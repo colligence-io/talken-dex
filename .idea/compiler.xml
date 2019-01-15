@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="talken-dex.main" target="1.8" />
+      <module name="talken-dex.talken-common-java.main" target="1.8" />
+      <module name="talken-dex.talken-common-java.test" target="1.8" />
+      <module name="talken-dex.test" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

@@ -1,0 +1,3 @@
+[submodule "talken-common-java"]
+	path = talken-common-java
+	url = https://github.com/colligence-io/talken-common-java

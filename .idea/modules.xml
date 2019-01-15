@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/talken-dex.iml" filepath="$PROJECT_DIR$/.idea/modules/talken-dex.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/talken-dex.main.iml" filepath="$PROJECT_DIR$/.idea/modules/talken-dex.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/talken-common-java/talken-dex.talken-common-java.iml" filepath="$PROJECT_DIR$/.idea/modules/talken-common-java/talken-dex.talken-common-java.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/talken-common-java/talken-dex.talken-common-java.main.iml" filepath="$PROJECT_DIR$/.idea/modules/talken-common-java/talken-dex.talken-common-java.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/talken-common-java/talken-dex.talken-common-java.test.iml" filepath="$PROJECT_DIR$/.idea/modules/talken-common-java/talken-dex.talken-common-java.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/talken-dex.test.iml" filepath="$PROJECT_DIR$/.idea/modules/talken-dex.test.iml" />
+    </modules>
+  </component>
+</project>

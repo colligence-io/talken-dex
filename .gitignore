@@ -1,0 +1,16 @@
+.gradle/
+gradle
+gradlew
+gradlew.bat
+.idea/httpRequests/
+.idea/libraries/
+.idea/workspace.xml
+.idea/uiDesigner.xml
+.idea/.name
+.idea/dataSources/
+.idea/dataSources.local.xml
+.idea/dataSources.xml
+.idea/mongoSettings.xml
+build/
+out/
+temp/
