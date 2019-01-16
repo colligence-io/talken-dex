@@ -5,6 +5,9 @@ gradlew.bat
 .idea/httpRequests/
 .idea/libraries/
 .idea/workspace.xml
+.idea/modules.xml
+.idea/modules
+.idea/**/*.iml
 .idea/uiDesigner.xml
 .idea/.name
 .idea/dataSources/
