@@ -1,0 +1,120 @@
+###############################################################################
+# Logging Default                                                             #
+###############################################################################
+logging:
+  level:
+    io.colligence: DEBUG
+    sun.rmi: INFO
+    org.springframework: INFO
+    org.eclipse.jetty: INFO
+    com.zaxxer.hikari: INFO
+    org.jooq.tools.LoggerListener: INFO
+
+###############################################################################
+# Common Profile                                                              #
+###############################################################################
+---
+spring:
+  profiles: common
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  datasource:
+    initialization-mode: never
+  cache:
+    type: redis
+  data:
+    redis:
+      repositories:
+        enabled: true
+  jooq:
+    sql-dialect: MariaDB
+  devtools:
+    livereload:
+      enabled: true
+
+###############################################################################
+# LOCAL Profile                                                               #
+###############################################################################
+---
+spring:
+  profiles: local
+  devtools:
+    livereload:
+      enabled: true
+  redis:
+    host: localhost
+    port: 6379
+  #    password: redispassword
+  datasource:
+    platform: mariadb
+    url: jdbc:mariadb://localhost:3306/talken_db
+    username: "root"
+    password: "!@coLLiGEnce#$"
+    dbcp2:
+      driver-class-name: org.mariadb.jdbc.Driver
+#logging:
+#  level:
+#    org.jooq.tools.LoggerListener: DEBUG
+
+###############################################################################
+# DEVELOPMENT Profile                                                         #
+###############################################################################
+---
+spring:
+  profiles: dev
+  redis:
+    host: 192.168.0.20
+    port: 6379
+    #    password: redispassword
+  datasource:
+    url: jdbc:mariadb://192.168.0.20:4006/talken_db
+    username: "ms_user"
+    password: "maxscale"
+    dbcp2:
+      driver-class-name: org.mariadb.jdbc.Driver
+logging:
+  level:
+    io.colligence: DEBUG
+    org.jooq.tools.LoggerListener: DEBUG
+###############################################################################
+# TEST Profile                                                                #
+###############################################################################
+#---
+#spring:
+#  profiles: prod
+#  datasource:
+#    url: jdbc:mariadb://192.168.0.20:4306/talken_db
+#    username: root
+#    password: 112233
+#    dbcp2:
+#      driver-class-name: org.mariadb.jdbc.Driver
+
+###############################################################################
+# PRODUCTION Profile                                                          #
+###############################################################################
+#---
+#spring:
+#  profiles: prod
+#  datasource:
+#    url: jdbc:mariadb://192.168.0.20:4306/talken_db
+#    username: root
+#    password: 112233
+#    dbcp2:
+#      driver-class-name: org.mariadb.jdbc.Driver
+
+###############################################################################
+# Verbose Mode Profile                                                        #
+###############################################################################
+---
+spring:
+  profiles: verbose
+logging:
+  level:
+    io.colligence: TRACE
+    org.springframework.transaction: DEBUG
+    org.jooq.tools.LoggerListener: DEBUG
+    org.springframework.security: DEBUG
+    com.google.api.client.http: DEBUG

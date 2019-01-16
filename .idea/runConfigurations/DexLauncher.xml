@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="DexLauncher" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="talken-dex.main" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="io.colligence.talken.dex.DexLauncher" />
+    <option name="PROGRAM_PARAMETERS" value="-p local" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
