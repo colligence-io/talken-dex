@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 
-@SpringBootApplication(scanBasePackages = {"io.colligence.talken.api"}, exclude = {ErrorMvcAutoConfiguration.class})
+@SpringBootApplication(scanBasePackages = {"io.colligence.talken.dex"}, exclude = {ErrorMvcAutoConfiguration.class})
 public class DexLauncher {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(DexLauncher.class);
 

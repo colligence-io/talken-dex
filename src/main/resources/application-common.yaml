@@ -34,6 +34,26 @@ spring:
   devtools:
     livereload:
       enabled: true
+talken:
+  dex:
+    stellar:
+      network: test
+      serverList:
+        - https://horizon-testnet.stellar.org
+    fee:
+      offerFeeHolderAccount: GC3TERVBLRYJ275VMJDNUMQJU2RS7YEEWLVRXUMTEZ45XMB7ZUQD3UAK
+      offerFeeRate: 0.001
+      offerFeeRateForCTX: 0.0005
+      deanchorFeeHolderAccount: GC3TERVBLRYJ275VMJDNUMQJU2RS7YEEWLVRXUMTEZ45XMB7ZUQD3UAK
+      deanchorFeePivotAsset: ETH
+      deanchorFeeAmount: 0.01
+    assetTypeList:
+      - code: CTX
+        issuer: GDQRXWHXYCIZTBYEWMYRCAN5LCLIYV747IHVKUNBEEZ3EKPTIM77CNJL
+      - code: ETH
+        issuer: GDQRXWHXYCIZTBYEWMYRCAN5LCLIYV747IHVKUNBEEZ3EKPTIM77CNJL
+      - code: BTC
+        issuer: GDQRXWHXYCIZTBYEWMYRCAN5LCLIYV747IHVKUNBEEZ3EKPTIM77CNJL
 
 ###############################################################################
 # LOCAL Profile                                                               #

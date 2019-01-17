@@ -23,6 +23,9 @@ bootJar {
     version = "0.0.1-SNAPSHOT"
 }
 repositories {
+    maven {
+        url "https://jitpack.io"
+    }
     mavenCentral()
 }
 configurations {
@@ -64,6 +67,9 @@ dependencies {
 
     // google http client
     compile('com.google.http-client:google-http-client-jackson2:1.27.0')
+
+    // stellar sdk
+    compile('com.github.stellar:java-stellar-sdk:0.4.1')
 
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('org.springframework.security:spring-security-test')
