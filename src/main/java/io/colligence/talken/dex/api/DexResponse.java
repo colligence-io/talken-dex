@@ -15,8 +15,4 @@ public class DexResponse<T> extends ResponseEntity<DexResponseBody<T>> {
 	public static <T> DexResponse<T> buildResponse(DexResponseBody<T> responseBody) {
 		return new DexResponse<>(responseBody, responseBody.getHttpStatus());
 	}
-
-	public static DexResponse<Void> buildExceptionResponse(Throwable t, String message) {
-		return buildResponse(new DexResponseBody<>(DexResultCodeEnum.ERROR, message, null));
-	}
 }

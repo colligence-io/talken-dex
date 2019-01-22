@@ -12,39 +12,37 @@ public class DexResponseBody<T> {
 	private DexResponseHeader status;
 	private T data;
 
+	private static final int OK = 0;
+
 	public DexResponseBody(T data) {
-		this.status = new DexResponseHeader(DexResultCodeEnum.OK, "OK");
+		this.status = new DexResponseHeader(OK, "OK");
 		this.data = data;
 	}
 
-	public DexResponseBody(DexResultCodeEnum resultCode, String message, T data) {
+	public DexResponseBody(int resultCode, String message, T data) {
 		this.status = new DexResponseHeader(resultCode, message);
 		this.data = data;
 	}
 
 	@JsonIgnore
 	public HttpStatus getHttpStatus() {
-		return status.getResultCode().getHttpStatus();
+		return status.isSuccess() ? HttpStatus.OK : HttpStatus.INTERNAL_SERVER_ERROR;
 	}
 
 	@Getter
 	@Setter
 	@JsonPropertyOrder({"success", "resultNo", "resultCode", "message"})
 	public static class DexResponseHeader {
-		private DexResultCodeEnum resultCode;
+		private int resultCode;
 		private String message;
 
-		public DexResponseHeader(DexResultCodeEnum resultCode, String message) {
+		public DexResponseHeader(int resultCode, String message) {
 			this.resultCode = resultCode;
 			this.message = message;
 		}
 
 		public boolean isSuccess() {
-			return !this.resultCode.getHttpStatus().isError();
-		}
-
-		public int getResultNo() {
-			return this.resultCode.getNo();
+			return this.resultCode == OK;
 		}
 	}
 }

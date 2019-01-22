@@ -1,6 +1,8 @@
 package io.colligence.talken.dex.config;
 
 import io.colligence.talken.common.CommonConsts;
+import io.colligence.talken.common.RunningProfile;
+import io.colligence.talken.dex.config.interceptor.TokenInterceptor;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,8 +20,8 @@ import javax.servlet.Filter;
 public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-
-//		registry.addInterceptor(localeChangeInterceptor());
+		if(!RunningProfile.isLocal())
+		registry.addInterceptor(new TokenInterceptor());
 	}
 
 	@Bean

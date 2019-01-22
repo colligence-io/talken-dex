@@ -2,7 +2,10 @@ package io.colligence.talken.dex.api;
 
 
 import io.colligence.talken.common.CLGException;
+import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.util.PrefixedLogger;
+import io.colligence.talken.dex.exception.APIErrorException;
+import io.colligence.talken.dex.exception.InternalServerErrorException;
 import io.colligence.talken.dex.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,13 +25,17 @@ public class GlobalControllerExceptionHandler {
 	MessageService ms;
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ExceptionHandler(APIErrorException.class)
+	@ResponseBody
+	public DexResponse<APIErrorException.APIError> handleCLGException(APIErrorException e, Locale locale) {
+		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), e.getApiError()));
+	}
+
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(CLGException.class)
 	@ResponseBody
 	public DexResponse<Void> handleCLGException(CLGException e, Locale locale) {
-
-		ms.getMessage(locale, e);
-
-		return DexResponse.buildExceptionResponse(e, ms.getMessage(locale, e));
+		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), null));
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -42,7 +49,10 @@ public class GlobalControllerExceptionHandler {
 //				return new DexResponse(, );
 //			}
 //		}
-		e.printStackTrace();
-		return DexResponse.buildExceptionResponse(e, "RuntimeException");
+		if(RunningProfile.isLocal()) {
+			e.printStackTrace();
+		}
+
+		return handleCLGException(new InternalServerErrorException(e), locale);
 	}
 }

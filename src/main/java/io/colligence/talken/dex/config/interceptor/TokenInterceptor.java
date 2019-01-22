@@ -1,6 +1,5 @@
 package io.colligence.talken.dex.config.interceptor;
 
-import io.colligence.talken.common.util.JwtUtil;
 import io.colligence.talken.common.util.PrefixedLogger;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;

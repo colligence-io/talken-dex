@@ -21,26 +21,45 @@ public class DexSettings {
 		private List<String> serverList;
 	}
 
+	private _Server server;
+
+	@Getter
+	@Setter
+	public static class _Server {
+		private String wltAddress;
+		private int wltPort;
+		private String ancAddress;
+		private int ancPort;
+		private String masAddress;
+		private int masPort;
+		private String txtAddress;
+		private int txtPort;
+	}
+
 	private _Fee fee;
 
 	@Getter
 	@Setter
 	public static class _Fee {
-		private String offerFeeHolderAccount;
 		private double offerFeeRate;
 		private double offerFeeRateForCTX;
 
-		private String deanchorFeeHolderAccount;
 		private String deanchorFeePivotAsset;
 		private double deanchorFeeAmount;
 	}
 
-	private List<_AssetType> assetTypeList;
+	// MAS mockup
+
+	private List<_MasMock> masMockUp;
 
 	@Getter
 	@Setter
-	public static class _AssetType {
+	public static class _MasMock {
 		private String code;
-		private String issuer;
+		private String assetIssuer;
+		private String assetBase;
+		private List<String> assetHolder;
+		private String offerFeeHolder;
+		private String deanchorFeeHolder;
 	}
 }

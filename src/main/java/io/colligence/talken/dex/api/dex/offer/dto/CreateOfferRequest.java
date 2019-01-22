@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.api.offer;
+package io.colligence.talken.dex.api.dex.offer.dto;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class OfferRequestDTO {
+public class CreateOfferRequest {
 	@NotEmpty
 	private String sourceAccountId;
 	@NotEmpty
