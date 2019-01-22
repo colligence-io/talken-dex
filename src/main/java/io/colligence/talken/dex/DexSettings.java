@@ -34,6 +34,7 @@ public class DexSettings {
 		private int masPort;
 		private String txtAddress;
 		private int txtPort;
+		private String txtServerId;
 	}
 
 	private _Fee fee;

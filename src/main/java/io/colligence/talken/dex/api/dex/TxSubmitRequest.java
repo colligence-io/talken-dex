@@ -7,7 +7,7 @@ import javax.validation.constraints.NotEmpty;
 @Data
 public class TxSubmitRequest {
 	@NotEmpty
-	private String taskID;
+	private String taskId;
 	@NotEmpty
 	private String txHash;
 	@NotEmpty

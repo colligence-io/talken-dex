@@ -1,13 +1,15 @@
 package io.colligence.talken.dex.api.dex.anchor.dto;
 
+import io.colligence.talken.dex.api.dex.TxInformation;
 import lombok.Data;
-
-import javax.validation.constraints.NotEmpty;
 
 @Data
 public class DeanchorResult {
-	@NotEmpty
 	private String taskID;
-	@NotEmpty
-	private String holderAccountAddress;
+	private TxInformation txInformation;
+
+	public DeanchorResult(String taskID, TxInformation txInformation) {
+		this.taskID = taskID;
+		this.txInformation = txInformation;
+	}
 }

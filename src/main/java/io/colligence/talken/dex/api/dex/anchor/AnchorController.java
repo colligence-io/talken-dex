@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
+
 @RestController
 public class AnchorController {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AnchorController.class);
@@ -28,18 +30,18 @@ public class AnchorController {
 	@RequestMapping(value = RequestMappings.ANCHOR_TASK + RequestMappings.SUBMIT_SUFFIX, method = RequestMethod.POST)
 	public DexResponse<AnchorSubmitResult> submitAnchor(@RequestBody AnchorSubmitRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(anchorService.submitAnchorTransaction(postBody.getTaskID(), postBody.getTxHash(), postBody.getTxEnvelope()));
+		return DexResponse.buildResponse(anchorService.submitAnchorTransaction(postBody.getAssetCode(), postBody.getTaskId(), postBody.getTxData()));
 	}
 
 	@RequestMapping(value = RequestMappings.DEANCHOR_TASK, method = RequestMethod.POST)
 	public DexResponse<DeanchorResult> deanchor(@RequestBody DeanchorRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(anchorService.buildDeanchorRequestInformation());
+		return DexResponse.buildResponse(anchorService.buildDeanchorRequestInformation(postBody.getPrivateWalletAddress(), postBody.getTradeWalletAddress(), postBody.getAssetCode(), postBody.getAmount(), Optional.ofNullable(postBody.getFeeByCtx()).orElse(false)));
 	}
 
 	@RequestMapping(value = RequestMappings.DEANCHOR_TASK + RequestMappings.SUBMIT_SUFFIX, method = RequestMethod.POST)
 	public DexResponse<DeanchorSubmitResult> deanchor(@RequestBody DeanchorSubmitRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(anchorService.submitDeanchorTransaction(postBody.getTaskID(), postBody.getTxHash(), postBody.getTxEnvelope()));
+		return DexResponse.buildResponse(anchorService.submitDeanchorTransaction(postBody.getTaskId(), postBody.getTxHash(), postBody.getTxEnvelope()));
 	}
 }

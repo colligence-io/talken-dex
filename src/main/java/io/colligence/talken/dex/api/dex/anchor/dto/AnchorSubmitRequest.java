@@ -1,6 +1,15 @@
 package io.colligence.talken.dex.api.dex.anchor.dto;
 
-import io.colligence.talken.dex.api.dex.TxSubmitRequest;
+import lombok.Data;
 
-public class AnchorSubmitRequest extends TxSubmitRequest {
+import javax.validation.constraints.NotEmpty;
+
+@Data
+public class AnchorSubmitRequest {
+	@NotEmpty
+	private String taskId;
+	@NotEmpty
+	private String assetCode;
+	@NotEmpty
+	private String txData;
 }

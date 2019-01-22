@@ -18,11 +18,11 @@ public class RequestMappings {
 
 	private static final String MAS = ROOT + "/mas";
 
-	public static final String MA = MAS + "/ma";
+	private static final String MA = MAS + "/ma";
 	public static final String MALIST = MA + "/list";
 	public static final String SWAPHOLDER = MA + "/swapHolder";
 
-	public static final String SIGNTASK = MAS + "/signTask/";
-	public static final String SIGNTASK_LIST = SIGNTASK + "/getList";
+	private static final String SIGNTASK = MAS + "/signTask/";
+	public static final String SIGNTASK_LIST = SIGNTASK + "/list";
 	public static final String UPDATE_SIGNTASK = SIGNTASK + "/updateTask";
 }

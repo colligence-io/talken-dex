@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.service.integration;
+package io.colligence.talken.dex.service.integration.anchor;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,7 +13,7 @@ import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.exception.APICallException;
-import io.colligence.talken.dex.exception.APIErrorException;
+import io.colligence.talken.dex.service.integration.APIError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -29,18 +29,19 @@ public class AnchorServerService {
 	@Autowired
 	private DexSettings dexSettings;
 
+	private static HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
+	private static JsonFactory jsonFactory = new JacksonFactory();
+
 	private static String anchoringApiUrl;
 	private static String deanchoringApiUrl;
 
 	@PostConstruct
 	private void init() {
 		anchoringApiUrl = "http://" + dexSettings.getServer().getAncAddress() + ":" + dexSettings.getServer().getAncPort() + "/exchange/anchor/asset/anchor";
+		deanchoringApiUrl = "http://" + dexSettings.getServer().getAncAddress() + ":" + dexSettings.getServer().getAncPort() + "/exchange/anchor/asset/deanchor";
 	}
 
-	private static HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
-	private static JsonFactory jsonFactory = new JacksonFactory();
-
-	public AncServerAnchorResponse requestAnchor(AncServerAnchorRequest request) throws APICallException, APIErrorException {
+	public AncServerAnchorResponse requestAnchor(AncServerAnchorRequest request) throws APICallException, APIError {
 		try {
 			HttpResponse response = requestFactory
 					.buildPostRequest(new GenericUrl(anchoringApiUrl), ByteArrayContent.fromString("application/json;charset=UTF-8", JSONWriter.toJsonString(request)))
@@ -56,7 +57,31 @@ public class AnchorServerService {
 			AncServerAnchorResponse asar = mapper.readValue(response.parseAsString(), AncServerAnchorResponse.class);
 
 			if(asar.getCode() != 200)
-				throw new APIErrorException("Anchor", String.valueOf(asar.getCode()), asar.getDescription(), asar);
+				throw new APIError("Anchor", String.valueOf(asar.getCode()), asar.getDescription(), asar);
+
+			return asar;
+		} catch(IOException e) {
+			throw new APICallException(e, "Anchor");
+		}
+	}
+
+	public AncServerDeanchorResponse requestDeanchor(AncServerDeanchorRequest request) throws APICallException, APIError {
+		try {
+			HttpResponse response = requestFactory
+					.buildPostRequest(new GenericUrl(deanchoringApiUrl), ByteArrayContent.fromString("application/json;charset=UTF-8", JSONWriter.toJsonString(request)))
+					.setParser(jsonFactory.createJsonObjectParser())
+					.execute();
+
+			// check http response is OK
+			if(response.getStatusCode() != 200)
+				throw new APICallException("Anchor", response.getStatusMessage());
+
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+			AncServerDeanchorResponse asar = mapper.readValue(response.parseAsString(), AncServerDeanchorResponse.class);
+
+			if(asar.getCode() != 200)
+				throw new APIError("Anchor", String.valueOf(asar.getCode()), asar.getDescription(), asar);
 
 			return asar;
 		} catch(IOException e) {

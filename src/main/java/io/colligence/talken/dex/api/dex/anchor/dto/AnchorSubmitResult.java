@@ -1,13 +1,13 @@
 package io.colligence.talken.dex.api.dex.anchor.dto;
 
-import io.colligence.talken.dex.api.dex.TxSubmitResult;
+import io.colligence.talken.dex.service.integration.txTunnel.TxtServerResponse;
 import lombok.Data;
 
 @Data
 public class AnchorSubmitResult {
-	private TxSubmitResult txSubmitResult;
+	private TxtServerResponse txtServerResponse;
 
-	public AnchorSubmitResult(TxSubmitResult txSubmitResult) {
-		this.txSubmitResult = txSubmitResult;
+	public AnchorSubmitResult(TxtServerResponse txtServerResponse) {
+		this.txtServerResponse = txtServerResponse;
 	}
 }

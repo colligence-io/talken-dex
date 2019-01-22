@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.service;
+package io.colligence.talken.dex.service.integration.stellar;
 
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;

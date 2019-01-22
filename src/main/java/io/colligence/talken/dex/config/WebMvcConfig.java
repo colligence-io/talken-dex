@@ -21,7 +21,7 @@ public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		if(!RunningProfile.isLocal())
-		registry.addInterceptor(new TokenInterceptor());
+			registry.addInterceptor(new TokenInterceptor());
 	}
 
 	@Bean

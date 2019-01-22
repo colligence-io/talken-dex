@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.service.mas;
+package io.colligence.talken.dex.api.mas.ma;
 
 import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.util.PrefixedLogger;
@@ -6,8 +6,7 @@ import io.colligence.talken.common.util.collection.SingleKeyTable;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
 import io.colligence.talken.dex.exception.StellarAccountNotFoundException;
-import io.colligence.talken.dex.service.ManagedAccountTypeEnum;
-import io.colligence.talken.dex.service.StellarNetworkService;
+import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -101,6 +100,10 @@ public class ManagedAccountService {
 
 	public KeyPair getDeanchorFeeHolderAccount(String code) throws AssetTypeNotFoundException {
 		return getManagedAccount(code, ManagedAccountTypeEnum.FEECOLLECTOR_DEANCHOR);
+	}
+
+	public KeyPair getBaseAccount(String code) throws AssetTypeNotFoundException {
+		return getManagedAccount(code, ManagedAccountTypeEnum.ASSET_BASE);
 	}
 
 	public String getHolderAccountAddress(String code) throws AssetTypeNotFoundException {

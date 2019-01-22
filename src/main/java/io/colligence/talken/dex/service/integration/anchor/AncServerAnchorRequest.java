@@ -1,10 +1,10 @@
-package io.colligence.talken.dex.service.integration;
+package io.colligence.talken.dex.service.integration.anchor;
 
 import lombok.Data;
 
 @Data
 public class AncServerAnchorRequest {
-	private String taskID;
+	private String taskId;
 	private String uid;
 	private String symbol;
 	private String from;

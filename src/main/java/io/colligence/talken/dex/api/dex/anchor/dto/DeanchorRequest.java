@@ -15,4 +15,5 @@ public class DeanchorRequest {
 	private String assetCode;
 	@NotNull
 	private Double amount;
+	private Boolean feeByCtx;
 }

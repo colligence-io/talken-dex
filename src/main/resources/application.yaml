@@ -47,6 +47,7 @@ talken:
       mas-port: 3232
       txt-address: 192.168.0.33
       txt-port: 3232
+      txt-server-id: DEX
       anc-address: 192.168.0.35
       anc-port: 3480
     fee:

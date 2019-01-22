@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.service;
+package io.colligence.talken.dex.api.dex;
 
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
@@ -17,5 +17,13 @@ public class TxFeeService {
 	public double calculateOfferFee(String assetCode, double amount) {
 		if(assetCode.equals("CTX")) return amount * dexSettings.getFee().getOfferFeeRateForCTX();
 		else return amount * dexSettings.getFee().getOfferFeeRate();
+	}
+
+	public double calculateDeanchorFeeByCtx(String assetCode, Double amount) {
+		return 0;
+	}
+
+	public double calculateDeanchorFee(String assetCode, Double amount) {
+		return 0;
 	}
 }

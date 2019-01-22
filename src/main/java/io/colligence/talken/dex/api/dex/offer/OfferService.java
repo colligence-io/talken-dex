@@ -1,16 +1,16 @@
 package io.colligence.talken.dex.api.dex.offer;
 
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.DexException;
 import io.colligence.talken.dex.DexSettings;
+import io.colligence.talken.dex.api.DexTaskId;
+import io.colligence.talken.dex.api.dex.TxFeeService;
 import io.colligence.talken.dex.api.dex.TxInformation;
 import io.colligence.talken.dex.api.dex.offer.dto.*;
+import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
 import io.colligence.talken.dex.exception.APICallException;
 import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
 import io.colligence.talken.dex.exception.TransactionHashNotMatchException;
-import io.colligence.talken.dex.service.StellarNetworkService;
-import io.colligence.talken.dex.service.TxFeeService;
-import io.colligence.talken.dex.service.mas.ManagedAccountService;
+import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -38,6 +38,9 @@ public class OfferService {
 
 	public CreateOfferResult buildCreateOfferTx(String sourceAccountID, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, APICallException {
 		try {
+			String taskID = DexTaskId.generate(DexTaskId.Type.OFFER_CREATE).toString();
+			// TODO : unique check, insert into db
+
 			// pick horizon server
 			Server server = stellarNetworkService.pickServer();
 
@@ -75,7 +78,7 @@ public class OfferService {
 
 			// TODO : insert into taskDB
 
-			return new CreateOfferResult(TxInformation.buildTxInformation(tx));
+			return new CreateOfferResult(taskID, TxInformation.buildTxInformation(tx));
 		} catch(IOException ioex) {
 			throw new APICallException(ioex, "Stellar");
 		}
@@ -91,6 +94,9 @@ public class OfferService {
 
 	public CreatePassiveOfferResult buildCreatePassiveOfferTx(String sourceAccountID, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, APICallException {
 		try {
+			String taskID = DexTaskId.generate(DexTaskId.Type.OFFER_CREATEPASSIVE).toString();
+			// TODO : unique check, insert into db
+
 			// pick horizon server
 			Server server = stellarNetworkService.pickServer();
 
@@ -128,7 +134,7 @@ public class OfferService {
 
 			// TODO : insert into taskDB
 
-			return new CreatePassiveOfferResult(TxInformation.buildTxInformation(tx));
+			return new CreatePassiveOfferResult(taskID, TxInformation.buildTxInformation(tx));
 		} catch(IOException ioex) {
 			throw new APICallException(ioex, "Stellar");
 		}
@@ -144,6 +150,9 @@ public class OfferService {
 
 	public DeleteOfferResult buildDeleteOfferTx(long offerId, String sourceAccountID, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, APICallException {
 		try {
+			String taskID = DexTaskId.generate(DexTaskId.Type.OFFER_DELETE).toString();
+			// TODO : unique check, insert into db
+
 			// pick horizon server
 			Server server = stellarNetworkService.pickServer();
 
@@ -173,7 +182,7 @@ public class OfferService {
 
 			// TODO : insert task into db
 
-			return new DeleteOfferResult(TxInformation.buildTxInformation(tx));
+			return new DeleteOfferResult(taskID, TxInformation.buildTxInformation(tx));
 		} catch(IOException ioex) {
 			throw new APICallException(ioex, "Stellar");
 		}

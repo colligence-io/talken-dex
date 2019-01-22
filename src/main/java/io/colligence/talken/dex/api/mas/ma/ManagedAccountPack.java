@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.service.mas;
+package io.colligence.talken.dex.api.mas.ma;
 
 import io.colligence.talken.common.util.collection.SingleKeyObject;
 import lombok.Data;

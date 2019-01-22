@@ -29,8 +29,9 @@ public class DexTaskId {
 	public static enum Type {
 		ANCHOR(1),
 		DEANCHOR(2),
-		OFFER_MAKE(3),
-		OFFER_DELETE(4);
+		OFFER_CREATE(3),
+		OFFER_CREATEPASSIVE(4),
+		OFFER_DELETE(5);
 
 		private final int code;
 

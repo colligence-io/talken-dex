@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.service;
+package io.colligence.talken.dex.api.mas.ma;
 
 public enum ManagedAccountTypeEnum {
 	ASSET_HOLDER(0),

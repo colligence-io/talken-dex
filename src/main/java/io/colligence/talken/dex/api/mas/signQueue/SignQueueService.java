@@ -1,9 +1,10 @@
-package io.colligence.talken.dex.service.integration;
+package io.colligence.talken.dex.api.mas.signQueue;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 @Service
 @Scope("singleton")
-public class TransactionTunnerService {
+public class SignQueueService {
+
 }

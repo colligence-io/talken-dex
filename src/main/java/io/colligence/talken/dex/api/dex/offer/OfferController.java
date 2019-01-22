@@ -28,7 +28,7 @@ public class OfferController {
 	@RequestMapping(value = RequestMappings.CREATE_OFFER + RequestMappings.SUBMIT_SUFFIX, method = RequestMethod.POST)
 	public DexResponse<CreateOfferSubmitResult> submitCreateOffer(@RequestBody CreateOfferSubmitRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(offerService.submitCreateOfferTx(postBody.getTaskID(), postBody.getTxHash(), postBody.getTxEnvelope()));
+		return DexResponse.buildResponse(offerService.submitCreateOfferTx(postBody.getTaskId(), postBody.getTxHash(), postBody.getTxEnvelope()));
 	}
 
 	@RequestMapping(value = RequestMappings.CREATE_PASSIVE_OFFER, method = RequestMethod.POST)
@@ -40,7 +40,7 @@ public class OfferController {
 	@RequestMapping(value = RequestMappings.CREATE_PASSIVE_OFFER + RequestMappings.SUBMIT_SUFFIX, method = RequestMethod.POST)
 	public DexResponse<CreatePassiveOfferSubmitResult> submitCreatePassiveOffer(@RequestBody CreatePassiveOfferSubmitRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(offerService.submitCreatePassiveOfferTx(postBody.getTaskID(), postBody.getTxHash(), postBody.getTxEnvelope()));
+		return DexResponse.buildResponse(offerService.submitCreatePassiveOfferTx(postBody.getTaskId(), postBody.getTxHash(), postBody.getTxEnvelope()));
 	}
 
 	@RequestMapping(value = RequestMappings.DELETE_OFFER, method = RequestMethod.POST)
@@ -52,6 +52,6 @@ public class OfferController {
 	@RequestMapping(value = RequestMappings.DELETE_OFFER + RequestMappings.SUBMIT_SUFFIX, method = RequestMethod.POST)
 	public DexResponse<DeleteOfferSubmitResult> submitDeleteOffer(@RequestBody DeleteOfferSubmitRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(offerService.submitDeleteOfferTx(postBody.getTaskID(), postBody.getTxHash(), postBody.getTxEnvelope()));
+		return DexResponse.buildResponse(offerService.submitDeleteOfferTx(postBody.getTaskId(), postBody.getTxHash(), postBody.getTxEnvelope()));
 	}
 }
