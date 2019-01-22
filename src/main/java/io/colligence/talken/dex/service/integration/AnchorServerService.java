@@ -11,7 +11,6 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.DexException;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.exception.APICallException;
 import io.colligence.talken.dex.exception.APIErrorException;
@@ -50,18 +49,18 @@ public class AnchorServerService {
 
 			// check http response is OK
 			if(response.getStatusCode() != 200)
-				throw new APICallException("AnchorAPI", response.getStatusMessage());
+				throw new APICallException("Anchor", response.getStatusMessage());
 
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 			AncServerAnchorResponse asar = mapper.readValue(response.parseAsString(), AncServerAnchorResponse.class);
 
 			if(asar.getCode() != 200)
-				throw new APIErrorException("AnchorAPI", String.valueOf(asar.getCode()), asar.getDescription(), asar);
+				throw new APIErrorException("Anchor", String.valueOf(asar.getCode()), asar.getDescription(), asar);
 
 			return asar;
 		} catch(IOException e) {
-			throw new APICallException(e, "AnchorAPI");
+			throw new APICallException(e, "Anchor");
 		}
 	}
 }
