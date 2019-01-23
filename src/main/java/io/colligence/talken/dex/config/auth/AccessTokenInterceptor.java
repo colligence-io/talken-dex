@@ -1,5 +1,6 @@
 package io.colligence.talken.dex.config.auth;
 
+import io.colligence.talken.common.persistence.jooq.tables.pojos.User;
 import io.colligence.talken.common.util.JwtUtil;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
@@ -7,6 +8,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -14,13 +16,17 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.function.Consumer;
+
+import static io.colligence.talken.common.persistence.jooq.Tables.USER;
 
 public class AccessTokenInterceptor implements HandlerInterceptor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AccessTokenInterceptor.class);
 
 	@Autowired
 	private DexSettings dexSettings;
+
+	@Autowired
+	private DSLContext dslContext;
 
 	// request scoped bean
 	@Autowired
@@ -30,10 +36,10 @@ public class AccessTokenInterceptor implements HandlerInterceptor {
 
 	private static String tokenHeader;
 
-	private static Consumer<AuthInfo> AuthSkipper = null;
+	private static Long fixedUserId = null;
 
-	public static void setAuthSkipper(Long fixedUserId) {
-		AuthSkipper = authInfo -> authInfo.setUserId(fixedUserId);
+	public static void setAuthSkipper(Long userId) {
+		fixedUserId = userId;
 	}
 
 	@PostConstruct
@@ -44,22 +50,14 @@ public class AccessTokenInterceptor implements HandlerInterceptor {
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-		if(AuthSkipper != null) {
-			AuthSkipper.accept(authInfo);
-			return true;
-		}
-
 		try {
 			String token = request.getHeader(tokenHeader);
-			if(token == null || token.isEmpty()) {
+			if(fixedUserId == null && (token == null || token.isEmpty())) {
 				throw new AccessTokenNotFoundException();
 			} else {
 				try {
-					Long userId = jwtUtil.getUserIdFromJWT(token);
-
-					// TODO : check userId is valid from DB
-
-					authInfo.setUserId(userId);
+					Long userId = (fixedUserId != null) ? fixedUserId : jwtUtil.getUserIdFromJWT(token);
+					loadUserInfo(userId);
 				} catch(SignatureException ex) {
 					// Invalid JWT signature
 					throw new AccessTokenValidationException("Invalid AccessToken", ex);
@@ -81,6 +79,15 @@ public class AccessTokenInterceptor implements HandlerInterceptor {
 			authInfo.setAuthException(ex);
 		}
 		return true;
+	}
+
+	private void loadUserInfo(long userId) {
+		User user = dslContext.selectFrom(USER)
+				.where(USER.ID.eq(userId))
+				.fetchOptionalInto(User.class)
+				.orElseThrow(() -> new AuthenticationException("User not found"));
+
+		authInfo.setUser(user);
 	}
 
 	@Override

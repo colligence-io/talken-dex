@@ -1,6 +1,5 @@
 package io.colligence.talken.dex.config.auth;
 
-import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.exception.UnauthorizedException;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -26,8 +25,9 @@ public class AuthRequiredAspect {
 
 	@Around("isAuthRequired(authRequired)")
 	public Object validateAuth(ProceedingJoinPoint joinPoint, AuthRequired authRequired) throws Throwable {
-		if(authInfo != null) authInfo.getUserId();
-		else throw new UnauthorizedException();
+		if(authInfo == null)
+			throw new UnauthorizedException(new AuthenticationException("Authentication information not found."));
+		authInfo.checkAuth();
 		return joinPoint.proceed();
 	}
 }

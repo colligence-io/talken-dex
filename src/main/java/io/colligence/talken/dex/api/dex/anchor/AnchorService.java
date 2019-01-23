@@ -52,7 +52,7 @@ public class AnchorService {
 	@Autowired
 	private TxFeeService txFeeService;
 
-	public AnchorResult buildAnchorRequestInformation(String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount) throws AssetTypeNotFoundException, APIErrorException, APICallException {
+	public AnchorResult buildAnchorRequestInformation(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount) throws AssetTypeNotFoundException, APIErrorException, APICallException {
 		String assetHolderAddress = maService.getHolderAccountAddress(assetCode);
 
 		String taskID = DexTaskId.generate(DexTaskId.Type.ANCHOR).toString();
@@ -82,7 +82,7 @@ public class AnchorService {
 		}
 	}
 
-	public AnchorSubmitResult submitAnchorTransaction(String assetCode, String taskID, String txData) throws APIErrorException, APICallException {
+	public AnchorSubmitResult submitAnchorTransaction(long userId, String assetCode, String taskID, String txData) throws APIErrorException, APICallException {
 		TxtServerRequest request = new TxtServerRequest();
 		request.setServiceId(dexSettings.getServer().getTxtServerId());
 		request.setTaskId(taskID);
@@ -100,7 +100,7 @@ public class AnchorService {
 		}
 	}
 
-	public DeanchorResult buildDeanchorRequestInformation(String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, boolean feeByCtx) throws AssetTypeNotFoundException, APICallException {
+	public DeanchorResult buildDeanchorRequestInformation(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, boolean feeByCtx) throws AssetTypeNotFoundException, APICallException {
 		try {
 			String taskID = DexTaskId.generate(DexTaskId.Type.DEANCHOR).toString();
 			// TODO : unique check, insert into db
@@ -166,7 +166,7 @@ public class AnchorService {
 		}
 	}
 
-	public DeanchorSubmitResult submitDeanchorTransaction(String taskID, String txHash, String txXdr) throws TransactionHashNotMatchException, APICallException, APIErrorException {
+	public DeanchorSubmitResult submitDeanchorTransaction(long userId, String taskID, String txHash, String txXdr) throws TransactionHashNotMatchException, APICallException, APIErrorException {
 		// TODO : check taskId integrity
 
 

@@ -1,23 +1,31 @@
 package io.colligence.talken.dex.config.auth;
 
+import io.colligence.talken.common.persistence.jooq.tables.pojos.User;
 import io.colligence.talken.dex.exception.UnauthorizedException;
 
 public class AuthInfo {
-	private Long userId = null;
+	private User user = null;
 	private UnauthorizedException uae = null;
 
-	public void setUserId(Long userId) {
-		this.userId = userId;
+	public void setUser(User user) {
+		this.user = user;
 		this.uae = null;
 	}
 
+	public User getUser() {
+		return this.user;
+	}
+
+	public Long getUserId() {
+		return this.user.getId();
+	}
+
 	public void setAuthException(AuthenticationException aex) {
-		this.userId = null;
+		this.user = null;
 		this.uae = new UnauthorizedException(aex);
 	}
 
-	public Long getUserId() throws UnauthorizedException {
+	public void checkAuth() throws UnauthorizedException {
 		if(this.uae != null) throw uae;
-		return userId;
 	}
 }
