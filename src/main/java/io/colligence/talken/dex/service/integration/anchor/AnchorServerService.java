@@ -37,8 +37,8 @@ public class AnchorServerService {
 
 	@PostConstruct
 	private void init() {
-		anchoringApiUrl = "http://" + dexSettings.getServer().getAncAddress() + ":" + dexSettings.getServer().getAncPort() + "/exchange/anchor/asset/anchor";
-		deanchoringApiUrl = "http://" + dexSettings.getServer().getAncAddress() + ":" + dexSettings.getServer().getAncPort() + "/exchange/anchor/asset/deanchor";
+		anchoringApiUrl = dexSettings.getServer().getAncAddress() + "/exchange/anchor/asset/anchor";
+		deanchoringApiUrl = dexSettings.getServer().getAncAddress() + "/exchange/anchor/asset/deanchor";
 	}
 
 	public AncServerAnchorResponse requestAnchor(AncServerAnchorRequest request) throws APICallException, APIError {

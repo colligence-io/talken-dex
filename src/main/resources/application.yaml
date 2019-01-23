@@ -36,20 +36,19 @@ spring:
       enabled: true
 talken:
   dex:
+    accessToken:
+      token-header: "X-Auth-Token"
+      jwt-secret: "!@TalkenTokenSecREtKey#$"
+      jwt-expiration: 604800000
     stellar:
       network: test
       serverList:
         - https://horizon-testnet.stellar.org
     server:
-      wlt-address: 192.168.0.33
-      wlt-port: 3232
-      mas-address: 127.0.0.1
-      mas-port: 3232
-      txt-address: 192.168.0.33
-      txt-port: 3232
+      wlt-address: http://192.168.0.33:3232
+      txt-address: http://192.168.0.33:3232
       txt-server-id: DEX
-      anc-address: 192.168.0.35
-      anc-port: 3480
+      anc-address: http://192.168.0.35:3480
     fee:
       offerFeeRate: 0.001
       offerFeeRateForCTX: 0.0005

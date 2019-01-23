@@ -6,6 +6,7 @@ import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.exception.APIErrorException;
 import io.colligence.talken.dex.exception.InternalServerErrorException;
+import io.colligence.talken.dex.exception.UnauthorizedException;
 import io.colligence.talken.dex.service.MessageService;
 import io.colligence.talken.dex.service.integration.APIError;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,24 +26,31 @@ public class GlobalControllerExceptionHandler {
 	@Autowired
 	MessageService ms;
 
+	@ResponseStatus(HttpStatus.UNAUTHORIZED)
+	@ExceptionHandler(UnauthorizedException.class)
+	@ResponseBody
+	public DexResponse<Void> handleRuntimeException(UnauthorizedException e, Locale locale) {
+		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), HttpStatus.UNAUTHORIZED, null));
+	}
+
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(APIErrorException.class)
 	@ResponseBody
 	public DexResponse<APIError> handleCLGException(APIErrorException e, Locale locale) {
-		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), e.getApiError()));
+		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, e.getApiError()));
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(CLGException.class)
 	@ResponseBody
 	public DexResponse<Void> handleCLGException(CLGException e, Locale locale) {
-		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), null));
+		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, null));
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	@ExceptionHandler(Exception.class)
+	@ExceptionHandler(RuntimeException.class)
 	@ResponseBody
-	public DexResponse<Void> handleCLGException(Exception e, Locale locale) {
+	public DexResponse<Void> handleRuntimeException(RuntimeException e, Locale locale) {
 //		if(e instanceof DataIntegrityViolationException) {
 //			// TODO : jooq datatbase exeption
 //			logger.exception(e);
@@ -50,6 +58,17 @@ public class GlobalControllerExceptionHandler {
 //				return new DexResponse(, );
 //			}
 //		}
+		if(RunningProfile.isLocal()) {
+			e.printStackTrace();
+		}
+
+		return handleCLGException(new InternalServerErrorException(e), locale);
+	}
+
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ExceptionHandler(Exception.class)
+	@ResponseBody
+	public DexResponse<Void> handleException(Exception e, Locale locale) {
 		if(RunningProfile.isLocal()) {
 			e.printStackTrace();
 		}

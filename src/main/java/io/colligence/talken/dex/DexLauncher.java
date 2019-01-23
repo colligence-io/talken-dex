@@ -3,6 +3,7 @@ package io.colligence.talken.dex;
 import io.colligence.talken.common.CommonConsts;
 import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.util.PrefixedLogger;
+import io.colligence.talken.dex.config.auth.AccessTokenInterceptor;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,16 +26,21 @@ public class DexLauncher {
 			// Verbose Mode
 			if(args[i].equals("-v")) verbose = true;
 
+			// force uid
+			if(args[i].equals("-u")) {
+				i++;
+				if(args.length <= i) usage();
+				try {
+					AccessTokenInterceptor.setAuthSkipper(Long.valueOf(args[i]));
+				} catch(Exception ex) {
+					usage();
+				}
+			}
+
 			// Choose profile
 			if(args[i].equals("-p")) {
 				i++;
-				if(args.length <= i) {
-					System.out.println("Colligence API Server");
-					System.out.println("Usage :");
-					System.out.println("  -p : profile [(l)ocal,(d)ev,(t)est,(p)roduction]");
-					System.out.println("  -v : verbose mode");
-					shutdown(CommonConsts.EXITCODE.ARGUMENT_ERROR);
-				}
+				if(args.length <= i) usage();
 
 				boolean profile_found = false;
 				for(CommonConsts.RUNNING_PROFILE _p : CommonConsts.RUNNING_PROFILE.values()) {
@@ -61,6 +67,15 @@ public class DexLauncher {
 			application.setAdditionalProfiles("common", RunningProfile.getRunningProfile().getName());
 		}
 		applicationContext = application.run(args);
+	}
+
+	private static void usage() {
+		System.out.println("Colligence API Server");
+		System.out.println("Usage :");
+		System.out.println("  -p : profile [(l)ocal,(d)ev,(t)est,(p)roduction]");
+		System.out.println("  -v : verbose mode");
+		System.out.println("  -u : skip auth with given uid");
+		shutdown(CommonConsts.EXITCODE.ARGUMENT_ERROR);
 	}
 
 	public static void shutdown(CommonConsts.EXITCODE code) {

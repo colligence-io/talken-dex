@@ -9,10 +9,6 @@ public class APIErrorException extends DexException {
 
 	private APIError apiError;
 
-//	public APIErrorException(String apiName, String code, String message, Object data) {
-//		this(new APIError(apiName, code, message, data));
-//	}
-
 	public APIErrorException(APIError apiError) {
 		super(DexExceptionType.API_RETURNED_ERROR, apiError.getApiName(), apiError.getCode());
 		this.apiError = apiError;

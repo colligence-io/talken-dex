@@ -36,7 +36,7 @@ public class TransactionTunnelService {
 
 	@PostConstruct
 	private void init() {
-		formatString = "http://" + dexSettings.getServer().getTxtAddress() + ":" + dexSettings.getServer().getTxtPort() + "/v1/%s/tx/broadcast";
+		formatString = dexSettings.getServer().getTxtAddress() + "/v1/%s/tx/broadcast";
 	}
 
 	public TxtServerResponse requestTxTunnel(String assetCode, TxtServerRequest request) throws APICallException, APIError {

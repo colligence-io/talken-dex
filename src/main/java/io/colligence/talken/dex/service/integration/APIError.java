@@ -1,7 +1,8 @@
 package io.colligence.talken.dex.service.integration;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties({"stackTrace", "cause", "localizedMessage", "suppressed"})
 public class APIError extends Throwable {
 	private static final long serialVersionUID = -9087245376865927948L;
 	private String apiName;

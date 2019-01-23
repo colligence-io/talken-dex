@@ -12,6 +12,16 @@ import java.util.List;
 @Getter
 @Setter
 public class DexSettings {
+	private _AccessToken accessToken;
+
+	@Getter
+	@Setter
+	public static class _AccessToken {
+		private String tokenHeader;
+		private String jwtSecret;
+		private int jwtExpiration;
+	}
+
 	private _Stellar stellar;
 
 	@Getter
@@ -27,13 +37,9 @@ public class DexSettings {
 	@Setter
 	public static class _Server {
 		private String wltAddress;
-		private int wltPort;
 		private String ancAddress;
-		private int ancPort;
 		private String masAddress;
-		private int masPort;
 		private String txtAddress;
-		private int txtPort;
 		private String txtServerId;
 	}
 

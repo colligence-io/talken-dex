@@ -1,13 +1,16 @@
 package io.colligence.talken.dex.config;
 
 import io.colligence.talken.common.CommonConsts;
-import io.colligence.talken.common.RunningProfile;
-import io.colligence.talken.dex.config.interceptor.TokenInterceptor;
+import io.colligence.talken.dex.config.auth.AccessTokenInterceptor;
+import io.colligence.talken.dex.config.auth.AuthInfo;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -20,8 +23,12 @@ import javax.servlet.Filter;
 public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		if(!RunningProfile.isLocal())
-			registry.addInterceptor(new TokenInterceptor());
+		registry.addInterceptor(tokenInterceptor());
+	}
+
+	@Bean
+	public AccessTokenInterceptor tokenInterceptor() {
+		return new AccessTokenInterceptor();
 	}
 
 	@Bean
@@ -35,5 +42,11 @@ public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
 		characterEncodingFilter.setEncoding(CommonConsts.CHARSET_NAME);
 		characterEncodingFilter.setForceEncoding(true);
 		return characterEncodingFilter;
+	}
+
+	@Bean
+	@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
+	public AuthInfo requestScopedAuthInfoBean() {
+		return new AuthInfo();
 	}
 }

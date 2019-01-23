@@ -11,22 +11,23 @@ import org.springframework.http.HttpStatus;
 public class DexResponseBody<T> {
 	private DexResponseHeader status;
 	private T data;
+	private HttpStatus httpStatus;
 
 	private static final int OK = 0;
 
-	public DexResponseBody(T data) {
-		this.status = new DexResponseHeader(OK, "OK");
+	public DexResponseBody(int resultCode, String message, HttpStatus httpStatus, T data) {
+		this.status = new DexResponseHeader(resultCode, message);
+		this.httpStatus = httpStatus;
 		this.data = data;
 	}
 
-	public DexResponseBody(int resultCode, String message, T data) {
-		this.status = new DexResponseHeader(resultCode, message);
-		this.data = data;
+	public DexResponseBody(T data) {
+		this(OK, "OK", HttpStatus.OK, data);
 	}
 
 	@JsonIgnore
 	public HttpStatus getHttpStatus() {
-		return status.isSuccess() ? HttpStatus.OK : HttpStatus.INTERNAL_SERVER_ERROR;
+		return this.httpStatus;
 	}
 
 	@Getter
