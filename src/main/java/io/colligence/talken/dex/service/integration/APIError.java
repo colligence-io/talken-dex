@@ -33,4 +33,14 @@ public class APIError extends Throwable {
 	public Object getRawResult() {
 		return rawResult;
 	}
+
+	@Override
+	public String toString() {
+		return "APIError{" +
+				"apiName='" + apiName + '\'' +
+				", code='" + code + '\'' +
+				", message='" + message + '\'' +
+				", rawResult=" + rawResult +
+				'}';
+	}
 }

@@ -5,6 +5,8 @@
       <profile default="true" name="Default" enabled="true" />
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="jooqGenerator.main" target="1.8" />
+      <module name="jooqGenerator.test" target="1.8" />
       <module name="talken-dex.main" target="1.8" />
       <module name="talken-dex.talken-common-java.main" target="1.8" />
       <module name="talken-dex.talken-common-java.test" target="1.8" />

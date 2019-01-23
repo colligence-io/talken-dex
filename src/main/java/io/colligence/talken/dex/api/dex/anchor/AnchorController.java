@@ -37,7 +37,7 @@ public class AnchorController {
 	@RequestMapping(value = RequestMappings.ANCHOR_TASK + RequestMappings.SUBMIT_SUFFIX, method = RequestMethod.POST)
 	public DexResponse<AnchorSubmitResult> submitAnchor(@RequestBody AnchorSubmitRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(anchorService.submitAnchorTransaction(authInfo.getUserId(), postBody.getAssetCode(), postBody.getTaskId(), postBody.getTxData()));
+		return DexResponse.buildResponse(anchorService.submitAnchorTransaction(authInfo.getUserId(), postBody.getTaskId(), postBody.getAssetCode(), postBody.getTxData()));
 	}
 
 	@AuthRequired
