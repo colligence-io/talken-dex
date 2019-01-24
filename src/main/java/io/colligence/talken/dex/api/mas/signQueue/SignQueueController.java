@@ -16,12 +16,17 @@ public class SignQueueController {
 	@Autowired
 	private SignQueueService signQueueService;
 
+	@RequestMapping(value = RequestMappings.SIGNTASK_ADD, method = RequestMethod.GET)
+	public DexResponse<String> addTask() throws DexException {
+		return DexResponse.buildResponse("Not Implemented");
+	}
+
 	@RequestMapping(value = RequestMappings.SIGNTASK_LIST, method = RequestMethod.GET)
 	public DexResponse<String> taskList() throws DexException {
 		return DexResponse.buildResponse("Not Implemented");
 	}
 
-	@RequestMapping(value = RequestMappings.UPDATE_SIGNTASK, method = RequestMethod.GET)
+	@RequestMapping(value = RequestMappings.SIGNTASK_UPDATE, method = RequestMethod.GET)
 	public DexResponse<String> updateTask() throws DexException {
 		return DexResponse.buildResponse("Not Implemented");
 	}

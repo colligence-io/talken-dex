@@ -138,18 +138,20 @@ public class AnchorService {
 		request.setSignatures(txData);
 
 		try {
-			TxtServerResponse response = txTunnelService.requestTxTunnel(maService.getAssetPlatform(assetCode), request);
+			TxtServerResponse txtResponse = txTunnelService.requestTxTunnel(maService.getAssetPlatform(assetCode), request);
 
 			logger.debug("{} step 2 success.", dexTaskId);
-			taskRecord.setS2oCode(response.getCode());
-			taskRecord.setS2oMessage(response.getMessage());
-			taskRecord.setS2oTxid(response.getHash());
-			taskRecord.setS2oData(response.getPayload());
+			taskRecord.setS2oCode(txtResponse.getCode());
+			taskRecord.setS2oMessage(txtResponse.getMessage());
+			taskRecord.setS2oTxid(txtResponse.getHash());
+			taskRecord.setS2oData(txtResponse.getPayload());
 			taskRecord.setS2oSuccessFlag(true);
 			taskRecord.setFinishFlag(true);
 			taskRecord.update();
 
-			return new AnchorSubmitResult(response);
+			AnchorSubmitResult result = new AnchorSubmitResult();
+			result.setTxtServerResponse(txtResponse);
+			return result;
 		} catch(APIError error) {
 
 			logger.error("{} step 2 failed. : {}", dexTaskId, error.toString());
@@ -253,10 +255,14 @@ public class AnchorService {
 			taskRecord.setS1oData(txInformation.getEnvelopeXdr());
 			taskRecord.update();
 
-			DeanchorResult deanchorResult = new DeanchorResult();
-			deanchorResult.setTaskID(dexTaskId.getId());
-			deanchorResult.setTxInformation(txInformation);
-			return deanchorResult;
+			DeanchorResult result = new DeanchorResult();
+			result.setTaskID(dexTaskId.getId());
+			result.setTxInformation(txInformation);
+			result.setFeeAssetType(feeAssetType.getType());
+			result.setFeeAmount(feeAmount);
+			result.setDeanchorAssetType(deanchorAssetType.getType());
+			result.setDeanchorAmount(deanchorAmount);
+			return result;
 		} catch(IOException ioex) {
 
 			logger.debug("{} step 1 failed. : {}", ioex.getMessage());
@@ -286,15 +292,15 @@ public class AnchorService {
 		txtRequest.setTaskId(taskID);
 		txtRequest.setSignatures(txXdr);
 
-		TxtServerResponse txResponse;
+		TxtServerResponse txtResponse;
 		try {
-			txResponse = txTunnelService.requestTxTunnel(maService.getAssetPlatform(taskRecord.getS1iAssetcode()), txtRequest);
+			txtResponse = txTunnelService.requestTxTunnel(maService.getAssetPlatform(taskRecord.getS1iAssetcode()), txtRequest);
 
 			logger.debug("{} step 2 success.", dexTaskId);
-			taskRecord.setS2oCode(txResponse.getCode());
-			taskRecord.setS2oMessage(txResponse.getMessage());
-			taskRecord.setS2oTxid(txResponse.getHash());
-			taskRecord.setS2oData(txResponse.getPayload());
+			taskRecord.setS2oCode(txtResponse.getCode());
+			taskRecord.setS2oMessage(txtResponse.getMessage());
+			taskRecord.setS2oTxid(txtResponse.getHash());
+			taskRecord.setS2oData(txtResponse.getPayload());
 			taskRecord.setS2oSuccessFlag(true);
 
 			taskRecord.setStep(3);
@@ -366,7 +372,7 @@ public class AnchorService {
 		}
 
 		DeanchorSubmitResult result = new DeanchorSubmitResult();
-		result.setTxResponse(txResponse);
+		result.setTxtServerResponse(txtResponse);
 		result.setDeanchorResponse(ancResponse);
 		return result;
 	}

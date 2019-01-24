@@ -5,7 +5,7 @@ public class RequestMappings {
 
 	private static final String DEX = ROOT + "/dex";
 
-	public static final String SUBMIT_SUFFIX = "/submit";
+	public static final String SUBMIT_SUFFIX = "_submit";
 
 	private static final String ANCHOR = DEX + "/anchor";
 	public static final String ANCHOR_TASK = ANCHOR + "/anchor";
@@ -22,7 +22,8 @@ public class RequestMappings {
 	public static final String MALIST = MA + "/list";
 	public static final String SWAPHOLDER = MA + "/swapHolder";
 
-	private static final String SIGNTASK = MAS + "/signTask/";
+	private static final String SIGNTASK = MAS + "/signTask";
+	public static final String SIGNTASK_ADD = SIGNTASK + "/add";
 	public static final String SIGNTASK_LIST = SIGNTASK + "/list";
-	public static final String UPDATE_SIGNTASK = SIGNTASK + "/updateTask";
+	public static final String SIGNTASK_UPDATE = SIGNTASK + "/update";
 }

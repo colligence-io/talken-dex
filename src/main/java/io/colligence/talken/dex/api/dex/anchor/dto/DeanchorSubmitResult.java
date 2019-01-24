@@ -6,6 +6,6 @@ import lombok.Data;
 
 @Data
 public class DeanchorSubmitResult {
-	private TxtServerResponse txResponse;
+	private TxtServerResponse txtServerResponse;
 	private AncServerDeanchorResponse deanchorResponse;
 }
