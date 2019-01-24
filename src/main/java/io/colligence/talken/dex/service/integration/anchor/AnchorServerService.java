@@ -48,6 +48,8 @@ public class AnchorServerService {
 					.setParser(jsonFactory.createJsonObjectParser())
 					.execute();
 
+			logger.logObjectAsJSON(request);
+
 			// check http response is OK
 			if(response.getStatusCode() != 200)
 				throw new APICallException("Anchor", response.getStatusMessage());

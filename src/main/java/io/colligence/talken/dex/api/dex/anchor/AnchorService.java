@@ -5,6 +5,7 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexAnchorTask
 import io.colligence.talken.common.persistence.jooq.tables.records.DexDeanchorTaskRecord;
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
+import io.colligence.talken.common.util.UTCUtil;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.api.DexTaskId;
 import io.colligence.talken.dex.api.dex.TxFeeService;
@@ -89,7 +90,7 @@ public class AnchorService {
 		req.setStellar(tradeWalletAddress);
 		req.setSymbol(assetCode);
 		req.setValue(amount.floatValue());
-		req.setMemo("");
+		req.setMemo(UTCUtil.getNow().toString());
 
 		try {
 			AncServerAnchorResponse response = anchorServerService.requestAnchor(req);
@@ -330,6 +331,7 @@ public class AnchorService {
 		ancRequest.setTo(taskRecord.getS1jBaseaccount());
 		ancRequest.setAddress(taskRecord.getS1iPrivateaddr());
 		ancRequest.setValue(taskRecord.getS1jDeanchoramount().floatValue());
+		ancRequest.setMemo(UTCUtil.getNow().toString());
 
 		AncServerDeanchorResponse ancResponse;
 		try {

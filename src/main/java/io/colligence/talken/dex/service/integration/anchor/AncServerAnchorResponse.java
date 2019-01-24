@@ -1,10 +1,8 @@
 package io.colligence.talken.dex.service.integration.anchor;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class AncServerAnchorResponse {
 	private int code;
 	private String description;
@@ -14,8 +12,7 @@ public class AncServerAnchorResponse {
 		return code == 200;
 	}
 
-	@Getter
-	@Setter
+	@Data
 	public static class _Data {
 		private Integer index;
 		private String address;

@@ -107,8 +107,7 @@ public class ManagedAccountService {
 	}
 
 	public String getHolderAccountAddress(String code) throws AssetTypeNotFoundException {
-		getPack(code);
-		return maTable.select(code).getAssetHolder().get(random.nextInt(maTable.select(code).getAssetHolder().size()));
+		return getPack(code).getAssetHolder().get(random.nextInt(maTable.select(code).getAssetHolder().size()));
 	}
 
 	public SingleKeyTable<String, ManagedAccountPack> getPackList() {

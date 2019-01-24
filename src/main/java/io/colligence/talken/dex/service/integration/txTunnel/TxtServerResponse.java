@@ -1,10 +1,8 @@
 package io.colligence.talken.dex.service.integration.txTunnel;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class TxtServerResponse {
 	private boolean success;
 	private String code;

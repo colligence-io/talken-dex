@@ -2,12 +2,10 @@ package io.colligence.talken.dex.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.springframework.http.HttpStatus;
 
-@Getter
-@Setter
+@Data
 public class DexResponseBody<T> {
 	private DexResponseHeader status;
 	private T data;
@@ -30,8 +28,7 @@ public class DexResponseBody<T> {
 		return this.httpStatus;
 	}
 
-	@Getter
-	@Setter
+	@Data
 	@JsonPropertyOrder({"success", "resultNo", "resultCode", "message"})
 	public static class DexResponseHeader {
 		private int resultCode;
