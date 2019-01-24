@@ -6,5 +6,5 @@ import lombok.Data;
 public class TxtServerRequest {
 	private String serviceId;
 	private String taskId;
-	private String txData;
+	private String signatures;
 }

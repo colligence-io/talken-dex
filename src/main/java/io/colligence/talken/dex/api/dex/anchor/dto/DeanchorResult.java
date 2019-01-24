@@ -7,9 +7,4 @@ import lombok.Data;
 public class DeanchorResult {
 	private String taskID;
 	private TxInformation txInformation;
-
-	public DeanchorResult(String taskID, TxInformation txInformation) {
-		this.taskID = taskID;
-		this.txInformation = txInformation;
-	}
 }

@@ -20,13 +20,22 @@ public class DexTaskId {
 		this.id = (type.getCode() + uuid + uuid2).replaceAll("[^0-9a-zA-Z]", "").toLowerCase().substring(0, LENGTH);
 	}
 
+	private DexTaskId(String generated) throws TaskIntegrityCheckFailedException {
+		this.type = DexTaskId.getType(generated);
+		this.id = generated;
+	}
+
 	public static DexTaskId generate(Type type) {
 		return new DexTaskId(type);
 	}
 
+	public static DexTaskId fromId(String generated) throws TaskIntegrityCheckFailedException {
+		return new DexTaskId(generated);
+	}
+
 	@Override
 	public String toString() {
-		return this.id;
+		return this.type.name() + " Task " + this.id;
 	}
 
 	public static enum Type {

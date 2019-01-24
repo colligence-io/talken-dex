@@ -61,10 +61,10 @@ public class AnchorService {
 	public AnchorResult buildAnchorRequestInformation(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount) throws AssetTypeNotFoundException, APIErrorException, APICallException, TaskIntegrityCheckFailedException {
 		String assetHolderAddress = maService.getHolderAccountAddress(assetCode);
 
-		String taskID = DexTaskId.generate(DexTaskId.Type.ANCHOR).toString();
+		DexTaskId dexTaskId = DexTaskId.generate(DexTaskId.Type.ANCHOR);
 
 		DexAnchorTaskRecord taskRecord = new DexAnchorTaskRecord();
-		taskRecord.setTaskid(taskID);
+		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
 		taskRecord.setStep(1);
 		taskRecord.setFinishFlag(false);
@@ -78,10 +78,10 @@ public class AnchorService {
 		dslContext.attach(taskRecord);
 		taskRecord.store();
 
-		logger.debug("Anchor Task {}[{}] generated. userId = {}", taskID, taskRecord.getId(), userId);
+		logger.debug("{} generated. userId = {}", dexTaskId, userId);
 
 		AncServerAnchorRequest req = new AncServerAnchorRequest();
-		req.setTaskId(taskID);
+		req.setTaskId(dexTaskId.getId());
 		req.setUid(String.valueOf(userId));
 		req.setFrom(privateWalletAddress);
 		req.setTo(assetHolderAddress);
@@ -93,19 +93,19 @@ public class AnchorService {
 		try {
 			AncServerAnchorResponse response = anchorServerService.requestAnchor(req);
 
-			logger.debug("Anchor Task {}[{}] step 1 success.", taskID, taskRecord.getId());
+			logger.debug("{} step 1 success.", dexTaskId);
 			taskRecord.setS1oSuccessFlag(true);
 			taskRecord.setS1oCode(String.valueOf(response.getCode()));
 			taskRecord.setS1oData(JSONWriter.toJsonStringSafe(response));
 			taskRecord.update();
 
 			AnchorResult result = new AnchorResult();
-			result.setTaskId(taskID);
+			result.setTaskId(dexTaskId.getId());
 			result.setHolderAccountAddress(response.getData().getAddress());
 			return result;
 		} catch(APIError error) {
 
-			logger.debug("Anchor Task {}[{}] step 1 failed. : {}", taskID, taskRecord.getId(), error.toString());
+			logger.debug("{} step 1 failed. : {}", dexTaskId, error.toString());
 			taskRecord.setS1oSuccessFlag(false);
 			taskRecord.setS1oCode(error.getCode());
 			taskRecord.setS1oData(JSONWriter.toJsonStringSafe(error.getRawResult()));
@@ -118,6 +118,7 @@ public class AnchorService {
 
 	public AnchorSubmitResult submitAnchorTransaction(long userId, String taskID, String assetCode, String txData) throws APIErrorException, APICallException, TaskNotFoundException, TaskIntegrityCheckFailedException {
 
+		DexTaskId dexTaskId = DexTaskId.fromId(taskID);
 		DexAnchorTaskRecord taskRecord = dslContext.selectFrom(DEX_ANCHOR_TASK)
 				.where(DEX_ANCHOR_TASK.TASKID.eq(taskID))
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskID));
@@ -132,12 +133,12 @@ public class AnchorService {
 		TxtServerRequest request = new TxtServerRequest();
 		request.setServiceId(dexSettings.getServer().getTxtServerId());
 		request.setTaskId(taskID);
-		request.setTxData(txData);
+		request.setSignatures(txData);
 
 		try {
 			TxtServerResponse response = txTunnelService.requestTxTunnel(assetCode, request);
 
-			logger.debug("Anchor Task {}[{}] step 2 success.", taskID, taskRecord.getId());
+			logger.debug("{} step 2 success.", dexTaskId);
 			taskRecord.setS2oCode(response.getCode());
 			taskRecord.setS2oMessage(response.getMessage());
 			taskRecord.setS2oTxid(response.getHash());
@@ -148,7 +149,8 @@ public class AnchorService {
 
 			return new AnchorSubmitResult(response);
 		} catch(APIError error) {
-			logger.debug("Anchor Task {}[{}] step 2 failed. : {}", taskID, taskRecord.getId(), error.toString());
+
+			logger.debug("{} step 2 failed. : {}", dexTaskId, error.toString());
 			taskRecord.setS1oSuccessFlag(false);
 			taskRecord.setS1oCode(error.getCode());
 			taskRecord.setS1oData(JSONWriter.toJsonStringSafe(error.getRawResult()));
@@ -219,7 +221,10 @@ public class AnchorService {
 
 			// TODO : insert into taskDB
 
-			return new DeanchorResult(taskID, TxInformation.buildTxInformation(tx));
+			DeanchorResult deanchorResult = new DeanchorResult();
+			deanchorResult.setTaskID(taskID);
+			deanchorResult.setTxInformation(TxInformation.buildTxInformation(tx));
+			return deanchorResult;
 		} catch(IOException ioex) {
 			throw new APICallException(ioex, "Stellar");
 		}
