@@ -2,7 +2,6 @@ package io.colligence.talken.dex.api;
 
 
 import io.colligence.talken.common.CLGException;
-import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.exception.APIErrorException;
 import io.colligence.talken.dex.exception.InternalServerErrorException;
@@ -58,10 +57,7 @@ public class GlobalControllerExceptionHandler {
 //				return new DexResponse(, );
 //			}
 //		}
-		if(RunningProfile.isLocal()) {
-			e.printStackTrace();
-		}
-
+		logger.exception(e);
 		return handleCLGException(new InternalServerErrorException(e), locale);
 	}
 
@@ -69,10 +65,7 @@ public class GlobalControllerExceptionHandler {
 	@ExceptionHandler(Exception.class)
 	@ResponseBody
 	public DexResponse<Void> handleException(Exception e, Locale locale) {
-		if(RunningProfile.isLocal()) {
-			e.printStackTrace();
-		}
-
+		logger.exception(e);
 		return handleCLGException(new InternalServerErrorException(e), locale);
 	}
 }
