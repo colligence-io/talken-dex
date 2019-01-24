@@ -118,7 +118,7 @@ public class AnchorService {
 		}
 	}
 
-	public AnchorSubmitResult submitAnchorTransaction(long userId, String taskID, String assetCode, String txData) throws APIErrorException, APICallException, TaskNotFoundException, TaskIntegrityCheckFailedException {
+	public AnchorSubmitResult submitAnchorTransaction(long userId, String taskID, String assetCode, String txData) throws APIErrorException, APICallException, TaskNotFoundException, TaskIntegrityCheckFailedException, AssetTypeNotFoundException {
 
 		DexTaskId dexTaskId = DexTaskId.fromId(taskID);
 		DexAnchorTaskRecord taskRecord = dslContext.selectFrom(DEX_ANCHOR_TASK)
@@ -138,7 +138,7 @@ public class AnchorService {
 		request.setSignatures(txData);
 
 		try {
-			TxtServerResponse response = txTunnelService.requestTxTunnel(assetCode, request);
+			TxtServerResponse response = txTunnelService.requestTxTunnel(maService.getAssetPlatform(assetCode), request);
 
 			logger.debug("{} step 2 success.", dexTaskId);
 			taskRecord.setS2oCode(response.getCode());
@@ -268,7 +268,7 @@ public class AnchorService {
 		}
 	}
 
-	public DeanchorSubmitResult submitDeanchorTransaction(long userId, String taskID, String txHash, String txXdr) throws TransactionHashNotMatchException, TaskIntegrityCheckFailedException, TaskNotFoundException, APIErrorException, APICallException {
+	public DeanchorSubmitResult submitDeanchorTransaction(long userId, String taskID, String txHash, String txXdr) throws TaskIntegrityCheckFailedException, TaskNotFoundException, APIErrorException, APICallException, AssetTypeNotFoundException {
 		DexTaskId dexTaskId = DexTaskId.fromId(taskID);
 		DexDeanchorTaskRecord taskRecord = dslContext.selectFrom(DEX_DEANCHOR_TASK)
 				.where(DEX_ANCHOR_TASK.TASKID.eq(taskID))
@@ -288,7 +288,7 @@ public class AnchorService {
 
 		TxtServerResponse txResponse;
 		try {
-			txResponse = txTunnelService.requestTxTunnel(taskRecord.getS1iAssetcode(), txtRequest);
+			txResponse = txTunnelService.requestTxTunnel(maService.getAssetPlatform(taskRecord.getS1iAssetcode()), txtRequest);
 
 			logger.debug("{} step 2 success.", dexTaskId);
 			taskRecord.setS2oCode(txResponse.getCode());

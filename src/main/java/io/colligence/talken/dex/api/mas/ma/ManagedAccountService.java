@@ -6,6 +6,7 @@ import io.colligence.talken.common.util.collection.SingleKeyTable;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
 import io.colligence.talken.dex.exception.StellarAccountNotFoundException;
+import io.colligence.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -41,6 +42,13 @@ public class ManagedAccountService {
 		for(DexSettings._MasMock masMock : dexSettings.getMasMockUp()) {
 			ManagedAccountPack pack = new ManagedAccountPack();
 			pack.setCode(masMock.getCode());
+
+			BlockChainPlatformEnum bcp = null;
+			for(BlockChainPlatformEnum _bcp : BlockChainPlatformEnum.values()) {
+				if(_bcp.name().equalsIgnoreCase(masMock.getPlatform())) bcp = _bcp;
+			}
+			if(bcp == null) throw new IllegalArgumentException(masMock.getPlatform() + " is not supported.");
+			pack.setPlatform(bcp);
 			pack.setAssetIssuer(getKeyPair(masMock.getAssetIssuer()));
 			pack.setAssetBase(getKeyPair(masMock.getAssetBase()));
 			pack.setAssetHolder(masMock.getAssetHolder());
@@ -110,6 +118,10 @@ public class ManagedAccountService {
 
 	public String getHolderAccountAddress(String code) throws AssetTypeNotFoundException {
 		return getPack(code).getAssetHolder().get(random.nextInt(maTable.select(code).getAssetHolder().size()));
+	}
+
+	public BlockChainPlatformEnum getAssetPlatform(String code) throws AssetTypeNotFoundException {
+		return getPack(code).getPlatform();
 	}
 
 	public SingleKeyTable<String, ManagedAccountPack> getPackList() {

@@ -9,6 +9,7 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import io.colligence.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
@@ -39,9 +40,9 @@ public class TransactionTunnelService {
 		formatString = dexSettings.getServer().getTxtAddress() + "/v1/%s/tx/broadcast";
 	}
 
-	public TxtServerResponse requestTxTunnel(String assetCode, TxtServerRequest request) throws APICallException, APIError {
+	public TxtServerResponse requestTxTunnel(BlockChainPlatformEnum platform, TxtServerRequest request) throws APICallException, APIError {
 		try {
-			String url = String.format(formatString, assetCode.toLowerCase());
+			String url = String.format(formatString, platform.getPlatformCode());
 
 			HttpResponse response = requestFactory
 					.buildPostRequest(new GenericUrl(url), ByteArrayContent.fromString("application/json;charset=UTF-8", JSONWriter.toJsonString(request)))

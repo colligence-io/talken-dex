@@ -63,6 +63,7 @@ public class DexSettings {
 	@Setter
 	public static class _MasMock {
 		private String code;
+		private String platform;
 		private String assetIssuer;
 		private String assetBase;
 		private List<String> assetHolder;
