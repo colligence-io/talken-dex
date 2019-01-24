@@ -13,7 +13,7 @@ public class DexResponseBody<T> {
 	private T data;
 	private HttpStatus httpStatus;
 
-	private static final int OK = 0;
+	private static final int OK = HttpStatus.OK.value();
 
 	public DexResponseBody(int resultCode, String message, HttpStatus httpStatus, T data) {
 		this.status = new DexResponseHeader(resultCode, message);

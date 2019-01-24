@@ -10,6 +10,7 @@ import io.colligence.talken.dex.service.MessageService;
 import io.colligence.talken.dex.service.integration.APIError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -25,11 +26,18 @@ public class GlobalControllerExceptionHandler {
 	@Autowired
 	MessageService ms;
 
+	@ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+	@ResponseBody
+	public DexResponse<Void> handleMethodNotAllowedException(HttpRequestMethodNotSupportedException e, Locale locale) {
+		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.METHOD_NOT_ALLOWED.value(), e.getMessage(), HttpStatus.METHOD_NOT_ALLOWED, null));
+	}
+
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	@ExceptionHandler(UnauthorizedException.class)
 	@ResponseBody
 	public DexResponse<Void> handleRuntimeException(UnauthorizedException e, Locale locale) {
-		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), HttpStatus.UNAUTHORIZED, null));
+		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.UNAUTHORIZED.value(), ms.getMessage(locale, e), HttpStatus.UNAUTHORIZED, null));
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
