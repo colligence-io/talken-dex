@@ -17,6 +17,7 @@ import org.stellar.sdk.Server;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.HashSet;
 import java.util.Optional;
 
 @Service
@@ -32,6 +33,8 @@ public class ManagedAccountService {
 
 	private SingleKeyTable<String, ManagedAccountPack> maTable = new SingleKeyTable<>();
 	private SecureRandom random = new SecureRandom();
+
+	private HashSet<String> checkedAccounts = new HashSet<>();
 
 	@PostConstruct
 	private void init() throws StellarAccountNotFoundException {
@@ -53,14 +56,13 @@ public class ManagedAccountService {
 		// You could skip this, but if the account does not exist, you will be charged
 		// the transaction fee when the transaction fails.
 		// It will throw HttpResponseException if account does not exist or there was another error.
-
-		// TODO : checkRouting into POSTLAUNCH, and dependent services must have not ready error
 		try {
 			logger.info("Checking managed account : {}", accountID);
 
 			KeyPair account = KeyPair.fromAccountId(accountID);
 
-			if(!RunningProfile.isLocal()) {
+			if(!RunningProfile.isLocal() && !checkedAccounts.contains(accountID)) {
+				checkedAccounts.add(accountID);
 				Server server = stellarNetworkService.pickServer();
 				server.accounts().account(account);
 			}
