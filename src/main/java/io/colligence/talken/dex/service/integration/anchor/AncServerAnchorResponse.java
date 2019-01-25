@@ -8,7 +8,7 @@ public class AncServerAnchorResponse {
 	private String description;
 	private _Data data;
 
-	private boolean isSuccess() {
+	public boolean isSuccess() {
 		return code == 200;
 	}
 

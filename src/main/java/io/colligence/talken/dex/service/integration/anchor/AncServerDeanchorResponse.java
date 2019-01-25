@@ -6,15 +6,8 @@ import lombok.Data;
 public class AncServerDeanchorResponse {
 	private int code;
 	private String description;
-	private _Data data;
 
-	private boolean isSuccess() {
+	public boolean isSuccess() {
 		return code == 200;
-	}
-
-	@Data
-	public static class _Data {
-		private Integer index;
-		private String address;
 	}
 }

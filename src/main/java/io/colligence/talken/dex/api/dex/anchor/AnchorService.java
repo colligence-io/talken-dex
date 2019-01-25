@@ -65,6 +65,7 @@ public class AnchorService {
 
 		DexTaskId dexTaskId = DexTaskId.generate(DexTaskId.Type.ANCHOR);
 
+		// create task record
 		DexAnchorTaskRecord taskRecord = new DexAnchorTaskRecord();
 		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
@@ -95,6 +96,7 @@ public class AnchorService {
 		try {
 			AncServerAnchorResponse response = anchorServerService.requestAnchor(req);
 
+			// update task record
 			logger.debug("{} step 1 success.", dexTaskId);
 			taskRecord.setS1oSuccessFlag(true);
 			taskRecord.setS1oCode(String.valueOf(response.getCode()));
@@ -107,6 +109,7 @@ public class AnchorService {
 			return result;
 		} catch(APIError error) {
 
+			// update task record
 			logger.error("{} step 1 failed. : {}", dexTaskId, error.toString());
 			taskRecord.setS1oSuccessFlag(false);
 			taskRecord.setS1oCode(error.getCode());
@@ -128,6 +131,7 @@ public class AnchorService {
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskID);
 		if(!taskRecord.getS1iAssetcode().equalsIgnoreCase(assetCode)) throw new TaskIntegrityCheckFailedException(taskID);
 
+		// update task record as step 2
 		taskRecord.setStep(2);
 		taskRecord.setS2iTxdata(txData);
 		taskRecord.update();
@@ -140,6 +144,7 @@ public class AnchorService {
 		try {
 			TxtServerResponse txtResponse = txTunnelService.requestTxTunnel(maService.getAssetPlatform(assetCode), request);
 
+			// update task record
 			logger.debug("{} step 2 success.", dexTaskId);
 			taskRecord.setS2oCode(txtResponse.getCode());
 			taskRecord.setS2oMessage(txtResponse.getMessage());
@@ -149,11 +154,10 @@ public class AnchorService {
 			taskRecord.setFinishFlag(true);
 			taskRecord.update();
 
-			AnchorSubmitResult result = new AnchorSubmitResult();
-			result.setTxtServerResponse(txtResponse);
-			return result;
+			return new AnchorSubmitResult(txtResponse);
 		} catch(APIError error) {
 
+			// update task record
 			logger.error("{} step 2 failed. : {}", dexTaskId, error.toString());
 			taskRecord.setS2oSuccessFlag(false);
 			taskRecord.setS2oCode(error.getCode());
@@ -170,6 +174,7 @@ public class AnchorService {
 
 		DexTaskId dexTaskId = DexTaskId.generate(DexTaskId.Type.DEANCHOR);
 
+		// create task record
 		DexDeanchorTaskRecord taskRecord = new DexDeanchorTaskRecord();
 		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
@@ -243,6 +248,7 @@ public class AnchorService {
 
 			TxInformation txInformation = TxInformation.buildTxInformation(tx);
 
+			// update task record
 			logger.debug("{} step 1 success.", dexTaskId);
 			taskRecord.setS1jBaseaccount(baseAccount.getAccountId());
 			taskRecord.setS1jDeanchoramount(deanchorAmount);
@@ -265,6 +271,7 @@ public class AnchorService {
 			return result;
 		} catch(IOException ioex) {
 
+			// update task record
 			logger.debug("{} step 1 failed. : {}", ioex.getMessage());
 			taskRecord.setS1oSuccessFlag(false);
 			taskRecord.setS1oData("IOException: " + ioex.getMessage());
@@ -283,6 +290,7 @@ public class AnchorService {
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskID);
 		if(!taskRecord.getS1oTxhash().equalsIgnoreCase(txHash)) throw new TaskIntegrityCheckFailedException(taskID);
 
+		// update task record as step 2
 		taskRecord.setS2iTxdata(txXdr);
 		taskRecord.setStep(2);
 		taskRecord.update();
@@ -296,19 +304,18 @@ public class AnchorService {
 		try {
 			txtResponse = txTunnelService.requestTxTunnel(maService.getAssetPlatform(taskRecord.getS1iAssetcode()), txtRequest);
 
+			// update task record
 			logger.debug("{} step 2 success.", dexTaskId);
 			taskRecord.setS2oCode(txtResponse.getCode());
 			taskRecord.setS2oMessage(txtResponse.getMessage());
 			taskRecord.setS2oTxid(txtResponse.getHash());
 			taskRecord.setS2oData(txtResponse.getPayload());
 			taskRecord.setS2oSuccessFlag(true);
-
-			taskRecord.setStep(3);
-
 			taskRecord.update();
 
 		} catch(APIError error) {
 
+			// update task record
 			logger.error("{} step 2 failed. : {}", dexTaskId, error.toString());
 			taskRecord.setS2oSuccessFlag(false);
 			taskRecord.setS2oCode(error.getCode());
@@ -319,6 +326,7 @@ public class AnchorService {
 			throw new APIErrorException(error);
 		} catch(APICallException ex) {
 
+			// update task record
 			logger.error("{} step 2 failed. : {}", dexTaskId, ex.getMessage());
 			taskRecord.setS2oSuccessFlag(false);
 			taskRecord.setS2oCode("APICallException");
@@ -328,6 +336,10 @@ public class AnchorService {
 
 			throw ex;
 		}
+
+		// update task record as step 3
+		taskRecord.setStep(3);
+		taskRecord.update();
 
 		AncServerDeanchorRequest ancRequest = new AncServerDeanchorRequest();
 		ancRequest.setTaskId(taskID);
@@ -343,6 +355,8 @@ public class AnchorService {
 		try {
 			ancResponse = anchorServerService.requestDeanchor(ancRequest);
 
+			// update task record
+			logger.debug("{} step 3 success.", dexTaskId);
 			taskRecord.setS3oSuccessFlag(true);
 			taskRecord.setS3oCode(Integer.toString(ancResponse.getCode()));
 			taskRecord.setS3oMessage(ancResponse.getDescription());
@@ -351,6 +365,7 @@ public class AnchorService {
 
 		} catch(APIError error) {
 
+			// update task record
 			logger.error("{} step 3 failed. : {}", dexTaskId, error.toString());
 			taskRecord.setS3oSuccessFlag(false);
 			taskRecord.setS3oCode(error.getCode());
@@ -361,6 +376,7 @@ public class AnchorService {
 			throw new APIErrorException(error);
 		} catch(APICallException ex) {
 
+			// update task record
 			logger.error("{} step 3 failed. : {}", dexTaskId, ex.getMessage());
 			taskRecord.setS3oSuccessFlag(false);
 			taskRecord.setS3oCode("APICallException");
@@ -371,9 +387,6 @@ public class AnchorService {
 			throw ex;
 		}
 
-		DeanchorSubmitResult result = new DeanchorSubmitResult();
-		result.setTxtServerResponse(txtResponse);
-		result.setDeanchorResponse(ancResponse);
-		return result;
+		return new DeanchorSubmitResult(txtResponse, ancResponse);
 	}
 }
