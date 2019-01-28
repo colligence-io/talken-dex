@@ -60,8 +60,8 @@ public class AnchorService {
 	@Autowired
 	private DSLContext dslContext;
 
-	public AnchorResult buildAnchorRequestInformation(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount) throws AssetTypeNotFoundException, APIErrorException, APICallException {
-		String assetHolderAddress = maService.getHolderAccountAddress(assetCode);
+	public AnchorResult buildAnchorRequestInformation(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount) throws AssetTypeNotFoundException, APIErrorException, APICallException, ActiveAssetHolderAccountNotFoundException {
+		String assetHolderAddress = maService.getActiveHolderAccountAddress(assetCode);
 
 		DexTaskId dexTaskId = DexTaskId.generate(DexTaskId.Type.ANCHOR);
 
@@ -302,6 +302,7 @@ public class AnchorService {
 
 		TxtServerResponse txtResponse;
 		try {
+			// FIXME : this is ONLY stellar transaction and all signed, TXT tunnel is not mandatory.
 			txtResponse = txTunnelService.requestTxTunnel(maService.getAssetPlatform(taskRecord.getS1iAssetcode()), txtRequest);
 
 			// update task record

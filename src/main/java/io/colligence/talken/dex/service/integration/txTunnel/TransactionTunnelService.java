@@ -42,7 +42,7 @@ public class TransactionTunnelService {
 
 	public TxtServerResponse requestTxTunnel(BlockChainPlatformEnum platform, TxtServerRequest request) throws APICallException, APIError {
 		try {
-			String url = String.format(formatString, platform.getPlatformCode());
+			String url = String.format(formatString, platform.getPlatformTxType());
 
 			HttpResponse response = requestFactory
 					.buildPostRequest(new GenericUrl(url), ByteArrayContent.fromString("application/json;charset=UTF-8", JSONWriter.toJsonString(request)))

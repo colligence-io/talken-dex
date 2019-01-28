@@ -12,7 +12,9 @@ public enum DexExceptionType implements CLGException.ExceptionType {
 	TASK_INTEGRITY_CHECK_FAILED(6),
 	ACCOUNT_NOT_FOUND(7),
 	ASSET_TYPE_NOT_FOUND(8),
-	TX_HASH_NOT_MATCH(9);
+	TX_HASH_NOT_MATCH(9),
+	CANNOT_UPDATE_HOLDER_STATUS(10),
+	ACTIVE_ASSET_HOLDER_NOT_FOUND(11);
 
 	private final int eCode;
 	private final String messageKey;
