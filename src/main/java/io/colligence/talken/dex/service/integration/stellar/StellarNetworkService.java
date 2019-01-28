@@ -75,7 +75,7 @@ public class StellarNetworkService {
 			SubmitTransactionResponse response = server.submitTransaction(tx);
 			result.setData(new TxSubmitResult(response));
 
-			if(response.getExtras() == null) {
+			if(response.isSuccess()) {
 				result.setSuccess(true);
 			} else {
 				SubmitTransactionResponse.Extras extras = response.getExtras();
