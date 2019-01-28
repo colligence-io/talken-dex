@@ -12,14 +12,12 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
-import io.colligence.talken.dex.exception.APICallException;
-import io.colligence.talken.dex.service.integration.APIError;
+import io.colligence.talken.dex.service.integration.APIResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 
 @Service
 @Scope("singleton")
@@ -41,53 +39,61 @@ public class AnchorServerService {
 		deanchoringApiUrl = dexSettings.getServer().getAncAddress() + "/exchange/anchor/asset/deanchor";
 	}
 
-	public AncServerAnchorResponse requestAnchor(AncServerAnchorRequest request) throws APICallException, APIError {
+	public APIResult<AncServerAnchorResponse> requestAnchor(AncServerAnchorRequest request) {
+		APIResult<AncServerAnchorResponse> result = new APIResult<>("Anchor");
 		try {
 			HttpResponse response = requestFactory
 					.buildPostRequest(new GenericUrl(anchoringApiUrl), ByteArrayContent.fromString("application/json;charset=UTF-8", JSONWriter.toJsonString(request)))
 					.setParser(jsonFactory.createJsonObjectParser())
 					.execute();
 
-			logger.logObjectAsJSON(request);
+			if(response.getStatusCode() != 200) {
+				result.setResponseCode(Integer.toString(response.getStatusCode()));
+				result.setError(Integer.toString(response.getStatusCode()), response.getStatusMessage());
+			} else {
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+				AncServerAnchorResponse asar = mapper.readValue(response.parseAsString(), AncServerAnchorResponse.class);
+				result.setData(asar);
 
-			// check http response is OK
-			if(response.getStatusCode() != 200)
-				throw new APICallException("Anchor", response.getStatusMessage());
-
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-			AncServerAnchorResponse asar = mapper.readValue(response.parseAsString(), AncServerAnchorResponse.class);
-
-			if(asar.getCode() != 200)
-				throw new APIError("Anchor", String.valueOf(asar.getCode()), asar.getDescription(), asar);
-
-			return asar;
-		} catch(IOException e) {
-			throw new APICallException(e, "Anchor");
+				if(asar.getCode() == 200) {
+					result.setSuccess(true);
+				} else {
+					result.setError(String.valueOf(asar.getCode()), asar.getDescription());
+				}
+			}
+		} catch(Exception e) {
+			result.setException(e);
 		}
+		return result;
 	}
 
-	public AncServerDeanchorResponse requestDeanchor(AncServerDeanchorRequest request) throws APICallException, APIError {
+	public APIResult<AncServerDeanchorResponse> requestDeanchor(AncServerDeanchorRequest request) {
+		APIResult<AncServerDeanchorResponse> result = new APIResult<>("Deanchor");
 		try {
 			HttpResponse response = requestFactory
 					.buildPostRequest(new GenericUrl(deanchoringApiUrl), ByteArrayContent.fromString("application/json;charset=UTF-8", JSONWriter.toJsonString(request)))
 					.setParser(jsonFactory.createJsonObjectParser())
 					.execute();
 
-			// check http response is OK
-			if(response.getStatusCode() != 200)
-				throw new APICallException("Anchor", response.getStatusMessage());
+			if(response.getStatusCode() != 200) {
+				result.setResponseCode(Integer.toString(response.getStatusCode()));
+				result.setError(Integer.toString(response.getStatusCode()), response.getStatusMessage());
+			} else {
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+				AncServerDeanchorResponse asar = mapper.readValue(response.parseAsString(), AncServerDeanchorResponse.class);
+				result.setData(asar);
 
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-			AncServerDeanchorResponse asar = mapper.readValue(response.parseAsString(), AncServerDeanchorResponse.class);
-
-			if(asar.getCode() != 200)
-				throw new APIError("Anchor", String.valueOf(asar.getCode()), asar.getDescription(), asar);
-
-			return asar;
-		} catch(IOException e) {
-			throw new APICallException(e, "Anchor");
+				if(asar.getCode() == 200) {
+					result.setSuccess(true);
+				} else {
+					result.setError(String.valueOf(asar.getCode()), asar.getDescription());
+				}
+			}
+		} catch(Exception e) {
+			result.setException(e);
 		}
+		return result;
 	}
 }

@@ -5,11 +5,14 @@ import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.api.DexTaskId;
 import io.colligence.talken.dex.api.dex.TxFeeService;
 import io.colligence.talken.dex.api.dex.TxInformation;
+import io.colligence.talken.dex.api.dex.TxSubmitResult;
 import io.colligence.talken.dex.api.dex.offer.dto.*;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
-import io.colligence.talken.dex.exception.APICallException;
+import io.colligence.talken.dex.exception.APIErrorException;
 import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
+import io.colligence.talken.dex.exception.StellarException;
 import io.colligence.talken.dex.exception.TransactionHashNotMatchException;
+import io.colligence.talken.dex.service.integration.APIResult;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -36,7 +39,7 @@ public class OfferService {
 	@Autowired
 	private ManagedAccountService maService;
 
-	public CreateOfferResult buildCreateOfferTx(long userId, String sourceAccountID, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, APICallException {
+	public CreateOfferResult buildCreateOfferTx(long userId, String sourceAccountID, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, StellarException {
 		try {
 			String taskID = DexTaskId.generate(DexTaskId.Type.OFFER_CREATE).toString();
 			// TODO : unique check, insert into db
@@ -80,19 +83,24 @@ public class OfferService {
 
 			return new CreateOfferResult(taskID, TxInformation.buildTxInformation(tx));
 		} catch(IOException ioex) {
-			throw new APICallException(ioex, "Stellar");
+			throw new StellarException(ioex);
 		}
 	}
 
-	public CreateOfferSubmitResult submitCreateOfferTx(long userId, String taskID, String txHash, String txXdr) throws TransactionHashNotMatchException, APICallException {
+	public CreateOfferSubmitResult submitCreateOfferTx(long userId, String taskID, String txHash, String txXdr) throws TransactionHashNotMatchException, APIErrorException {
 		// TODO : update taskDB
 
 		// build refund tx and send it to MAS
 
-		return new CreateOfferSubmitResult(stellarNetworkService.submitTx(taskID, txHash, txXdr));
+		APIResult<TxSubmitResult> stellarTxResult = stellarNetworkService.submitTx(taskID, txHash, txXdr);
+		if(!stellarTxResult.isSuccess()) {
+			throw new APIErrorException(stellarTxResult);
+		}
+
+		return new CreateOfferSubmitResult(stellarTxResult.getData());
 	}
 
-	public CreatePassiveOfferResult buildCreatePassiveOfferTx(long userId, String sourceAccountID, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, APICallException {
+	public CreatePassiveOfferResult buildCreatePassiveOfferTx(long userId, String sourceAccountID, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, StellarException {
 		try {
 			String taskID = DexTaskId.generate(DexTaskId.Type.OFFER_CREATEPASSIVE).toString();
 			// TODO : unique check, insert into db
@@ -136,19 +144,24 @@ public class OfferService {
 
 			return new CreatePassiveOfferResult(taskID, TxInformation.buildTxInformation(tx));
 		} catch(IOException ioex) {
-			throw new APICallException(ioex, "Stellar");
+			throw new StellarException(ioex);
 		}
 	}
 
-	public CreatePassiveOfferSubmitResult submitCreatePassiveOfferTx(long userId, String taskID, String txHash, String txXdr) throws APICallException, TransactionHashNotMatchException {
+	public CreatePassiveOfferSubmitResult submitCreatePassiveOfferTx(long userId, String taskID, String txHash, String txXdr) throws TransactionHashNotMatchException, APIErrorException {
 		// TODO : update taskDB
 
 		// build refund tx and send it to MAS
 
-		return new CreatePassiveOfferSubmitResult(stellarNetworkService.submitTx(taskID, txHash, txXdr));
+		APIResult<TxSubmitResult> stellarTxResult = stellarNetworkService.submitTx(taskID, txHash, txXdr);
+		if(!stellarTxResult.isSuccess()) {
+			throw new APIErrorException(stellarTxResult);
+		}
+
+		return new CreatePassiveOfferSubmitResult(stellarTxResult.getData());
 	}
 
-	public DeleteOfferResult buildDeleteOfferTx(long userId, long offerId, String sourceAccountID, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, APICallException {
+	public DeleteOfferResult buildDeleteOfferTx(long userId, long offerId, String sourceAccountID, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, StellarException {
 		try {
 			String taskID = DexTaskId.generate(DexTaskId.Type.OFFER_DELETE).toString();
 			// TODO : unique check, insert into db
@@ -184,15 +197,20 @@ public class OfferService {
 
 			return new DeleteOfferResult(taskID, TxInformation.buildTxInformation(tx));
 		} catch(IOException ioex) {
-			throw new APICallException(ioex, "Stellar");
+			throw new StellarException(ioex);
 		}
 	}
 
-	public DeleteOfferSubmitResult submitDeleteOfferTx(long userId, String taskID, String txHash, String txXdr) throws TransactionHashNotMatchException, APICallException {
+	public DeleteOfferSubmitResult submitDeleteOfferTx(long userId, String taskID, String txHash, String txXdr) throws TransactionHashNotMatchException, APIErrorException {
 		// TODO : update taskDB
 
 		// build refund tx and send it to MAS
 
-		return new DeleteOfferSubmitResult(stellarNetworkService.submitTx(taskID, txHash, txXdr));
+		APIResult<TxSubmitResult> stellarTxResult = stellarNetworkService.submitTx(taskID, txHash, txXdr);
+		if(!stellarTxResult.isSuccess()) {
+			throw new APIErrorException(stellarTxResult);
+		}
+
+		return new DeleteOfferSubmitResult(stellarTxResult.getData());
 	}
 }

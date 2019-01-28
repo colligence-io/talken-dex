@@ -2,19 +2,19 @@ package io.colligence.talken.dex.exception;
 
 import io.colligence.talken.dex.DexException;
 import io.colligence.talken.dex.DexExceptionType;
-import io.colligence.talken.dex.service.integration.APIError;
+import io.colligence.talken.dex.service.integration.APIResult;
 
 public class APIErrorException extends DexException {
 	private static final long serialVersionUID = 7055335221308754388L;
 
-	private APIError apiError;
+	private APIResult apiResult;
 
-	public APIErrorException(APIError apiError) {
-		super(DexExceptionType.API_RETURNED_ERROR, apiError.getApiName(), apiError.getCode());
-		this.apiError = apiError;
+	public APIErrorException(APIResult apiResult) {
+		super(DexExceptionType.API_RETURNED_ERROR, apiResult.getApiName(), apiResult.getErrorCode());
+		this.apiResult = apiResult;
 	}
 
-	public APIError getApiError() {
-		return apiError;
+	public APIResult getApiResult() {
+		return apiResult;
 	}
 }

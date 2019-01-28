@@ -2,12 +2,13 @@ package io.colligence.talken.dex.service.integration.stellar;
 
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
+import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.collection.ObjectPair;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.api.dex.TxSubmitResult;
-import io.colligence.talken.dex.exception.APICallException;
 import io.colligence.talken.dex.exception.TransactionHashNotMatchException;
+import io.colligence.talken.dex.service.integration.APIResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,6 @@ import org.stellar.sdk.Transaction;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,21 +54,36 @@ public class StellarNetworkService {
 		return new Server(availableServers.get(random.nextInt(serverList.size())));
 	}
 
-	public TxSubmitResult submitTx(String taskID, String txHash, String txEnvelopeXdr) throws TransactionHashNotMatchException, APICallException {
+	public APIResult<TxSubmitResult> submitTx(String taskID, String txHash, String txEnvelopeXdr) throws TransactionHashNotMatchException {
+		APIResult<TxSubmitResult> result = new APIResult<>("StellarSubmit");
+		Transaction tx;
+		try {
+			tx = Transaction.fromEnvelopeXdr(txEnvelopeXdr);
+		} catch(Exception ex) {
+			result.setException(ex);
+			return result;
+		}
+
+		// TODO : check taskID (txMemo? maybe?)
+		if(!txHash.equalsIgnoreCase(ByteArrayUtil.toHexString(tx.hash()))) {
+			throw new TransactionHashNotMatchException(txHash);
+		}
+
 		try {
 			Server server = pickServer();
-			// TODO : check taskID & txHash is matched other throw TASK_INTEGRATION_FAIL
-
-			Transaction tx = Transaction.fromEnvelopeXdr(txEnvelopeXdr);
-			if(!txHash.equalsIgnoreCase(ByteArrayUtil.toHexString(tx.hash()))) {
-				throw new TransactionHashNotMatchException(txHash);
-			}
 
 			SubmitTransactionResponse response = server.submitTransaction(tx);
+			result.setData(new TxSubmitResult(response));
 
-			return new TxSubmitResult(response);
-		} catch(IOException ioex) {
-			throw new APICallException(ioex, "Stellar");
+			if(response.getExtras() == null) {
+				result.setSuccess(true);
+			} else {
+				SubmitTransactionResponse.Extras extras = response.getExtras();
+				result.setError(extras.getResultCodes().getTransactionResultCode(), JSONWriter.toJsonStringSafe(extras.getResultCodes().getOperationsResultCodes()));
+			}
+		} catch(Exception e) {
+			result.setException(e);
 		}
+		return result;
 	}
 }

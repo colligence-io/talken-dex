@@ -7,7 +7,7 @@ import io.colligence.talken.dex.exception.APIErrorException;
 import io.colligence.talken.dex.exception.InternalServerErrorException;
 import io.colligence.talken.dex.exception.UnauthorizedException;
 import io.colligence.talken.dex.service.MessageService;
-import io.colligence.talken.dex.service.integration.APIError;
+import io.colligence.talken.dex.service.integration.APIResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -43,8 +43,9 @@ public class GlobalControllerExceptionHandler {
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(APIErrorException.class)
 	@ResponseBody
-	public DexResponse<APIError> handleCLGException(APIErrorException e, Locale locale) {
-		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, e.getApiError()));
+	public DexResponse<APIResult> handleCLGException(APIErrorException e, Locale locale) {
+		// FIXME : e.getApiResult is too sensitive to return as result body, consider hide it
+		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, e.getApiResult()));
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

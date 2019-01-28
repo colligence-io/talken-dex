@@ -13,14 +13,12 @@ import io.colligence.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
-import io.colligence.talken.dex.exception.APICallException;
-import io.colligence.talken.dex.service.integration.APIError;
+import io.colligence.talken.dex.service.integration.APIResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 
 @Service
 @Scope("singleton")
@@ -40,7 +38,9 @@ public class TransactionTunnelService {
 		formatString = dexSettings.getServer().getTxtAddress() + "/v1/%s/tx/broadcast";
 	}
 
-	public TxtServerResponse requestTxTunnel(BlockChainPlatformEnum platform, TxtServerRequest request) throws APICallException, APIError {
+	public APIResult<TxtServerResponse> requestTxTunnel(BlockChainPlatformEnum platform, TxtServerRequest request) {
+		APIResult<TxtServerResponse> result = new APIResult<>("TxTunnel");
+
 		try {
 			String url = String.format(formatString, platform.getPlatformTxType());
 
@@ -49,20 +49,25 @@ public class TransactionTunnelService {
 					.setParser(jsonFactory.createJsonObjectParser())
 					.execute();
 
-			// check http response is OK
-			if(response.getStatusCode() != 200)
-				throw new APICallException("TxTunnel", response.getStatusMessage());
+			if(response.getStatusCode() != 200) {
+				result.setResponseCode(Integer.toString(response.getStatusCode()));
+				result.setError(Integer.toString(response.getStatusCode()), response.getStatusMessage());
+			} else {
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+				TxtServerResponse txtr = mapper.readValue(response.parseAsString(), TxtServerResponse.class);
+				result.setData(txtr);
 
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-			TxtServerResponse txtr = mapper.readValue(response.parseAsString(), TxtServerResponse.class);
-
-			if(!txtr.isSuccess())
-				throw new APIError("TxTunnel", String.valueOf(txtr.getCode()), txtr.getMessage(), txtr);
-
-			return txtr;
-		} catch(IOException e) {
-			throw new APICallException(e, "TxTunnel");
+				if(txtr.isSuccess()) {
+					result.setSuccess(true);
+				} else {
+					result.setError(String.valueOf(txtr.getCode()), txtr.getMessage());
+				}
+			}
+		} catch(Exception e) {
+			result.setException(e);
 		}
+
+		return result;
 	}
 }
