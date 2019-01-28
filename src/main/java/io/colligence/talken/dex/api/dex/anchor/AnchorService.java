@@ -105,7 +105,7 @@ public class AnchorService {
 
 			AnchorResult result = new AnchorResult();
 			result.setTaskId(dexTaskId.getId());
-			result.setHolderAccountAddress(response.getData().getAddress());
+			result.setHolderAccountAddress(assetHolderAddress);
 			return result;
 		} catch(APIError error) {
 
