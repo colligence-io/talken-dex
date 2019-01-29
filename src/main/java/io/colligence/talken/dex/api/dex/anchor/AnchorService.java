@@ -27,7 +27,10 @@ import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.*;
+import org.stellar.sdk.KeyPair;
+import org.stellar.sdk.PaymentOperation;
+import org.stellar.sdk.Server;
+import org.stellar.sdk.Transaction;
 import org.stellar.sdk.responses.AccountResponse;
 
 import java.io.IOException;
@@ -168,8 +171,6 @@ public class AnchorService {
 	}
 
 	public DeanchorResult buildDeanchorRequestInformation(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws AssetTypeNotFoundException, StellarException {
-		if(feeByCtx == null) feeByCtx = false;
-
 		DexTaskId dexTaskId = DexTaskId.generate(DexTaskId.Type.DEANCHOR);
 
 		// create task record
@@ -200,59 +201,42 @@ public class AnchorService {
 			// load up-to-date information on source account.
 			AccountResponse sourceAccount = server.accounts().account(source);
 
-			AssetTypeCreditAlphaNum4 deanchorAssetType = maService.getAssetType(assetCode);
 			KeyPair baseAccount = maService.getBaseAccount(assetCode);
-
-			AssetTypeCreditAlphaNum4 feeAssetType;
-			KeyPair feeCollectAccount;
-
-			double feeAmount;
-			double deanchorAmount;
 
 			Transaction tx;
 
-			if(feeByCtx) {
-				// calculate fee
-				feeAmount = txFeeService.calculateDeanchorFeeByCtx(assetCode, amount);
-				deanchorAmount = amount;
+			TxFeeService.Fee fee = txFeeService.calculateDeanchorFee(assetCode, amount, feeByCtx);
 
-				feeAssetType = maService.getAssetType("CTX");
-				feeCollectAccount = maService.getDeanchorFeeHolderAccount("CTX");
-			} else {
-				// calculate fee
-				feeAmount = txFeeService.calculateDeanchorFee(assetCode, amount);
-				deanchorAmount = amount - feeAmount;
-
-				feeAssetType = maService.getAssetType(assetCode);
-				feeCollectAccount = maService.getDeanchorFeeHolderAccount(assetCode);
-			}
+			Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount).setTimeout(Transaction.Builder.TIMEOUT_INFINITE);
 
 			// build fee operation
-			PaymentOperation feePayOperation = new PaymentOperation
-					.Builder(feeCollectAccount, feeAssetType, Double.toString(feeAmount))
-					.build();
+			if(fee.getFeeAmount() > 0) {
+				txBuilder.addOperation(
+						new PaymentOperation
+								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), Double.toString(fee.getFeeAmount()))
+								.build()
+				);
+			}
 
 			// build deanchor operation
-			PaymentOperation deanchorOperation = new PaymentOperation
-					.Builder(baseAccount, deanchorAssetType, Double.toString(deanchorAmount))
-					.build();
+			txBuilder.addOperation(
+					new PaymentOperation
+							.Builder(baseAccount, fee.getSellAssetType(), Double.toString(fee.getSellAmount()))
+							.build()
+			);
 
 			// build tx
-			tx = new Transaction.Builder(sourceAccount)
-					.addOperation(feePayOperation)
-					.addOperation(deanchorOperation)
-					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-					.build();
+			tx = txBuilder.build();
 
 			TxInformation txInformation = TxInformation.buildTxInformation(tx);
 
 			// update task record
 			logger.debug("{} step 1 success.", dexTaskId);
 			taskRecord.setS1jBaseaccount(baseAccount.getAccountId());
-			taskRecord.setS1jDeanchoramount(deanchorAmount);
-			taskRecord.setS1jFeeamount(feeAmount);
-			taskRecord.setS1jFeeassettype(feeAssetType.getType());
-			taskRecord.setS1jFeecollectaccount(feeCollectAccount.getAccountId());
+			taskRecord.setS1jDeanchoramount(fee.getSellAmount());
+			taskRecord.setS1jFeeamount(fee.getFeeAmount());
+			taskRecord.setS1jFeeassettype(fee.getFeeAssetType().getType());
+			taskRecord.setS1jFeecollectaccount(fee.getFeeCollectorAccount().getAccountId());
 			taskRecord.setS1oSuccessFlag(true);
 			taskRecord.setS1oSequence(txInformation.getSequence());
 			taskRecord.setS1oTxhash(txInformation.getHash());
@@ -262,10 +246,10 @@ public class AnchorService {
 			DeanchorResult result = new DeanchorResult();
 			result.setTaskID(dexTaskId.getId());
 			result.setTxInformation(txInformation);
-			result.setFeeAssetType(feeAssetType.getType());
-			result.setFeeAmount(feeAmount);
-			result.setDeanchorAssetType(deanchorAssetType.getType());
-			result.setDeanchorAmount(deanchorAmount);
+			result.setFeeAssetType(fee.getFeeAssetType().getType());
+			result.setFeeAmount(fee.getFeeAmount());
+			result.setDeanchorAssetType(fee.getSellAssetType().getType());
+			result.setDeanchorAmount(fee.getSellAmount());
 			return result;
 		} catch(IOException ioex) {
 

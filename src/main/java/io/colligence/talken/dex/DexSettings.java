@@ -49,10 +49,11 @@ public class DexSettings {
 	@Setter
 	public static class _Fee {
 		private double offerFeeRate;
-		private double offerFeeRateForCTX;
+		private double offerFeeRateCtxFactor;
 
 		private String deanchorFeePivotAsset;
 		private double deanchorFeeAmount;
+		private double deanchorFeeRateCtxFactor;
 	}
 
 	// MAS mockup

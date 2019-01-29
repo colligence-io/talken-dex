@@ -28,7 +28,7 @@ public class OfferController {
 	@RequestMapping(value = RequestMappings.CREATE_OFFER, method = RequestMethod.POST)
 	public DexResponse<CreateOfferResult> createOffer(@RequestBody CreateOfferRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(offerService.buildCreateOfferTx(authInfo.getUserId(), postBody.getSourceAccountId(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice()));
+		return DexResponse.buildResponse(offerService.buildCreateOfferTx(authInfo.getUserId(), postBody.getSourceAccountId(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
 	}
 
 	@AuthRequired
@@ -42,7 +42,7 @@ public class OfferController {
 	@RequestMapping(value = RequestMappings.CREATE_PASSIVE_OFFER, method = RequestMethod.POST)
 	public DexResponse<CreatePassiveOfferResult> createPassiveOffer(@RequestBody CreatePassiveOfferRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(offerService.buildCreatePassiveOfferTx(authInfo.getUserId(), postBody.getSourceAccountId(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice()));
+		return DexResponse.buildResponse(offerService.buildCreatePassiveOfferTx(authInfo.getUserId(), postBody.getSourceAccountId(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
 	}
 
 	@AuthRequired

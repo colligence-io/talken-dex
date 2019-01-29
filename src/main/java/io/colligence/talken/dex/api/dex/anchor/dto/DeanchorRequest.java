@@ -16,4 +16,8 @@ public class DeanchorRequest {
 	@NotNull
 	private Double amount;
 	private Boolean feeByCtx;
+
+	public Boolean getFeeByCtx() {
+		return (feeByCtx != null) ? feeByCtx : false;
+	}
 }

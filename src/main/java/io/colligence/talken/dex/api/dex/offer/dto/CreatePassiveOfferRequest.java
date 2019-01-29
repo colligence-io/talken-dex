@@ -17,4 +17,9 @@ public class CreatePassiveOfferRequest {
 	private Double sellAssetAmount;
 	@NotNull
 	private Double sellAssetPrice;
+	private Boolean feeByCtx;
+
+	public Boolean getFeeByCtx() {
+		return (feeByCtx != null) ? feeByCtx : false;
+	}
 }

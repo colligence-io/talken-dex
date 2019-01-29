@@ -1,8 +1,10 @@
 package io.colligence.talken.dex.service.integration;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 
 @Getter
+@JsonIgnoreProperties({"cause", "data"})
 public class APIResult<T> {
 	private String apiName;
 	private boolean isSuccess = false;

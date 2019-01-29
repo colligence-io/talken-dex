@@ -5,9 +5,9 @@ import lombok.Data;
 
 @Data
 public class AnchorSubmitResult {
-	private TxtServerResponse transaction;
+	private TxtServerResponse txtResult;
 
 	public AnchorSubmitResult(TxtServerResponse txtServerResponse) {
-		this.transaction = txtServerResponse;
+		this.txtResult = txtServerResponse;
 	}
 }

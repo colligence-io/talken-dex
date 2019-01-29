@@ -1,7 +1,6 @@
 package io.colligence.talken.dex.api.dex.offer;
 
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.api.DexTaskId;
 import io.colligence.talken.dex.api.dex.TxFeeService;
 import io.colligence.talken.dex.api.dex.TxInformation;
@@ -28,9 +27,6 @@ public class OfferService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(OfferService.class);
 
 	@Autowired
-	private DexSettings dexSettings;
-
-	@Autowired
 	private TxFeeService txFeeService;
 
 	@Autowired
@@ -39,7 +35,7 @@ public class OfferService {
 	@Autowired
 	private ManagedAccountService maService;
 
-	public CreateOfferResult buildCreateOfferTx(long userId, String sourceAccountID, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, StellarException {
+	public CreateOfferResult buildCreateOfferTx(long userId, String sourceAccountID, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws AssetTypeNotFoundException, StellarException {
 		try {
 			String taskID = DexTaskId.generate(DexTaskId.Type.OFFER_CREATE).toString();
 			// TODO : unique check, insert into db
@@ -49,35 +45,36 @@ public class OfferService {
 
 			// prepare accounts
 			KeyPair source = KeyPair.fromAccountId(sourceAccountID);
-			KeyPair feeDestination = maService.getOfferFeeHolderAccount(sellAssetCode);
 
 			// load up-to-date information on source account.
 			AccountResponse sourceAccount = server.accounts().account(source);
 
 			// calculate fee
-			double feeAmount = txFeeService.calculateOfferFee(sellAssetCode, sellAssetAmount);
-			double actualSellAmount = sellAssetAmount - feeAmount;
+			TxFeeService.Fee fee = txFeeService.calculateOfferFee(sellAssetCode, sellAssetAmount, feeByCtx);
 
 			// get assetType
-			AssetTypeCreditAlphaNum4 sellAssetType = maService.getAssetType(sellAssetCode);
 			AssetTypeCreditAlphaNum4 buyAssetType = maService.getAssetType(buyAssetCode);
 
-			// build fee operation
-			PaymentOperation feePayOperation = new PaymentOperation
-					.Builder(feeDestination, sellAssetType, Double.toString(feeAmount))
-					.build();
+			Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount).setTimeout(Transaction.Builder.TIMEOUT_INFINITE);
+
+			if(fee.getFeeAmount() > 0) {
+				// build fee operation
+				txBuilder.addOperation(
+						new PaymentOperation
+								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), Double.toString(fee.getFeeAmount()))
+								.build()
+				);
+			}
 
 			// build manage offer operation
-			ManageOfferOperation offerOperation = new ManageOfferOperation
-					.Builder(sellAssetType, buyAssetType, Double.toString(actualSellAmount), Double.toString(sellAssetPrice)).setOfferId(0)
-					.build();
+			txBuilder.addOperation(
+					new ManageOfferOperation
+							.Builder(fee.getSellAssetType(), buyAssetType, Double.toString(fee.getSellAmount()), Double.toString(sellAssetPrice)).setOfferId(0)
+							.build()
+			);
 
 			// build tx
-			Transaction tx = new Transaction.Builder(sourceAccount)
-					.addOperation(feePayOperation)
-					.addOperation(offerOperation)
-					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-					.build();
+			Transaction tx = txBuilder.build();
 
 			// TODO : insert into taskDB
 
@@ -100,7 +97,7 @@ public class OfferService {
 		return new CreateOfferSubmitResult(stellarTxResult.getData());
 	}
 
-	public CreatePassiveOfferResult buildCreatePassiveOfferTx(long userId, String sourceAccountID, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, StellarException {
+	public CreatePassiveOfferResult buildCreatePassiveOfferTx(long userId, String sourceAccountID, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws AssetTypeNotFoundException, StellarException {
 		try {
 			String taskID = DexTaskId.generate(DexTaskId.Type.OFFER_CREATEPASSIVE).toString();
 			// TODO : unique check, insert into db
@@ -110,35 +107,37 @@ public class OfferService {
 
 			// prepare accounts
 			KeyPair source = KeyPair.fromAccountId(sourceAccountID);
-			KeyPair feeDestination = maService.getOfferFeeHolderAccount(sellAssetCode);
+//			KeyPair feeDestination = maService.getOfferFeeHolderAccount(sellAssetCode);
 
 			// load up-to-date information on source account.
 			AccountResponse sourceAccount = server.accounts().account(source);
 
 			// calculate fee
-			double feeAmount = txFeeService.calculateOfferFee(sellAssetCode, sellAssetAmount);
-			double actualSellAmount = sellAssetAmount - feeAmount;
+			TxFeeService.Fee fee = txFeeService.calculateOfferFee(sellAssetCode, sellAssetAmount, feeByCtx);
 
 			// get assetType
-			AssetTypeCreditAlphaNum4 sellAssetType = maService.getAssetType(sellAssetCode);
 			AssetTypeCreditAlphaNum4 buyAssetType = maService.getAssetType(buyAssetCode);
 
-			// build fee operation
-			PaymentOperation feePayOperation = new PaymentOperation
-					.Builder(feeDestination, sellAssetType, Double.toString(feeAmount))
-					.build();
+			Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount).setTimeout(Transaction.Builder.TIMEOUT_INFINITE);
 
-			// build passiveoffer operation
-			CreatePassiveOfferOperation offerOperation = new CreatePassiveOfferOperation
-					.Builder(sellAssetType, buyAssetType, Double.toString(actualSellAmount), Double.toString(sellAssetPrice))
-					.build();
+			if(fee.getFeeAmount() > 0) {
+				// build fee operation
+				txBuilder.addOperation(
+						new PaymentOperation
+								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), Double.toString(fee.getFeeAmount()))
+								.build()
+				);
+			}
+
+			// build manage offer operation
+			txBuilder.addOperation(
+					new CreatePassiveOfferOperation
+							.Builder(fee.getSellAssetType(), buyAssetType, Double.toString(fee.getSellAmount()), Double.toString(sellAssetPrice))
+							.build()
+			);
 
 			// build tx
-			Transaction tx = new Transaction.Builder(sourceAccount)
-					.addOperation(feePayOperation)
-					.addOperation(offerOperation)
-					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-					.build();
+			Transaction tx = txBuilder.build();
 
 			// TODO : insert into taskDB
 

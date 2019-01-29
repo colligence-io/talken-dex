@@ -51,9 +51,10 @@ talken:
       anc-address: http://192.168.0.35:3480
     fee:
       offerFeeRate: 0.001
-      offerFeeRateForCTX: 0.0005
-      deanchorFeePivotAsset: "ETH"
-      deanchorFeeAmount: 0.01
+      offerFeeRateCtxFactor: 0.5
+      deanchorFeePivotAsset: "BTC"
+      deanchorFeeAmount: 0.001
+      deanchorFeeRateCtxFactor: 0.5
     masMockUp:
       - code: "CTX"
         platform: "ERC20"
