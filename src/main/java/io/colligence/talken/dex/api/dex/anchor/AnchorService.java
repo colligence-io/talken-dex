@@ -8,7 +8,7 @@ import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.UTCUtil;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.api.DexTaskId;
-import io.colligence.talken.dex.api.dex.TxFeeService;
+import io.colligence.talken.dex.api.dex.FeeCalculationService;
 import io.colligence.talken.dex.api.dex.TxInformation;
 import io.colligence.talken.dex.api.dex.TxSubmitResult;
 import io.colligence.talken.dex.api.dex.anchor.dto.AnchorResult;
@@ -59,7 +59,7 @@ public class AnchorService {
 	private ManagedAccountService maService;
 
 	@Autowired
-	private TxFeeService txFeeService;
+	private FeeCalculationService feeCalculationService;
 
 	@Autowired
 	private DSLContext dslContext;
@@ -205,7 +205,7 @@ public class AnchorService {
 
 			Transaction tx;
 
-			TxFeeService.Fee fee = txFeeService.calculateDeanchorFee(assetCode, amount, feeByCtx);
+			FeeCalculationService.Fee fee = feeCalculationService.calculateDeanchorFee(assetCode, amount, feeByCtx);
 
 			Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount).setTimeout(Transaction.Builder.TIMEOUT_INFINITE);
 

@@ -5,7 +5,7 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexMakeofferT
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.api.DexTaskId;
-import io.colligence.talken.dex.api.dex.TxFeeService;
+import io.colligence.talken.dex.api.dex.FeeCalculationService;
 import io.colligence.talken.dex.api.dex.TxInformation;
 import io.colligence.talken.dex.api.dex.TxSubmitResult;
 import io.colligence.talken.dex.api.dex.offer.dto.*;
@@ -38,7 +38,7 @@ public class OfferService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(OfferService.class);
 
 	@Autowired
-	private TxFeeService txFeeService;
+	private FeeCalculationService feeCalculationService;
 
 	@Autowired
 	private StellarNetworkService stellarNetworkService;
@@ -87,7 +87,7 @@ public class OfferService {
 			AccountResponse sourceAccount = server.accounts().account(source);
 
 			// calculate fee
-			TxFeeService.Fee fee = txFeeService.calculateOfferFee(sellAssetCode, sellAssetAmount, feeByCtx);
+			FeeCalculationService.Fee fee = feeCalculationService.calculateOfferFee(sellAssetCode, sellAssetAmount, feeByCtx);
 
 			// get assetType
 			AssetTypeCreditAlphaNum4 buyAssetType = maService.getAssetType(buyAssetCode);
@@ -248,7 +248,7 @@ public class OfferService {
 
 		taskRecord.setRefundfeeamount(refundAmount);
 
-		DexTaskId refundTaskId = txFeeService.createOfferFeeRefundTask(taskRecord.getFeecollectaccount(), taskRecord.getSourceaccount(), refundAmount);
+		DexTaskId refundTaskId = feeCalculationService.createOfferFeeRefundTask(taskRecord.getFeecollectaccount(), taskRecord.getSourceaccount(), refundAmount);
 
 		taskRecord.setRefundtaskid(refundTaskId.getId());
 
@@ -288,7 +288,7 @@ public class OfferService {
 			AccountResponse sourceAccount = server.accounts().account(source);
 
 			// calculate fee
-			TxFeeService.Fee fee = txFeeService.calculateOfferFee(sellAssetCode, sellAssetAmount, feeByCtx);
+			FeeCalculationService.Fee fee = feeCalculationService.calculateOfferFee(sellAssetCode, sellAssetAmount, feeByCtx);
 
 			// get assetType
 			AssetTypeCreditAlphaNum4 buyAssetType = maService.getAssetType(buyAssetCode);

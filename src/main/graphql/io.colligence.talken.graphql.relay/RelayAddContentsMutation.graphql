@@ -1,0 +1,22 @@
+mutation RelayAddContentsMutation(
+$msgType:String!,
+$userId: String!,
+$pushTitle: String!,
+$pushBody: String!,
+$pushImage: String,
+$msgContents: String!
+) {
+    addContents(message: {
+        msgType: $msgType,
+        userId: $userId,
+        pushTitle: $pushTitle,
+        pushBody: $pushBody,
+        pushImage: $pushImage,
+        msgContents: $msgContents
+    }) {
+        transId
+        status
+        regDt
+        endDt
+    }
+}

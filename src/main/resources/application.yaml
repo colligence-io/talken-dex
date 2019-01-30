@@ -45,6 +45,7 @@ talken:
       serverList:
         - "https://horizon-testnet.stellar.org"
     server:
+      rly-address: http://192.168.0.33:3888/graphql
       wlt-address: http://192.168.0.33:3232/bws/api
       txt-address: http://192.168.0.33:3232/bws/api
       txt-server-id: "DEX"

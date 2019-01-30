@@ -16,8 +16,8 @@ import javax.annotation.PostConstruct;
 
 @Service
 @Scope("singleton")
-public class TxFeeService {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TxFeeService.class);
+public class FeeCalculationService {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(FeeCalculationService.class);
 
 	@Autowired
 	private DexSettings dexSettings;

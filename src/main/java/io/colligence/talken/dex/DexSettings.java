@@ -36,9 +36,9 @@ public class DexSettings {
 	@Getter
 	@Setter
 	public static class _Server {
+		private String rlyAddress;
 		private String wltAddress;
 		private String ancAddress;
-		private String masAddress;
 		private String txtAddress;
 		private String txtServerId;
 	}
