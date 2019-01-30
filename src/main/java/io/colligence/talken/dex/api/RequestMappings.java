@@ -10,6 +10,8 @@ public class RequestMappings {
 	private static final String ANCHOR = DEX + "/anchor";
 	public static final String ANCHOR_TASK = ANCHOR + "/anchor";
 	public static final String DEANCHOR_TASK = ANCHOR + "/deanchor";
+	public static final String DEANCHOR_DEXKEY = ANCHOR + "/deanchor/dexKey";
+
 
 	private static final String OFFER = DEX + "/offer";
 	public static final String CREATE_OFFER = OFFER + "/createOffer";

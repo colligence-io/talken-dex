@@ -15,7 +15,8 @@ public enum DexExceptionType implements CLGException.ExceptionType {
 	TX_HASH_NOT_MATCH(9),
 	CANNOT_UPDATE_HOLDER_STATUS(10),
 	ACTIVE_ASSET_HOLDER_NOT_FOUND(11),
-	TRANSACTION_RESULT_PROCESSING_ERROR(12);
+	TRANSACTION_RESULT_PROCESSING_ERROR(12),
+	SIGNATURE_VERIFICATION_FAILED(13);
 
 	private final int eCode;
 	private final String messageKey;
