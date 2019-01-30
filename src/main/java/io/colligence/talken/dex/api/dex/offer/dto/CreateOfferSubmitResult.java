@@ -6,8 +6,8 @@ import lombok.Data;
 @Data
 public class CreateOfferSubmitResult {
 	private TxSubmitResult txSubmitResult;
-
-	public CreateOfferSubmitResult(TxSubmitResult txSubmitResult) {
-		this.txSubmitResult = txSubmitResult;
-	}
+	private long offerId;
+	private double makeAmount;
+	private double takeAmount;
+	private double refundAmount;
 }

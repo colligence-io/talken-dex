@@ -14,7 +14,8 @@ public enum DexExceptionType implements CLGException.ExceptionType {
 	ASSET_TYPE_NOT_FOUND(8),
 	TX_HASH_NOT_MATCH(9),
 	CANNOT_UPDATE_HOLDER_STATUS(10),
-	ACTIVE_ASSET_HOLDER_NOT_FOUND(11);
+	ACTIVE_ASSET_HOLDER_NOT_FOUND(11),
+	TRANSACTION_RESULT_PROCESSING_ERROR(12);
 
 	private final int eCode;
 	private final String messageKey;

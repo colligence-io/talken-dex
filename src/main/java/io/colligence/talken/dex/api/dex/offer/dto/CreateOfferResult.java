@@ -7,9 +7,6 @@ import lombok.Data;
 public class CreateOfferResult {
 	private String taskId;
 	private TxInformation txInformation;
-
-	public CreateOfferResult(String taskId, TxInformation txInformation) {
-		this.taskId = taskId;
-		this.txInformation = txInformation;
-	}
+	private double feeAmount;
+	private String feeAssetType;
 }

@@ -43,7 +43,8 @@ public class DexTaskId {
 		DEANCHOR(2),
 		OFFER_CREATE(3),
 		OFFER_CREATEPASSIVE(4),
-		OFFER_DELETE(5);
+		OFFER_DELETE(5),
+		OFFER_REFUNDFEE(6);
 
 		private final int code;
 
