@@ -329,7 +329,7 @@ public class AnchorService {
 		logger.debug("{} complete.", dexTaskId, userId);
 
 		DeanchorResult result = new DeanchorResult();
-		result.setTaskID(dexTaskId.getId());
+		result.setTaskId(dexTaskId.getId());
 		result.setTransId(taskRecord.getRlyTransid());
 		result.setFeeAssetType(taskRecord.getFeeassettype());
 		result.setFeeAmount(taskRecord.getFeeamount());
