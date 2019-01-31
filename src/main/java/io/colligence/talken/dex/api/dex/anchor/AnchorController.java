@@ -5,7 +5,12 @@ import io.colligence.talken.dex.DexException;
 import io.colligence.talken.dex.api.DTOValidator;
 import io.colligence.talken.dex.api.DexResponse;
 import io.colligence.talken.dex.api.RequestMappings;
-import io.colligence.talken.dex.api.dex.anchor.dto.*;
+import io.colligence.talken.dex.api.dex.DexKeyRequest;
+import io.colligence.talken.dex.api.dex.DexKeyResult;
+import io.colligence.talken.dex.api.dex.anchor.dto.AnchorRequest;
+import io.colligence.talken.dex.api.dex.anchor.dto.AnchorResult;
+import io.colligence.talken.dex.api.dex.anchor.dto.DeanchorRequest;
+import io.colligence.talken.dex.api.dex.anchor.dto.DeanchorResult;
 import io.colligence.talken.dex.config.auth.AuthInfo;
 import io.colligence.talken.dex.config.auth.AuthRequired;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +54,8 @@ public class AnchorController {
 	}
 
 	@AuthRequired
-	@RequestMapping(value = RequestMappings.DEANCHOR_DEXKEY, method = RequestMethod.POST)
-	public DexResponse<DeanchorDexKeyResult> deanchorDexKey(@RequestBody DeanchorDexKeyRequest postBody) throws DexException {
+	@RequestMapping(value = RequestMappings.DEANCHOR_TASK_DEXKEY, method = RequestMethod.POST)
+	public DexResponse<DexKeyResult> deanchorDexKey(@RequestBody DexKeyRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(anchorService.deanchorDexKey(authInfo.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
 	}

@@ -5,18 +5,19 @@ public class RequestMappings {
 
 	private static final String DEX = ROOT + "/dex";
 
-//	public static final String SUBMIT_SUFFIX = "_submit";
+	private static final String DEXKEY_SUFFIX = "/dexKey";
 
 	private static final String ANCHOR = DEX + "/anchor";
 	public static final String ANCHOR_TASK = ANCHOR + "/anchor";
 	public static final String DEANCHOR_TASK = ANCHOR + "/deanchor";
-	public static final String DEANCHOR_DEXKEY = ANCHOR + "/deanchor/dexKey";
+	public static final String DEANCHOR_TASK_DEXKEY = DEANCHOR_TASK + DEXKEY_SUFFIX;
 
 
 	private static final String OFFER = DEX + "/offer";
 	public static final String CREATE_OFFER = OFFER + "/createOffer";
-	//	public static final String CREATE_PASSIVE_OFFER = OFFER + "/createPassiveOffer";
+	public static final String CREATE_OFFER_DEXKEY = CREATE_OFFER + DEXKEY_SUFFIX;
 	public static final String DELETE_OFFER = OFFER + "/deleteOffer";
+	public static final String DELETE_OFFER_DEXKEY = DELETE_OFFER + DEXKEY_SUFFIX;
 
 	private static final String MAS = ROOT + "/mas";
 

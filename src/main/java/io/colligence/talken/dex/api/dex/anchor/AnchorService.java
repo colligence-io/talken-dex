@@ -1,7 +1,6 @@
 package io.colligence.talken.dex.api.dex.anchor;
 
 
-import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexAnchorTaskRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexDeanchorTaskRecord;
 import io.colligence.talken.common.util.JSONWriter;
@@ -9,11 +8,11 @@ import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.UTCUtil;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.api.DexTaskId;
+import io.colligence.talken.dex.api.dex.DexKeyResult;
 import io.colligence.talken.dex.api.dex.FeeCalculationService;
 import io.colligence.talken.dex.api.dex.TxEncryptedData;
 import io.colligence.talken.dex.api.dex.TxInformation;
 import io.colligence.talken.dex.api.dex.anchor.dto.AnchorResult;
-import io.colligence.talken.dex.api.dex.anchor.dto.DeanchorDexKeyResult;
 import io.colligence.talken.dex.api.dex.anchor.dto.DeanchorResult;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
 import io.colligence.talken.dex.exception.*;
@@ -23,6 +22,7 @@ import io.colligence.talken.dex.service.integration.relay.RelayAddContentsReques
 import io.colligence.talken.dex.service.integration.relay.RelayAddContentsResponse;
 import io.colligence.talken.dex.service.integration.relay.RelayServerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
+import io.colligence.talken.dex.util.StellarSignVerifier;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -31,7 +31,6 @@ import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 
@@ -330,8 +329,11 @@ public class AnchorService {
 		return result;
 	}
 
-	public DeanchorDexKeyResult deanchorDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
+	public DexKeyResult deanchorDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
 		DexTaskId dexTaskId = DexTaskId.fromId(taskId);
+		if(!dexTaskId.getType().equals(DexTaskId.Type.DEANCHOR))
+			throw new TaskNotFoundException(taskId);
+
 		DexDeanchorTaskRecord taskRecord = dslContext.selectFrom(DEX_DEANCHOR_TASK)
 				.where(DEX_ANCHOR_TASK.TASKID.eq(taskId))
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
@@ -339,18 +341,12 @@ public class AnchorService {
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);
 		if(!taskRecord.getRlyTransid().equals(transId)) throw new TaskIntegrityCheckFailedException(taskId);
 
-		byte[] ba_transId = transId.getBytes(StandardCharsets.UTF_8);
-		byte[] ba_signature = ByteArrayUtil.hexStringToByteArray(signature);
-
-		KeyPair kpFromPublicKey = KeyPair.fromAccountId(taskRecord.getTradeaddr());
-
-		if(kpFromPublicKey.verify(ba_transId, ba_signature)) {
-			DeanchorDexKeyResult result = new DeanchorDexKeyResult();
-			result.setDexKey(taskRecord.getTxKey());
-			return result;
-		} else {
+		if(!StellarSignVerifier.verifySignBase64(taskRecord.getTradeaddr(), transId, signature))
 			throw new SignatureVerificationFailedException(transId, signature);
-		}
+
+		DexKeyResult result = new DexKeyResult();
+		result.setDexKey(taskRecord.getTxKey());
+		return result;
 	}
 
 //	public DeanchorSubmitResult submitDeanchorTransaction(long userId, String taskID, String txHash, String txXdr) throws TaskIntegrityCheckFailedException, TaskNotFoundException, APIErrorException, TransactionHashNotMatchException {

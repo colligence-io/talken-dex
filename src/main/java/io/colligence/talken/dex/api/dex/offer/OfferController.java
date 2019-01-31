@@ -5,6 +5,8 @@ import io.colligence.talken.dex.DexException;
 import io.colligence.talken.dex.api.DTOValidator;
 import io.colligence.talken.dex.api.DexResponse;
 import io.colligence.talken.dex.api.RequestMappings;
+import io.colligence.talken.dex.api.dex.DexKeyRequest;
+import io.colligence.talken.dex.api.dex.DexKeyResult;
 import io.colligence.talken.dex.api.dex.offer.dto.CreateOfferRequest;
 import io.colligence.talken.dex.api.dex.offer.dto.CreateOfferResult;
 import io.colligence.talken.dex.api.dex.offer.dto.DeleteOfferRequest;
@@ -34,6 +36,13 @@ public class OfferController {
 		return DexResponse.buildResponse(offerService.createOffer(authInfo.getUserId(), postBody.getSourceAccountId(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
 	}
 
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.CREATE_OFFER_DEXKEY, method = RequestMethod.POST)
+	public DexResponse<DexKeyResult> createOfferDexKey(@RequestBody DexKeyRequest postBody) throws DexException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(offerService.createOfferDexKey(authInfo.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
+	}
+
 //  NOT AVAILABLE YET
 //	@AuthRequired
 //	@RequestMapping(value = RequestMappings.CREATE_PASSIVE_OFFER, method = RequestMethod.POST)
@@ -47,5 +56,12 @@ public class OfferController {
 	public DexResponse<DeleteOfferResult> deleteOffer(@RequestBody DeleteOfferRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(offerService.deleteOffer(authInfo.getUserId(), postBody.getOfferId(), postBody.getSourceAccountId(), postBody.getSellAssetCode(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice()));
+	}
+
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.DELETE_OFFER_DEXKEY, method = RequestMethod.POST)
+	public DexResponse<DexKeyResult> deleteOfferDexKey(@RequestBody DexKeyRequest postBody) throws DexException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(offerService.deleteOfferDexKey(authInfo.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
 	}
 }

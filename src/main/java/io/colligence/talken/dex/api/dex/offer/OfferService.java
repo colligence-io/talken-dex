@@ -7,20 +7,20 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexMakeofferT
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.api.DexTaskId;
+import io.colligence.talken.dex.api.dex.DexKeyResult;
 import io.colligence.talken.dex.api.dex.FeeCalculationService;
 import io.colligence.talken.dex.api.dex.TxEncryptedData;
 import io.colligence.talken.dex.api.dex.TxInformation;
 import io.colligence.talken.dex.api.dex.offer.dto.CreateOfferResult;
 import io.colligence.talken.dex.api.dex.offer.dto.DeleteOfferResult;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
-import io.colligence.talken.dex.exception.APIErrorException;
-import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
-import io.colligence.talken.dex.exception.StellarException;
+import io.colligence.talken.dex.exception.*;
 import io.colligence.talken.dex.service.integration.APIResult;
 import io.colligence.talken.dex.service.integration.relay.RelayAddContentsRequest;
 import io.colligence.talken.dex.service.integration.relay.RelayAddContentsResponse;
 import io.colligence.talken.dex.service.integration.relay.RelayServerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
+import io.colligence.talken.dex.util.StellarSignVerifier;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -33,7 +33,7 @@ import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Optional;
 
-import static io.colligence.talken.common.persistence.jooq.Tables.DEX_MAKEOFFER_RESULT;
+import static io.colligence.talken.common.persistence.jooq.Tables.*;
 
 @Service
 @Scope("singleton")
@@ -189,6 +189,26 @@ public class OfferService {
 		return result;
 	}
 
+	public DexKeyResult createOfferDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
+		DexTaskId dexTaskId = DexTaskId.fromId(taskId);
+		if(!dexTaskId.getType().equals(DexTaskId.Type.OFFER_CREATE))
+			throw new TaskNotFoundException(taskId);
+
+		DexMakeofferTaskRecord taskRecord = dslContext.selectFrom(DEX_MAKEOFFER_TASK)
+				.where(DEX_ANCHOR_TASK.TASKID.eq(taskId))
+				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
+
+		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);
+		if(!taskRecord.getRlyTransid().equals(transId)) throw new TaskIntegrityCheckFailedException(taskId);
+
+		if(!StellarSignVerifier.verifySignBase64(taskRecord.getSourceaccount(), transId, signature))
+			throw new SignatureVerificationFailedException(transId, signature);
+
+		DexKeyResult result = new DexKeyResult();
+		result.setDexKey(taskRecord.getTxKey());
+		return result;
+	}
+
 	public DeleteOfferResult deleteOffer(long userId, long offerId, String sourceAccountId, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, StellarException, APIErrorException {
 		DexTaskId dexTaskId = DexTaskId.generate(DexTaskId.Type.OFFER_DELETE);
 
@@ -312,6 +332,26 @@ public class OfferService {
 		result.setSellAssetType(taskRecord.getSellassetcode());
 		result.setSellAmount(taskRecord.getSellprice());
 		result.setSellPrice(taskRecord.getSellprice());
+		return result;
+	}
+
+	public DexKeyResult deleteOfferDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
+		DexTaskId dexTaskId = DexTaskId.fromId(taskId);
+		if(!dexTaskId.getType().equals(DexTaskId.Type.OFFER_DELETE))
+			throw new TaskNotFoundException(taskId);
+
+		DexDeleteofferTaskRecord taskRecord = dslContext.selectFrom(DEX_DELETEOFFER_TASK)
+				.where(DEX_ANCHOR_TASK.TASKID.eq(taskId))
+				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
+
+		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);
+		if(!taskRecord.getRlyTransid().equals(transId)) throw new TaskIntegrityCheckFailedException(taskId);
+
+		if(!StellarSignVerifier.verifySignBase64(taskRecord.getSourceaccount(), transId, signature))
+			throw new SignatureVerificationFailedException(transId, signature);
+
+		DexKeyResult result = new DexKeyResult();
+		result.setDexKey(taskRecord.getTxKey());
 		return result;
 	}
 }
