@@ -1,23 +1,20 @@
 package io.colligence.talken.dex.api;
 
+import io.colligence.talken.common.util.RandomStringGenerator;
 import io.colligence.talken.dex.exception.TaskIntegrityCheckFailedException;
 import lombok.Getter;
-
-import java.util.UUID;
 
 @Getter
 public class DexTaskId {
 	private Type type;
 	private String id;
 
-	private static final int LENGTH = 48;
+	private static final int LENGTH = 24;
 
 	private DexTaskId(Type type) {
 		this.type = type;
-		String uuid = UUID.randomUUID().toString();
-		String uuid2 = UUID.randomUUID().toString();
-
-		this.id = (type.getCode() + uuid + uuid2).replaceAll("[^0-9a-zA-Z]", "").toLowerCase().substring(0, LENGTH);
+		String gen = RandomStringGenerator.generate(16) + RandomStringGenerator.encodeLong(System.currentTimeMillis());
+		this.id = type.getCode() + gen.substring(gen.length() - 23);
 	}
 
 	private DexTaskId(String generated) throws TaskIntegrityCheckFailedException {

@@ -12,8 +12,6 @@ import java.util.List;
 @Getter
 @Setter
 public class DexSettings {
-	private _AccessToken accessToken;
-
 	@Getter
 	@Setter
 	public static class _AccessToken {
@@ -21,6 +19,16 @@ public class DexSettings {
 		private String jwtSecret;
 		private int jwtExpiration;
 	}
+
+	private _Scheduler scheduler;
+
+	@Getter
+	@Setter
+	public static class _Scheduler {
+		private int poolSize;
+	}
+
+	private _AccessToken accessToken;
 
 	private _Stellar stellar;
 

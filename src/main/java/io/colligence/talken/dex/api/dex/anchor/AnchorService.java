@@ -23,15 +23,11 @@ import io.colligence.talken.dex.service.integration.relay.RelayAddContentsReques
 import io.colligence.talken.dex.service.integration.relay.RelayAddContentsResponse;
 import io.colligence.talken.dex.service.integration.relay.RelayServerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
-import io.colligence.talken.dex.service.integration.txTunnel.TransactionTunnelService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.KeyPair;
-import org.stellar.sdk.PaymentOperation;
-import org.stellar.sdk.Server;
-import org.stellar.sdk.Transaction;
+import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 
 import java.io.IOException;
@@ -52,9 +48,6 @@ public class AnchorService {
 
 	@Autowired
 	private StellarNetworkService stellarNetworkService;
-
-	@Autowired
-	private TransactionTunnelService txTunnelService;
 
 	@Autowired
 	private AnchorServerService anchorServerService;
@@ -198,7 +191,7 @@ public class AnchorService {
 		logger.debug("{} generated. userId = {}", dexTaskId, userId);
 
 
-		// build encData and deanchor request
+		// build encData for deanchor request
 		TxEncryptedData encData;
 		try {
 			// pick horizon server
@@ -212,11 +205,12 @@ public class AnchorService {
 
 			KeyPair baseAccount = maService.getBaseAccount(assetCode);
 
-			Transaction tx;
-
 			FeeCalculationService.Fee fee = feeCalculationService.calculateDeanchorFee(assetCode, amount, feeByCtx);
 
-			Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount).setTimeout(Transaction.Builder.TIMEOUT_INFINITE);
+			Transaction.Builder txBuilder = new Transaction
+					.Builder(sourceAccount)
+					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+					.addMemo(Memo.text(dexTaskId.getId()));
 
 			// build fee operation
 			if(fee.getFeeAmount() > 0) {
@@ -235,9 +229,7 @@ public class AnchorService {
 			);
 
 			// build tx
-			tx = txBuilder.build();
-
-			TxInformation txInformation = TxInformation.buildTxInformation(tx);
+			TxInformation txInformation = TxInformation.buildTxInformation(txBuilder.build());
 
 			encData = new TxEncryptedData(txInformation);
 
@@ -248,7 +240,7 @@ public class AnchorService {
 			taskRecord.setFeecollectaccount(fee.getFeeCollectorAccount().getAccountId());
 			taskRecord.setTxSeq(txInformation.getSequence());
 			taskRecord.setTxHash(txInformation.getHash());
-			taskRecord.setTxData(txInformation.getEnvelopeXdr());
+			taskRecord.setTxXdr(txInformation.getEnvelopeXdr());
 			taskRecord.setTxKey(encData.getKey());
 			taskRecord.update();
 

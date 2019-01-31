@@ -5,7 +5,7 @@ public class RequestMappings {
 
 	private static final String DEX = ROOT + "/dex";
 
-	public static final String SUBMIT_SUFFIX = "_submit";
+//	public static final String SUBMIT_SUFFIX = "_submit";
 
 	private static final String ANCHOR = DEX + "/anchor";
 	public static final String ANCHOR_TASK = ANCHOR + "/anchor";
@@ -15,7 +15,7 @@ public class RequestMappings {
 
 	private static final String OFFER = DEX + "/offer";
 	public static final String CREATE_OFFER = OFFER + "/createOffer";
-	public static final String CREATE_PASSIVE_OFFER = OFFER + "/createPassiveOffer";
+	//	public static final String CREATE_PASSIVE_OFFER = OFFER + "/createPassiveOffer";
 	public static final String DELETE_OFFER = OFFER + "/deleteOffer";
 
 	private static final String MAS = ROOT + "/mas";
