@@ -12,6 +12,8 @@ import java.util.List;
 @Getter
 @Setter
 public class DexSettings {
+	private String randomStringTable;
+
 	@Getter
 	@Setter
 	public static class _AccessToken {

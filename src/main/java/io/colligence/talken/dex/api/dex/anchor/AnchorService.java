@@ -6,12 +6,7 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexDeanchorTa
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.UTCUtil;
-import io.colligence.talken.dex.DexSettings;
-import io.colligence.talken.dex.api.DexTaskId;
-import io.colligence.talken.dex.api.dex.DexKeyResult;
-import io.colligence.talken.dex.api.dex.FeeCalculationService;
-import io.colligence.talken.dex.api.dex.TxEncryptedData;
-import io.colligence.talken.dex.api.dex.TxInformation;
+import io.colligence.talken.dex.api.dex.*;
 import io.colligence.talken.dex.api.dex.anchor.dto.AnchorResult;
 import io.colligence.talken.dex.api.dex.anchor.dto.DeanchorResult;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
@@ -43,7 +38,7 @@ public class AnchorService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AnchorService.class);
 
 	@Autowired
-	private DexSettings dexSettings;
+	private DexTaskIdService taskIdService;
 
 	@Autowired
 	private StellarNetworkService stellarNetworkService;
@@ -66,7 +61,7 @@ public class AnchorService {
 	public AnchorResult anchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount) throws AssetTypeNotFoundException, APIErrorException, ActiveAssetHolderAccountNotFoundException {
 		String assetHolderAddress = maService.getActiveHolderAccountAddress(assetCode);
 
-		DexTaskId dexTaskId = DexTaskId.generate(DexTaskId.Type.ANCHOR);
+		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskId.Type.ANCHOR);
 
 		// create task record
 		DexAnchorTaskRecord taskRecord = new DexAnchorTaskRecord();
@@ -171,7 +166,7 @@ public class AnchorService {
 
 
 	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws AssetTypeNotFoundException, StellarException, APIErrorException {
-		DexTaskId dexTaskId = DexTaskId.generate(DexTaskId.Type.DEANCHOR);
+		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskId.Type.DEANCHOR);
 
 		// create task record
 		DexDeanchorTaskRecord taskRecord = new DexDeanchorTaskRecord();
@@ -330,7 +325,7 @@ public class AnchorService {
 	}
 
 	public DexKeyResult deanchorDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
-		DexTaskId dexTaskId = DexTaskId.fromId(taskId);
+		DexTaskId dexTaskId = taskIdService.decode_taskId(taskId);
 		if(!dexTaskId.getType().equals(DexTaskId.Type.DEANCHOR))
 			throw new TaskNotFoundException(taskId);
 

@@ -6,11 +6,7 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexMakeofferR
 import io.colligence.talken.common.persistence.jooq.tables.records.DexMakeofferTaskRecord;
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.api.DexTaskId;
-import io.colligence.talken.dex.api.dex.DexKeyResult;
-import io.colligence.talken.dex.api.dex.FeeCalculationService;
-import io.colligence.talken.dex.api.dex.TxEncryptedData;
-import io.colligence.talken.dex.api.dex.TxInformation;
+import io.colligence.talken.dex.api.dex.*;
 import io.colligence.talken.dex.api.dex.offer.dto.CreateOfferResult;
 import io.colligence.talken.dex.api.dex.offer.dto.DeleteOfferResult;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
@@ -41,6 +37,9 @@ public class OfferService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(OfferService.class);
 
 	@Autowired
+	private DexTaskIdService taskIdService;
+
+	@Autowired
 	private FeeCalculationService feeCalculationService;
 
 	@Autowired
@@ -56,7 +55,7 @@ public class OfferService {
 	private RelayServerService relayServerService;
 
 	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws AssetTypeNotFoundException, StellarException, APIErrorException {
-		DexTaskId dexTaskId = DexTaskId.generate(DexTaskId.Type.OFFER_CREATE);
+		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskId.Type.OFFER_CREATE);
 
 		// create task record
 		DexMakeofferTaskRecord taskRecord = new DexMakeofferTaskRecord();
@@ -190,7 +189,7 @@ public class OfferService {
 	}
 
 	public DexKeyResult createOfferDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
-		DexTaskId dexTaskId = DexTaskId.fromId(taskId);
+		DexTaskId dexTaskId = taskIdService.decode_taskId(taskId);
 		if(!dexTaskId.getType().equals(DexTaskId.Type.OFFER_CREATE))
 			throw new TaskNotFoundException(taskId);
 
@@ -210,7 +209,7 @@ public class OfferService {
 	}
 
 	public DeleteOfferResult deleteOffer(long userId, long offerId, String sourceAccountId, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, StellarException, APIErrorException {
-		DexTaskId dexTaskId = DexTaskId.generate(DexTaskId.Type.OFFER_DELETE);
+		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskId.Type.OFFER_DELETE);
 
 		// create task record
 		DexDeleteofferTaskRecord taskRecord = new DexDeleteofferTaskRecord();
@@ -336,7 +335,7 @@ public class OfferService {
 	}
 
 	public DexKeyResult deleteOfferDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
-		DexTaskId dexTaskId = DexTaskId.fromId(taskId);
+		DexTaskId dexTaskId = taskIdService.decode_taskId(taskId);
 		if(!dexTaskId.getType().equals(DexTaskId.Type.OFFER_DELETE))
 			throw new TaskNotFoundException(taskId);
 

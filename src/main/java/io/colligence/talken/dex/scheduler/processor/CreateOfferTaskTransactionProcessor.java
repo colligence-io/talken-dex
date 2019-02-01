@@ -1,17 +1,29 @@
-package io.colligence.talken.dex.scheduler;
+package io.colligence.talken.dex.scheduler.processor;
 
 import io.colligence.talken.common.util.PrefixedLogger;
-import org.springframework.context.annotation.Scope;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import io.colligence.talken.dex.api.dex.DexTaskId;
+import io.colligence.talken.dex.exception.TransactionResultProcessingException;
+import io.colligence.talken.dex.scheduler.TaskTransactionProcessor;
+import org.jooq.DSLContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.stellar.sdk.responses.TransactionResponse;
 
-@Service
-@Scope("singleton")
-public class MakeOfferTaskMonitorService {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(MakeOfferTaskMonitorService.class);
+@Component
+public class CreateOfferTaskTransactionProcessor implements TaskTransactionProcessor {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(CreateOfferTaskTransactionProcessor.class);
 
-	@Scheduled(fixedRate = 5000)
-	private void checkTask() {
+	@Autowired
+	private DSLContext dslContext;
+
+	@Override
+	public DexTaskId.Type getDexTaskType() {
+		return DexTaskId.Type.OFFER_CREATE;
+	}
+
+	@Override
+	public void process(DexTaskId dexTaskId, TransactionResponse tx) throws TransactionResultProcessingException {
+		logger.info("Processing tx for task {}", dexTaskId);
 
 	}
 
@@ -152,3 +164,5 @@ public class MakeOfferTaskMonitorService {
 //		return result;
 //	}
 }
+
+

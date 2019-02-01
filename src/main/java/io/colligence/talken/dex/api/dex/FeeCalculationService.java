@@ -2,7 +2,6 @@ package io.colligence.talken.dex.api.dex;
 
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
-import io.colligence.talken.dex.api.DexTaskId;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
 import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
 import lombok.Getter;
@@ -92,11 +91,6 @@ public class FeeCalculationService {
 	public double exchangeAsset(Asset from, double amount, Asset to) {
 		// TODO : implement exchange routine
 		return amount;
-	}
-
-	public DexTaskId createOfferFeeRefundTask(String feeCollectorAccount, String tradeWallerAddress, double refundAmount) {
-		return DexTaskId.generate(DexTaskId.Type.OFFER_REFUNDFEE);
-		// TODO : implement refund routine
 	}
 
 	@Getter

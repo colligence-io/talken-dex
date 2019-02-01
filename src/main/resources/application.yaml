@@ -36,6 +36,7 @@ spring:
       enabled: true
 talken:
   dex:
+    randomStringTable: "L4567YZvhiDCOPVWXrEFMNabcdeUgGHIJjklmABstu3wxyz012KnopqfQRST89"
     scheduler:
       pool-size: 4
     accessToken:
