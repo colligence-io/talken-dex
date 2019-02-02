@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.scheduler;
+package io.colligence.talken.dex.scheduler.dex;
 
 import io.colligence.talken.common.persistence.jooq.tables.records.DexStatusRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
@@ -16,14 +16,15 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.Memo;
-import org.stellar.sdk.MemoText;
-import org.stellar.sdk.Server;
+import org.stellar.sdk.*;
 import org.stellar.sdk.requests.RequestBuilder;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.TransactionResponse;
+import org.stellar.sdk.xdr.ManageOfferOp;
+import org.stellar.sdk.xdr.PaymentOp;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -32,8 +33,8 @@ import static io.colligence.talken.common.persistence.jooq.Tables.DEX_STATUS;
 
 @Service
 @Scope("singleton")
-public class StellarTransactionMonitor implements ApplicationContextAware {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarTransactionMonitor.class);
+public class TaskTransactionMonitor implements ApplicationContextAware {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TaskTransactionMonitor.class);
 
 	@Autowired
 	private StellarNetworkService stellarNetworkService;
@@ -107,7 +108,7 @@ public class StellarTransactionMonitor implements ApplicationContextAware {
 
 		for(TransactionResponse txRecord : txPage.getRecords()) {
 			try {
-				logger.trace("{} {} {} {}", txRecord.getHash(), txRecord.getLedger(), txRecord.getCreatedAt(), txRecord.getPagingToken());
+//				logger.trace("{} {} {} {}", txRecord.getHash(), txRecord.getLedger(), txRecord.getCreatedAt(), txRecord.getPagingToken());
 				Memo memo = txRecord.getMemo();
 				if(memo instanceof MemoText) {
 					String memoText = ((MemoText) memo).getText();
@@ -116,13 +117,21 @@ public class StellarTransactionMonitor implements ApplicationContextAware {
 							DexTaskId dexTaskId = taskIdService.decode_taskId(memoText);
 							// run processor
 							if(processors.containsKey(dexTaskId.getType())) {
-								try {
-									processors.get(dexTaskId.getType()).process(dexTaskId, txRecord);
-								} catch(TransactionResultProcessingException trpex) {
-									// TODO : leave log at DB for manual inspection
-									// dslContext.insertInto(DEX_PROCESS_LOG)...
 
-									logger.exception(trpex, "Error processing task [{}] tx result.", dexTaskId);
+								TaskTransactionProcessResult result;
+								try {
+									result = processors.get(dexTaskId.getType()).process(dexTaskId, txRecord);
+								} catch(Exception ex) {
+									result = new TaskTransactionProcessResult(ex);
+								}
+
+								if(!result.isSuccess()) {
+									if(result.getCause() != null)
+										logger.exception(result.getCause());
+
+									logger.error("{} transaction {} result process error : {}", dexTaskId, txRecord.getHash(), result.getMessage());
+									// TODO : log error at DB
+									// dexTaskId, txRecord, TaskTransactionProcessResult
 								}
 							}
 						} catch(TaskIntegrityCheckFailedException e) {
@@ -139,6 +148,7 @@ public class StellarTransactionMonitor implements ApplicationContextAware {
 			}
 		}
 	}
+
 //
 //	private void getTransactionsStream() {
 //		Server server = stellarNetworkService.pickServer();

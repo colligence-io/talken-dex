@@ -1,9 +1,9 @@
 package io.colligence.talken.dex.api.dex.offer;
 
 
+import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateofferResultRecord;
+import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateofferTaskRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexDeleteofferTaskRecord;
-import io.colligence.talken.common.persistence.jooq.tables.records.DexMakeofferResultRecord;
-import io.colligence.talken.common.persistence.jooq.tables.records.DexMakeofferTaskRecord;
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.api.dex.*;
@@ -58,7 +58,7 @@ public class OfferService {
 		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskId.Type.OFFER_CREATE);
 
 		// create task record
-		DexMakeofferTaskRecord taskRecord = new DexMakeofferTaskRecord();
+		DexCreateofferTaskRecord taskRecord = new DexCreateofferTaskRecord();
 		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
 
@@ -75,7 +75,7 @@ public class OfferService {
 
 		logger.debug("{} generated. userId = {}", dexTaskId, userId);
 
-		// build encData for makeOffer request
+		// build encData for CreateOffer request
 		TxEncryptedData encData;
 		try {
 			// pick horizon server
@@ -91,7 +91,7 @@ public class OfferService {
 			FeeCalculationService.Fee fee = feeCalculationService.calculateOfferFee(sellAssetCode, sellAssetAmount, feeByCtx);
 
 			// get assetType
-			AssetTypeCreditAlphaNum4 buyAssetType = maService.getAssetType(buyAssetCode);
+			Asset buyAssetType = maService.getAssetType(buyAssetCode);
 
 			Transaction.Builder txBuilder = new Transaction
 					.Builder(sourceAccount)
@@ -193,7 +193,7 @@ public class OfferService {
 		if(!dexTaskId.getType().equals(DexTaskId.Type.OFFER_CREATE))
 			throw new TaskNotFoundException(taskId);
 
-		DexMakeofferTaskRecord taskRecord = dslContext.selectFrom(DEX_MAKEOFFER_TASK)
+		DexCreateofferTaskRecord taskRecord = dslContext.selectFrom(DEX_CREATEOFFER_TASK)
 				.where(DEX_ANCHOR_TASK.TASKID.eq(taskId))
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
 
@@ -224,20 +224,20 @@ public class OfferService {
 		dslContext.attach(taskRecord);
 		taskRecord.store();
 
-		Optional<DexMakeofferResultRecord> opt_dexMakeofferResultRecord = dslContext.selectFrom(DEX_MAKEOFFER_RESULT)
-				.where(DEX_MAKEOFFER_RESULT.OFFERID.eq(offerId))
+		Optional<DexCreateofferResultRecord> opt_dexCreateOfferResultRecord = dslContext.selectFrom(DEX_CREATEOFFER_RESULT)
+				.where(DEX_CREATEOFFER_RESULT.OFFERID.eq(offerId))
 				.fetchOptional();
 
-		if(opt_dexMakeofferResultRecord.isPresent()) {
-			taskRecord.setMakeoffertaskid(opt_dexMakeofferResultRecord.get().getTaskid());
+		if(opt_dexCreateOfferResultRecord.isPresent()) {
+			taskRecord.setCreateoffertaskid(opt_dexCreateOfferResultRecord.get().getTaskid());
 		} else {
 			// TODO : determine what to do, force proceed? or drop
-			logger.warn("Make offer result for {} not found, this may cause unexpected refund result.");
+			logger.warn("Create offer result for {} not found, this may cause unexpected refund result.");
 		}
 
 		logger.debug("{} generated. userId = {}", dexTaskId, userId);
 
-		// build encData for makeOffer request
+		// build encData for DeleteOffer request
 		TxEncryptedData encData;
 		try {
 			// pick horizon server
@@ -250,8 +250,8 @@ public class OfferService {
 			AccountResponse sourceAccount = server.accounts().account(source);
 
 			// get assetType
-			AssetTypeCreditAlphaNum4 sellAssetType = maService.getAssetType(sellAssetCode);
-			AssetTypeCreditAlphaNum4 buyAssetType = maService.getAssetType(buyAssetCode);
+			Asset sellAssetType = maService.getAssetType(sellAssetCode);
+			Asset buyAssetType = maService.getAssetType(buyAssetCode);
 
 			Transaction.Builder txBuilder = new Transaction
 					.Builder(sourceAccount)

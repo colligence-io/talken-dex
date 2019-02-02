@@ -14,6 +14,7 @@ import io.colligence.talken.dex.service.integration.stellar.StellarNetworkServic
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.stellar.sdk.Asset;
 import org.stellar.sdk.AssetTypeCreditAlphaNum4;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.Server;
@@ -113,7 +114,7 @@ public class ManagedAccountService {
 		}
 	}
 
-	public AssetTypeCreditAlphaNum4 getAssetType(String code) throws AssetTypeNotFoundException {
+	public Asset getAssetType(String code) throws AssetTypeNotFoundException {
 		return getPack(code).getAssetType();
 	}
 
