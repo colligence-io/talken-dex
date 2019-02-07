@@ -9,6 +9,7 @@ public class RequestMappings {
 
 	private static final String ANCHOR = DEX + "/anchor";
 	public static final String ANCHOR_TASK = ANCHOR + "/anchor";
+	public static final String ANCHOR_TASK_DEXKEY = ANCHOR_TASK + DEXKEY_SUFFIX;
 	public static final String DEANCHOR_TASK = ANCHOR + "/deanchor";
 	public static final String DEANCHOR_TASK_DEXKEY = DEANCHOR_TASK + DEXKEY_SUFFIX;
 

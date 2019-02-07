@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.api.dex;
+package io.colligence.talken.dex.service.integration.relay;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,13 +10,13 @@ import javax.crypto.KeyGenerator;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 
-public class TxEncryptedData {
-	private TxInformation txInfo;
+public class RelayEncryptedContent<T> {
+	private T data;
 	private String key;
 	private String encrypted;
 
-	public TxEncryptedData(TxInformation txInfo) throws JsonProcessingException, GeneralSecurityException {
-		this.txInfo = txInfo;
+	public RelayEncryptedContent(T data) throws JsonProcessingException, GeneralSecurityException {
+		this.data = data;
 		encrypt();
 	}
 
@@ -29,11 +29,11 @@ public class TxEncryptedData {
 			key = RandomStringGenerator.generate(16);
 		}
 
-		encrypted = new AES256Util(key).encrypt(JSONWriter.toJsonString(txInfo));
+		encrypted = new AES256Util(key).encrypt(JSONWriter.toJsonString(data));
 	}
 
-	public TxInformation getTxInfo() {
-		return txInfo;
+	public T getData() {
+		return data;
 	}
 
 	public String getKey() {

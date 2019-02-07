@@ -35,16 +35,15 @@ public class AnchorController {
 	@RequestMapping(value = RequestMappings.ANCHOR_TASK, method = RequestMethod.POST)
 	public DexResponse<AnchorResult> anchor(@RequestBody AnchorRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(anchorService.anchor(authInfo.getUserId(), postBody.getPrivateWalletAddress(), postBody.getTradeWalletAddress(), postBody.getAssetCode(), postBody.getAmount()));
+		return DexResponse.buildResponse(anchorService.anchor(authInfo.getUserId(), postBody.getFrom(), postBody.getStellar(), postBody.getSymbol(), postBody.getAmount(), postBody));
 	}
 
-//	@Deprecated
-//	@AuthRequired
-//	@RequestMapping(value = RequestMappings.ANCHOR_TASK + RequestMappings.SUBMIT_SUFFIX, method = RequestMethod.POST)
-//	public DexResponse<AnchorSubmitResult> submitAnchor(@RequestBody AnchorSubmitRequest postBody) throws DexException {
-//		DTOValidator.validate(postBody);
-//		return DexResponse.buildResponse(anchorService.submitAnchorTransaction(authInfo.getUserId(), postBody.getTaskId(), postBody.getAssetCode(), postBody.getTxData()));
-//	}
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.ANCHOR_TASK_DEXKEY, method = RequestMethod.POST)
+	public DexResponse<DexKeyResult> anchorDexKey(@RequestBody DexKeyRequest postBody) throws DexException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(anchorService.anchorDexKey(authInfo.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
+	}
 
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.DEANCHOR_TASK, method = RequestMethod.POST)
@@ -59,11 +58,4 @@ public class AnchorController {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(anchorService.deanchorDexKey(authInfo.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
 	}
-
-//	@AuthRequired
-//	@RequestMapping(value = RequestMappings.DEANCHOR_TASK + RequestMappings.SUBMIT_SUFFIX, method = RequestMethod.POST)
-//	public DexResponse<DeanchorSubmitResult> deanchor(@RequestBody DeanchorSubmitRequest postBody) throws DexException {
-//		DTOValidator.validate(postBody);
-//		return DexResponse.buildResponse(anchorService.submitDeanchorTransaction(authInfo.getUserId(), postBody.getTaskId(), postBody.getTxHash(), postBody.getTxEnvelope()));
-//	}
 }

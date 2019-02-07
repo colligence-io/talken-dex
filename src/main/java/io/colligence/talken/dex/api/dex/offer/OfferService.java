@@ -4,7 +4,6 @@ package io.colligence.talken.dex.api.dex.offer;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateofferResultRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateofferTaskRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexDeleteofferTaskRecord;
-import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.api.dex.*;
 import io.colligence.talken.dex.api.dex.offer.dto.CreateOfferResult;
@@ -12,8 +11,9 @@ import io.colligence.talken.dex.api.dex.offer.dto.DeleteOfferResult;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
 import io.colligence.talken.dex.exception.*;
 import io.colligence.talken.dex.service.integration.APIResult;
-import io.colligence.talken.dex.service.integration.relay.RelayAddContentsRequest;
 import io.colligence.talken.dex.service.integration.relay.RelayAddContentsResponse;
+import io.colligence.talken.dex.service.integration.relay.RelayEncryptedContent;
+import io.colligence.talken.dex.service.integration.relay.RelayMsgTypeEnum;
 import io.colligence.talken.dex.service.integration.relay.RelayServerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
 import io.colligence.talken.dex.util.StellarSignVerifier;
@@ -26,7 +26,6 @@ import org.stellar.sdk.responses.AccountResponse;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
 import java.util.Optional;
 
 import static io.colligence.talken.common.persistence.jooq.Tables.*;
@@ -76,7 +75,7 @@ public class OfferService {
 		logger.debug("{} generated. userId = {}", dexTaskId, userId);
 
 		// build encData for CreateOffer request
-		TxEncryptedData encData;
+		RelayEncryptedContent<TxInformation> encData;
 		try {
 			// pick horizon server
 			Server server = stellarNetworkService.pickServer();
@@ -117,7 +116,7 @@ public class OfferService {
 			// build tx
 			TxInformation txInformation = TxInformation.buildTxInformation(txBuilder.build());
 
-			encData = new TxEncryptedData(txInformation);
+			encData = new RelayEncryptedContent<>(txInformation);
 
 			taskRecord.setSellamount(fee.getSellAmount());
 			taskRecord.setFeeassetcode(fee.getFeeAssetType().getType());
@@ -126,7 +125,6 @@ public class OfferService {
 			taskRecord.setTxSeq(txInformation.getSequence());
 			taskRecord.setTxHash(txInformation.getHash());
 			taskRecord.setTxXdr(txInformation.getEnvelopeXdr());
-			taskRecord.setTxKey(encData.getKey());
 			taskRecord.update();
 
 		} catch(GeneralSecurityException | IOException ex) {
@@ -143,17 +141,7 @@ public class OfferService {
 
 
 		// send relay addContents request
-		HashMap<String, String> contents = new HashMap<>();
-		contents.put("taskId", dexTaskId.getId());
-		contents.put("data", encData.getEncrypted());
-		RelayAddContentsRequest rlyRequest = new RelayAddContentsRequest();
-		rlyRequest.setMsgType("1005");
-		rlyRequest.setUserId(Long.toString(userId));
-		rlyRequest.setMsgContents(JSONWriter.toJsonStringSafe(contents));
-		rlyRequest.setPushTitle("");
-		rlyRequest.setPushBody("");
-
-		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(rlyRequest);
+		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.CREATEOFFER, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
@@ -168,6 +156,7 @@ public class OfferService {
 		}
 
 		// update task record
+		taskRecord.setRlyDexkey(encData.getKey());
 		taskRecord.setRlyTransid(relayResult.getData().getTransId());
 		taskRecord.setRlyRegdt(relayResult.getData().getRegDt());
 		taskRecord.setRlyEnddt(relayResult.getData().getEndDt());
@@ -194,7 +183,7 @@ public class OfferService {
 			throw new TaskNotFoundException(taskId);
 
 		DexCreateofferTaskRecord taskRecord = dslContext.selectFrom(DEX_CREATEOFFER_TASK)
-				.where(DEX_ANCHOR_TASK.TASKID.eq(taskId))
+				.where(DEX_CREATEOFFER_TASK.TASKID.eq(taskId))
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
 
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);
@@ -204,7 +193,7 @@ public class OfferService {
 			throw new SignatureVerificationFailedException(transId, signature);
 
 		DexKeyResult result = new DexKeyResult();
-		result.setDexKey(taskRecord.getTxKey());
+		result.setDexKey(taskRecord.getRlyDexkey());
 		return result;
 	}
 
@@ -238,7 +227,7 @@ public class OfferService {
 		logger.debug("{} generated. userId = {}", dexTaskId, userId);
 
 		// build encData for DeleteOffer request
-		TxEncryptedData encData;
+		RelayEncryptedContent<TxInformation> encData;
 		try {
 			// pick horizon server
 			Server server = stellarNetworkService.pickServer();
@@ -269,12 +258,11 @@ public class OfferService {
 			// build tx
 			TxInformation txInformation = TxInformation.buildTxInformation(txBuilder.build());
 
-			encData = new TxEncryptedData(txInformation);
+			encData = new RelayEncryptedContent<>(txInformation);
 
 			taskRecord.setTxSeq(txInformation.getSequence());
 			taskRecord.setTxHash(txInformation.getHash());
 			taskRecord.setTxXdr(txInformation.getEnvelopeXdr());
-			taskRecord.setTxKey(encData.getKey());
 			taskRecord.update();
 
 		} catch(GeneralSecurityException | IOException ex) {
@@ -291,17 +279,7 @@ public class OfferService {
 
 
 		// send relay addContents request
-		HashMap<String, String> contents = new HashMap<>();
-		contents.put("taskId", dexTaskId.getId());
-		contents.put("data", encData.getEncrypted());
-		RelayAddContentsRequest rlyRequest = new RelayAddContentsRequest();
-		rlyRequest.setMsgType("1006");
-		rlyRequest.setUserId(Long.toString(userId));
-		rlyRequest.setMsgContents(JSONWriter.toJsonStringSafe(contents));
-		rlyRequest.setPushTitle("");
-		rlyRequest.setPushBody("");
-
-		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(rlyRequest);
+		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DELETEOFFER, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
@@ -316,6 +294,7 @@ public class OfferService {
 		}
 
 		// update task record
+		taskRecord.setRlyDexkey(encData.getKey());
 		taskRecord.setRlyTransid(relayResult.getData().getTransId());
 		taskRecord.setRlyRegdt(relayResult.getData().getRegDt());
 		taskRecord.setRlyEnddt(relayResult.getData().getEndDt());
@@ -340,7 +319,7 @@ public class OfferService {
 			throw new TaskNotFoundException(taskId);
 
 		DexDeleteofferTaskRecord taskRecord = dslContext.selectFrom(DEX_DELETEOFFER_TASK)
-				.where(DEX_ANCHOR_TASK.TASKID.eq(taskId))
+				.where(DEX_DELETEOFFER_TASK.TASKID.eq(taskId))
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
 
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);
@@ -350,7 +329,7 @@ public class OfferService {
 			throw new SignatureVerificationFailedException(transId, signature);
 
 		DexKeyResult result = new DexKeyResult();
-		result.setDexKey(taskRecord.getTxKey());
+		result.setDexKey(taskRecord.getRlyDexkey());
 		return result;
 	}
 }

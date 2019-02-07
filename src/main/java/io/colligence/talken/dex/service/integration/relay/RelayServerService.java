@@ -6,8 +6,10 @@ import com.apollographql.apollo.api.Response;
 import com.apollographql.apollo.exception.ApolloException;
 import com.apollographql.apollo.response.CustomTypeAdapter;
 import com.apollographql.apollo.response.CustomTypeValue;
+import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
+import io.colligence.talken.dex.api.dex.DexTaskId;
 import io.colligence.talken.dex.service.integration.APIResult;
 import io.colligence.talken.graphql.relay.RelayAddContentsMutation;
 import io.colligence.talken.graphql.relay.type.CustomType;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -54,18 +57,21 @@ public class RelayServerService {
 				.build();
 	}
 
-	public APIResult<RelayAddContentsResponse> requestAddContents(RelayAddContentsRequest request) {
-
+	public APIResult<RelayAddContentsResponse> requestAddContents(RelayMsgTypeEnum msgType, long userId, DexTaskId dexTaskId, RelayEncryptedContent<?> encData) {
 		CompletableFuture<APIResult<RelayAddContentsResponse>> completableFuture = new CompletableFuture<>();
+
+		HashMap<String, String> contents = new HashMap<>();
+		contents.put("taskId", dexTaskId.getId());
+		contents.put("data", encData.getEncrypted());
 
 		apolloClient.mutate(
 				RelayAddContentsMutation.builder()
-						.msgType(request.getMsgType())
-						.userId(request.getUserId())
-						.pushTitle(request.getPushTitle())
-						.pushBody(request.getPushBody())
-						.pushImage(request.getPushImage())
-						.msgContents(request.getMsgContents())
+						.msgType(msgType.getMsgType())
+						.userId(Long.toString(userId))
+						.msgContents(JSONWriter.toJsonStringSafe(contents))
+						.pushTitle("")
+						.pushBody("")
+						.pushImage(null)
 						.build()
 		).enqueue(new ApolloCall.Callback<RelayAddContentsMutation.Data>() {
 			@Override
