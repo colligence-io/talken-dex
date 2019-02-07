@@ -2,6 +2,7 @@ package io.colligence.talken.dex.service.integration.relay;
 
 import com.apollographql.apollo.ApolloCall;
 import com.apollographql.apollo.ApolloClient;
+import com.apollographql.apollo.api.Error;
 import com.apollographql.apollo.api.Response;
 import com.apollographql.apollo.exception.ApolloException;
 import com.apollographql.apollo.response.CustomTypeAdapter;
@@ -69,25 +70,36 @@ public class RelayServerService {
 						.msgType(msgType.getMsgType())
 						.userId(Long.toString(userId))
 						.msgContents(JSONWriter.toJsonStringSafe(contents))
-						.pushTitle("")
-						.pushBody("")
-						.pushImage(null)
+						.pushTitle(msgType.name())
+						.pushBody(msgType.name())
+						.pushImage("")
 						.build()
 		).enqueue(new ApolloCall.Callback<RelayAddContentsMutation.Data>() {
 			@Override
 			public void onResponse(@NotNull Response<RelayAddContentsMutation.Data> response) {
 				APIResult<RelayAddContentsResponse> apiResult = new APIResult<>("RelayAddContents");
-				try {
-					RelayAddContentsResponse result = new RelayAddContentsResponse();
-					result.setTransId(response.data().addContents().transId());
-					result.setStatus(response.data().addContents().status());
-					result.setRegDt(response.data().addContents().regDt());
-					result.setEndDt(response.data().addContents().endDt());
-					apiResult.setSuccess(true);
-					apiResult.setData(result);
-				} catch(Exception ex) {
-					apiResult.setException(ex);
+				if(response.hasErrors()) {
+					StringBuilder sb = new StringBuilder();
+					for(Error error : response.errors()) sb.append(error.message()).append("\n");
+					apiResult.setError("RelayError", sb.toString());
+				} else {
+					if(response.data() != null) {
+						try {
+							RelayAddContentsResponse result = new RelayAddContentsResponse();
+							result.setTransId(response.data().addContents().transId());
+							result.setStatus(response.data().addContents().status());
+							result.setRegDt(response.data().addContents().regDt());
+							result.setEndDt(response.data().addContents().endDt());
+							apiResult.setSuccess(true);
+							apiResult.setData(result);
+						} catch(Exception ex) {
+							apiResult.setException(ex);
+						}
+					} else {
+						apiResult.setError("RelayError", "Relay server returned null.");
+					}
 				}
+
 				completableFuture.complete(apiResult);
 			}
 

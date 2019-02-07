@@ -1,5 +1,6 @@
 package io.colligence.talken.dex.scheduler.dex;
 
+import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexStatusRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.api.dex.DexTaskId;
@@ -75,6 +76,11 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 	}
 
 	private String getLastPagingToken() {
+		// reset status if local
+		if(RunningProfile.isLocal()) {
+			dslContext.deleteFrom(DEX_STATUS).where().execute();
+		}
+
 		Optional<DexStatusRecord> opt_status = dslContext.selectFrom(DEX_STATUS).limit(1).fetchOptional();
 		if(opt_status.isPresent()) {
 			return opt_status.get().getTxmonitorlastpagingtoken();

@@ -158,6 +158,9 @@ public class AnchorService {
 		AnchorResult result = new AnchorResult();
 		result.setTaskId(dexTaskId.getId());
 		result.setHolderAccountAddress(assetHolderAddress);
+		result.setTransId(taskRecord.getRlyTransid());
+		result.setAssetType(taskRecord.getAssetcode());
+		result.setAmount(taskRecord.getAmount());
 		return result;
 	}
 
