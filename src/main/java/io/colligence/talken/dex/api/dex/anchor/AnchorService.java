@@ -159,7 +159,7 @@ public class AnchorService {
 		result.setTaskId(dexTaskId.getId());
 		result.setHolderAccountAddress(assetHolderAddress);
 		result.setTransId(taskRecord.getRlyTransid());
-		result.setAssetType(taskRecord.getAssetcode());
+		result.setAssetCode(taskRecord.getAssetcode());
 		result.setAmount(taskRecord.getAmount());
 		return result;
 	}
@@ -326,9 +326,9 @@ public class AnchorService {
 		DeanchorResult result = new DeanchorResult();
 		result.setTaskId(dexTaskId.getId());
 		result.setTransId(taskRecord.getRlyTransid());
-		result.setFeeAssetType(taskRecord.getFeeassettype());
+		result.setFeeAssetCode(taskRecord.getFeeassettype());
 		result.setFeeAmount(taskRecord.getFeeamount());
-		result.setDeanchorAssetType(taskRecord.getAssetcode());
+		result.setDeanchorAssetCode(taskRecord.getAssetcode());
 		result.setDeanchorAmount(taskRecord.getDeanchoramount());
 		return result;
 	}

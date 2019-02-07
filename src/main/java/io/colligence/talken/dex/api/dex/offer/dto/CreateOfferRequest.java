@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class CreateOfferRequest {
 	@NotEmpty
-	private String sourceAccountId;
+	private String tradeWallerAddress;
 	@NotEmpty
 	private String sellAssetCode;
 	@NotEmpty

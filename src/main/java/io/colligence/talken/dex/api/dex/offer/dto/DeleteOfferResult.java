@@ -7,7 +7,7 @@ public class DeleteOfferResult {
 	private String taskId;
 	private String transId;
 	private Long offerId;
-	private String sellAssetType;
+	private String sellAssetCode;
 	private Double sellAmount;
 	private Double sellPrice;
 }

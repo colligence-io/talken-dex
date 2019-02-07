@@ -10,7 +10,7 @@ public class DeleteOfferRequest {
 	@NotEmpty
 	private Long offerId;
 	@NotEmpty
-	private String sourceAccountId;
+	private String tradeWalletAddress;
 	@NotEmpty
 	private String sellAssetCode;
 	@NotEmpty

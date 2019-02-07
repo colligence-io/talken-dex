@@ -6,10 +6,10 @@ import lombok.Data;
 public class CreateOfferResult {
 	private String taskId;
 	private String transId;
-	private String sellAssetType;
+	private String sellAssetCode;
 	private Double sellAmount;
 	private Double sellPrice;
-	private String buyAssetType;
-	private String feeAssetType;
+	private String buyAssetCode;
+	private String feeAssetCode;
 	private Double feeAmount;
 }

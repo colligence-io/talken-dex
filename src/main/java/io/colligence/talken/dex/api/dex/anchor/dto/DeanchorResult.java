@@ -6,8 +6,8 @@ import lombok.Data;
 public class DeanchorResult {
 	private String taskId;
 	private String transId;
-	private String feeAssetType;
+	private String feeAssetCode;
 	private Double feeAmount;
-	private String deanchorAssetType;
+	private String deanchorAssetCode;
 	private Double deanchorAmount;
 }

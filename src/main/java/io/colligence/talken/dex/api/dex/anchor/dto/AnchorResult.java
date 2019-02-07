@@ -6,7 +6,7 @@ import lombok.Data;
 public class AnchorResult {
 	private String taskId;
 	private String transId;
-	private String assetType;
+	private String assetCode;
 	private Double amount;
 	private String holderAccountAddress;
 }

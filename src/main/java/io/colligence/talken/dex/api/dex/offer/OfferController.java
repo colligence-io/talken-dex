@@ -33,7 +33,7 @@ public class OfferController {
 	@RequestMapping(value = RequestMappings.CREATE_OFFER, method = RequestMethod.POST)
 	public DexResponse<CreateOfferResult> createOffer(@RequestBody CreateOfferRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(offerService.createOffer(authInfo.getUserId(), postBody.getSourceAccountId(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
+		return DexResponse.buildResponse(offerService.createOffer(authInfo.getUserId(), postBody.getTradeWallerAddress(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
 	}
 
 	@AuthRequired
@@ -43,19 +43,11 @@ public class OfferController {
 		return DexResponse.buildResponse(offerService.createOfferDexKey(authInfo.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
 	}
 
-//  NOT AVAILABLE YET
-//	@AuthRequired
-//	@RequestMapping(value = RequestMappings.CREATE_PASSIVE_OFFER, method = RequestMethod.POST)
-//	public DexResponse<CreatePassiveOfferResult> createPassiveOffer(@RequestBody CreatePassiveOfferRequest postBody) throws DexException {
-//		DTOValidator.validate(postBody);
-//		return DexResponse.buildResponse(offerService.createPassiveOffer(authInfo.getUserId(), postBody.getSourceAccountId(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
-//	}
-
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.DELETE_OFFER, method = RequestMethod.POST)
 	public DexResponse<DeleteOfferResult> deleteOffer(@RequestBody DeleteOfferRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(offerService.deleteOffer(authInfo.getUserId(), postBody.getOfferId(), postBody.getSourceAccountId(), postBody.getSellAssetCode(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice()));
+		return DexResponse.buildResponse(offerService.deleteOffer(authInfo.getUserId(), postBody.getOfferId(), postBody.getTradeWalletAddress(), postBody.getSellAssetCode(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice()));
 	}
 
 	@AuthRequired

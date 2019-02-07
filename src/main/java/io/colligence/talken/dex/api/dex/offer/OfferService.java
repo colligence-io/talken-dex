@@ -168,11 +168,11 @@ public class OfferService {
 		CreateOfferResult result = new CreateOfferResult();
 		result.setTaskId(dexTaskId.getId());
 		result.setTransId(taskRecord.getRlyTransid());
-		result.setSellAssetType(taskRecord.getSellassetcode());
+		result.setSellAssetCode(taskRecord.getSellassetcode());
 		result.setSellAmount(taskRecord.getSellamount());
 		result.setSellPrice(taskRecord.getSellprice());
-		result.setBuyAssetType(taskRecord.getBuyassetcode());
-		result.setFeeAssetType(taskRecord.getFeeassetcode());
+		result.setBuyAssetCode(taskRecord.getBuyassetcode());
+		result.setFeeAssetCode(taskRecord.getFeeassetcode());
 		result.setFeeAmount(taskRecord.getFeeamount());
 		return result;
 	}
@@ -307,7 +307,7 @@ public class OfferService {
 		result.setTaskId(dexTaskId.getId());
 		result.setTransId(taskRecord.getRlyTransid());
 		result.setOfferId(taskRecord.getOfferid());
-		result.setSellAssetType(taskRecord.getSellassetcode());
+		result.setSellAssetCode(taskRecord.getSellassetcode());
 		result.setSellAmount(taskRecord.getSellprice());
 		result.setSellPrice(taskRecord.getSellprice());
 		return result;
