@@ -65,20 +65,4 @@ public class DexSettings {
 		private double deanchorFeeAmount;
 		private double deanchorFeeRateCtxFactor;
 	}
-
-	// MAS mockup
-
-	private List<_MasMock> masMockUp;
-
-	@Getter
-	@Setter
-	public static class _MasMock {
-		private String code;
-		private String platform;
-		private String assetIssuer;
-		private String assetBase;
-		private List<String> assetHolder;
-		private String offerFeeHolder;
-		private String deanchorFeeHolder;
-	}
 }

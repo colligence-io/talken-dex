@@ -2,15 +2,18 @@ package io.colligence.talken.dex.api.mas.ma;
 
 import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.persistence.enums.BlockChainPlatformEnum;
+import io.colligence.talken.common.persistence.jooq.tables.records.TokenHolderAccountRecord;
+import io.colligence.talken.common.persistence.jooq.tables.records.TokenMetaRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.collection.SingleKeyTable;
-import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.api.mas.ma.dto.UpdateHolderResult;
 import io.colligence.talken.dex.exception.AccountNotFoundException;
 import io.colligence.talken.dex.exception.ActiveAssetHolderAccountNotFoundException;
 import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
 import io.colligence.talken.dex.exception.UpdateHolderStatusException;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
+import org.jooq.DSLContext;
+import org.jooq.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -21,11 +24,13 @@ import org.stellar.sdk.Server;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Optional;
+
+import static io.colligence.talken.common.persistence.jooq.Tables.TOKEN_HOLDER_ACCOUNT;
+import static io.colligence.talken.common.persistence.jooq.Tables.TOKEN_META;
 
 @Service
 @Scope("singleton")
@@ -33,44 +38,56 @@ public class ManagedAccountService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(ManagedAccountService.class);
 
 	@Autowired
-	private DexSettings dexSettings;
-
-	@Autowired
 	private StellarNetworkService stellarNetworkService;
 
+	@Autowired
+	private DSLContext dslContext;
+
 	private SingleKeyTable<String, ManagedAccountPack> maTable = new SingleKeyTable<>();
-	private SecureRandom random = new SecureRandom();
 
 	private HashSet<String> checkedAccounts = new HashSet<>();
 
 	@PostConstruct
 	private void init() throws AccountNotFoundException {
-		for(DexSettings._MasMock masMock : dexSettings.getMasMockUp()) {
+		maTable = load();
+	}
+
+	public Hashtable<String, ManagedAccountPack> reload() throws AccountNotFoundException {
+		maTable = load();
+
+		return getPackList();
+	}
+
+	private SingleKeyTable<String, ManagedAccountPack> load() throws AccountNotFoundException {
+		SingleKeyTable<String, ManagedAccountPack> rtn = new SingleKeyTable<>();
+		Result<TokenMetaRecord> tmList = dslContext.selectFrom(TOKEN_META).where(TOKEN_META.MANAGED_FLAG.eq(true)).fetch();
+
+		for(TokenMetaRecord _tm : tmList) {
+			logger.info("Load managed accounts for {}({})", _tm.getGeneralName(), _tm.getSymbol());
+
 			ManagedAccountPack pack = new ManagedAccountPack();
-			pack.setCode(masMock.getCode());
 
-			BlockChainPlatformEnum bcp = null;
-			for(BlockChainPlatformEnum _bcp : BlockChainPlatformEnum.values()) {
-				if(_bcp.name().equalsIgnoreCase(masMock.getPlatform())) bcp = _bcp;
-			}
-			if(bcp == null) throw new IllegalArgumentException(masMock.getPlatform() + " is not supported.");
-			pack.setPlatform(bcp);
+			pack.setDataId(_tm.getId());
 
-			pack.setAssetIssuerAddress(masMock.getAssetIssuer());
-			pack.setAssetIssuer(getKeyPair(masMock.getAssetIssuer()));
-			pack.setAssetBaseAddress(masMock.getAssetBase());
-			pack.setAssetBase(getKeyPair(masMock.getAssetBase()));
-			for(String _ah : masMock.getAssetHolder()) {
-				pack.addAssetHolder(_ah);
-			}
-			pack.setDeanchorFeeHolderAddress(masMock.getDeanchorFeeHolder());
-			pack.setDeanchorFeeHolder(getKeyPair(masMock.getDeanchorFeeHolder()));
-			pack.setOfferFeeHolderAddress(masMock.getOfferFeeHolder());
-			pack.setOfferFeeHolder(getKeyPair(masMock.getOfferFeeHolder()));
-			pack.setAssetCode(masMock.getCode());
-			pack.setAssetType(new AssetTypeCreditAlphaNum4(masMock.getCode(), pack.getAssetIssuer()));
-			maTable.insert(pack);
+			pack.setPlatform(_tm.getPlatform());
+			pack.setAssetIssuerAddress(_tm.getMaIssuer());
+			pack.setAssetIssuer(getKeyPair(_tm.getMaIssuer()));
+			pack.setAssetBaseAddress(_tm.getMaBase());
+			pack.setAssetBase(getKeyPair(_tm.getMaBase()));
+			pack.setDeanchorFeeHolderAddress(_tm.getMaFeeholderDeanc());
+			pack.setDeanchorFeeHolder(getKeyPair(_tm.getMaFeeholderDeanc()));
+			pack.setOfferFeeHolderAddress(_tm.getMaFeeholderOffer());
+			pack.setOfferFeeHolder(getKeyPair(_tm.getMaFeeholderOffer()));
+			pack.setAssetCode(_tm.getSymbol());
+			pack.setAssetType(new AssetTypeCreditAlphaNum4(_tm.getSymbol(), pack.getAssetIssuer()));
+
+			Result<TokenHolderAccountRecord> _holders = dslContext.selectFrom(TOKEN_HOLDER_ACCOUNT).where(TOKEN_HOLDER_ACCOUNT.TOKEN_META_ID.eq(_tm.getId())).fetch();
+			for(TokenHolderAccountRecord _holder : _holders)
+				pack.addAssetHolder(_holder.getAddress(), _holder.getHotFlag(), _holder.getActiveFlag());
+
+			rtn.insert(pack);
 		}
+		return rtn;
 	}
 
 	private KeyPair getKeyPair(String accountID) throws AccountNotFoundException {
@@ -150,12 +167,6 @@ public class ManagedAccountService {
 		return getPack(code).getPlatform();
 	}
 
-	public Hashtable<String, ManagedAccountPack> reload() {
-		// TODO : implement reload routine
-
-		return getPackList();
-	}
-
 	public Hashtable<String, ManagedAccountPack> getPackList() {
 		return maTable.__getRawData();
 	}
@@ -176,9 +187,16 @@ public class ManagedAccountService {
 				if(holder.isHot() && holders.stream().filter(ManagedAccountPack.AssetHolder::isHot).count() == 1)
 					throw new UpdateHolderStatusException(assetCode, address, "last hot account cannot be freezed.");
 
-				// TODO : update to DB
+				dslContext.update(TOKEN_HOLDER_ACCOUNT)
+						.set(TOKEN_HOLDER_ACCOUNT.HOT_FLAG, false)
+						.where(TOKEN_HOLDER_ACCOUNT.TOKEN_META_ID.eq(pack.getDataId()).and(TOKEN_HOLDER_ACCOUNT.ADDRESS.eq(address)))
+						.execute();
 				holder.setHot(false);
 			} else {
+				dslContext.update(TOKEN_HOLDER_ACCOUNT)
+						.set(TOKEN_HOLDER_ACCOUNT.HOT_FLAG, true)
+						.where(TOKEN_HOLDER_ACCOUNT.TOKEN_META_ID.eq(pack.getDataId()).and(TOKEN_HOLDER_ACCOUNT.ADDRESS.eq(address)))
+						.execute();
 				holder.setHot(true);
 			}
 
@@ -190,11 +208,16 @@ public class ManagedAccountService {
 				if(holder.isActive() && holders.stream().filter(ManagedAccountPack.AssetHolder::isActive).count() == 1)
 					throw new UpdateHolderStatusException(assetCode, address, "last active account cannot be deactivated.");
 
-				// TODO : update to DB
+				dslContext.update(TOKEN_HOLDER_ACCOUNT)
+						.set(TOKEN_HOLDER_ACCOUNT.ACTIVE_FLAG, false)
+						.where(TOKEN_HOLDER_ACCOUNT.TOKEN_META_ID.eq(pack.getDataId()).and(TOKEN_HOLDER_ACCOUNT.ADDRESS.eq(address)))
+						.execute();
 				holder.setActive(false);
 			} else {
-
-				// TODO : update to DB
+				dslContext.update(TOKEN_HOLDER_ACCOUNT)
+						.set(TOKEN_HOLDER_ACCOUNT.ACTIVE_FLAG, true)
+						.where(TOKEN_HOLDER_ACCOUNT.TOKEN_META_ID.eq(pack.getDataId()).and(TOKEN_HOLDER_ACCOUNT.ADDRESS.eq(address)))
+						.execute();
 				holder.setActive(true);
 			}
 		}

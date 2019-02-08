@@ -12,7 +12,9 @@ import java.util.List;
 
 @Data
 public class ManagedAccountPack implements SingleKeyObject<String> {
-	private String code;
+	private String assetCode;
+	@JsonIgnore
+	private AssetTypeCreditAlphaNum4 assetType;
 	private BlockChainPlatformEnum platform;
 	private String assetIssuerAddress;
 	@JsonIgnore
@@ -27,13 +29,13 @@ public class ManagedAccountPack implements SingleKeyObject<String> {
 	private String deanchorFeeHolderAddress;
 	@JsonIgnore
 	private KeyPair deanchorFeeHolder;
-	private String assetCode;
+
 	@JsonIgnore
-	private AssetTypeCreditAlphaNum4 assetType;
+	private long dataId;
 
 	@Override
 	public String __getSKey__() {
-		return this.code;
+		return this.assetCode;
 	}
 
 	public String getPlatformTxTunnelType() {
@@ -41,12 +43,8 @@ public class ManagedAccountPack implements SingleKeyObject<String> {
 		else return null;
 	}
 
-	public void addAssetHolder(String address) {
-		assetHolder.add(new AssetHolder(address, true));
-	}
-
-	public void addAssetHolder(String address, boolean isHot) {
-		addAssetHolder(address, isHot);
+	public void addAssetHolder(String address, boolean isHot, boolean isActive) {
+		assetHolder.add(new AssetHolder(address, isHot, isActive));
 	}
 
 	@Data
@@ -55,10 +53,10 @@ public class ManagedAccountPack implements SingleKeyObject<String> {
 		private boolean isHot;
 		private boolean isActive;
 
-		public AssetHolder(String address, boolean isHot) {
+		private AssetHolder(String address, boolean isHot, boolean isActive) {
 			this.address = address;
 			this.isHot = isHot;
-			this.isActive = false;
+			this.isActive = isActive;
 		}
 	}
 }
