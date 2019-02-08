@@ -16,6 +16,7 @@ import io.colligence.talken.dex.service.integration.relay.RelayEncryptedContent;
 import io.colligence.talken.dex.service.integration.relay.RelayMsgTypeEnum;
 import io.colligence.talken.dex.service.integration.relay.RelayServerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
+import io.colligence.talken.dex.util.StellarConverter;
 import io.colligence.talken.dex.util.StellarSignVerifier;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,7 @@ public class OfferService {
 	@Autowired
 	private RelayServerService relayServerService;
 
-	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws AssetTypeNotFoundException, StellarException, APIErrorException {
+	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws AssetTypeNotFoundException, StellarException, APIErrorException, AssetConvertException {
 		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskId.Type.OFFER_CREATE);
 
 		// create task record
@@ -119,7 +120,7 @@ public class OfferService {
 			encData = new RelayEncryptedContent<>(txInformation);
 
 			taskRecord.setSellamount(fee.getSellAmount());
-			taskRecord.setFeeassetcode(fee.getFeeAssetType().getType());
+			taskRecord.setFeeassetcode(StellarConverter.toAssetCode(fee.getFeeAssetType()));
 			taskRecord.setFeeamount(fee.getFeeAmount());
 			taskRecord.setFeecollectaccount(fee.getFeeCollectorAccount().getAccountId());
 			taskRecord.setTxSeq(txInformation.getSequence());

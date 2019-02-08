@@ -1,5 +1,6 @@
 package io.colligence.talken.dex.scheduler.dex.tradeaggr;
 
+import io.colligence.talken.common.persistence.redis.AssetOHLCData;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.UTCUtil;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
@@ -11,6 +12,7 @@ import org.jooq.Record;
 import org.jooq.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.Asset;
@@ -21,6 +23,8 @@ import org.stellar.sdk.responses.TradeAggregationResponse;
 import java.time.LocalDateTime;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static io.colligence.talken.common.CommonConsts.REDIS.KEY_ASSET_OHLCV;
+import static io.colligence.talken.common.CommonConsts.REDIS.KEY_ASSET_OHLCV_UPDATED;
 import static io.colligence.talken.common.CommonConsts.ZONE_UTC;
 import static io.colligence.talken.common.persistence.jooq.Tables.TOKEN_MARKET_PAIR;
 import static io.colligence.talken.common.persistence.jooq.Tables.TOKEN_META;
@@ -35,6 +39,9 @@ public class TradeAggregationService {
 
 	@Autowired
 	private ManagedAccountService maService;
+
+	@Autowired
+	private RedisTemplate<String, Object> redisTemplate;
 
 	@Autowired
 	private DSLContext dslContext;
@@ -70,12 +77,19 @@ public class TradeAggregationService {
 				.where(base.MANAGED_FLAG.eq(true).and(counter.MANAGED_FLAG.eq(true)).and(TOKEN_MARKET_PAIR.ACTIVE_FLAG.eq(true)))
 				.fetch();
 
+		AssetOHLCData redisData = new AssetOHLCData();
+
 		for(Record _mpRecord : mpList) {
 			try {
 				String baseAsset = _mpRecord.get(base.SYMBOL);
 				String counterAsset = _mpRecord.get(counter.SYMBOL);
 				Asset baseAssetType = maService.getAssetType(baseAsset);
 				Asset counterAssetType = maService.getAssetType(counterAsset);
+
+
+				if(!redisData.containsKey(baseAsset))
+					redisData.put(baseAsset, new AssetOHLCData.Base());
+				AssetOHLCData.Base redisBase = redisData.get(baseAsset);
 
 				TradeAggregationResponse aggr = null;
 				try {
@@ -90,16 +104,29 @@ public class TradeAggregationService {
 
 				if(aggr != null) {
 					try {
+						AssetOHLCData.Counter redisCounter = new AssetOHLCData.Counter();
+						redisBase.put(counterAsset, redisCounter);
+
+						redisCounter.setTimestamp(aggr.getTimestamp() / 1000);
+						redisCounter.setTradeCount(aggr.getTradeCount());
+						redisCounter.setBase_volume(Double.valueOf(aggr.getBaseVolume()));
+						redisCounter.setCounter_volume(Double.valueOf(aggr.getCounterVolume()));
+						redisCounter.setPrice_avg(Double.valueOf(aggr.getAvg()));
+						redisCounter.setPrice_o(Double.valueOf(aggr.getOpen()));
+						redisCounter.setPrice_h(Double.valueOf(aggr.getHigh()));
+						redisCounter.setPrice_l(Double.valueOf(aggr.getLow()));
+						redisCounter.setPrice_c(Double.valueOf(aggr.getClose()));
+
 						int updated = dslContext.update(TOKEN_MARKET_PAIR)
-								.set(TOKEN_MARKET_PAIR.AGGR_TIMESTAMP, UTCUtil.ts2ldt(aggr.getTimestamp() / 1000))
-								.set(TOKEN_MARKET_PAIR.BASE_VOLUME, Double.valueOf(aggr.getBaseVolume()))
-								.set(TOKEN_MARKET_PAIR.COUNTER_VOLUME, Double.valueOf(aggr.getCounterVolume()))
-								.set(TOKEN_MARKET_PAIR.TRADE_COUNT, aggr.getTradeCount())
-								.set(TOKEN_MARKET_PAIR.PRICE_AVG, Double.valueOf(aggr.getAvg()))
-								.set(TOKEN_MARKET_PAIR.PRICE_O, Double.valueOf(aggr.getOpen()))
-								.set(TOKEN_MARKET_PAIR.PRICE_H, Double.valueOf(aggr.getHigh()))
-								.set(TOKEN_MARKET_PAIR.PRICE_L, Double.valueOf(aggr.getLow()))
-								.set(TOKEN_MARKET_PAIR.PRICE_C, Double.valueOf(aggr.getClose()))
+								.set(TOKEN_MARKET_PAIR.AGGR_TIMESTAMP, UTCUtil.ts2ldt(redisCounter.getTimestamp()))
+								.set(TOKEN_MARKET_PAIR.BASE_VOLUME, redisCounter.getBase_volume())
+								.set(TOKEN_MARKET_PAIR.COUNTER_VOLUME, redisCounter.getCounter_volume())
+								.set(TOKEN_MARKET_PAIR.TRADE_COUNT, redisCounter.getTradeCount())
+								.set(TOKEN_MARKET_PAIR.PRICE_AVG, redisCounter.getPrice_avg())
+								.set(TOKEN_MARKET_PAIR.PRICE_O, redisCounter.getPrice_o())
+								.set(TOKEN_MARKET_PAIR.PRICE_H, redisCounter.getPrice_h())
+								.set(TOKEN_MARKET_PAIR.PRICE_L, redisCounter.getPrice_l())
+								.set(TOKEN_MARKET_PAIR.PRICE_C, redisCounter.getPrice_c())
 								.where(TOKEN_MARKET_PAIR.ID.eq(_mpRecord.get(TOKEN_MARKET_PAIR.ID)))
 								.execute();
 						if(updated > 0)
@@ -117,6 +144,13 @@ public class TradeAggregationService {
 			} catch(AssetTypeNotFoundException ex) {
 				logger.exception(ex, "Asset {} not found on managed account service.", ex.getAssetCode());
 			}
+		}
+
+		try {
+			redisTemplate.opsForValue().set(KEY_ASSET_OHLCV_UPDATED, UTCUtil.getNowTimestamp_s());
+			redisTemplate.opsForValue().set(KEY_ASSET_OHLCV, redisData);
+		} catch(Exception ex) {
+			logger.exception(ex, "Cannot update redis {}", KEY_ASSET_OHLCV);
 		}
 	}
 }

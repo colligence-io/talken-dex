@@ -16,7 +16,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.*;
+import org.stellar.sdk.Memo;
+import org.stellar.sdk.MemoText;
+import org.stellar.sdk.Server;
 import org.stellar.sdk.requests.RequestBuilder;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.TransactionResponse;
@@ -46,6 +48,8 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 
 	private ApplicationContext applicationContext;
 
+	private static final int TXREQUEST_LIMIT = 200;
+
 	@Override
 	public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
@@ -53,6 +57,10 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 
 	@PostConstruct
 	private void init() {
+		// reset status if local
+		if(RunningProfile.isLocal()) {
+			dslContext.deleteFrom(DEX_STATUS).where().execute();
+		}
 		Map<String, TaskTransactionProcessor> ascBeans = applicationContext.getBeansOfType(TaskTransactionProcessor.class);
 		ascBeans.forEach((_name, _asc) -> {
 			processors.put(_asc.getDexTaskType(), _asc);
@@ -62,21 +70,19 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 
 	@Scheduled(fixedDelay = 3000)
 	private void checkTask() {
-		String lastPagingToken;
-		lastPagingToken = getLastPagingToken();
-		if(lastPagingToken == null) {
-			logger.error("Cannot get lastPagingToken from Stellar network.");
-			return;
-		}
-		processNextTransactions(lastPagingToken);
+		int processed = -1;
+		do {
+			String lastPagingToken;
+			lastPagingToken = getLastPagingToken();
+			if(lastPagingToken == null) {
+				logger.error("Cannot get lastPagingToken from Stellar network.");
+				return;
+			}
+			processed = processNextTransactions(lastPagingToken);
+		} while(processed == TXREQUEST_LIMIT);
 	}
 
 	private String getLastPagingToken() {
-		// reset status if local
-		if(RunningProfile.isLocal()) {
-			dslContext.deleteFrom(DEX_STATUS).where().execute();
-		}
-
 		Optional<DexStatusRecord> opt_status = dslContext.selectFrom(DEX_STATUS).limit(1).fetchOptional();
 		if(opt_status.isPresent()) {
 			return opt_status.get().getTxmonitorlastpagingtoken();
@@ -97,16 +103,18 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 		}
 	}
 
-	private void processNextTransactions(String lastPagingToken) {
+	private int processNextTransactions(String lastPagingToken) {
 		Server server = stellarNetworkService.pickServer();
 		Page<TransactionResponse> txPage;
 		try {
 			// 200 is maximum
-			txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(lastPagingToken).limit(200).execute();
+			txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(lastPagingToken).limit(TXREQUEST_LIMIT).execute();
 		} catch(Exception e) {
 			logger.exception(e, "Cannot get last tx page from stellar network.");
-			return;
+			return -1;
 		}
+
+		int processed = 0;
 
 		for(TransactionResponse txRecord : txPage.getRecords()) {
 			try {
@@ -145,12 +153,14 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 				dslContext.update(DEX_STATUS)
 						.set(DEX_STATUS.TXMONITORLASTPAGINGTOKEN, txRecord.getPagingToken())
 						.execute();
+
+				processed++;
 			} catch(Exception ex) {
 				logger.exception(ex, "Unidentified exception occured.");
 			}
 		}
 
-		// TODO : if page count is 200, redo self
+		return processed;
 	}
 
 //

@@ -20,6 +20,7 @@ import io.colligence.talken.dex.service.integration.relay.RelayEncryptedContent;
 import io.colligence.talken.dex.service.integration.relay.RelayMsgTypeEnum;
 import io.colligence.talken.dex.service.integration.relay.RelayServerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
+import io.colligence.talken.dex.util.StellarConverter;
 import io.colligence.talken.dex.util.StellarSignVerifier;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -184,7 +185,7 @@ public class AnchorService {
 		return result;
 	}
 
-	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws AssetTypeNotFoundException, StellarException, APIErrorException {
+	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws AssetTypeNotFoundException, StellarException, APIErrorException, AssetConvertException {
 		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskId.Type.DEANCHOR);
 
 		// create task record
@@ -249,7 +250,7 @@ public class AnchorService {
 			taskRecord.setBaseaccount(baseAccount.getAccountId());
 			taskRecord.setDeanchoramount(fee.getSellAmount());
 			taskRecord.setFeeamount(fee.getFeeAmount());
-			taskRecord.setFeeassettype(fee.getFeeAssetType().getType());
+			taskRecord.setFeeassettype(StellarConverter.toAssetCode(fee.getFeeAssetType()));
 			taskRecord.setFeecollectaccount(fee.getFeeCollectorAccount().getAccountId());
 			taskRecord.setTxSeq(txInformation.getSequence());
 			taskRecord.setTxHash(txInformation.getHash());

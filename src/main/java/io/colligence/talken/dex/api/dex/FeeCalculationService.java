@@ -3,6 +3,7 @@ package io.colligence.talken.dex.api.dex;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
+import io.colligence.talken.dex.exception.AssetConvertException;
 import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +25,11 @@ public class FeeCalculationService {
 	@Autowired
 	private ManagedAccountService maService;
 
+	@Autowired
+	private AssetConvertService assetConvertService;
+
 	private Asset deanchorPivotAssetType;
 	private double deanchorPivotAmount;
-
 
 	@PostConstruct
 	private void init() throws AssetTypeNotFoundException {
@@ -34,7 +37,7 @@ public class FeeCalculationService {
 		deanchorPivotAmount = dexSettings.getFee().getDeanchorFeeAmount();
 	}
 
-	public Fee calculateOfferFee(String assetCode, double amount, boolean feeByCtx) throws AssetTypeNotFoundException {
+	public Fee calculateOfferFee(String assetCode, double amount, boolean feeByCtx) throws AssetTypeNotFoundException, AssetConvertException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);
@@ -49,7 +52,7 @@ public class FeeCalculationService {
 			if(feeByCtx) {
 				fee.feeAssetType = maService.getAssetType("CTX");
 				fee.feeCollectorAccount = maService.getOfferFeeHolderAccount("CTX");
-				fee.feeAmount = exchangeAsset(fee.sellAssetType, amount * dexSettings.getFee().getOfferFeeRate() * dexSettings.getFee().getOfferFeeRateCtxFactor(), fee.feeAssetType);
+				fee.feeAmount = assetConvertService.convertAsset(fee.sellAssetType, amount * dexSettings.getFee().getOfferFeeRate() * dexSettings.getFee().getOfferFeeRateCtxFactor(), fee.feeAssetType);
 				fee.sellAmount = amount;
 			} else {
 				fee.feeAssetType = fee.sellAssetType;
@@ -61,7 +64,7 @@ public class FeeCalculationService {
 		return fee;
 	}
 
-	public Fee calculateDeanchorFee(String assetCode, Double amount, boolean feeByCtx) throws AssetTypeNotFoundException {
+	public Fee calculateDeanchorFee(String assetCode, Double amount, boolean feeByCtx) throws AssetTypeNotFoundException, AssetConvertException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);
@@ -70,27 +73,22 @@ public class FeeCalculationService {
 			fee.feeAssetType = maService.getAssetType("CTX");
 			fee.feeCollectorAccount = maService.getDeanchorFeeHolderAccount("CTX");
 			// NOTE : no discount for CTX deanchoring
-			fee.feeAmount = exchangeAsset(deanchorPivotAssetType, deanchorPivotAmount, fee.feeAssetType);
+			fee.feeAmount = assetConvertService.convertAsset(deanchorPivotAssetType, deanchorPivotAmount, fee.feeAssetType);
 			fee.sellAmount = amount - fee.feeAmount;
 		} else {
 			if(feeByCtx) {
 				fee.feeAssetType = maService.getAssetType("CTX");
 				fee.feeCollectorAccount = maService.getDeanchorFeeHolderAccount("CTX");
-				fee.feeAmount = exchangeAsset(deanchorPivotAssetType, deanchorPivotAmount, fee.feeAssetType) * dexSettings.getFee().getDeanchorFeeRateCtxFactor();
+				fee.feeAmount = assetConvertService.convertAsset(deanchorPivotAssetType, deanchorPivotAmount, fee.feeAssetType) * dexSettings.getFee().getDeanchorFeeRateCtxFactor();
 				fee.sellAmount = amount;
 			} else {
 				fee.feeAssetType = fee.sellAssetType;
 				fee.feeCollectorAccount = maService.getDeanchorFeeHolderAccount(assetCode);
-				fee.feeAmount = exchangeAsset(deanchorPivotAssetType, deanchorPivotAmount, fee.feeAssetType);
+				fee.feeAmount = assetConvertService.convertAsset(deanchorPivotAssetType, deanchorPivotAmount, fee.feeAssetType);
 				fee.sellAmount = amount - fee.feeAmount;
 			}
 		}
 		return fee;
-	}
-
-	public double exchangeAsset(Asset from, double amount, Asset to) {
-		// TODO : implement exchange routine
-		return amount;
 	}
 
 	@Getter

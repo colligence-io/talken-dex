@@ -17,7 +17,6 @@ import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
-import org.stellar.sdk.Asset;
 import org.stellar.sdk.Transaction;
 import org.stellar.sdk.responses.TransactionResponse;
 import org.stellar.sdk.xdr.*;
@@ -174,11 +173,11 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 				takeRecord.setTaskid(dexTaskId.getId());
 				takeRecord.setSelleraccount(createTaskRecord.getSourceaccount());
 				takeRecord.setTakeofferid(claimed.getOfferID().getUint64());
-				takeRecord.setSoldassettype(Asset.fromXdr(claimed.getAssetSold()).getType());
+				takeRecord.setSoldassettype(StellarConverter.toAssetCode(claimed.getAssetSold()));
 				double soldAmount = StellarConverter.toDouble(claimed.getAmountSold());
 				takeAmount += soldAmount;
 				takeRecord.setSoldamount(soldAmount);
-				takeRecord.setBoughtassettype(Asset.fromXdr(claimed.getAssetBought()).getType());
+				takeRecord.setBoughtassettype(StellarConverter.toAssetCode(claimed.getAssetBought()));
 				takeRecord.setBoughtamount(StellarConverter.toDouble(claimed.getAmountBought()));
 				takeList.add(takeRecord);
 			}
