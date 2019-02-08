@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.scheduler.dex;
+package io.colligence.talken.dex.scheduler.dex.txmonitor;
 
 import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexStatusRecord;
@@ -6,7 +6,6 @@ import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.api.dex.DexTaskId;
 import io.colligence.talken.dex.api.dex.DexTaskIdService;
 import io.colligence.talken.dex.exception.TaskIntegrityCheckFailedException;
-import io.colligence.talken.dex.exception.TransactionResultProcessingException;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.BeansException;
@@ -21,11 +20,8 @@ import org.stellar.sdk.*;
 import org.stellar.sdk.requests.RequestBuilder;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.TransactionResponse;
-import org.stellar.sdk.xdr.ManageOfferOp;
-import org.stellar.sdk.xdr.PaymentOp;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;

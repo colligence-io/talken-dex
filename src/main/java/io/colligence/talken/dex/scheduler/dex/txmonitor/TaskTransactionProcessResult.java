@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.scheduler.dex;
+package io.colligence.talken.dex.scheduler.dex.txmonitor;
 
 import org.slf4j.helpers.MessageFormatter;
 

@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.scheduler.dex.processor;
+package io.colligence.talken.dex.scheduler.dex.txmonitor.processor;
 
 
 import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateofferRefundTaskRecord;
@@ -9,8 +9,8 @@ import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.api.dex.DexTaskId;
 import io.colligence.talken.dex.api.dex.DexTaskIdService;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
-import io.colligence.talken.dex.scheduler.dex.TaskTransactionProcessResult;
-import io.colligence.talken.dex.scheduler.dex.TaskTransactionProcessor;
+import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessResult;
+import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessor;
 import io.colligence.talken.dex.util.StellarConverter;
 import io.colligence.talken.dex.util.TransactionBlockExecutor;
 import org.jooq.DSLContext;

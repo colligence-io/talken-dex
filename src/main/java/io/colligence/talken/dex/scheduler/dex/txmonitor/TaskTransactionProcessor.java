@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.scheduler.dex;
+package io.colligence.talken.dex.scheduler.dex.txmonitor;
 
 import io.colligence.talken.dex.api.dex.DexTaskId;
 import io.colligence.talken.dex.exception.TransactionResultProcessingException;

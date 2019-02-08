@@ -13,7 +13,7 @@ public class ScheduleConfig {
 	@Autowired
 	private DexSettings dexSettings;
 
-	@Bean
+	@Bean(name = "dexTaskScheduler")
 	public ThreadPoolTaskScheduler taskScheduler() {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 		scheduler.setPoolSize(dexSettings.getScheduler().getPoolSize());
