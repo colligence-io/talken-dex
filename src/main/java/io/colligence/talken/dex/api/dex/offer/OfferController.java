@@ -36,11 +36,10 @@ public class OfferController {
 		return DexResponse.buildResponse(offerService.createOffer(authInfo.getUserId(), postBody.getTradeWallerAddress(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
 	}
 
-	@AuthRequired
 	@RequestMapping(value = RequestMappings.CREATE_OFFER_DEXKEY, method = RequestMethod.POST)
 	public DexResponse<DexKeyResult> createOfferDexKey(@RequestBody DexKeyRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(offerService.createOfferDexKey(authInfo.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
+		return DexResponse.buildResponse(offerService.createOfferDexKey(postBody.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
 	}
 
 	@AuthRequired
@@ -50,10 +49,9 @@ public class OfferController {
 		return DexResponse.buildResponse(offerService.deleteOffer(authInfo.getUserId(), postBody.getOfferId(), postBody.getTradeWalletAddress(), postBody.getSellAssetCode(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice()));
 	}
 
-	@AuthRequired
 	@RequestMapping(value = RequestMappings.DELETE_OFFER_DEXKEY, method = RequestMethod.POST)
 	public DexResponse<DexKeyResult> deleteOfferDexKey(@RequestBody DexKeyRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(offerService.deleteOfferDexKey(authInfo.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
+		return DexResponse.buildResponse(offerService.deleteOfferDexKey(postBody.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
 	}
 }

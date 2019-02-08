@@ -38,11 +38,10 @@ public class AnchorController {
 		return DexResponse.buildResponse(anchorService.anchor(authInfo.getUserId(), postBody.getFrom(), postBody.getStellar(), postBody.getSymbol(), postBody.getAmount(), postBody));
 	}
 
-	@AuthRequired
 	@RequestMapping(value = RequestMappings.ANCHOR_TASK_DEXKEY, method = RequestMethod.POST)
 	public DexResponse<DexKeyResult> anchorDexKey(@RequestBody DexKeyRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(anchorService.anchorDexKey(authInfo.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
+		return DexResponse.buildResponse(anchorService.anchorDexKey(postBody.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
 	}
 
 	@AuthRequired
@@ -52,10 +51,9 @@ public class AnchorController {
 		return DexResponse.buildResponse(anchorService.deanchor(authInfo.getUserId(), postBody.getPrivateWalletAddress(), postBody.getTradeWalletAddress(), postBody.getAssetCode(), postBody.getAmount(), Optional.ofNullable(postBody.getFeeByCtx()).orElse(false)));
 	}
 
-	@AuthRequired
 	@RequestMapping(value = RequestMappings.DEANCHOR_TASK_DEXKEY, method = RequestMethod.POST)
 	public DexResponse<DexKeyResult> deanchorDexKey(@RequestBody DexKeyRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(anchorService.deanchorDexKey(authInfo.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
+		return DexResponse.buildResponse(anchorService.deanchorDexKey(postBody.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
 	}
 }
