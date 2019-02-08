@@ -33,7 +33,7 @@ public class OfferController {
 	@RequestMapping(value = RequestMappings.CREATE_OFFER, method = RequestMethod.POST)
 	public DexResponse<CreateOfferResult> createOffer(@RequestBody CreateOfferRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(offerService.createOffer(authInfo.getUserId(), postBody.getTradeWallerAddress(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
+		return DexResponse.buildResponse(offerService.createOffer(authInfo.getUserId(), postBody.getTradeWalletAddress(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
 	}
 
 	@RequestMapping(value = RequestMappings.CREATE_OFFER_DEXKEY, method = RequestMethod.POST)

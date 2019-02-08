@@ -42,7 +42,7 @@ public class TransactionTunnelService {
 		APIResult<TxtServerResponse> result = new APIResult<>("TxTunnel");
 
 		try {
-			String url = String.format(formatString, platform.getPlatformTxType());
+			String url = String.format(formatString, platform.getPlatformTxTunnelType());
 
 			HttpResponse response = requestFactory
 					.buildPostRequest(new GenericUrl(url), ByteArrayContent.fromString("application/json;charset=UTF-8", JSONWriter.toJsonString(request)))

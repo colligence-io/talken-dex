@@ -36,8 +36,8 @@ public class ManagedAccountPack implements SingleKeyObject<String> {
 		return this.code;
 	}
 
-	public String getPlatformTxType() {
-		if(platform != null) return platform.getPlatformTxType();
+	public String getPlatformTxTunnelType() {
+		if(platform != null) return platform.getPlatformTxTunnelType();
 		else return null;
 	}
 
