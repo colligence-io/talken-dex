@@ -4,7 +4,9 @@ import io.colligence.talken.common.CommonConsts;
 import io.colligence.talken.common.persistence.redis.AssetExchangeRate;
 import io.colligence.talken.common.persistence.redis.AssetOHLCData;
 import io.colligence.talken.common.util.PrefixedLogger;
+import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
 import io.colligence.talken.dex.exception.AssetConvertException;
+import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
 import io.colligence.talken.dex.util.StellarConverter;
 import org.jooq.DSLContext;
 import org.jooq.Record1;
@@ -25,6 +27,9 @@ public class AssetConvertService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AssetConvertService.class);
 
 	@Autowired
+	private ManagedAccountService maService;
+
+	@Autowired
 	private DSLContext dslContext;
 
 	@Autowired
@@ -41,6 +46,10 @@ public class AssetConvertService {
 	@PostConstruct
 	private void init() {
 		checkRedisData();
+	}
+
+	public double convertAsset(String fromCode, double amount, String toCode) throws AssetConvertException, AssetTypeNotFoundException {
+		return convertAsset(maService.getAssetType(fromCode), amount, maService.getAssetType(toCode));
 	}
 
 	public double convertAsset(Asset fromType, double amount, Asset toType) throws AssetConvertException {
@@ -96,7 +105,7 @@ public class AssetConvertService {
 		}
 
 		// try interchange with trade aggregation data
-		// ex: MOBI -> KRW
+		// ex: MOBI -> BTC -> KRW
 		for(String ic : INTERCHANGE) {
 			if(!ic.equals(from)) {
 				Double ic_rate = getClosePrice(from, ic);
