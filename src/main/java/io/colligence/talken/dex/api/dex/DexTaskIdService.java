@@ -1,6 +1,7 @@
 package io.colligence.talken.dex.api.dex;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
+import io.colligence.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.exception.TaskIntegrityCheckFailedException;
@@ -34,11 +35,11 @@ public class DexTaskIdService {
 	}
 
 	/* GENERATION & VERIFICATION */
-	public DexTaskId generate_taskId(DexTaskId.Type type) {
+	public DexTaskId generate_taskId(DexTaskTypeEnum type) {
 		long genTime = System.currentTimeMillis();
 
 		StringBuilder sb = new StringBuilder("TALKEN");
-		sb.append(type.getCode());
+		sb.append(type.getIndex());
 
 		for(int i = 0; i < 7; i++)
 			sb.append(sc[random.nextInt(sc.length)]);
@@ -83,7 +84,7 @@ public class DexTaskIdService {
 			if(ca[4] != 'E') throw new TaskIntegrityCheckFailedException(taskId);
 			if(ca[5] != 'N') throw new TaskIntegrityCheckFailedException(taskId);
 
-			DexTaskId.Type type = DexTaskId.Type.fromCode(ca[6]);
+			DexTaskTypeEnum type = DexTaskTypeEnum.fromCode(ca[6]);
 			if(type == null) throw new TaskIntegrityCheckFailedException(taskId);
 
 			byte[] bytes = taskId.substring(0, 22).getBytes(StandardCharsets.UTF_8);

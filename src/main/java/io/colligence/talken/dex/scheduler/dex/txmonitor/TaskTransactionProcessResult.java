@@ -1,57 +1,37 @@
 package io.colligence.talken.dex.scheduler.dex.txmonitor;
 
-import org.slf4j.helpers.MessageFormatter;
-
 public class TaskTransactionProcessResult {
 
 	private boolean isSuccess;
-	private String message;
-	private Throwable cause;
+	private TaskTransactionProcessError error;
 
-	public TaskTransactionProcessResult(boolean isSuccess, String message) {
+	public static TaskTransactionProcessResult success() {
+		return new TaskTransactionProcessResult(true);
+	}
+
+	public static TaskTransactionProcessResult error(TaskTransactionProcessError error) {
+		return new TaskTransactionProcessResult(false, error);
+	}
+
+	public static TaskTransactionProcessResult error(String code, Throwable exception) {
+		return new TaskTransactionProcessResult(false, new TaskTransactionProcessError(code, exception, exception.getClass().getSimpleName() + " : " + exception.getMessage()));
+	}
+
+	private TaskTransactionProcessResult(boolean isSuccess) {
 		this.isSuccess = isSuccess;
-		this.message = message;
+		this.error = null;
 	}
 
-	public TaskTransactionProcessResult() {
-		this(true, "OK");
-	}
-
-	public TaskTransactionProcessResult(String message) {
-		this(false, message);
-	}
-
-	public TaskTransactionProcessResult(String format, Object arg) {
-		this(MessageFormatter.format(format, arg).getMessage());
-	}
-
-	public TaskTransactionProcessResult(String format, Object arg1, Object arg2) {
-		this(MessageFormatter.format(format, arg1, arg2).getMessage());
-	}
-
-	public TaskTransactionProcessResult(String format, Object... args) {
-		this(MessageFormatter.arrayFormat(format, args).getMessage());
-	}
-
-	public TaskTransactionProcessResult(Throwable ex) {
-		this(ex.getClass().getSimpleName() + " occured : " + ex.getMessage());
-		this.cause = ex;
-	}
-
-	public TaskTransactionProcessResult(Throwable ex, String format, Object... args) {
-		this(format, args);
-		this.cause = ex;
+	private TaskTransactionProcessResult(boolean isSuccess, TaskTransactionProcessError error) {
+		this.isSuccess = isSuccess;
+		this.error = error;
 	}
 
 	public boolean isSuccess() {
 		return isSuccess;
 	}
 
-	public String getMessage() {
-		return message;
-	}
-
-	public Throwable getCause() {
-		return cause;
+	public TaskTransactionProcessError getError() {
+		return error;
 	}
 }

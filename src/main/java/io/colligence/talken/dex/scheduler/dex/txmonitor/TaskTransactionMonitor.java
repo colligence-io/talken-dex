@@ -1,12 +1,15 @@
 package io.colligence.talken.dex.scheduler.dex.txmonitor;
 
 import io.colligence.talken.common.RunningProfile;
+import io.colligence.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexStatusRecord;
+import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.api.dex.DexTaskId;
 import io.colligence.talken.dex.api.dex.DexTaskIdService;
 import io.colligence.talken.dex.exception.TaskIntegrityCheckFailedException;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
+import io.colligence.talken.dex.util.StellarConverter;
 import org.jooq.DSLContext;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +47,7 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 	@Autowired
 	private DSLContext dslContext;
 
-	private HashMap<DexTaskId.Type, TaskTransactionProcessor> processors = new HashMap<>();
+	private HashMap<DexTaskTypeEnum, TaskTransactionProcessor> processors = new HashMap<>();
 
 	private ApplicationContext applicationContext;
 
@@ -125,6 +128,20 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 					if(memoText.startsWith("TALKEN")) {
 						try {
 							DexTaskId dexTaskId = taskIdService.decode_taskId(memoText);
+
+							DexTxResultRecord resultRecord = new DexTxResultRecord();
+							resultRecord.setTxid(txRecord.getHash());
+							resultRecord.setTxhash(txRecord.getHash());
+							resultRecord.setMemotaskid(dexTaskId.getId());
+							resultRecord.setTasktype(dexTaskId.getType());
+							resultRecord.setLedger(txRecord.getLedger());
+							resultRecord.setCreatedat(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
+							resultRecord.setSourceaccount(txRecord.getSourceAccount().getAccountId());
+							resultRecord.setEnvelopexdr(txRecord.getEnvelopeXdr());
+							resultRecord.setResultxdr(txRecord.getResultXdr());
+							resultRecord.setResultmetaxdr(txRecord.getResultMetaXdr());
+							resultRecord.setFeepaid(txRecord.getFeePaid());
+
 							// run processor
 							if(processors.containsKey(dexTaskId.getType())) {
 
@@ -132,18 +149,26 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 								try {
 									result = processors.get(dexTaskId.getType()).process(dexTaskId, txRecord);
 								} catch(Exception ex) {
-									result = new TaskTransactionProcessResult(ex);
+									result = TaskTransactionProcessResult.error("Unknown", ex);
 								}
 
-								if(!result.isSuccess()) {
-									if(result.getCause() != null)
-										logger.exception(result.getCause());
+								if(result.isSuccess()) {
+									resultRecord.setProcessSuccessFlag(true);
+								} else {
+									logger.error("{} transaction {} result process error : {} {}", dexTaskId, txRecord.getHash(), result.getError().getCode(), result.getError().getMessage());
 
-									logger.error("{} transaction {} result process error : {}", dexTaskId, txRecord.getHash(), result.getMessage());
-									// TODO : log error at DB
-									// dexTaskId, txRecord, TaskTransactionProcessResult
+									// log exception
+									if(result.getError().getCause() != null)
+										logger.exception(result.getError().getCause());
+
+									resultRecord.setProcessSuccessFlag(false);
+									resultRecord.setErrorcode(result.getError().getCode());
+									resultRecord.setErrormessage(result.getError().getMessage());
 								}
 							}
+
+							dslContext.attach(resultRecord);
+							resultRecord.store();
 						} catch(TaskIntegrityCheckFailedException e) {
 							logger.warn("Invalid DexTaskId [{}] detected : txHash = {}", memoText, txRecord.getHash());
 						}

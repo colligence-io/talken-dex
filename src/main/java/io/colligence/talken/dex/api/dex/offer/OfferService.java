@@ -1,9 +1,10 @@
 package io.colligence.talken.dex.api.dex.offer;
 
 
-import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateofferResultRecord;
+import io.colligence.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateofferTaskRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexDeleteofferTaskRecord;
+import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.api.dex.*;
 import io.colligence.talken.dex.api.dex.offer.dto.CreateOfferResult;
@@ -55,7 +56,7 @@ public class OfferService {
 	private RelayServerService relayServerService;
 
 	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws AssetTypeNotFoundException, StellarException, APIErrorException, AssetConvertException {
-		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskId.Type.OFFER_CREATE);
+		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.OFFER_CREATE);
 
 		// create task record
 		DexCreateofferTaskRecord taskRecord = new DexCreateofferTaskRecord();
@@ -180,7 +181,7 @@ public class OfferService {
 
 	public DexKeyResult createOfferDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
 		DexTaskId dexTaskId = taskIdService.decode_taskId(taskId);
-		if(!dexTaskId.getType().equals(DexTaskId.Type.OFFER_CREATE))
+		if(!dexTaskId.getType().equals(DexTaskTypeEnum.OFFER_CREATE))
 			throw new TaskNotFoundException(taskId);
 
 		DexCreateofferTaskRecord taskRecord = dslContext.selectFrom(DEX_CREATEOFFER_TASK)
@@ -199,7 +200,7 @@ public class OfferService {
 	}
 
 	public DeleteOfferResult deleteOffer(long userId, long offerId, String sourceAccountId, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, StellarException, APIErrorException {
-		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskId.Type.OFFER_DELETE);
+		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.OFFER_DELETE);
 
 		// create task record
 		DexDeleteofferTaskRecord taskRecord = new DexDeleteofferTaskRecord();
@@ -214,8 +215,8 @@ public class OfferService {
 		dslContext.attach(taskRecord);
 		taskRecord.store();
 
-		Optional<DexCreateofferResultRecord> opt_dexCreateOfferResultRecord = dslContext.selectFrom(DEX_CREATEOFFER_RESULT)
-				.where(DEX_CREATEOFFER_RESULT.OFFERID.eq(offerId))
+		Optional<DexTxResultCreateofferRecord> opt_dexCreateOfferResultRecord = dslContext.selectFrom(DEX_TX_RESULT_CREATEOFFER)
+				.where(DEX_TX_RESULT_CREATEOFFER.OFFERID.eq(offerId))
 				.fetchOptional();
 
 		if(opt_dexCreateOfferResultRecord.isPresent()) {
@@ -316,7 +317,7 @@ public class OfferService {
 
 	public DexKeyResult deleteOfferDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
 		DexTaskId dexTaskId = taskIdService.decode_taskId(taskId);
-		if(!dexTaskId.getType().equals(DexTaskId.Type.OFFER_DELETE))
+		if(!dexTaskId.getType().equals(DexTaskTypeEnum.OFFER_DELETE))
 			throw new TaskNotFoundException(taskId);
 
 		DexDeleteofferTaskRecord taskRecord = dslContext.selectFrom(DEX_DELETEOFFER_TASK)
