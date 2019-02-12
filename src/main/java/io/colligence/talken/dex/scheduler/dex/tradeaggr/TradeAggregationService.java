@@ -5,7 +5,6 @@ import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.UTCUtil;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
 import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
-import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionMonitor;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -32,7 +31,7 @@ import static io.colligence.talken.common.persistence.jooq.Tables.TOKEN_META;
 @Service
 @Scope("singleton")
 public class TradeAggregationService {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TaskTransactionMonitor.class);
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TradeAggregationService.class);
 
 	@Autowired
 	private StellarNetworkService stellarNetworkService;
