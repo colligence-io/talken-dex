@@ -6,7 +6,6 @@ import io.colligence.talken.dex.api.DTOValidator;
 import io.colligence.talken.dex.api.DexResponse;
 import io.colligence.talken.dex.api.RequestMappings;
 import io.colligence.talken.dex.api.dex.AssetConvertService;
-import io.colligence.talken.dex.api.dex.anchor.AnchorController;
 import io.colligence.talken.dex.api.dex.misc.dto.AssetConvertRequest;
 import io.colligence.talken.dex.api.dex.misc.dto.AssetExchangeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class MiscController {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AnchorController.class);
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(MiscController.class);
 //
 //	@Autowired
 //	private AuthInfo authInfo;
