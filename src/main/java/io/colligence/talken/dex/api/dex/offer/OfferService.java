@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Optional;
@@ -106,7 +107,7 @@ public class OfferService {
 				// build fee operation
 				txBuilder.addOperation(
 						new PaymentOperation
-								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), Double.toString(fee.getFeeAmount()))
+								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), StellarConverter.toString(fee.getFeeAmount()))
 								.build()
 				);
 			}
@@ -114,7 +115,7 @@ public class OfferService {
 			// build manage offer operation
 			txBuilder.addOperation(
 					new ManageOfferOperation
-							.Builder(fee.getSellAssetType(), buyAssetType, Double.toString(fee.getSellAmount()), Double.toString(sellAssetPrice)).setOfferId(0)
+							.Builder(fee.getSellAssetType(), buyAssetType, StellarConverter.toString(fee.getSellAmount()), StellarConverter.toString(sellAssetPrice)).setOfferId(0)
 							.build()
 			);
 
@@ -132,7 +133,7 @@ public class OfferService {
 			taskRecord.setTxXdr(txInformation.getEnvelopeXdr());
 			taskRecord.update();
 
-		} catch(GeneralSecurityException | IOException ex) {
+		} catch(GeneralSecurityException | IOException | RuntimeException ex) {
 			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
 
 			taskRecord.setErrorposition("build txData");
@@ -255,7 +256,7 @@ public class OfferService {
 			// build manage offer operation
 			txBuilder.addOperation(
 					new ManageOfferOperation
-							.Builder(sellAssetType, buyAssetType, Double.toString(0), Double.toString(sellAssetPrice))
+							.Builder(sellAssetType, buyAssetType, StellarConverter.toString(0d), StellarConverter.toString(sellAssetPrice))
 							.setOfferId(offerId)
 							.build()
 			);

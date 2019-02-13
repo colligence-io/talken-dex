@@ -11,6 +11,7 @@ import io.colligence.talken.dex.exception.SigningException;
 import io.colligence.talken.dex.exception.TaskIntegrityCheckFailedException;
 import io.colligence.talken.dex.service.integration.signer.SignerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
+import io.colligence.talken.dex.util.StellarConverter;
 import org.jooq.DSLContext;
 import org.jooq.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,7 +90,7 @@ public class CreateOfferRefundService {
 					.addMemo(Memo.text(taskId.getId()))
 					.addOperation(
 							new PaymentOperation
-									.Builder(destination, assetType, Double.toString(taskRecord.getRefundamount()))
+									.Builder(destination, assetType, StellarConverter.toString(taskRecord.getRefundamount()))
 									.build()
 					).build();
 

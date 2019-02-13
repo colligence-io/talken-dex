@@ -26,6 +26,10 @@ public class StellarConverter {
 		}
 	}
 
+	public static String toString(Double d) {
+		return String.format("%.7f", d);
+	}
+
 	public static String toAssetCode(org.stellar.sdk.xdr.Asset assetType) {
 		return toAssetCode(Asset.fromXdr(assetType));
 	}

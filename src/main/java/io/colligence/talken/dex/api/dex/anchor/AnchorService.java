@@ -234,7 +234,7 @@ public class AnchorService {
 			if(fee.getFeeAmount() > 0) {
 				txBuilder.addOperation(
 						new PaymentOperation
-								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), Double.toString(fee.getFeeAmount()))
+								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), StellarConverter.toString(fee.getFeeAmount()))
 								.build()
 				);
 			}
@@ -242,7 +242,7 @@ public class AnchorService {
 			// build deanchor operation
 			txBuilder.addOperation(
 					new PaymentOperation
-							.Builder(baseAccount, fee.getSellAssetType(), Double.toString(fee.getSellAmount()))
+							.Builder(baseAccount, fee.getSellAssetType(), StellarConverter.toString(fee.getSellAmount()))
 							.build()
 			);
 
