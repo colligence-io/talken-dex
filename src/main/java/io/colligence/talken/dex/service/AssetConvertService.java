@@ -48,12 +48,18 @@ public class AssetConvertService {
 		checkRedisData();
 	}
 
-	public double convertAsset(String fromCode, double amount, String toCode) throws AssetConvertException, AssetTypeNotFoundException {
-		return convertAsset(maService.getAssetType(fromCode), amount, maService.getAssetType(toCode));
+
+	public double convert(String fromCode, double amount, String toCode) throws AssetConvertException, AssetTypeNotFoundException {
+		return StellarConverter.rawToDouble(convertRaw(fromCode, StellarConverter.doubleToRaw(amount), toCode));
 	}
 
-	public double convertAsset(Asset fromType, double amount, Asset toType) throws AssetConvertException {
+	public long convertRaw(String fromCode, long amountRaw, String toCode) throws AssetConvertException, AssetTypeNotFoundException {
+		return convertRaw(maService.getAssetType(fromCode), amountRaw, maService.getAssetType(toCode));
+	}
+
+	public long convertRaw(Asset fromType, long amountRaw, Asset toType) throws AssetConvertException {
 		checkRedisData();
+
 
 		final String from = StellarConverter.toAssetCode(fromType);
 		final String to = StellarConverter.toAssetCode(toType);
@@ -62,7 +68,7 @@ public class AssetConvertService {
 		Double rate = getClosePrice(from, to);
 
 		if(rate != null) {
-			return amount * rate;
+			return (long) (amountRaw * rate);
 		}
 
 		// try interchange
@@ -79,38 +85,42 @@ public class AssetConvertService {
 			}
 		}
 		if(rate != null) {
-			return amount * rate;
+			return (long) (amountRaw * rate);
 		}
 
 		// fallback to CoinMarketCap data
 		rate = getExchangeRate(from, to);
 		if(rate != null) {
-			return amount * rate;
+			return (long) (amountRaw * rate);
 		}
 
 		throw new AssetConvertException(from, to);
 	}
 
-	public double exchangeAssetToFiat(String from, double amount, String to) throws AssetConvertException {
+	public double exchange(String fromCode, double amount, String toCode) throws AssetConvertException {
+		return StellarConverter.rawToDouble(exchangeRawToFiat(fromCode, StellarConverter.doubleToRaw(amount), toCode));
+	}
+
+	public long exchangeRawToFiat(String fromCode, long amountRaw, String toCode) throws AssetConvertException {
 		checkRedisData();
 
 		// exchange to fiat
-		if(!to.equalsIgnoreCase("USD") && !to.equalsIgnoreCase("KRW")) {
-			throw new AssetConvertException(from, to);
+		if(!toCode.equalsIgnoreCase("USD") && !toCode.equalsIgnoreCase("KRW")) {
+			throw new AssetConvertException(fromCode, toCode);
 		}
 
-		Double rate = getExchangeRate(from, to);
+		Double rate = getExchangeRate(fromCode, toCode);
 		if(rate != null) {
-			return amount * rate;
+			return (long) (amountRaw * rate);
 		}
 
 		// try interchange with trade aggregation data
 		// ex: MOBI -> BTC -> KRW
 		for(String ic : INTERCHANGE) {
-			if(!ic.equals(from)) {
-				Double ic_rate = getClosePrice(from, ic);
+			if(!ic.equals(fromCode)) {
+				Double ic_rate = getClosePrice(fromCode, ic);
 				if(ic_rate != null) {
-					Double ic_rate2 = getExchangeRate(ic, to);
+					Double ic_rate2 = getExchangeRate(ic, toCode);
 					if(ic_rate2 != null) {
 						rate = ic_rate * ic_rate2;
 						break;
@@ -120,10 +130,10 @@ public class AssetConvertService {
 		}
 
 		if(rate != null) {
-			return amount * rate;
+			return (long) (amountRaw * rate);
 		}
 
-		throw new AssetConvertException(from, to);
+		throw new AssetConvertException(fromCode, toCode);
 	}
 
 	private void checkRedisData() {

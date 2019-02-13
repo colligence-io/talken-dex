@@ -3,12 +3,12 @@ package io.colligence.talken.dex.scheduler.dex.refund;
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateofferRefundTaskRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.service.DexTaskId;
-import io.colligence.talken.dex.service.DexTaskIdService;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
 import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
 import io.colligence.talken.dex.exception.SigningException;
 import io.colligence.talken.dex.exception.TaskIntegrityCheckFailedException;
+import io.colligence.talken.dex.service.DexTaskId;
+import io.colligence.talken.dex.service.DexTaskIdService;
 import io.colligence.talken.dex.service.integration.signer.SignerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
 import io.colligence.talken.dex.util.StellarConverter;
@@ -90,7 +90,7 @@ public class CreateOfferRefundService {
 					.addMemo(Memo.text(taskId.getId()))
 					.addOperation(
 							new PaymentOperation
-									.Builder(destination, assetType, StellarConverter.toString(taskRecord.getRefundamount()))
+									.Builder(destination, assetType, StellarConverter.rawToDoubleString(taskRecord.getRefundamountraw()))
 									.build()
 					).build();
 

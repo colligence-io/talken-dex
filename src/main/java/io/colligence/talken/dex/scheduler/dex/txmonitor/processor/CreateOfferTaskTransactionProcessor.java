@@ -7,11 +7,11 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateoffe
 import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferClaimedRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.service.DexTaskIdService;
 import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessError;
 import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessResult;
 import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessor;
 import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionResponse;
+import io.colligence.talken.dex.service.DexTaskIdService;
 import io.colligence.talken.dex.util.StellarConverter;
 import io.colligence.talken.dex.util.TransactionBlockExecutor;
 import org.jooq.DSLContext;
@@ -74,13 +74,13 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 					}
 				}
 
-				double feeAmount = createTaskRecord.getFeeamount();
+				long feeAmountRaw = createTaskRecord.getFeeamountraw();
 
-				if(feeAmount != 0 && feeResult == null)
-					throw new TaskTransactionProcessError("NoPaymentNode", "No fee payment operation node found");
+				if(feeAmountRaw != 0 && feeResult == null)
+					throw new TaskTransactionProcessError("NoPaymentNode", "No fee payment operation entry found");
 
 				if(offerResult == null || offerResult.getSuccess() == null)
-					throw new TaskTransactionProcessError("NoOfferSuccessNode");
+					throw new TaskTransactionProcessError("NoOfferSuccessNode", "No manage offer operation entry found");
 
 				// insert claimed list
 				if(offerResult.getSuccess().getOffersClaimed() != null) {
@@ -90,9 +90,9 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 						takeRecord.setSelleraccount(createTaskRecord.getSourceaccount());
 						takeRecord.setTakeofferid(claimed.getOfferID().getUint64());
 						takeRecord.setSoldassettype(StellarConverter.toAssetCode(claimed.getAssetSold()));
-						takeRecord.setSoldamount(StellarConverter.toDouble(claimed.getAmountSold()));
+						takeRecord.setSoldamountraw(claimed.getAmountSold().getInt64());
 						takeRecord.setBoughtassettype(StellarConverter.toAssetCode(claimed.getAssetBought()));
-						takeRecord.setBoughtamount(StellarConverter.toDouble(claimed.getAmountBought()));
+						takeRecord.setBoughtamountraw(claimed.getAmountBought().getInt64());
 						dslContext.attach(takeRecord);
 						takeRecord.store();
 					}
@@ -107,10 +107,10 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 				if(made != null) {
 					resultRecord.setOfferid(made.getOfferID().getUint64());
 
-					double makeAmount = StellarConverter.toDouble(made.getAmount());
-					resultRecord.setMakeamount(makeAmount);
+					long makeAmountRaw = made.getAmount().getInt64();
+					resultRecord.setMakeamountraw(makeAmountRaw);
 
-					double refundAmount = feeAmount * (makeAmount / createTaskRecord.getSellamount());
+					long refundAmountRaw = feeAmountRaw * (makeAmountRaw / createTaskRecord.getSellamountraw());
 
 					// insert refund task
 					DexCreateofferRefundTaskRecord refundTaskRecord = new DexCreateofferRefundTaskRecord();
@@ -118,7 +118,7 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 					refundTaskRecord.setCreateoffertaskid(createTaskRecord.getTaskid());
 					refundTaskRecord.setFeecollectaccount(createTaskRecord.getFeecollectaccount());
 					refundTaskRecord.setRefundassetcode(createTaskRecord.getFeeassetcode());
-					refundTaskRecord.setRefundamount(refundAmount);
+					refundTaskRecord.setRefundamountraw(refundAmountRaw);
 					refundTaskRecord.setRefundaccount(createTaskRecord.getSourceaccount());
 					dslContext.attach(refundTaskRecord);
 					refundTaskRecord.store();

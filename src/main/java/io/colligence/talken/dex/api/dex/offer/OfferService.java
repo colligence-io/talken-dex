@@ -6,7 +6,8 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateoffe
 import io.colligence.talken.common.persistence.jooq.tables.records.DexDeleteofferTaskRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.api.dex.*;
+import io.colligence.talken.dex.api.dex.DexKeyResult;
+import io.colligence.talken.dex.api.dex.TxInformation;
 import io.colligence.talken.dex.api.dex.offer.dto.CreateOfferResult;
 import io.colligence.talken.dex.api.dex.offer.dto.DeleteOfferResult;
 import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
@@ -29,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Optional;
@@ -70,8 +70,8 @@ public class OfferService {
 		taskRecord.setIspassive(false);
 		taskRecord.setSourceaccount(sourceAccountId);
 		taskRecord.setSellassetcode(sellAssetCode);
-		taskRecord.setSellrequestedamount(sellAssetAmount);
-		taskRecord.setSellprice(sellAssetPrice);
+		taskRecord.setSellrequestedamountraw(StellarConverter.doubleToRaw(sellAssetAmount));
+		taskRecord.setSellpriceraw(StellarConverter.doubleToRaw(sellAssetPrice));
 		taskRecord.setBuyassetcode(buyAssetCode);
 		taskRecord.setFeebyctx(feeByCtx);
 
@@ -93,7 +93,7 @@ public class OfferService {
 			AccountResponse sourceAccount = server.accounts().account(source);
 
 			// calculate fee
-			FeeCalculationService.Fee fee = feeCalculationService.calculateOfferFee(sellAssetCode, sellAssetAmount, feeByCtx);
+			FeeCalculationService.Fee fee = feeCalculationService.calculateOfferFee(sellAssetCode, StellarConverter.doubleToRaw(sellAssetAmount), feeByCtx);
 
 			// get assetType
 			Asset buyAssetType = maService.getAssetType(buyAssetCode);
@@ -103,11 +103,11 @@ public class OfferService {
 					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
 					.addMemo(Memo.text(dexTaskId.getId()));
 
-			if(fee.getFeeAmount() > 0) {
+			if(fee.getFeeAmountRaw() > 0) {
 				// build fee operation
 				txBuilder.addOperation(
 						new PaymentOperation
-								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), StellarConverter.toString(fee.getFeeAmount()))
+								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), StellarConverter.rawToDoubleString(fee.getFeeAmountRaw()))
 								.build()
 				);
 			}
@@ -115,7 +115,7 @@ public class OfferService {
 			// build manage offer operation
 			txBuilder.addOperation(
 					new ManageOfferOperation
-							.Builder(fee.getSellAssetType(), buyAssetType, StellarConverter.toString(fee.getSellAmount()), StellarConverter.toString(sellAssetPrice)).setOfferId(0)
+							.Builder(fee.getSellAssetType(), buyAssetType, StellarConverter.rawToDoubleString(fee.getSellAmountRaw()), StellarConverter.doubleToString(sellAssetPrice)).setOfferId(0)
 							.build()
 			);
 
@@ -124,9 +124,9 @@ public class OfferService {
 
 			encData = new RelayEncryptedContent<>(txInformation);
 
-			taskRecord.setSellamount(fee.getSellAmount());
+			taskRecord.setSellamountraw(fee.getSellAmountRaw());
 			taskRecord.setFeeassetcode(StellarConverter.toAssetCode(fee.getFeeAssetType()));
-			taskRecord.setFeeamount(fee.getFeeAmount());
+			taskRecord.setFeeamountraw(fee.getFeeAmountRaw());
 			taskRecord.setFeecollectaccount(fee.getFeeCollectorAccount().getAccountId());
 			taskRecord.setTxSeq(txInformation.getSequence());
 			taskRecord.setTxHash(txInformation.getHash());
@@ -175,11 +175,11 @@ public class OfferService {
 		result.setTaskId(dexTaskId.getId());
 		result.setTransId(taskRecord.getRlyTransid());
 		result.setSellAssetCode(taskRecord.getSellassetcode());
-		result.setSellAmount(taskRecord.getSellamount());
-		result.setSellPrice(taskRecord.getSellprice());
+		result.setSellAmount(StellarConverter.rawToDouble(taskRecord.getSellamountraw()));
+		result.setSellPrice(StellarConverter.rawToDouble(taskRecord.getSellpriceraw()));
 		result.setBuyAssetCode(taskRecord.getBuyassetcode());
 		result.setFeeAssetCode(taskRecord.getFeeassetcode());
-		result.setFeeAmount(taskRecord.getFeeamount());
+		result.setFeeAmount(StellarConverter.rawToDouble(taskRecord.getFeeamountraw()));
 		return result;
 	}
 
@@ -215,7 +215,7 @@ public class OfferService {
 		taskRecord.setOfferid(offerId);
 		taskRecord.setSellassetcode(sellAssetCode);
 		taskRecord.setBuyassetcode(buyAssetCode);
-		taskRecord.setSellprice(sellAssetPrice);
+		taskRecord.setSellpriceraw(StellarConverter.doubleToRaw(sellAssetPrice));
 		dslContext.attach(taskRecord);
 		taskRecord.store();
 
@@ -256,7 +256,7 @@ public class OfferService {
 			// build manage offer operation
 			txBuilder.addOperation(
 					new ManageOfferOperation
-							.Builder(sellAssetType, buyAssetType, StellarConverter.toString(0d), StellarConverter.toString(sellAssetPrice))
+							.Builder(sellAssetType, buyAssetType, "0", StellarConverter.doubleToString(sellAssetPrice))
 							.setOfferId(offerId)
 							.build()
 			);
@@ -314,8 +314,8 @@ public class OfferService {
 		result.setTransId(taskRecord.getRlyTransid());
 		result.setOfferId(taskRecord.getOfferid());
 		result.setSellAssetCode(taskRecord.getSellassetcode());
-		result.setSellAmount(taskRecord.getSellprice());
-		result.setSellPrice(taskRecord.getSellprice());
+		result.setSellAmount(StellarConverter.rawToDouble(taskRecord.getSellpriceraw()));
+		result.setSellPrice(StellarConverter.rawToDouble(taskRecord.getSellpriceraw()));
 		return result;
 	}
 

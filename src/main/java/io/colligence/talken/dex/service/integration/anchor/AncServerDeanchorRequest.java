@@ -12,5 +12,5 @@ public class AncServerDeanchorRequest {
 	private String to;
 	private String address;
 	private String memo;
-	private Float value;
+	private Double value;
 }
