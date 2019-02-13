@@ -142,12 +142,15 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 							resultRecord.setResultmetaxdr(txRecord.getResultMetaXdr());
 							resultRecord.setFeepaid(txRecord.getFeePaid());
 
+							TaskTransactionResponse txResponse = new TaskTransactionResponse(dexTaskId, txRecord);
+							resultRecord.setOfferidfromresult(txResponse.getOfferIdFromResult());
+
 							// run processor
 							if(processors.containsKey(dexTaskId.getType())) {
 
 								TaskTransactionProcessResult result;
 								try {
-									result = processors.get(dexTaskId.getType()).process(dexTaskId, txRecord);
+									result = processors.get(dexTaskId.getType()).process(txResponse);
 								} catch(Exception ex) {
 									result = TaskTransactionProcessResult.error("Unknown", ex);
 								}
@@ -187,25 +190,4 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 
 		return processed;
 	}
-
-//
-//	private void getTransactionsStream() {
-//		Server server = stellarNetworkService.pickServer();
-//
-//		SSEStream<TransactionResponse> stream = server.transactions().cursor("").stream((response) -> {
-//			String txHash = response.getHash();
-//			Memo memo = response.getMemo();
-//			if(memo instanceof MemoText) {
-//				String memoText = ((MemoText) memo).getText();
-//				if(memoText.startsWith("TALKEN")) {
-//					try {
-//						taskIdService.decode_taskId(memoText);
-//						processTransaction(response);
-//					} catch(TaskIntegrityCheckFailedException e) {
-//						logger.warn("Invalid DexTaskId detected : {}", memoText);
-//					}
-//				}
-//			}
-//		});
-//	}
 }

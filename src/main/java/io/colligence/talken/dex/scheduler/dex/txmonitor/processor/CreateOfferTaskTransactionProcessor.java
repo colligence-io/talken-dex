@@ -7,27 +7,19 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateoffe
 import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferClaimedRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.api.dex.DexTaskId;
 import io.colligence.talken.dex.api.dex.DexTaskIdService;
-import io.colligence.talken.dex.api.mas.ma.ManagedAccountService;
 import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessError;
 import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessResult;
 import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessor;
+import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionResponse;
 import io.colligence.talken.dex.util.StellarConverter;
 import io.colligence.talken.dex.util.TransactionBlockExecutor;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
-import org.stellar.sdk.Transaction;
-import org.stellar.sdk.responses.TransactionResponse;
 import org.stellar.sdk.xdr.*;
-import shadow.com.google.common.io.BaseEncoding;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Base64;
 import java.util.Optional;
 
 import static io.colligence.talken.common.persistence.jooq.Tables.DEX_CREATEOFFER_TASK;
@@ -38,9 +30,6 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 
 	@Autowired
 	private DSLContext dslContext;
-
-	@Autowired
-	private ManagedAccountService maService;
 
 	@Autowired
 	private DexTaskIdService taskIdService;
@@ -54,14 +43,13 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 	}
 
 	@Override
-	public TaskTransactionProcessResult process(DexTaskId dexTaskId, TransactionResponse txResponse) {
+	public TaskTransactionProcessResult process(TaskTransactionResponse taskTxResponse) {
 		try {
 			TransactionBlockExecutor.of(txMgr).transactional(() -> {
 
-				String txHash = txResponse.getHash();
-				logger.debug("Processing tx {} for task {}", txHash, dexTaskId);
+				logger.debug("Processing tx {} for task {}", taskTxResponse.getTxHash(), taskTxResponse.getTaskId());
 
-				Optional<DexCreateofferTaskRecord> opt_createTaskRecord = dslContext.selectFrom(DEX_CREATEOFFER_TASK).where(DEX_CREATEOFFER_TASK.TASKID.eq(dexTaskId.getId())).fetchOptional();
+				Optional<DexCreateofferTaskRecord> opt_createTaskRecord = dslContext.selectFrom(DEX_CREATEOFFER_TASK).where(DEX_CREATEOFFER_TASK.TASKID.eq(taskTxResponse.getTaskId().getId())).fetchOptional();
 
 				if(!opt_createTaskRecord.isPresent())
 					throw new TaskTransactionProcessError("TaskIdNotFound");
@@ -70,42 +58,14 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 
 				// TODO : is this always right? same result? even when operation order mismatch?
 				// check tx envelope integrity
-				try {
-					TransactionEnvelope xdr = Transaction.fromEnvelopeXdr(txResponse.getEnvelopeXdr()).toEnvelopeXdr();
-
-					// remove signatures
-					xdr.setSignatures(new DecoratedSignature[0]);
-					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					XdrDataOutputStream xdos = new XdrDataOutputStream(baos);
-					TransactionEnvelope.encode(xdos, xdr);
-					String bareXdr = Base64.getEncoder().encodeToString(baos.toByteArray());
-
-					if(!bareXdr.equals(createTaskRecord.getTxXdr()))
-						throw new TaskTransactionProcessError("TXEnvelopeNotMatch", "{} {} not match", bareXdr, createTaskRecord.getTxXdr());
-
-				} catch(IOException ex) {
-					throw new TaskTransactionProcessError("EnvelopeDecodeError", ex);
-				}
-
-
-				TransactionResult result;
-				try {
-					// decode result
-					BaseEncoding base64Encoding = BaseEncoding.base64();
-					byte[] bytes = base64Encoding.decode(txResponse.getResultXdr());
-					ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-					XdrDataInputStream xdrInputStream = new XdrDataInputStream(inputStream);
-					result = TransactionResult.decode(xdrInputStream);
-				} catch(IOException ex) {
-					throw new TaskTransactionProcessError("ResultDecodeError", ex);
-				}
-
+				if(!taskTxResponse.getBareXdr().equals(createTaskRecord.getTxXdr()))
+					throw new TaskTransactionProcessError("TXEnvelopeNotMatch", "{} {} not match", taskTxResponse.getBareXdr(), createTaskRecord.getTxXdr());
 
 				// extract feeResult and offerResult
 				PaymentResult feeResult = null;
 				ManageOfferResult offerResult = null;
 
-				for(OperationResult operationResult : result.getResult().getResults()) {
+				for(OperationResult operationResult : taskTxResponse.getResult().getResult().getResults()) {
 					if(operationResult.getTr().getDiscriminant() == OperationType.PAYMENT) {
 						feeResult = operationResult.getTr().getPaymentResult();
 					}
@@ -126,7 +86,7 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 				if(offerResult.getSuccess().getOffersClaimed() != null) {
 					for(ClaimOfferAtom claimed : offerResult.getSuccess().getOffersClaimed()) {
 						DexTxResultCreateofferClaimedRecord takeRecord = new DexTxResultCreateofferClaimedRecord();
-						takeRecord.setTaskid(dexTaskId.getId());
+						takeRecord.setTaskid(taskTxResponse.getTaskId().getId());
 						takeRecord.setSelleraccount(createTaskRecord.getSourceaccount());
 						takeRecord.setTakeofferid(claimed.getOfferID().getUint64());
 						takeRecord.setSoldassettype(StellarConverter.toAssetCode(claimed.getAssetSold()));
@@ -140,8 +100,8 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 
 				// insert result record
 				DexTxResultCreateofferRecord resultRecord = new DexTxResultCreateofferRecord();
-				resultRecord.setTxid(txResponse.getHash());
-				resultRecord.setTaskid(dexTaskId.getId());
+				resultRecord.setTxid(taskTxResponse.getTxHash());
+				resultRecord.setTaskid(taskTxResponse.getTaskId().getId());
 
 				OfferEntry made = offerResult.getSuccess().getOffer().getOffer();
 				if(made != null) {

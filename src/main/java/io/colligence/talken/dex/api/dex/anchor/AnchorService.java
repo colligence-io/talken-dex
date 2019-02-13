@@ -244,7 +244,7 @@ public class AnchorService {
 			);
 
 			// build tx
-			TxInformation txInformation = TxInformation.buildTxInformation(txBuilder.build());
+			TxInformation txInformation = TxInformation.buildBareTxInformation(txBuilder.build());
 
 			encData = new RelayEncryptedContent<>(txInformation);
 

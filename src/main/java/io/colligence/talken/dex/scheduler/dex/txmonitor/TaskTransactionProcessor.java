@@ -8,5 +8,5 @@ import org.stellar.sdk.responses.TransactionResponse;
 public interface TaskTransactionProcessor {
 	DexTaskTypeEnum getDexTaskType();
 
-	TaskTransactionProcessResult process(DexTaskId dexTaskId, TransactionResponse txResponse) throws TransactionResultProcessingException;
+	TaskTransactionProcessResult process(TaskTransactionResponse taskTxResponse) throws TransactionResultProcessingException;
 }

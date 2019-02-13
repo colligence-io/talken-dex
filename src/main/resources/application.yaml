@@ -59,6 +59,8 @@ talken:
       deanchorFeePivotAsset: "BTC"
       deanchorFeeAmount: 0.001
       deanchorFeeRateCtxFactor: 0.5
+    signerMock:
+      GC3TERVBLRYJ275VMJDNUMQJU2RS7YEEWLVRXUMTEZ45XMB7ZUQD3UAK: "SA5O4FDAJW5I6HBAORQ23XDIS23S27CYAPYOO6ROIQTDZ7G7HB37JQN6"
 
 ###############################################################################
 # LOCAL Profile                                                               #

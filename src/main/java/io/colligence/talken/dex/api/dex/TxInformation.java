@@ -19,7 +19,7 @@ public class TxInformation {
 	private String hash;
 	private String envelopeXdr;
 
-	public static TxInformation buildTxInformation(Transaction tx) throws IOException {
+	public static TxInformation buildBareTxInformation(Transaction tx) throws IOException {
 		// encode tx to envelope
 		TransactionEnvelope xdr = new TransactionEnvelope();
 		xdr.setTx(tx.toXdr());

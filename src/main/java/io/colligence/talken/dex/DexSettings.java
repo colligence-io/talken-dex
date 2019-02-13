@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 @ConfigurationProperties("talken.dex")
@@ -65,4 +66,6 @@ public class DexSettings {
 		private double deanchorFeeAmount;
 		private double deanchorFeeRateCtxFactor;
 	}
+
+	private Map<String, String> signerMock;
 }
