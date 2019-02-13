@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.api.dex;
+package io.colligence.talken.dex.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.colligence.talken.common.persistence.enums.DexTaskTypeEnum;

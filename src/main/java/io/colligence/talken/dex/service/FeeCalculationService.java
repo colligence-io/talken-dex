@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.api.dex;
+package io.colligence.talken.dex.service;
 
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;

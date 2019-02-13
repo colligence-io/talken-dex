@@ -7,7 +7,7 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateoffe
 import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferClaimedRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.api.dex.DexTaskIdService;
+import io.colligence.talken.dex.service.DexTaskIdService;
 import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessError;
 import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessResult;
 import io.colligence.talken.dex.scheduler.dex.txmonitor.TaskTransactionProcessor;

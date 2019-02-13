@@ -10,7 +10,7 @@ import com.apollographql.apollo.response.CustomTypeValue;
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
-import io.colligence.talken.dex.api.dex.DexTaskId;
+import io.colligence.talken.dex.service.DexTaskId;
 import io.colligence.talken.dex.service.integration.APIResult;
 import io.colligence.talken.graphql.relay.RelayAddContentsMutation;
 import io.colligence.talken.graphql.relay.type.CustomType;

@@ -1,4 +1,4 @@
-package io.colligence.talken.dex.api.dex;
+package io.colligence.talken.dex.service;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.colligence.talken.common.persistence.enums.DexTaskTypeEnum;

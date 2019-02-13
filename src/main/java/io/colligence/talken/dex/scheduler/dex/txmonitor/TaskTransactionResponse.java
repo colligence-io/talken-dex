@@ -1,6 +1,6 @@
 package io.colligence.talken.dex.scheduler.dex.txmonitor;
 
-import io.colligence.talken.dex.api.dex.DexTaskId;
+import io.colligence.talken.dex.service.DexTaskId;
 import org.stellar.sdk.Transaction;
 import org.stellar.sdk.responses.TransactionResponse;
 import org.stellar.sdk.xdr.*;
