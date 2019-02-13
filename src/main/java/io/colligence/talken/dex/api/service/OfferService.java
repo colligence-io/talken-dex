@@ -266,7 +266,7 @@ public class OfferService {
 			taskRecord.setTxXdr(bareTxInfo.getEnvelopeXdr());
 			taskRecord.update();
 
-		} catch(GeneralSecurityException | IOException ex) {
+		} catch(GeneralSecurityException | IOException | RuntimeException ex) {
 			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
 
 			taskRecord.setErrorposition("build txData");

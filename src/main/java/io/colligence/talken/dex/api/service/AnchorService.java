@@ -8,10 +8,10 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexDeanchorTa
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.UTCUtil;
-import io.colligence.talken.dex.api.dto.DexKeyResult;
 import io.colligence.talken.dex.api.dto.AnchorRequest;
 import io.colligence.talken.dex.api.dto.AnchorResult;
 import io.colligence.talken.dex.api.dto.DeanchorResult;
+import io.colligence.talken.dex.api.dto.DexKeyResult;
 import io.colligence.talken.dex.exception.*;
 import io.colligence.talken.dex.service.integration.APIResult;
 import io.colligence.talken.dex.service.integration.anchor.*;
@@ -257,7 +257,7 @@ public class AnchorService {
 			taskRecord.setTxXdr(bareTxInfo.getEnvelopeXdr());
 			taskRecord.update();
 
-		} catch(GeneralSecurityException | IOException ex) {
+		} catch(GeneralSecurityException | IOException | RuntimeException ex) {
 			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
 
 			taskRecord.setErrorposition("build txData");
