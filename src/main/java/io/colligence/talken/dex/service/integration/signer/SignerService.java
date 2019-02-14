@@ -34,6 +34,8 @@ public class SignerService {
 	public void sign(Transaction tx) throws SigningException {
 		if(kps.containsKey(tx.getSourceAccount().getAccountId())) {
 			tx.sign(kps.get(tx.getSourceAccount().getAccountId()));
+			// NOTE : same result
+			// tx.getSignatures().add(kps.get(tx.getSourceAccount().getAccountId()).signDecorated(tx.hash()));
 		} else throw new SigningException(tx.getSourceAccount().getAccountId(), "Signer not found");
 	}
 }
