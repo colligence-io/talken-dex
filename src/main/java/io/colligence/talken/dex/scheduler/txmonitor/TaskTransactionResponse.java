@@ -19,7 +19,9 @@ public class TaskTransactionResponse {
 	private TransactionResult result;
 
 	public TaskTransactionResponse(DexTaskId taskId, TransactionResponse response) {
+		this.taskId = taskId;
 		this.response = response;
+		parse();
 	}
 
 	private void parse() throws TaskTransactionProcessError {
