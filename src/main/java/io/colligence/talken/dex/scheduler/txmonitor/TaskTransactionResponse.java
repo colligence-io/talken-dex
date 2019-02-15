@@ -69,7 +69,7 @@ public class TaskTransactionResponse {
 	}
 
 	public Long getOfferIdFromResult() {
-		if(response != null) {
+		if(result != null) {
 			if(result.getResult() == null) return null;
 			if(result.getResult().getResults() == null || result.getResult().getResults().length == 0) return null;
 
