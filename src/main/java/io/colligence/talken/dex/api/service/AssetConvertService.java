@@ -237,7 +237,7 @@ public class AssetConvertService {
 //					.fetchOptional();
 
 			if(opt_price.isPresent())
-				return opt_price.get().get(ITGR_CMC_QUOTE.PRICE);
+				return opt_price.get().get(TOKEN_META_AUX.DATA_D);
 			else
 				return null;
 		}
