@@ -1,6 +1,7 @@
 package io.colligence.talken.dex.api.service;
 
 import io.colligence.talken.common.CommonConsts;
+import io.colligence.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.colligence.talken.common.persistence.redis.AssetExchangeRate;
 import io.colligence.talken.common.persistence.redis.AssetOHLCData;
 import io.colligence.talken.common.util.PrefixedLogger;
@@ -183,6 +184,8 @@ public class AssetConvertService {
 				return taData.get(base).get(counter).getPrice_c();
 			else return null;
 		} else {
+			// TODO : optimize required, this will query db every time!
+			// maybe this is not required at all!
 			io.colligence.talken.common.persistence.jooq.tables.TOKEN_META base_table = TOKEN_META.as("base");
 			io.colligence.talken.common.persistence.jooq.tables.TOKEN_META counter_table = TOKEN_META.as("counter");
 
@@ -208,13 +211,30 @@ public class AssetConvertService {
 				return excData.get(base).get(counter).getPrice();
 			else return null;
 		} else {
+			// TODO : optimize required, this will query db every time!
+			// maybe this is not required at all!
+			TokenMetaAuxCodeEnum metaAux;
+			try {
+				metaAux = TokenMetaAuxCodeEnum.getCmcPriceDataTypeFromSymbol(counter);
+			} catch(IllegalArgumentException ex) {
+				logger.exception(ex);
+				return null;
+			}
+
 			Optional<Record1<Double>> opt_price = dslContext
-					.select(ITGR_CMC_QUOTE.PRICE)
-					.from(ITGR_CMC
-							.leftOuterJoin(ITGR_CMC).on(ITGR_CMC.ID.eq(ITGR_CMC_QUOTE.ITGR_CMC_ID))
-					)
-					.where(ITGR_CMC.SYMBOL.eq(base).and(ITGR_CMC_QUOTE.CURRENCY.eq(counter)))
+					.select(TOKEN_META_AUX.DATA_D)
+					.from(TOKEN_META_AUX
+							.leftJoin(TOKEN_META).on(TOKEN_META_AUX.TOKEN_META_ID.eq(TOKEN_META.ID))
+					).where(TOKEN_META.SYMBOL.eq(base).and(TOKEN_META_AUX.AUX_CODE.eq(metaAux)))
 					.fetchOptional();
+
+//			Optional<Record1<Double>> opt_price = dslContext
+//					.select(ITGR_CMC_QUOTE.PRICE)
+//					.from(ITGR_CMC_QUOTE
+//							.leftOuterJoin(ITGR_CMC).on(ITGR_CMC.ID.eq(ITGR_CMC_QUOTE.ITGR_CMC_ID))
+//					)
+//					.where(ITGR_CMC.SYMBOL.eq(base).and(ITGR_CMC_QUOTE.CURRENCY.eq(counter)))
+//					.fetchOptional();
 
 			if(opt_price.isPresent())
 				return opt_price.get().get(ITGR_CMC_QUOTE.PRICE);
