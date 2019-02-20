@@ -110,20 +110,21 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 					long makeAmountRaw = made.getAmount().getInt64();
 					resultRecord.setMakeamountraw(makeAmountRaw);
 
-					long refundAmountRaw = feeAmountRaw * (makeAmountRaw / createTaskRecord.getSellamountraw());
+					long refundAmountRaw = (long) ((double) feeAmountRaw * ((double) makeAmountRaw / (double) createTaskRecord.getSellamountraw()));
 
-					// insert refund task
-					DexCreateofferRefundTaskRecord refundTaskRecord = new DexCreateofferRefundTaskRecord();
-					refundTaskRecord.setTaskid(taskIdService.generate_taskId(DexTaskTypeEnum.OFFER_REFUNDFEE).getId());
-					refundTaskRecord.setCreateoffertaskid(createTaskRecord.getTaskid());
-					refundTaskRecord.setFeecollectaccount(createTaskRecord.getFeecollectaccount());
-					refundTaskRecord.setRefundassetcode(createTaskRecord.getFeeassetcode());
-					refundTaskRecord.setRefundamountraw(refundAmountRaw);
-					refundTaskRecord.setRefundaccount(createTaskRecord.getSourceaccount());
-					dslContext.attach(refundTaskRecord);
-					refundTaskRecord.store();
-
-					resultRecord.setRefundtaskid(refundTaskRecord.getTaskid());
+					if(refundAmountRaw > 1) {
+						// insert refund task
+						DexCreateofferRefundTaskRecord refundTaskRecord = new DexCreateofferRefundTaskRecord();
+						refundTaskRecord.setTaskid(taskIdService.generate_taskId(DexTaskTypeEnum.OFFER_REFUNDFEE).getId());
+						refundTaskRecord.setCreateoffertaskid(createTaskRecord.getTaskid());
+						refundTaskRecord.setFeecollectaccount(createTaskRecord.getFeecollectaccount());
+						refundTaskRecord.setRefundassetcode(createTaskRecord.getFeeassetcode());
+						refundTaskRecord.setRefundamountraw(refundAmountRaw);
+						refundTaskRecord.setRefundaccount(createTaskRecord.getSourceaccount());
+						dslContext.attach(refundTaskRecord);
+						refundTaskRecord.store();
+						resultRecord.setRefundtaskid(refundTaskRecord.getTaskid());
+					}
 				}
 
 				dslContext.attach(resultRecord);
