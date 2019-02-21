@@ -23,12 +23,12 @@ public class AdminController {
 	// TODO : Admin Access control
 
 
-	@RequestMapping(value = RequestMappings.TMS_TM_RELOAD, method = RequestMethod.GET)
+	@RequestMapping(value = RequestMappings.ADM_RELOAD_TM, method = RequestMethod.GET)
 	public DexResponse<Map<String, TokenMetaData>> reloadTokenMetaList() throws DexException {
 		return DexResponse.buildResponse(tmService.forceReload());
 	}
 
-	@RequestMapping(value = RequestMappings.TMS_MI_UPDATEHOLDER, method = RequestMethod.POST)
+	@RequestMapping(value = RequestMappings.ADM_MI_UPDATEHOLDER, method = RequestMethod.POST)
 	public DexResponse<UpdateHolderResult> updateHolder(@PathVariable @NotEmpty String nameKey, @RequestBody UpdateHolderRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
 		if(postBody.getIsActive() == null && postBody.getIsHot() == null)
