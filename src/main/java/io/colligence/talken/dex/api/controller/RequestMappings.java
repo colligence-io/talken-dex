@@ -24,12 +24,12 @@ public class RequestMappings {
 
 	public static final String TXLIST = DEX + "/txList";
 
-	private static final String TMS = ROOT + "/tms/";
+	private static final String TMS = ROOT + "/tms";
 	public static final String TMS_TM_LIST = TMS + "/list";
 	public static final String TMS_TM_INFO = TMS + "/info/{symbol}";
 	public static final String TMS_MI_LIST = TMS + "/listManaged";
 
-	private static final String ADM = "/adm/";
+	private static final String ADM = "/adm";
 	public static final String ADM_RELOAD_TM = ADM + "/reloadTokenMeta";
 	public static final String ADM_MI_UPDATEHOLDER = ADM + "/managedInfo/{symbol}/updateHolder";
 }
