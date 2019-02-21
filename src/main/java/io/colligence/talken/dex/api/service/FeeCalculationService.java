@@ -3,7 +3,8 @@ package io.colligence.talken.dex.api.service;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.exception.AssetConvertException;
-import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
+import io.colligence.talken.dex.exception.InternalServerErrorException;
+import io.colligence.talken.dex.exception.TokenMetaDataNotFoundException;
 import io.colligence.talken.dex.util.StellarConverter;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ public class FeeCalculationService {
 	private DexSettings dexSettings;
 
 	@Autowired
-	private ManagedAccountService maService;
+	private TokenMetaService maService;
 
 	@Autowired
 	private AssetConvertService assetConvertService;
@@ -34,12 +35,12 @@ public class FeeCalculationService {
 	private static final long MINIMUM_FEE_RAW = 1;
 
 	@PostConstruct
-	private void init() throws AssetTypeNotFoundException {
+	private void init() throws TokenMetaDataNotFoundException {
 		deanchorPivotAssetType = maService.getAssetType(dexSettings.getFee().getDeanchorFeePivotAsset());
 		deanchorPivotAmountRaw = StellarConverter.doubleToRaw(dexSettings.getFee().getDeanchorFeeAmount());
 	}
 
-	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws AssetTypeNotFoundException, AssetConvertException {
+	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaDataNotFoundException, AssetConvertException, InternalServerErrorException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);
@@ -69,7 +70,7 @@ public class FeeCalculationService {
 		return fee;
 	}
 
-	public Fee calculateDeanchorFee(String assetCode, long amountRaw, boolean feeByCtx) throws AssetTypeNotFoundException, AssetConvertException {
+	public Fee calculateDeanchorFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaDataNotFoundException, AssetConvertException, InternalServerErrorException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);

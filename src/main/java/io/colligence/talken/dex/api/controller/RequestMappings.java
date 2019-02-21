@@ -24,10 +24,11 @@ public class RequestMappings {
 
 	public static final String TXLIST = DEX + "/txList";
 
-	private static final String MAS = ROOT + "/mas";
-
-	private static final String MA = MAS + "/ma";
-	public static final String MA_LIST = MA + "/list";
-	public static final String MA_RELOAD = MA + "/reload";
-	public static final String MA_UPDATEHOLDER = MA + "/updateHolder";
+	private static final String TMS = ROOT + "/tms";
+	public static final String TMS_TM_RELOAD = TMS + "/reload";
+	public static final String TMS_TM_LIST = TMS + "/tmList";
+	public static final String TMS_TM_INFO = TMS + "/tmInfo/{symbol}";
+	public static final String TMS_MI_LIST = TMS + "/miList";
+	public static final String TMS_MI_INFO = TMS + "/miInfo/{symbol}";
+	public static final String TMS_MI_UPDATEHOLDER = TMS_MI_INFO + "/updateHolder";
 }

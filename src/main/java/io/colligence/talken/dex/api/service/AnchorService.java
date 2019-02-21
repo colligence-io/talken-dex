@@ -53,7 +53,7 @@ public class AnchorService {
 	private RelayServerService relayServerService;
 
 	@Autowired
-	private ManagedAccountService maService;
+	private TokenMetaService tmService;
 
 	@Autowired
 	private FeeCalculationService feeCalculationService;
@@ -61,8 +61,8 @@ public class AnchorService {
 	@Autowired
 	private DSLContext dslContext;
 
-	public AnchorResult anchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, AnchorRequest ancRequestBody) throws AssetTypeNotFoundException, APIErrorException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
-		String assetHolderAddress = maService.getActiveHolderAccountAddress(assetCode);
+	public AnchorResult anchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, AnchorRequest ancRequestBody) throws TokenMetaDataNotFoundException, APIErrorException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
+		String assetHolderAddress = tmService.getActiveHolderAccountAddress(assetCode);
 
 		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.ANCHOR);
 
@@ -185,7 +185,7 @@ public class AnchorService {
 		return result;
 	}
 
-	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws AssetTypeNotFoundException, StellarException, APIErrorException, AssetConvertException {
+	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws TokenMetaDataNotFoundException, StellarException, APIErrorException, AssetConvertException, InternalServerErrorException {
 		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 
 		// create task record
@@ -204,6 +204,21 @@ public class AnchorService {
 
 		logger.debug("{} generated. userId = {}", dexTaskId, userId);
 
+		// calculate fee
+		FeeCalculationService.Fee fee;
+		try {
+			fee = feeCalculationService.calculateDeanchorFee(assetCode, StellarConverter.doubleToRaw(amount), feeByCtx);
+		} catch(InternalServerErrorException ex) {
+			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
+
+			taskRecord.setErrorposition("calculate fee");
+			taskRecord.setErrorcode(ex.getClass().getSimpleName());
+			taskRecord.setErrormessage(ex.getMessage());
+			taskRecord.setSuccessFlag(false);
+			taskRecord.update();
+
+			throw ex;
+		}
 
 		// build encData for deanchor request
 		RelayEncryptedContent<BareTxInfo> encData;
@@ -217,9 +232,7 @@ public class AnchorService {
 			// load up-to-date information on source account.
 			AccountResponse sourceAccount = server.accounts().account(source);
 
-			KeyPair baseAccount = maService.getBaseAccount(assetCode);
-
-			FeeCalculationService.Fee fee = feeCalculationService.calculateDeanchorFee(assetCode, StellarConverter.doubleToRaw(amount), feeByCtx);
+			KeyPair baseAccount = tmService.getBaseAccount(assetCode);
 
 			Transaction.Builder txBuilder = new Transaction
 					.Builder(sourceAccount)

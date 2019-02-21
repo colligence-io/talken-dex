@@ -7,11 +7,11 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateoffe
 import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferClaimedRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
+import io.colligence.talken.dex.api.service.DexTaskIdService;
 import io.colligence.talken.dex.scheduler.txmonitor.TaskTransactionProcessError;
 import io.colligence.talken.dex.scheduler.txmonitor.TaskTransactionProcessResult;
 import io.colligence.talken.dex.scheduler.txmonitor.TaskTransactionProcessor;
 import io.colligence.talken.dex.scheduler.txmonitor.TaskTransactionResponse;
-import io.colligence.talken.dex.api.service.DexTaskIdService;
 import io.colligence.talken.dex.util.StellarConverter;
 import io.colligence.talken.dex.util.TransactionBlockExecutor;
 import org.jooq.DSLContext;
@@ -116,7 +116,7 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 						// insert refund task
 						DexCreateofferRefundTaskRecord refundTaskRecord = new DexCreateofferRefundTaskRecord();
 						refundTaskRecord.setTaskid(taskIdService.generate_taskId(DexTaskTypeEnum.OFFER_REFUNDFEE).getId());
-						refundTaskRecord.setCreateoffertaskid(createTaskRecord.getTaskid());
+						refundTaskRecord.setCreateofferTaskid(createTaskRecord.getTaskid());
 						refundTaskRecord.setFeecollectaccount(createTaskRecord.getFeecollectaccount());
 						refundTaskRecord.setRefundassetcode(createTaskRecord.getFeeassetcode());
 						refundTaskRecord.setRefundamountraw(refundAmountRaw);

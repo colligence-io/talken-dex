@@ -1,9 +1,9 @@
 package io.colligence.talken.dex.api.dto;
 
-import io.colligence.talken.dex.api.service.ManagedAccountPack;
+import io.colligence.talken.dex.api.service.TokenMetaData;
 import lombok.Data;
 
 @Data
 public class UpdateHolderResult {
-	private ManagedAccountPack managedAccountPack;
+	private TokenMetaData.ManagedInfo managedAccountPack;
 }

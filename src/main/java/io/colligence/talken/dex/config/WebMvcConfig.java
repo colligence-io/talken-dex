@@ -1,15 +1,18 @@
 package io.colligence.talken.dex.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.colligence.talken.common.CommonConsts;
 import io.colligence.talken.dex.config.auth.AccessTokenInterceptor;
 import io.colligence.talken.dex.config.auth.AuthInfo;
+import io.colligence.talken.dex.util.LocalDateTimeSerializer;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -17,6 +20,8 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.servlet.Filter;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Configuration
 @EnableWebMvc
@@ -32,8 +37,17 @@ public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
 	}
 
 	@Bean
-	public HttpMessageConverter<String> responseBodyConverter() {
-		return new StringHttpMessageConverter(CommonConsts.CHARSET);
+	public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
+		ObjectMapper mapper = new ObjectMapper();
+		SimpleModule module = new SimpleModule();
+		module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer());
+		mapper.registerModule(module);
+		return new MappingJackson2HttpMessageConverter(mapper);
+	}
+
+	@Override
+	public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+		converters.add(mappingJackson2HttpMessageConverter());
 	}
 
 	@Bean

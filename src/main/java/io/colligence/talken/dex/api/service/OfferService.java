@@ -6,9 +6,9 @@ import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateoffe
 import io.colligence.talken.common.persistence.jooq.tables.records.DexDeleteofferTaskRecord;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.api.dto.DexKeyResult;
 import io.colligence.talken.dex.api.dto.CreateOfferResult;
 import io.colligence.talken.dex.api.dto.DeleteOfferResult;
+import io.colligence.talken.dex.api.dto.DexKeyResult;
 import io.colligence.talken.dex.exception.*;
 import io.colligence.talken.dex.service.integration.APIResult;
 import io.colligence.talken.dex.service.integration.relay.RelayAddContentsResponse;
@@ -46,7 +46,7 @@ public class OfferService {
 	private StellarNetworkService stellarNetworkService;
 
 	@Autowired
-	private ManagedAccountService maService;
+	private TokenMetaService maService;
 
 	@Autowired
 	private DSLContext dslContext;
@@ -54,7 +54,7 @@ public class OfferService {
 	@Autowired
 	private RelayServerService relayServerService;
 
-	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws AssetTypeNotFoundException, StellarException, APIErrorException, AssetConvertException {
+	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws TokenMetaDataNotFoundException, StellarException, APIErrorException, AssetConvertException, InternalServerErrorException {
 		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.OFFER_CREATE);
 
 		// create task record
@@ -75,6 +75,23 @@ public class OfferService {
 
 		logger.debug("{} generated. userId = {}", dexTaskId, userId);
 
+
+		// calculate fee
+		FeeCalculationService.Fee fee;
+		try {
+			fee = feeCalculationService.calculateOfferFee(sellAssetCode, StellarConverter.doubleToRaw(sellAssetAmount), feeByCtx);
+		} catch(InternalServerErrorException ex) {
+			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
+
+			taskRecord.setErrorposition("calculate fee");
+			taskRecord.setErrorcode(ex.getClass().getSimpleName());
+			taskRecord.setErrormessage(ex.getMessage());
+			taskRecord.setSuccessFlag(false);
+			taskRecord.update();
+
+			throw ex;
+		}
+
 		// build encData for CreateOffer request
 		RelayEncryptedContent<BareTxInfo> encData;
 		try {
@@ -86,9 +103,6 @@ public class OfferService {
 
 			// load up-to-date information on source account.
 			AccountResponse sourceAccount = server.accounts().account(source);
-
-			// calculate fee
-			FeeCalculationService.Fee fee = feeCalculationService.calculateOfferFee(sellAssetCode, StellarConverter.doubleToRaw(sellAssetAmount), feeByCtx);
 
 			// get assetType
 			Asset buyAssetType = maService.getAssetType(buyAssetCode);
@@ -198,7 +212,7 @@ public class OfferService {
 		return result;
 	}
 
-	public DeleteOfferResult deleteOffer(long userId, long offerId, String sourceAccountId, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws AssetTypeNotFoundException, StellarException, APIErrorException {
+	public DeleteOfferResult deleteOffer(long userId, long offerId, String sourceAccountId, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws TokenMetaDataNotFoundException, StellarException, APIErrorException {
 		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.OFFER_DELETE);
 
 		// create task record
@@ -219,7 +233,7 @@ public class OfferService {
 				.fetchOptional();
 
 		if(opt_dexCreateOfferResultRecord.isPresent()) {
-			taskRecord.setCreateoffertaskid(opt_dexCreateOfferResultRecord.get().getTaskid());
+			taskRecord.setCreateofferTaskid(opt_dexCreateOfferResultRecord.get().getTaskid());
 		} else {
 			// TODO : determine what to do, force proceed? or drop
 			logger.warn("Create offer result for {} not found, this may cause unexpected refund result.");

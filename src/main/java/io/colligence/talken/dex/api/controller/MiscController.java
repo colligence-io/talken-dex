@@ -32,13 +32,13 @@ public class MiscController {
 	private TaskTransactionListService txListService;
 
 	@RequestMapping(value = RequestMappings.CONVERT_ASSET, method = RequestMethod.POST)
-	public DexResponse<Double> anchor(@RequestBody AssetConvertRequest postBody) throws DexException {
+	public DexResponse<Double> convert(@RequestBody AssetConvertRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(assetConvertService.convert(postBody.getFrom(), postBody.getAmount(), postBody.getTo()));
 	}
 
 	@RequestMapping(value = RequestMappings.EXCHANGE_ASSET, method = RequestMethod.POST)
-	public DexResponse<Double> anchor(@RequestBody AssetExchangeRequest postBody) throws DexException {
+	public DexResponse<Double> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(assetConvertService.exchange(postBody.getFrom(), postBody.getAmount(), postBody.getTo()));
 	}

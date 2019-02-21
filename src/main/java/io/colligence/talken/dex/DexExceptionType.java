@@ -16,11 +16,10 @@ public enum DexExceptionType implements CLGException.ExceptionType {
 	SIGNATURE_VERIFICATION_FAILED(10),
 	ASSET_CONVERT_ERROR(11),
 	// FROM MAS
-	ASSET_TYPE_NOT_FOUND(50),
+	TOKEN_META_DATA_NOT_FOUND(50),
 	CANNOT_UPDATE_HOLDER_STATUS(51),
 	ACTIVE_ASSET_HOLDER_NOT_FOUND(52),
 	SIGNING_ERROR(53);
-
 
 	private final int eCode;
 	private final String messageKey;

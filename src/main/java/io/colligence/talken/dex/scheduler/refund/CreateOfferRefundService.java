@@ -3,12 +3,12 @@ package io.colligence.talken.dex.scheduler.refund;
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateofferRefundTaskRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.api.service.ManagedAccountService;
-import io.colligence.talken.dex.exception.AssetTypeNotFoundException;
-import io.colligence.talken.dex.exception.SigningException;
-import io.colligence.talken.dex.exception.TaskIntegrityCheckFailedException;
 import io.colligence.talken.dex.api.service.DexTaskId;
 import io.colligence.talken.dex.api.service.DexTaskIdService;
+import io.colligence.talken.dex.api.service.TokenMetaService;
+import io.colligence.talken.dex.exception.SigningException;
+import io.colligence.talken.dex.exception.TaskIntegrityCheckFailedException;
+import io.colligence.talken.dex.exception.TokenMetaDataNotFoundException;
 import io.colligence.talken.dex.service.integration.signer.SignerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
 import io.colligence.talken.dex.util.StellarConverter;
@@ -42,7 +42,7 @@ public class CreateOfferRefundService {
 	private DexTaskIdService taskIdService;
 
 	@Autowired
-	private ManagedAccountService maService;
+	private TokenMetaService maService;
 
 	@Autowired
 	private SignerService signerService;
@@ -94,12 +94,18 @@ public class CreateOfferRefundService {
 									.build()
 					).build();
 
+			taskRecord.setTxSeq(tx.getSequenceNumber());
+			taskRecord.setTxHash(ByteArrayUtil.toHexString(tx.hash()));
+			taskRecord.setTxXdr(tx.toEnvelopeXdrBase64());
+
 			signerService.sign(tx);
 
 			SubmitTransactionResponse txResponse = server.submitTransaction(tx);
 
 			if(txResponse.isSuccess()) {
 				taskRecord.setSuccessFlag(true);
+				taskRecord.setTxResulthash(txResponse.getHash());
+				taskRecord.setTxResultxdr(txResponse.getResultXdr());
 			} else {
 				SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
 				taskRecord.setSuccessFlag(false);
@@ -110,18 +116,14 @@ public class CreateOfferRefundService {
 				taskRecord.setErrormessage(sj.toString());
 			}
 
-			taskRecord.setTxSeq(tx.getSequenceNumber());
-			taskRecord.setTxHash(ByteArrayUtil.toHexString(tx.hash()));
-			taskRecord.setTxXdr(tx.toEnvelopeXdrBase64());
 			taskRecord.update();
-
 		} catch(TaskIntegrityCheckFailedException e) {
 			taskRecord.setErrorposition("decoding task ID");
 			taskRecord.setErrorcode(e.getClass().getSimpleName());
 			taskRecord.setErrormessage(e.getMessage());
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
-		} catch(AssetTypeNotFoundException e) {
+		} catch(TokenMetaDataNotFoundException e) {
 			taskRecord.setErrorposition("get asset type");
 			taskRecord.setErrorcode(e.getClass().getSimpleName());
 			taskRecord.setErrormessage(e.getMessage());
