@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.colligence.talken.common.CommonConsts;
 import io.colligence.talken.dex.config.auth.AccessTokenInterceptor;
 import io.colligence.talken.dex.config.auth.AuthInfo;
-import io.colligence.talken.dex.util.LocalDateTimeSerializer;
+import io.colligence.talken.common.util.LocalDateTime2TimestampSerializer;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,7 +40,7 @@ public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
 	public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
 		ObjectMapper mapper = new ObjectMapper();
 		SimpleModule module = new SimpleModule();
-		module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer());
+		module.addSerializer(LocalDateTime.class, new LocalDateTime2TimestampSerializer());
 		mapper.registerModule(module);
 		return new MappingJackson2HttpMessageConverter(mapper);
 	}
