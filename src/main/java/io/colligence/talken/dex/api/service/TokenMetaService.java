@@ -7,7 +7,6 @@ import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.persistence.enums.LangTypeEnum;
 import io.colligence.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.colligence.talken.common.persistence.jooq.tables.pojos.TokenExchangeRate;
-import io.colligence.talken.common.persistence.jooq.tables.pojos.TokenInfo;
 import io.colligence.talken.common.persistence.jooq.tables.records.*;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.UTCUtil;
@@ -141,21 +140,13 @@ public class TokenMetaService {
 				_erMap.get(metaId).add(_er.into(TokenExchangeRate.class));
 			}
 
-			// preload token_entry_id / tokenInfo map
-			Map<Long, TokenInfo> _tiMap = new HashMap<>();
-			for(TokenInfoRecord _ti : dslContext.selectFrom(TOKEN_INFO).fetch()) {
-				_tiMap.put(_ti.getTokenId(), _ti.into(TokenInfo.class));
-			}
-
 			// preload token_meta_id / token_info map
 			Map<Long, Map<LangTypeEnum, TokenMetaData.EntryInfo>> _teMap = new HashMap<>();
 			for(TokenEntryRecord _te : dslContext.selectFrom(TOKEN_ENTRY).fetch()) {
 				Long metaId = _te.getTokenMetaId();
 				if(!_teMap.containsKey(metaId))
 					_teMap.put(metaId, new HashMap<>());
-				TokenMetaData.EntryInfo ei = _te.into(TokenMetaData.EntryInfo.class);
-				ei.setInfo(_tiMap.get(_te.getId()));
-				_teMap.get(metaId).put(_te.getLangcode(), ei);
+				_teMap.get(metaId).put(_te.getLangcode(), _te.into(TokenMetaData.EntryInfo.class));
 			}
 
 			// preload token_meta_id / token_aux list map
@@ -194,11 +185,7 @@ public class TokenMetaService {
 			// preload token_meta_id / token meta data map
 			Map<Long, TokenMetaData> tmIdMap = new HashMap<>();
 			for(TokenMetaRecord _tmr : dslContext.selectFrom(TOKEN_META).fetch()) {
-				TokenMetaData tmd = _tmr.into(TokenMetaData.class);
-				if(tmd.getRefUrls() != null && !tmd.getRefUrls().isEmpty()) {
-					tmd.setUrls(mapper.readValue(tmd.getRefUrls(), TokenMetaUrlData.class));
-				}
-				tmIdMap.put(_tmr.getId(), tmd);
+				tmIdMap.put(_tmr.getId(), _tmr.into(TokenMetaData.class));
 			}
 
 			// Composite TokenMetaData

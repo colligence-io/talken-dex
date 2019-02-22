@@ -30,7 +30,6 @@ public class TokenMetaData extends TokenMeta implements SingleKeyObject<String> 
 	private Map<LangTypeEnum, String> name;
 	private Map<LangTypeEnum, EntryInfo> entryInfo;
 	private ManagedInfo managedInfo = null;
-	private TokenMetaUrlData urls;
 	private Map<TokenMetaAuxCodeEnum, Object> aux;
 	private Map<String, Double> exchangeRate;
 
@@ -45,9 +44,6 @@ public class TokenMetaData extends TokenMeta implements SingleKeyObject<String> 
 		public Long getId() {
 			return super.getId();
 		}
-
-		@JsonIgnoreProperties({"tokenId"})
-		private TokenInfo info;
 	}
 
 	@Getter
