@@ -10,8 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.net.InetAddress;
 
 @SpringBootApplication(scanBasePackages = {"io.colligence.talken.dex"}, exclude = {ErrorMvcAutoConfiguration.class})
 public class DexLauncher {
@@ -22,6 +21,7 @@ public class DexLauncher {
 	public static String HOSTNAME = null;
 
 	public static void main(String[] args) {
+		readHostname();
 		SpringApplication application = new SpringApplication(DexLauncher.class);
 
 		boolean verbose = false;
@@ -78,13 +78,10 @@ public class DexLauncher {
 
 	private static void readHostname() {
 		try {
-			String file = "/etc/hostname";
-			BufferedReader reader = new BufferedReader(new FileReader(file));
-			HOSTNAME = reader.readLine().trim();
+			HOSTNAME = InetAddress.getLocalHost().getHostName();
 			if(HOSTNAME == null || HOSTNAME.isEmpty()) throw new Exception("hostname is null/empty");
-			reader.close();
 		} catch(Exception ex) {
-			logger.exception(ex, "Failed to read hostname from /etc/hostname");
+			logger.exception(ex, "Failed to read hostname");
 			shutdown(CommonConsts.EXITCODE.HOSTNAME_CHECK);
 		}
 	}
