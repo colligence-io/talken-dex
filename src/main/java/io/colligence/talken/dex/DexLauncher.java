@@ -22,6 +22,7 @@ public class DexLauncher {
 	public static String HOSTNAME = null;
 
 	public static void main(String[] args) {
+		readHostname();
 		SpringApplication application = new SpringApplication(DexLauncher.class);
 
 		boolean verbose = false;
