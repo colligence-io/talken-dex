@@ -1,5 +1,6 @@
 package io.colligence.talken.dex;
 
+import com.google.common.hash.Hashing;
 import io.colligence.talken.common.CommonConsts;
 import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.util.PrefixedLogger;
@@ -12,6 +13,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 
 @SpringBootApplication(scanBasePackages = {"io.colligence.talken.dex"}, exclude = {ErrorMvcAutoConfiguration.class})
 public class DexLauncher {
@@ -83,6 +85,9 @@ public class DexLauncher {
 			BufferedReader reader = new BufferedReader(new FileReader(file));
 			HOSTNAME = reader.readLine().trim();
 			if(HOSTNAME == null || HOSTNAME.isEmpty()) throw new Exception("hostname is null/empty");
+			logger.info("hostname : {}", HOSTNAME);
+			Hashing.sha256().hashString(DexLauncher.HOSTNAME, StandardCharsets.UTF_8).toString().toLowerCase();
+			logger.info("{}", HOSTNAME);
 			reader.close();
 		} catch(Exception ex) {
 			logger.exception(ex, "Failed to read hostname from /etc/hostname");

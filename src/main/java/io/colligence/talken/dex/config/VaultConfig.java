@@ -66,8 +66,6 @@ public class VaultConfig extends AbstractVaultConfiguration {
 			username = Hashing.sha256().hashString(DexLauncher.HOSTNAME, StandardCharsets.UTF_8).toString().toLowerCase();
 		}
 
-		logger.info("Trying to get initialToken from vault as {}", username);
-
 		VaultToken initialToken = getInitialToken(username, password);
 		AppRoleAuthenticationOptions options = AppRoleAuthenticationOptions.builder()
 				.appRole(appRole)
