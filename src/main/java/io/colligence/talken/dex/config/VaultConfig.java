@@ -63,8 +63,10 @@ public class VaultConfig extends AbstractVaultConfiguration {
 		if(RunningProfile.isLocal()) {
 			username = appRole;
 		} else {
-			username = Hashing.sha256().hashString(DexLauncher.HOSTNAME, StandardCharsets.UTF_8).toString();
+			username = Hashing.sha256().hashString(DexLauncher.HOSTNAME, StandardCharsets.UTF_8).toString().toLowerCase();
 		}
+
+		logger.info("Trying to get initialToken from vault as {}", username);
 
 		VaultToken initialToken = getInitialToken(username, password);
 		AppRoleAuthenticationOptions options = AppRoleAuthenticationOptions.builder()
