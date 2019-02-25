@@ -3,7 +3,6 @@ package io.colligence.talken.dex.config;
 import com.google.common.hash.Hashing;
 import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.DexLauncher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +19,7 @@ import org.springframework.vault.support.VaultResponse;
 import org.springframework.vault.support.VaultResponseSupport;
 import org.springframework.vault.support.VaultToken;
 
+import java.net.InetAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -63,8 +63,14 @@ public class VaultConfig extends AbstractVaultConfiguration {
 		if(RunningProfile.isLocal()) {
 			username = appRole;
 		} else {
-			username = Hashing.sha256().hashString(DexLauncher.HOSTNAME, StandardCharsets.UTF_8).toString().toLowerCase();
+			try {
+				username = Hashing.sha256().hashString(InetAddress.getLocalHost().getHostName(), StandardCharsets.UTF_8).toString().toLowerCase();
+			} catch(Exception ex) {
+				username = appRole;
+			}
 		}
+
+		logger.info("Trying to get Initial Token from vault as {}", username);
 
 		VaultToken initialToken = getInitialToken(username, password);
 		AppRoleAuthenticationOptions options = AppRoleAuthenticationOptions.builder()
