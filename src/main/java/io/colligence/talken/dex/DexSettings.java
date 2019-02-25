@@ -1,10 +1,15 @@
 package io.colligence.talken.dex;
 
+import io.colligence.talken.common.persistence.vault.VaultSecretDataDexKey;
+import io.colligence.talken.common.persistence.vault.VaultSecretDataWebJwt;
+import io.colligence.talken.dex.config.VaultConfig;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +18,19 @@ import java.util.Map;
 @Getter
 @Setter
 public class DexSettings {
+	@Autowired
+	private VaultConfig.VaultSecretReader secretReader;
+
+	@PostConstruct
+	private void readVaultSecret() {
+		VaultSecretDataDexKey secret = secretReader.readSecret("dexKey", VaultSecretDataDexKey.class);
+		randomStringTable = secret.getSeed();
+
+		VaultSecretDataWebJwt secret2 = secretReader.readSecret("web-jwt", VaultSecretDataWebJwt.class);
+		accessToken.jwtSecret = secret2.getSecret();
+		accessToken.jwtExpiration = secret2.getExpiration();
+	}
+
 	private String randomStringTable;
 
 	@Getter

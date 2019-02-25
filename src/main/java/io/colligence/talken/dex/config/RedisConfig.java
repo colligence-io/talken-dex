@@ -1,8 +1,10 @@
 package io.colligence.talken.dex.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import io.colligence.talken.common.persistence.vault.VaultSecretDataRedis;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
@@ -11,15 +13,19 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 //@EnableRedisRepositories
 public class RedisConfig {
-	private @Value("${spring.redis.host}")
-	String redisHost;
-	private @Value("${spring.redis.port}")
-	int redisPort;
-//    private @Value("${spring.redis.password}") String password;
+	@Autowired
+	private VaultConfig.VaultSecretReader secretReader;
 
 	@Bean
 	public LettuceConnectionFactory redisConnectionFactory() {
-		return new LettuceConnectionFactory(redisHost, redisPort);
+		VaultSecretDataRedis secret = secretReader.readSecret("redis", VaultSecretDataRedis.class);
+
+		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
+		redisConfig.setHostName(secret.getHost());
+		redisConfig.setPort(secret.getPort());
+		if(secret.getPassword() != null) redisConfig.setPassword(secret.getPassword());
+
+		return new LettuceConnectionFactory(redisConfig);
 	}
 
 	@Bean

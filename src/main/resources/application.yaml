@@ -15,6 +15,8 @@ logging:
 ###############################################################################
 ---
 spring:
+  main:
+    allow-bean-definition-overriding: true
   profiles: common
   http:
     encoding:
@@ -36,13 +38,10 @@ spring:
       enabled: true
 talken:
   dex:
-    randomStringTable: "L4567YZvhiDCOPVWXrEFMNabcdeUgGHIJjklmABstu3wxyz012KnopqfQRST89"
     scheduler:
       pool-size: 4
     accessToken:
       token-header: "X-Auth-Token"
-      jwt-secret: "!@TalkenTokenSecREtKey#$"
-      jwt-expiration: 604800000
     stellar:
       network: test
       serverList:
@@ -71,17 +70,10 @@ spring:
   devtools:
     livereload:
       enabled: true
-  redis:
-    host: localhost
-    port: 6379
-  #    password: redispassword
-  datasource:
-    platform: mariadb
-    url: jdbc:mariadb://localhost:3306/talken_db
-    username: "root"
-    password: "!@coLLiGEnce#$"
-    dbcp2:
-      driver-class-name: org.mariadb.jdbc.Driver
+vault:
+  uri: "http://192.168.0.30:8200"
+  app-role: "tkn-dex"
+  secret-key: "1234"
 #logging:
 #  level:
 #    org.jooq.tools.LoggerListener: DEBUG
@@ -92,16 +84,10 @@ spring:
 ---
 spring:
   profiles: dev
-  redis:
-    host: 192.168.0.20
-    port: 6379
-    #    password: redispassword
-  datasource:
-    url: jdbc:mariadb://192.168.0.20:4006/talken_db
-    username: "ms_user"
-    password: "maxscale"
-    dbcp2:
-      driver-class-name: org.mariadb.jdbc.Driver
+vault:
+  uri: "http://192.168.0.20:8200"
+  app-role: "tkn-dex"
+  secret-key: "cd1deff6cc64399fb9aff4cf2c32b68d"
 logging:
   level:
     io.colligence: DEBUG

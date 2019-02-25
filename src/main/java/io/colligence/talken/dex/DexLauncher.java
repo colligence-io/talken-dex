@@ -10,11 +10,16 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+
 @SpringBootApplication(scanBasePackages = {"io.colligence.talken.dex"}, exclude = {ErrorMvcAutoConfiguration.class})
 public class DexLauncher {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(DexLauncher.class);
 
 	private static ConfigurableApplicationContext applicationContext;
+
+	public static String HOSTNAME = null;
 
 	public static void main(String[] args) {
 		SpringApplication application = new SpringApplication(DexLauncher.class);
@@ -66,7 +71,22 @@ public class DexLauncher {
 		} else {
 			application.setAdditionalProfiles("common", RunningProfile.getRunningProfile().getName());
 		}
+
+		//application.
 		applicationContext = application.run(args);
+	}
+
+	private static void readHostname() {
+		try {
+			String file = "/etc/hostname";
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			HOSTNAME = reader.readLine().trim();
+			if(HOSTNAME == null || HOSTNAME.isEmpty()) throw new Exception("hostname is null/empty");
+			reader.close();
+		} catch(Exception ex) {
+			logger.exception(ex, "Failed to read hostname from /etc/hostname");
+			shutdown(CommonConsts.EXITCODE.HOSTNAME_CHECK);
+		}
 	}
 
 	private static void usage() {
