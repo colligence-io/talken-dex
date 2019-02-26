@@ -1,6 +1,7 @@
 package io.colligence.talken.dex.config;
 
-import io.colligence.talken.common.persistence.vault.VaultSecretDataRedis;
+import io.colligence.talken.common.persistence.vault.VaultSecretReader;
+import io.colligence.talken.common.persistence.vault.data.VaultSecretDataRedis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +15,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 //@EnableRedisRepositories
 public class RedisConfig {
 	@Autowired
-	private VaultConfig.VaultSecretReader secretReader;
+	private VaultSecretReader secretReader;
 
 	@Bean
 	public LettuceConnectionFactory redisConnectionFactory() {

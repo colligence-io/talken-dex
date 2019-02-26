@@ -1,7 +1,8 @@
 package io.colligence.talken.dex.config;
 
 import com.zaxxer.hikari.HikariDataSource;
-import io.colligence.talken.common.persistence.vault.VaultSecretDataMariaDB;
+import io.colligence.talken.common.persistence.vault.VaultSecretReader;
+import io.colligence.talken.common.persistence.vault.data.VaultSecretDataMariaDB;
 import org.jooq.DSLContext;
 import org.jooq.ExecuteContext;
 import org.jooq.SQLDialect;
@@ -23,7 +24,7 @@ import javax.sql.DataSource;
 @EnableTransactionManagement
 public class DataConfig {
 	@Autowired
-	private VaultConfig.VaultSecretReader secretReader;
+	private VaultSecretReader secretReader;
 
 	@Bean(name = "dataSource")
 	@Primary

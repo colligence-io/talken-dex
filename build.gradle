@@ -51,17 +51,6 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-jdbc')
     compile('org.springframework.boot:spring-boot-starter-aop')
 
-    // Jackson
-    compile('com.fasterxml.jackson.core:jackson-core')
-    compile('com.fasterxml.jackson.core:jackson-databind')
-    compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310')
-
-    // JOOQ
-    compile('org.springframework.boot:spring-boot-starter-jooq') {
-        exclude group: 'org.jooq', module: 'jooq'
-    }
-    compile('org.jooq:jooq:3.11.7')
-
     // MariaDB
     runtime('org.mariadb.jdbc:mariadb-java-client')
 
@@ -78,13 +67,10 @@ dependencies {
     // stellar sdk
     compile('com.github.stellar:java-stellar-sdk:0.4.1')
 
+    // Apollo GraphQL
     compile('com.apollographql.apollo:apollo-runtime:1.0.0-alpha5')
     
-    compile('org.springframework.vault:spring-vault-core:2.1.1.RELEASE')
-
     testCompile('org.springframework.boot:spring-boot-starter-test')
-    testCompile('org.springframework.security:spring-security-test')
-    testCompile("com.h2database:h2")
 
     // devtools
     runtime('org.springframework.boot:spring-boot-devtools')
