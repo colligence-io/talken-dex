@@ -75,48 +75,35 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 	private void checkTask() {
 		int processed = -1;
 		do {
-			String lastPagingToken;
-			lastPagingToken = getLastPagingToken();
-			if(lastPagingToken == null) {
-				logger.error("Cannot get lastPagingToken from Stellar network.");
-				return;
-			}
-			processed = processNextTransactions(lastPagingToken);
+			processed = processNextTransactions();
 		} while(processed == TXREQUEST_LIMIT);
 	}
 
-	private String getLastPagingToken() {
+	private int processNextTransactions() {
 		Optional<DexStatusRecord> opt_status = dslContext.selectFrom(DEX_STATUS).limit(1).fetchOptional();
-		if(opt_status.isPresent()) {
-			return opt_status.get().getTxmonitorlastpagingtoken();
-		}
 
+		Server server = stellarNetworkService.pickServer();
+
+		Page<TransactionResponse> txPage;
 		try {
-			Server server = stellarNetworkService.pickServer();
-			Page<TransactionResponse> lastRecord = server.transactions().order(RequestBuilder.Order.DESC).limit(1).execute();
-			if(lastRecord.getRecords().size() < 1) {
-				return null;
+			if(opt_status.isPresent()) {
+				// 200 is maximum
+				txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(opt_status.get().getTxmonitorlastpagingtoken()).limit(TXREQUEST_LIMIT).execute();
 			} else {
-				dslContext.insertInto(DEX_STATUS).columns(DEX_STATUS.TXMONITORLASTPAGINGTOKEN).values(lastRecord.getRecords().get(0).getPagingToken()).execute();
-				return lastRecord.getRecords().get(0).getPagingToken();
+				// insert initial row
+				dslContext.insertInto(DEX_STATUS).columns(DEX_STATUS.TXMONITORLASTPAGINGTOKEN).values("0").execute();
+				// get last tx for initiation
+				txPage = server.transactions().order(RequestBuilder.Order.DESC).limit(1).execute();
 			}
 		} catch(Exception ex) {
 			logger.exception(ex, "Cannot get last tx from stellar network.");
-			return null;
-		}
-	}
-
-	private int processNextTransactions(String lastPagingToken) {
-		Server server = stellarNetworkService.pickServer();
-		Page<TransactionResponse> txPage;
-		try {
-			// 200 is maximum
-			txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(lastPagingToken).limit(TXREQUEST_LIMIT).execute();
-		} catch(Exception e) {
-			logger.exception(e, "Cannot get last tx page from stellar network.");
 			return -1;
 		}
 
+		return processTransactionPage(txPage);
+	}
+
+	private int processTransactionPage(Page<TransactionResponse> txPage) {
 		int processed = 0;
 
 		for(TransactionResponse txRecord : txPage.getRecords()) {
