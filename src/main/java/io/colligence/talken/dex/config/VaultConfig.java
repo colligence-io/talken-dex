@@ -59,14 +59,13 @@ public class VaultConfig extends AbstractVaultConfiguration {
 
 	@Override
 	public ClientAuthentication clientAuthentication() {
-		String username;
-		if(RunningProfile.isLocal()) {
-			username = appRole;
-		} else {
+		String username = Hashing.sha256().hashString(appRole, StandardCharsets.UTF_8).toString().toLowerCase();
+
+		if(!RunningProfile.isLocal()) {
 			try {
 				username = Hashing.sha256().hashString(InetAddress.getLocalHost().getHostName(), StandardCharsets.UTF_8).toString().toLowerCase();
 			} catch(Exception ex) {
-				username = appRole;
+//				username = appRole;
 			}
 		}
 
