@@ -5,11 +5,13 @@ import io.colligence.talken.common.CLGException;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.exception.APIErrorException;
 import io.colligence.talken.dex.exception.InternalServerErrorException;
+import io.colligence.talken.dex.exception.ParameterViolationException;
 import io.colligence.talken.dex.exception.UnauthorizedException;
 import io.colligence.talken.dex.service.MessageService;
 import io.colligence.talken.dex.service.integration.APIResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,6 +27,18 @@ public class GlobalControllerExceptionHandler {
 
 	@Autowired
 	MessageService ms;
+
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public DexResponse<Void> handleHttpMessageNotReadableException(HttpMessageNotReadableException e, Locale locale) {
+		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.BAD_REQUEST.value(), "Request Violation", HttpStatus.BAD_REQUEST, null));
+	}
+
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(ParameterViolationException.class)
+	public DexResponse<Void> handleParameterViolationException(ParameterViolationException e, Locale locale) {
+		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.BAD_REQUEST.value(), "Parameter Violation", HttpStatus.BAD_REQUEST, null));
+	}
 
 	@ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
 	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
