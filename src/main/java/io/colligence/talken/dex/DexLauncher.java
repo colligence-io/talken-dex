@@ -16,8 +16,6 @@ public class DexLauncher {
 
 	private static ConfigurableApplicationContext applicationContext;
 
-	public static String HOSTNAME = null;
-
 	public static void main(String[] args) {
 		SpringApplication application = new SpringApplication(DexLauncher.class);
 
