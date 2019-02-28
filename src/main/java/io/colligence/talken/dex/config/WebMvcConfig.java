@@ -1,5 +1,6 @@
 package io.colligence.talken.dex.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.colligence.talken.common.CommonConsts;
@@ -42,6 +43,7 @@ public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
 		SimpleModule module = new SimpleModule();
 		module.addSerializer(LocalDateTime.class, new LocalDateTime2TimestampSerializer());
 		mapper.registerModule(module);
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		return new MappingJackson2HttpMessageConverter(mapper);
 	}
 
