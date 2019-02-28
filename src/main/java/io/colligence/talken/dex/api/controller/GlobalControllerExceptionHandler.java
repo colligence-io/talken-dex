@@ -31,12 +31,14 @@ public class GlobalControllerExceptionHandler {
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	public DexResponse<Void> handleHttpMessageNotReadableException(HttpMessageNotReadableException e, Locale locale) {
+		logger.exception(e);
 		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.BAD_REQUEST.value(), "Request Violation", HttpStatus.BAD_REQUEST, null));
 	}
 
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(ParameterViolationException.class)
 	public DexResponse<Void> handleParameterViolationException(ParameterViolationException e, Locale locale) {
+		logger.exception(e);
 		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.BAD_REQUEST.value(), "Parameter Violation", HttpStatus.BAD_REQUEST, null));
 	}
 
@@ -44,6 +46,7 @@ public class GlobalControllerExceptionHandler {
 	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
 	@ResponseBody
 	public DexResponse<Void> handleMethodNotAllowedException(HttpRequestMethodNotSupportedException e, Locale locale) {
+		logger.exception(e);
 		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.METHOD_NOT_ALLOWED.value(), e.getMessage(), HttpStatus.METHOD_NOT_ALLOWED, null));
 	}
 
@@ -51,6 +54,7 @@ public class GlobalControllerExceptionHandler {
 	@ExceptionHandler(UnauthorizedException.class)
 	@ResponseBody
 	public DexResponse<Void> handleRuntimeException(UnauthorizedException e, Locale locale) {
+		logger.exception(e);
 		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.UNAUTHORIZED.value(), ms.getMessage(locale, e), HttpStatus.UNAUTHORIZED, null));
 	}
 
@@ -59,6 +63,7 @@ public class GlobalControllerExceptionHandler {
 	@ResponseBody
 	public DexResponse<APIResult> handleCLGException(APIErrorException e, Locale locale) {
 		// FIXME : e.getApiResult is too sensitive to return as result body, consider hide it
+		logger.exception(e);
 		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, e.getApiResult()));
 	}
 
@@ -66,6 +71,7 @@ public class GlobalControllerExceptionHandler {
 	@ExceptionHandler(CLGException.class)
 	@ResponseBody
 	public DexResponse<Void> handleCLGException(CLGException e, Locale locale) {
+		logger.exception(e);
 		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, null));
 	}
 
