@@ -11,4 +11,6 @@ public class TxListRequest {
 	String taskId;
 	String txHash;
 	Long offerId;
+	String sellAssetCode;
+	String buyAssetCode;
 }
