@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class DeleteOfferRequest {
-	@NotEmpty
+	@NotNull
 	private Long offerId;
 	@NotEmpty
 	private String tradeWalletAddress;
