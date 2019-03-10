@@ -285,6 +285,7 @@ public class AnchorService {
 		// request deanchor monitor
 		AncServerDeanchorRequest ancRequest = new AncServerDeanchorRequest();
 		ancRequest.setTaskId(dexTaskId.getId());
+		ancRequest.setUid(String.valueOf(userId));
 		ancRequest.setSymbol(taskRecord.getAssetcode());
 		ancRequest.setHash(taskRecord.getTxHash());
 		ancRequest.setFrom(taskRecord.getTradeaddr());
