@@ -9,7 +9,7 @@ import io.colligence.talken.dex.api.service.TokenMetaService;
 import io.colligence.talken.dex.exception.SigningException;
 import io.colligence.talken.dex.exception.TaskIntegrityCheckFailedException;
 import io.colligence.talken.dex.exception.TokenMetaDataNotFoundException;
-import io.colligence.talken.dex.service.integration.signer.SignerService;
+import io.colligence.talken.dex.service.integration.signer.SignServerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
 import io.colligence.talken.dex.util.StellarConverter;
 import org.jooq.DSLContext;
@@ -45,7 +45,7 @@ public class CreateOfferRefundService {
 	private TokenMetaService maService;
 
 	@Autowired
-	private SignerService signerService;
+	private SignServerService signerService;
 
 	// check refund tasks
 	@Scheduled(fixedDelay = 10000)
@@ -98,7 +98,7 @@ public class CreateOfferRefundService {
 			taskRecord.setTxHash(ByteArrayUtil.toHexString(tx.hash()));
 			taskRecord.setTxXdr(tx.toEnvelopeXdrBase64());
 
-			signerService.sign(tx);
+			signerService.signTransaction(tx);
 
 			SubmitTransactionResponse txResponse = server.submitTransaction(tx);
 

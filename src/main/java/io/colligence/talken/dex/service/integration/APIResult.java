@@ -8,7 +8,7 @@ import lombok.Getter;
 public class APIResult<T> {
 	private String apiName;
 	private boolean isSuccess = false;
-	private String responseCode;
+	private int responseCode;
 	private String errorCode;
 	private String errorMessage;
 	private Throwable cause;
@@ -18,7 +18,7 @@ public class APIResult<T> {
 		this.apiName = apiName;
 	}
 
-	public void setResponseCode(String responseCode) {
+	public void setResponseCode(int responseCode) {
 		this.responseCode = responseCode;
 	}
 

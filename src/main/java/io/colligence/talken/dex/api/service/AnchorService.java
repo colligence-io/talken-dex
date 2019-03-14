@@ -137,7 +137,7 @@ public class AnchorService {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
 
 			taskRecord.setErrorposition("request relay");
-			taskRecord.setErrorcode(relayResult.getResponseCode());
+			taskRecord.setErrorcode(String.valueOf(relayResult.getResponseCode()));
 			taskRecord.setErrormessage(relayResult.getErrorMessage());
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
@@ -320,7 +320,7 @@ public class AnchorService {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
 
 			taskRecord.setErrorposition("request relay");
-			taskRecord.setErrorcode(relayResult.getResponseCode());
+			taskRecord.setErrorcode(String.valueOf(relayResult.getResponseCode()));
 			taskRecord.setErrormessage(relayResult.getErrorMessage());
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();

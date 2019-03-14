@@ -1,7 +1,7 @@
 package io.colligence.talken.dex;
 
 import io.colligence.talken.common.persistence.vault.VaultSecretReader;
-import io.colligence.talken.common.persistence.vault.data.VaultSecretDataDexKey;
+import io.colligence.talken.common.persistence.vault.data.VaultSecretDataDexSettings;
 import io.colligence.talken.common.persistence.vault.data.VaultSecretDataWebJwt;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
-import java.util.Map;
 
 @Component
 @ConfigurationProperties("talken.dex")
@@ -23,8 +22,13 @@ public class DexSettings {
 
 	@PostConstruct
 	private void readVaultSecret() {
-		VaultSecretDataDexKey secret = secretReader.readSecret("dexKey", VaultSecretDataDexKey.class);
-		randomStringTable = secret.getSeed();
+		VaultSecretDataDexSettings secret = secretReader.readSecret("dexSettings", VaultSecretDataDexSettings.class);
+		randomStringTable = secret.getTaskIdSeed();
+
+		signServer = new _SignServer();
+		signServer.addr = secret.getSignServerAddr();
+		signServer.appName = secret.getSignServerAppName();
+		signServer.appKey = secret.getSignServerAppKey();
 
 		VaultSecretDataWebJwt secret2 = secretReader.readSecret("web-jwt", VaultSecretDataWebJwt.class);
 		accessToken.jwtSecret = secret2.getSecret();
@@ -32,6 +36,18 @@ public class DexSettings {
 	}
 
 	private String randomStringTable;
+
+	private _SignServer signServer;
+
+	@Getter
+	@Setter
+	public static class _SignServer {
+		private String addr;
+		private String appName;
+		private String appKey;
+	}
+
+	private _AccessToken accessToken;
 
 	@Getter
 	@Setter
@@ -48,8 +64,6 @@ public class DexSettings {
 	public static class _Scheduler {
 		private int poolSize;
 	}
-
-	private _AccessToken accessToken;
 
 	private _Stellar stellar;
 
@@ -84,6 +98,4 @@ public class DexSettings {
 		private double deanchorFeeAmount;
 		private double deanchorFeeRateCtxFactor;
 	}
-
-	private Map<String, String> signerMock;
 }
