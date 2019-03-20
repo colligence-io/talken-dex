@@ -3,7 +3,6 @@ package io.colligence.talken.dex.api.service;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.colligence.talken.common.CommonConsts;
-import io.colligence.talken.common.RunningProfile;
 import io.colligence.talken.common.persistence.enums.LangTypeEnum;
 import io.colligence.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.colligence.talken.common.persistence.jooq.tables.pojos.TokenExchangeRate;
@@ -13,19 +12,19 @@ import io.colligence.talken.common.util.UTCUtil;
 import io.colligence.talken.common.util.collection.SingleKeyTable;
 import io.colligence.talken.dex.api.dto.UpdateHolderResult;
 import io.colligence.talken.dex.exception.*;
+import io.colligence.talken.dex.service.integration.signer.SignServerService;
 import io.colligence.talken.dex.service.integration.stellar.StellarNetworkService;
+import io.colligence.talken.dex.util.StellarConverter;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.Asset;
-import org.stellar.sdk.AssetTypeCreditAlphaNum4;
-import org.stellar.sdk.KeyPair;
-import org.stellar.sdk.Server;
+import org.stellar.sdk.*;
+import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.util.*;
 
 import static io.colligence.talken.common.persistence.jooq.Tables.*;
@@ -40,6 +39,9 @@ public class TokenMetaService {
 
 	@Autowired
 	private DSLContext dslContext;
+
+	@Autowired
+	private SignServerService signServerService;
 
 	@Autowired
 	private RedisTemplate<String, Object> redisTemplate;
@@ -231,11 +233,11 @@ public class TokenMetaService {
 				TokenMetaData.ManagedInfo mi = _tmd.getManagedInfo();
 				mi.setAssetHolderAccounts(_tmhMap.get(_tmd.getId()));
 				mi.setAssetCode(_tmd.getSymbol());
-				mi.setAssetIssuer(getKeyPair(mi.getIssueraddress()));
+				mi.setAssetIssuer(KeyPair.fromAccountId(mi.getIssueraddress()));
 				mi.setAssetType(new AssetTypeCreditAlphaNum4(_tmd.getSymbol(), mi.getAssetIssuer()));
-				mi.setAssetBase(getKeyPair(mi.getBaseaddress()));
-				mi.setDeanchorFeeHolder(getKeyPair(mi.getDeancfeeholderaddress()));
-				mi.setOfferFeeHolder(getKeyPair(mi.getOfferfeeholderaddress()));
+				mi.setAssetBase(KeyPair.fromAccountId(mi.getBaseaddress()));
+				mi.setDeanchorFeeHolder(KeyPair.fromAccountId(mi.getDeancfeeholderaddress()));
+				mi.setOfferFeeHolder(KeyPair.fromAccountId(mi.getOfferfeeholderaddress()));
 
 				mi.setMarketPair(new HashMap<>());
 				for(TokenMetaData.MarketPairInfo _mp : _tmpMap.get(_tmd.getId())) {
@@ -243,11 +245,69 @@ public class TokenMetaService {
 				}
 			}
 
+			verifyManaged(newMiTable);
+
 			tmTable = newTmTable;
 			miTable = newMiTable;
 			loadTimestamp = UTCUtil.getNowTimestamp_s();
 		} catch(Exception ex) {
 			throw new InternalServerErrorException(ex);
+		}
+	}
+
+	private void verifyManaged(SingleKeyTable<String, TokenMetaData> checkTarget) {
+		for(TokenMetaData _tm : checkTarget.__getRawData().values()) {
+			checkTrust(_tm.getManagedInfo().getAssetBase(), _tm.getManagedInfo());
+			checkTrust(_tm.getManagedInfo().getOfferFeeHolder(), _tm.getManagedInfo());
+			checkTrust(_tm.getManagedInfo().getDeanchorFeeHolder(), _tm.getManagedInfo());
+		}
+	}
+
+	private void checkTrust(KeyPair source, TokenMetaData.ManagedInfo target) {
+		if(!checkedAccounts.contains(source.getAccountId())) {
+			try {
+				Server server = stellarNetworkService.pickServer();
+
+				AccountResponse sourceAccount = server.accounts().account(source);
+
+				boolean trusted = false;
+				for(AccountResponse.Balance _bal : sourceAccount.getBalances()) {
+					if(target.getAssetType().equals(_bal.getAsset())) trusted = true;
+				}
+
+				if(!trusted) {
+					logger.info("No trust on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
+					Transaction tx = new Transaction
+							.Builder(sourceAccount)
+							.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+							.addOperation(
+									new ChangeTrustOperation.Builder(
+											target.getAssetType(),
+											String.valueOf(StellarConverter.rawToDoubleString(Long.MAX_VALUE))
+									).build()
+							)
+							.build();
+
+					signServerService.signTransaction(tx);
+
+					SubmitTransactionResponse txResponse = server.submitTransaction(tx);
+
+					if(txResponse.isSuccess()) {
+						logger.info("Trustline made on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
+					} else {
+						SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
+						StringJoiner sj = new StringJoiner(",");
+						if(resultCodes.getOperationsResultCodes() != null) resultCodes.getOperationsResultCodes().forEach(sj::add);
+						logger.error("Cannot make trustline on {} for {} / {} : {} - {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId(), resultCodes.getTransactionResultCode(), sj.toString());
+					}
+				} else {
+					logger.info("Trustline on {} for {} {} verified", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
+				}
+
+				checkedAccounts.add(source.getAccountId());
+			} catch(Exception ex) {
+				logger.exception(ex, "Trust Check Exception : {}", source.getAccountId());
+			}
 		}
 	}
 
@@ -262,25 +322,6 @@ public class TokenMetaService {
 
 	public Map<String, TokenMetaData> getManagedInfoList() {
 		return miTable.__getRawData();
-	}
-
-	private KeyPair getKeyPair(String accountID) throws AccountNotFoundException {
-		// First, check to make sure that the destination account exists.
-		// You could skip this, but if the account does not exist, you will be charged
-		// the transaction fee when the transaction fails.
-		// It will throw HttpResponseException if account does not exist or there was another error.
-		try {
-			KeyPair account = KeyPair.fromAccountId(accountID);
-			if(!RunningProfile.isLocal() && !checkedAccounts.contains(accountID)) {
-				logger.info("Checking managed account : {}", accountID);
-				checkedAccounts.add(accountID);
-				Server server = stellarNetworkService.pickServer();
-				server.accounts().account(account);
-			}
-			return account;
-		} catch(IOException ex) {
-			throw new AccountNotFoundException("MA(OnLoad)", accountID);
-		}
 	}
 
 	private TokenMetaData.ManagedInfo getPack(String assetCode) throws TokenMetaDataNotFoundException {
