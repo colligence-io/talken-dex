@@ -9,6 +9,8 @@ import io.colligence.talken.common.persistence.jooq.tables.pojos.TokenExchangeRa
 import io.colligence.talken.common.persistence.jooq.tables.records.*;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.UTCUtil;
+import io.colligence.talken.common.util.collection.DoubleKeyObject;
+import io.colligence.talken.common.util.collection.DoubleKeyTable;
 import io.colligence.talken.common.util.collection.SingleKeyTable;
 import io.colligence.talken.dex.api.dto.UpdateHolderResult;
 import io.colligence.talken.dex.exception.*;
@@ -53,7 +55,28 @@ public class TokenMetaService {
 	private SingleKeyTable<String, TokenMetaData> tmTable = new SingleKeyTable<>();
 	private SingleKeyTable<String, TokenMetaData> miTable = new SingleKeyTable<>();
 
-	private HashSet<String> checkedAccounts = new HashSet<>();
+	// checked trustline registry
+	private DoubleKeyTable<String, Asset, TrustedAsset> checkedTrusts = new DoubleKeyTable<>();
+
+	private static class TrustedAsset implements DoubleKeyObject<String, Asset> {
+		private String accountID;
+		private Asset trustFor;
+
+		private TrustedAsset(String accountID, Asset trustFor) {
+			this.accountID = accountID;
+			this.trustFor = trustFor;
+		}
+
+		@Override
+		public String __getMKey__() {
+			return accountID;
+		}
+
+		@Override
+		public Asset __getSKey__() {
+			return trustFor;
+		}
+	}
 
 	@PostConstruct
 	private void init() throws TokenMetaLoadException {
@@ -263,16 +286,17 @@ public class TokenMetaService {
 	}
 
 	private boolean checkTrust(KeyPair source, TokenMetaData.ManagedInfo target) {
-		if(checkedAccounts.contains(source.getAccountId())) return true;
+		TrustedAsset ta = new TrustedAsset(source.getAccountId(), target.getAssetType());
+		if(checkedTrusts.has(ta)) return true;
 
 		boolean trusted = false;
 		try {
 			Server server = stellarNetworkService.pickServer();
 
-			AccountResponse sourceAccount = server.accounts().account(source);
+			AccountResponse sourceAccount = server.accounts().account(KeyPair.fromAccountId(ta.accountID));
 
 			for(AccountResponse.Balance _bal : sourceAccount.getBalances()) {
-				if(target.getAssetType().equals(_bal.getAsset())) trusted = true;
+				if(ta.trustFor.equals(_bal.getAsset())) trusted = true;
 			}
 
 			if(!trusted) {
@@ -307,8 +331,8 @@ public class TokenMetaService {
 		}
 
 		if(trusted) {
-			checkedAccounts.add(source.getAccountId());
-			logger.info("Trustline on {} for {} {} verified", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
+			checkedTrusts.insert(ta);
+			logger.info("Trustline on {} for {} / {} verified", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
 			return true;
 		} else {
 			return false;
