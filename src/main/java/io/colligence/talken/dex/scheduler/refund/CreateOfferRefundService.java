@@ -1,8 +1,8 @@
 package io.colligence.talken.dex.scheduler.refund;
 
-import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.colligence.talken.common.persistence.jooq.tables.records.DexCreateofferRefundTaskRecord;
 import io.colligence.talken.common.util.PrefixedLogger;
+import io.colligence.talken.dex.api.service.BareTxInfo;
 import io.colligence.talken.dex.api.service.DexTaskId;
 import io.colligence.talken.dex.api.service.DexTaskIdService;
 import io.colligence.talken.dex.api.service.TokenMetaService;
@@ -94,9 +94,12 @@ public class CreateOfferRefundService {
 									.build()
 					).build();
 
-			taskRecord.setTxSeq(tx.getSequenceNumber());
-			taskRecord.setTxHash(ByteArrayUtil.toHexString(tx.hash()));
-			taskRecord.setTxXdr(tx.toEnvelopeXdrBase64());
+			// build tx
+			BareTxInfo bareTxInfo = BareTxInfo.build(tx);
+
+			taskRecord.setTxSeq(bareTxInfo.getSequence());
+			taskRecord.setTxHash(bareTxInfo.getHash());
+			taskRecord.setTxXdr(bareTxInfo.getEnvelopeXdr());
 
 			logger.debug("Request sign for {} {}", source.getAccountId(), taskRecord.getTxHash());
 			signerService.signTransaction(tx);
