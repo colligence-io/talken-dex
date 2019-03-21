@@ -54,7 +54,7 @@ public class OfferService {
 	@Autowired
 	private RelayServerService relayServerService;
 
-	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws TokenMetaDataNotFoundException, StellarException, APIErrorException, AssetConvertException, InternalServerErrorException {
+	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws TokenMetaDataNotFoundException, StellarException, APIErrorException, AssetConvertException, TokenMetaLoadException {
 		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.OFFER_CREATE);
 
 		// create task record
@@ -80,7 +80,7 @@ public class OfferService {
 		FeeCalculationService.Fee fee;
 		try {
 			fee = feeCalculationService.calculateOfferFee(sellAssetCode, StellarConverter.doubleToRaw(sellAssetAmount), feeByCtx);
-		} catch(InternalServerErrorException ex) {
+		} catch(TokenMetaLoadException ex) {
 			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
 
 			taskRecord.setErrorposition("calculate fee");

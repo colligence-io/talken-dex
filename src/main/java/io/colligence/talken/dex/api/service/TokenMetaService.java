@@ -46,6 +46,8 @@ public class TokenMetaService {
 	@Autowired
 	private RedisTemplate<String, Object> redisTemplate;
 
+	private static Long lastTradeAggregationUpdatedTimestamp = null;
+	private static Long lastExchangeRateUpdatedTimestamp = null;
 	private static Long loadTimestamp;
 
 	private SingleKeyTable<String, TokenMetaData> tmTable = new SingleKeyTable<>();
@@ -54,54 +56,42 @@ public class TokenMetaService {
 	private HashSet<String> checkedAccounts = new HashSet<>();
 
 	@PostConstruct
-	private void init() throws InternalServerErrorException {
+	private void init() throws TokenMetaLoadException {
 		load();
+		lastExchangeRateUpdatedTimestamp = loadTimestamp;
+		lastTradeAggregationUpdatedTimestamp = loadTimestamp;
 	}
 
-	public Map<String, TokenMetaData> forceReload() throws InternalServerErrorException {
+	public Map<String, TokenMetaData> forceReload() throws TokenMetaLoadException {
 		load();
 		return tmTable.__getRawData();
 	}
 
-	public void checkUpdateAndReload() throws InternalServerErrorException {
+	public void checkTaExrAndUpdate() throws TokenMetaLoadException {
+		boolean reloaded = false;
 		Long redisTaDataUpdated = null;
-		try {
-			Object val = redisTemplate.opsForValue().get(CommonConsts.REDIS.KEY_ASSET_OHLCV_UPDATED);
-			if(val != null)
-				redisTaDataUpdated = Long.valueOf(val.toString());
-		} catch(Exception ex) {
-			logger.exception(ex, "Cannot get data {} from redis", CommonConsts.REDIS.KEY_ASSET_OHLCV_UPDATED);
-			throw new InternalServerErrorException(ex);
-		}
-
-		if(redisTaDataUpdated != null) {
-			if(loadTimestamp == null || loadTimestamp < redisTaDataUpdated) {
+		Object taval = redisTemplate.opsForValue().get(CommonConsts.REDIS.KEY_ASSET_OHLCV_UPDATED);
+		if(taval != null) {
+			redisTaDataUpdated = Long.valueOf(taval.toString());
+			if(lastTradeAggregationUpdatedTimestamp < redisTaDataUpdated) {
 				load();
-				loadTimestamp = redisTaDataUpdated;
-				return;
+				reloaded = true;
+				lastTradeAggregationUpdatedTimestamp = redisTaDataUpdated;
 			}
 		}
 
 		Long redisExrDataUpdated = null;
-		try {
-			Object val = redisTemplate.opsForValue().get(CommonConsts.REDIS.KEY_ASSET_EXRATE_UPDATED);
-			if(val != null)
-				redisExrDataUpdated = Long.valueOf(val.toString());
-		} catch(
-				Exception ex) {
-			logger.exception(ex, "Cannot get data {} from redis", CommonConsts.REDIS.KEY_ASSET_EXRATE_UPDATED);
-			throw new InternalServerErrorException(ex);
-		}
-
-		if(redisExrDataUpdated != null) {
-			if(loadTimestamp == null || loadTimestamp < redisExrDataUpdated) {
-				load();
-				loadTimestamp = redisExrDataUpdated;
+		Object exrval = redisTemplate.opsForValue().get(CommonConsts.REDIS.KEY_ASSET_EXRATE_UPDATED);
+		if(exrval != null) {
+			redisExrDataUpdated = Long.valueOf(exrval.toString());
+			if(lastExchangeRateUpdatedTimestamp < redisExrDataUpdated) {
+				if(!reloaded) load();
+				lastExchangeRateUpdatedTimestamp = redisExrDataUpdated;
 			}
 		}
 	}
 
-	private void load() throws InternalServerErrorException {
+	private void load() throws TokenMetaLoadException {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -245,69 +235,83 @@ public class TokenMetaService {
 				}
 			}
 
-			verifyManaged(newMiTable);
+			if(!verifyManaged(newMiTable)) {
+				logger.error("Cannot verify token meta data");
+
+				// TODO : this is commented out for partial integration with signServer
+				// after all accounts integrated with signServer, this must be enabled instead of just logging
+
+				//throw new TokenMetaLoadException("Cannot verify token meta data");
+			}
 
 			tmTable = newTmTable;
 			miTable = newMiTable;
 			loadTimestamp = UTCUtil.getNowTimestamp_s();
 		} catch(Exception ex) {
-			throw new InternalServerErrorException(ex);
+			throw new TokenMetaLoadException(ex);
 		}
 	}
 
-	private void verifyManaged(SingleKeyTable<String, TokenMetaData> checkTarget) {
+	private boolean verifyManaged(SingleKeyTable<String, TokenMetaData> checkTarget) {
+		boolean trustFailed = false;
 		for(TokenMetaData _tm : checkTarget.__getRawData().values()) {
-			checkTrust(_tm.getManagedInfo().getAssetBase(), _tm.getManagedInfo());
-			checkTrust(_tm.getManagedInfo().getOfferFeeHolder(), _tm.getManagedInfo());
-			checkTrust(_tm.getManagedInfo().getDeanchorFeeHolder(), _tm.getManagedInfo());
+			if(!checkTrust(_tm.getManagedInfo().getAssetBase(), _tm.getManagedInfo())) trustFailed = true;
+			if(!checkTrust(_tm.getManagedInfo().getOfferFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
+			if(!checkTrust(_tm.getManagedInfo().getDeanchorFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
 		}
+		return !trustFailed;
 	}
 
-	private void checkTrust(KeyPair source, TokenMetaData.ManagedInfo target) {
-		if(!checkedAccounts.contains(source.getAccountId())) {
-			try {
-				Server server = stellarNetworkService.pickServer();
+	private boolean checkTrust(KeyPair source, TokenMetaData.ManagedInfo target) {
+		if(checkedAccounts.contains(source.getAccountId())) return true;
 
-				AccountResponse sourceAccount = server.accounts().account(source);
+		boolean trusted = false;
+		try {
+			Server server = stellarNetworkService.pickServer();
 
-				boolean trusted = false;
-				for(AccountResponse.Balance _bal : sourceAccount.getBalances()) {
-					if(target.getAssetType().equals(_bal.getAsset())) trusted = true;
-				}
+			AccountResponse sourceAccount = server.accounts().account(source);
 
-				if(!trusted) {
-					logger.info("No trust on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
-					Transaction tx = new Transaction
-							.Builder(sourceAccount)
-							.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-							.addOperation(
-									new ChangeTrustOperation.Builder(
-											target.getAssetType(),
-											String.valueOf(StellarConverter.rawToDoubleString(Long.MAX_VALUE))
-									).build()
-							)
-							.build();
-
-					signServerService.signTransaction(tx);
-
-					SubmitTransactionResponse txResponse = server.submitTransaction(tx);
-
-					if(txResponse.isSuccess()) {
-						logger.info("Trustline made on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
-					} else {
-						SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
-						StringJoiner sj = new StringJoiner(",");
-						if(resultCodes.getOperationsResultCodes() != null) resultCodes.getOperationsResultCodes().forEach(sj::add);
-						logger.error("Cannot make trustline on {} for {} / {} : {} - {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId(), resultCodes.getTransactionResultCode(), sj.toString());
-					}
-				} else {
-					logger.info("Trustline on {} for {} {} verified", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
-				}
-
-				checkedAccounts.add(source.getAccountId());
-			} catch(Exception ex) {
-				logger.exception(ex, "Trust Check Exception : {}", source.getAccountId());
+			for(AccountResponse.Balance _bal : sourceAccount.getBalances()) {
+				if(target.getAssetType().equals(_bal.getAsset())) trusted = true;
 			}
+
+			if(!trusted) {
+				logger.info("No trust on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
+				Transaction tx = new Transaction
+						.Builder(sourceAccount)
+						.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+						.addOperation(
+								new ChangeTrustOperation.Builder(
+										target.getAssetType(),
+										String.valueOf(StellarConverter.rawToDoubleString(Long.MAX_VALUE))
+								).build()
+						)
+						.build();
+
+				signServerService.signTransaction(tx);
+
+				SubmitTransactionResponse txResponse = server.submitTransaction(tx);
+
+				if(txResponse.isSuccess()) {
+					logger.info("Trustline made on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
+					trusted = true;
+				} else {
+					SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
+					StringJoiner sj = new StringJoiner(",");
+					if(resultCodes.getOperationsResultCodes() != null) resultCodes.getOperationsResultCodes().forEach(sj::add);
+					logger.error("Cannot make trustline on {} for {} / {} : {} - {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId(), resultCodes.getTransactionResultCode(), sj.toString());
+				}
+			}
+		} catch(Exception ex) {
+			logger.exception(ex, "Trust Check Exception : {}", source.getAccountId());
+		}
+
+		if(trusted) {
+			checkedAccounts.add(source.getAccountId());
+			logger.info("Trustline on {} for {} {} verified", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
+			return true;
+		} else {
+			return false;
 		}
 	}
 

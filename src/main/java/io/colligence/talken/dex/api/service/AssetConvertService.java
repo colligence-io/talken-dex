@@ -2,8 +2,8 @@ package io.colligence.talken.dex.api.service;
 
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.exception.AssetConvertException;
-import io.colligence.talken.dex.exception.InternalServerErrorException;
 import io.colligence.talken.dex.exception.TokenMetaDataNotFoundException;
+import io.colligence.talken.dex.exception.TokenMetaLoadException;
 import io.colligence.talken.dex.util.StellarConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -21,16 +21,16 @@ public class AssetConvertService {
 	// interchange assets, in order
 	private static final String[] INTERCHANGE = new String[]{"BTC", "ETH", "XLM", "CTX"};
 
-	public double convert(String fromCode, double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, InternalServerErrorException {
+	public double convert(String fromCode, double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
 		return StellarConverter.rawToDouble(convertRaw(fromCode, StellarConverter.doubleToRaw(amount), toCode));
 	}
 
-	public long convertRaw(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, InternalServerErrorException {
+	public long convertRaw(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
 		return convertRaw(tmService.getAssetType(fromCode), amountRaw, tmService.getAssetType(toCode));
 	}
 
-	public long convertRaw(Asset fromType, long amountRaw, Asset toType) throws AssetConvertException, TokenMetaDataNotFoundException, InternalServerErrorException {
-		tmService.checkUpdateAndReload();
+	public long convertRaw(Asset fromType, long amountRaw, Asset toType) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+		tmService.checkTaExrAndUpdate();
 
 		final String from = StellarConverter.toAssetCode(fromType);
 		final String to = StellarConverter.toAssetCode(toType);
@@ -66,12 +66,12 @@ public class AssetConvertService {
 		throw new AssetConvertException(from, to);
 	}
 
-	public double exchange(String fromCode, double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, InternalServerErrorException {
+	public double exchange(String fromCode, double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
 		return StellarConverter.rawToDouble(exchangeRawToFiat(fromCode, StellarConverter.doubleToRaw(amount), toCode));
 	}
 
-	public long exchangeRawToFiat(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, InternalServerErrorException {
-		tmService.checkUpdateAndReload();
+	public long exchangeRawToFiat(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+		tmService.checkTaExrAndUpdate();
 
 		// exchange to fiat
 		if(!toCode.equalsIgnoreCase("USD") && !toCode.equalsIgnoreCase("KRW")) {

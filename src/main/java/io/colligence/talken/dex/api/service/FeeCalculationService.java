@@ -3,8 +3,8 @@ package io.colligence.talken.dex.api.service;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
 import io.colligence.talken.dex.exception.AssetConvertException;
-import io.colligence.talken.dex.exception.InternalServerErrorException;
 import io.colligence.talken.dex.exception.TokenMetaDataNotFoundException;
+import io.colligence.talken.dex.exception.TokenMetaLoadException;
 import io.colligence.talken.dex.util.StellarConverter;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ public class FeeCalculationService {
 		deanchorPivotAmountRaw = StellarConverter.doubleToRaw(dexSettings.getFee().getDeanchorFeeAmount());
 	}
 
-	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaDataNotFoundException, AssetConvertException, InternalServerErrorException {
+	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaDataNotFoundException, AssetConvertException, TokenMetaLoadException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);
@@ -70,7 +70,7 @@ public class FeeCalculationService {
 		return fee;
 	}
 
-	public Fee calculateDeanchorFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaDataNotFoundException, AssetConvertException, InternalServerErrorException {
+	public Fee calculateDeanchorFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaDataNotFoundException, AssetConvertException, TokenMetaLoadException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);

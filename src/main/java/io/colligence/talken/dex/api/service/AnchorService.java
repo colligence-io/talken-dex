@@ -185,7 +185,7 @@ public class AnchorService {
 		return result;
 	}
 
-	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws TokenMetaDataNotFoundException, StellarException, APIErrorException, AssetConvertException, InternalServerErrorException {
+	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws TokenMetaDataNotFoundException, StellarException, APIErrorException, AssetConvertException, TokenMetaLoadException {
 		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 
 		// create task record
@@ -208,7 +208,7 @@ public class AnchorService {
 		FeeCalculationService.Fee fee;
 		try {
 			fee = feeCalculationService.calculateDeanchorFee(assetCode, StellarConverter.doubleToRaw(amount), feeByCtx);
-		} catch(InternalServerErrorException ex) {
+		} catch(TokenMetaLoadException ex) {
 			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
 
 			taskRecord.setErrorposition("calculate fee");

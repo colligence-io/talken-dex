@@ -19,7 +19,8 @@ public enum DexExceptionType implements CLGException.ExceptionType {
 	TOKEN_META_DATA_NOT_FOUND(50),
 	CANNOT_UPDATE_HOLDER_STATUS(51),
 	ACTIVE_ASSET_HOLDER_NOT_FOUND(52),
-	SIGNING_ERROR(53);
+	SIGNING_ERROR(53),
+	CANNOT_LOAD_TOKEN_META_DATA(54);
 
 	private final int eCode;
 	private final String messageKey;
