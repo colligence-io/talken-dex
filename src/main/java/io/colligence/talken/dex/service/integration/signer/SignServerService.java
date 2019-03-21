@@ -132,7 +132,6 @@ public class SignServerService extends AbstractRestApiService {
 		ssReq.setType("XLM");
 		ssReq.setData(ByteArrayUtils.toHexString(tx.hash()));
 
-		logger.info("Request sign for {} {}", accountId, ssReq.getData());
 		APIResult<SignServerSignResponse> signResult = requestSign(ssReq);
 		if(signResult != null) {
 			// try once again for sure (in case of access token is expired)

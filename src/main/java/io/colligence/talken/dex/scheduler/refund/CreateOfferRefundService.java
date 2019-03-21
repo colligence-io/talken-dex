@@ -98,8 +98,10 @@ public class CreateOfferRefundService {
 			taskRecord.setTxHash(ByteArrayUtil.toHexString(tx.hash()));
 			taskRecord.setTxXdr(tx.toEnvelopeXdrBase64());
 
+			logger.debug("Request sign for {} {}", source.getAccountId(), taskRecord.getTxHash());
 			signerService.signTransaction(tx);
 
+			logger.debug("Sending refund TX to stellar network.");
 			SubmitTransactionResponse txResponse = server.submitTransaction(tx);
 
 			if(txResponse.isSuccess()) {
