@@ -27,8 +27,6 @@ public class CreateOfferRefundTaskTransactionProcessor implements TaskTransactio
 	@Override
 	public TaskTransactionProcessResult process(TaskTransactionResponse taskTxResponse) {
 		try {
-			logger.debug("Processing tx {} for task {}", taskTxResponse.getTxHash(), taskTxResponse.getTaskId());
-
 			int updated = dslContext.update(DEX_CREATEOFFER_REFUND_TASK)
 					.set(DEX_CREATEOFFER_REFUND_TASK.CHECKED_FLAG, true)
 					.where(DEX_CREATEOFFER_REFUND_TASK.TASKID.eq(taskTxResponse.getTaskId().getId()))

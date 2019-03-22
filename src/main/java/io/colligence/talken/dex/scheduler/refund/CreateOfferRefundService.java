@@ -122,6 +122,8 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 	}
 
 	private void refund(RefundTask taskInfo) {
+		logger.debug("Starting refund process for {}", taskInfo.getTaskid());
+
 		DexCreateofferRefundTaskTxlogRecord logRecord = new DexCreateofferRefundTaskTxlogRecord();
 		logRecord.setTaskid(taskInfo.getTaskid());
 		if(taskInfo.getTrialNo() == null) logRecord.setTrialno(0);
@@ -166,6 +168,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 				logRecord.setSuccessFlag(true);
 				logRecord.setTxResulthash(txResponse.getHash());
 				logRecord.setTxResultxdr(txResponse.getResultXdr());
+				logger.info("Offer fee refund success for {} : {} to {} amount = {} {}", taskInfo.getTaskid(), taskInfo.getFeecollectaccount(), taskInfo.getRefundaccount(), StellarConverter.rawToDoubleString(taskInfo.getRefundamountraw()), taskInfo.getRefundassetcode());
 			} else {
 				SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
 				logRecord.setSuccessFlag(false);
@@ -174,6 +177,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 				StringJoiner sj = new StringJoiner(",");
 				if(resultCodes.getOperationsResultCodes() != null) resultCodes.getOperationsResultCodes().forEach(sj::add);
 				logRecord.setErrormessage(sj.toString());
+				logger.warn("Refund failed for {}, trial = {} : {} {}", logRecord.getTaskid(), logRecord.getTrialno(), logRecord.getErrorcode(), logRecord.getErrormessage());
 			}
 
 		} catch(TaskIntegrityCheckFailedException e) {

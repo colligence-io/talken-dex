@@ -137,6 +137,7 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 
 								TaskTransactionProcessResult result;
 								try {
+									logger.info("{} ({}) found. start processing.", dexTaskId, txResponse.getTxHash());
 									result = processors.get(dexTaskId.getType()).process(txResponse);
 								} catch(Exception ex) {
 									result = TaskTransactionProcessResult.error("Unknown", ex);
@@ -155,6 +156,9 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 									resultRecord.setErrorcode(result.getError().getCode());
 									resultRecord.setErrormessage(result.getError().getMessage());
 								}
+							}
+							else {
+								logger.debug("No processor for {} registered", dexTaskId);
 							}
 						} catch(TaskIntegrityCheckFailedException e) {
 							logger.error("Invalid DexTaskId [{}] detected : txHash = {}", memoText, txRecord.getHash());

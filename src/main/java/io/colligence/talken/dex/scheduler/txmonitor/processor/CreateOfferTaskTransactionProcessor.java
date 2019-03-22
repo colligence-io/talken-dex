@@ -47,9 +47,6 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 	public TaskTransactionProcessResult process(TaskTransactionResponse taskTxResponse) {
 		try {
 			TransactionBlockExecutor.of(txMgr).transactional(() -> {
-
-				logger.debug("Processing tx {} for task {}", taskTxResponse.getTxHash(), taskTxResponse.getTaskId());
-
 				Optional<DexCreateofferTaskRecord> opt_createTaskRecord = dslContext.selectFrom(DEX_CREATEOFFER_TASK).where(DEX_CREATEOFFER_TASK.TASKID.eq(taskTxResponse.getTaskId().getId())).fetchOptional();
 
 				if(!opt_createTaskRecord.isPresent())
@@ -58,7 +55,6 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 				DexCreateofferTaskRecord createTaskRecord = opt_createTaskRecord.get();
 
 				// TODO : is this always right? same result? even when operation order mismatch?
-
 				byte[] createBytes = Base64.getDecoder().decode(createTaskRecord.getTxXdr());
 				byte[] resultBytes = Base64.getDecoder().decode(taskTxResponse.getResponse().getEnvelopeXdr());
 
