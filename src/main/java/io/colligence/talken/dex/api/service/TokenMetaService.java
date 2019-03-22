@@ -301,9 +301,7 @@ public class TokenMetaService {
 
 			if(!trusted) {
 				logger.info("No trust on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
-				Transaction tx = new Transaction
-						.Builder(sourceAccount)
-						.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+				Transaction tx = stellarNetworkService.getTransactionBuilderFor(sourceAccount)
 						.addOperation(
 								new ChangeTrustOperation.Builder(
 										target.getAssetType(),

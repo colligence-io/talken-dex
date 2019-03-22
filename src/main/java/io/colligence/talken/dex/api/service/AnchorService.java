@@ -234,9 +234,7 @@ public class AnchorService {
 
 			KeyPair baseAccount = tmService.getBaseAccount(assetCode);
 
-			Transaction.Builder txBuilder = new Transaction
-					.Builder(sourceAccount)
-					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+			Transaction.Builder txBuilder = stellarNetworkService.getTransactionBuilderFor(sourceAccount)
 					.addMemo(Memo.text(dexTaskId.getId()));
 
 			// build fee operation

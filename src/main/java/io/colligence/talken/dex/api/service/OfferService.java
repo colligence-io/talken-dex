@@ -107,9 +107,7 @@ public class OfferService {
 			// get assetType
 			Asset buyAssetType = maService.getAssetType(buyAssetCode);
 
-			Transaction.Builder txBuilder = new Transaction
-					.Builder(sourceAccount)
-					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+			Transaction.Builder txBuilder = stellarNetworkService.getTransactionBuilderFor(sourceAccount)
 					.addMemo(Memo.text(dexTaskId.getId()));
 
 			if(fee.getFeeAmountRaw() > 0) {
@@ -257,9 +255,7 @@ public class OfferService {
 			Asset sellAssetType = maService.getAssetType(sellAssetCode);
 			Asset buyAssetType = maService.getAssetType(buyAssetCode);
 
-			Transaction.Builder txBuilder = new Transaction
-					.Builder(sourceAccount)
-					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+			Transaction.Builder txBuilder = stellarNetworkService.getTransactionBuilderFor(sourceAccount)
 					.addMemo(Memo.text(dexTaskId.getId()));
 
 			// build manage offer operation

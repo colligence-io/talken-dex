@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.Network;
 import org.stellar.sdk.Server;
+import org.stellar.sdk.Transaction;
+import org.stellar.sdk.TransactionBuilderAccount;
 
 import javax.annotation.PostConstruct;
 import java.security.SecureRandom;
@@ -26,6 +28,8 @@ public class StellarNetworkService {
 
 	private List<ObjectPair<String, Boolean>> serverList = new ArrayList<>();
 	private SecureRandom random = new SecureRandom();
+
+	private static final int BASE_FEE = 100;
 
 	@PostConstruct
 	private void init() {
@@ -45,5 +49,15 @@ public class StellarNetworkService {
 	public Server pickServer() {
 		List<String> availableServers = serverList.stream().filter(_sl -> _sl.second().equals(true)).map(ObjectPair::first).collect(Collectors.toList());
 		return new Server(availableServers.get(random.nextInt(serverList.size())));
+	}
+
+	public Transaction.Builder getTransactionBuilderFor(TransactionBuilderAccount sourceAccount) {
+		return new Transaction.Builder(sourceAccount)
+				.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+				.setOperationFee(getBaseFee());
+	}
+
+	public int getBaseFee() {
+		return BASE_FEE;
 	}
 }

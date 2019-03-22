@@ -48,7 +48,7 @@ public class CreateOfferRefundService {
 	private DSLContext dslContext;
 
 	@Autowired
-	private StellarNetworkService stellarService;
+	private StellarNetworkService stellarNetworkService;
 
 	@Autowired
 	private DexTaskIdService taskIdService;
@@ -131,7 +131,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 
 			Asset assetType = maService.getAssetType(taskInfo.getRefundassetcode());
 			// pick horizon server
-			Server server = stellarService.pickServer();
+			Server server = stellarNetworkService.pickServer();
 
 			// prepare accounts
 			KeyPair source = KeyPair.fromAccountId(taskInfo.getFeecollectaccount());
@@ -141,9 +141,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 
 			KeyPair destination = KeyPair.fromAccountId(taskInfo.getRefundaccount());
 
-			Transaction tx = new Transaction
-					.Builder(sourceAccount)
-					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+			Transaction tx = stellarNetworkService.getTransactionBuilderFor(sourceAccount)
 					.addMemo(Memo.text(taskId.getId()))
 					.addOperation(
 							new PaymentOperation
