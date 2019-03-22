@@ -88,12 +88,12 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 		try {
 			if(opt_status.isPresent()) {
 				// 200 is maximum
-				txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(opt_status.get().getTxmonitorlastpagingtoken()).limit(TXREQUEST_LIMIT).execute();
+				txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(opt_status.get().getTxmonitorlastpagingtoken()).limit(TXREQUEST_LIMIT).includeFailed(false).execute();
 			} else {
 				// insert initial row
 				dslContext.insertInto(DEX_STATUS).columns(DEX_STATUS.TXMONITORLASTPAGINGTOKEN).values("0").execute();
 				// get last tx for initiation
-				txPage = server.transactions().order(RequestBuilder.Order.DESC).limit(1).execute();
+				txPage = server.transactions().order(RequestBuilder.Order.DESC).limit(1).includeFailed(false).execute();
 			}
 		} catch(Exception ex) {
 			logger.exception(ex, "Cannot get last tx from stellar network.");

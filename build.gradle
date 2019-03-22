@@ -65,7 +65,7 @@ dependencies {
     compile('com.google.http-client:google-http-client-jackson2:1.27.0')
 
     // stellar sdk
-    compile('com.github.stellar:java-stellar-sdk:0.4.1')
+    compile('com.github.stellar:java-stellar-sdk:0.6.0')
 
     // Apollo GraphQL
     compile('com.apollographql.apollo:apollo-runtime:1.0.0-alpha5')

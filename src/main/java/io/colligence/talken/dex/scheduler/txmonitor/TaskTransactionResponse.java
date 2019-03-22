@@ -34,7 +34,7 @@ public class TaskTransactionResponse {
 			XdrDataOutputStream xdos = new XdrDataOutputStream(baos);
 			TransactionEnvelope.encode(xdos, xdr);
 			this.bareXdr = Base64.getEncoder().encodeToString(baos.toByteArray());
-		} catch(IOException ex) {
+		} catch(Exception ex) {
 			throw new TaskTransactionProcessError("EnvelopeDecodeError", ex);
 		}
 
@@ -45,7 +45,7 @@ public class TaskTransactionResponse {
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
 			XdrDataInputStream xdrInputStream = new XdrDataInputStream(inputStream);
 			this.result = TransactionResult.decode(xdrInputStream);
-		} catch(IOException ex) {
+		} catch(Exception ex) {
 			throw new TaskTransactionProcessError("ResultDecodeError", ex);
 		}
 	}

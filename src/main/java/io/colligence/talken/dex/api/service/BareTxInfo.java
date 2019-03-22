@@ -20,21 +20,21 @@ public class BareTxInfo {
 	private String envelopeXdr;
 
 	public static BareTxInfo build(Transaction tx) throws IOException {
-		// encode tx to envelope
-		TransactionEnvelope xdr = new TransactionEnvelope();
-		xdr.setTx(tx.toXdr());
-		xdr.setSignatures(new DecoratedSignature[0]);
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		XdrDataOutputStream xdos = new XdrDataOutputStream(baos);
-		TransactionEnvelope.encode(xdos, xdr);
-		byte[] txEnvelope = baos.toByteArray();
+//		// encode tx to envelope
+//		TransactionEnvelope xdr = new TransactionEnvelope();
+//		xdr.setTx(tx.toXdr());
+//		xdr.setSignatures(new DecoratedSignature[0]);
+//		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//		XdrDataOutputStream xdos = new XdrDataOutputStream(baos);
+//		TransactionEnvelope.encode(xdos, xdr);
+//		byte[] txEnvelope = baos.toByteArray();
 
 		// encode to base64
 		BareTxInfo txInfo = new BareTxInfo();
 		txInfo.setNetworkPhrase(Network.current().getNetworkPassphrase());
 		txInfo.setSequence(tx.getSequenceNumber());
 		txInfo.setHash(ByteArrayUtil.toHexString(tx.hash()));
-		txInfo.setEnvelopeXdr(Base64.getEncoder().encodeToString(txEnvelope));
+		txInfo.setEnvelopeXdr(tx.toEnvelopeXdrBase64());
 
 		return txInfo;
 	}
