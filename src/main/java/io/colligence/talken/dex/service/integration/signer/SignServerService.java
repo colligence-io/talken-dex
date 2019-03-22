@@ -115,6 +115,7 @@ public class SignServerService extends AbstractRestApiService {
 
 		// case of unauthorized result, mostly case of token expiration
 		// try update access token and send request again
+		logger.debug("ss token expired, getting new one");
 		updateAccessToken();
 		headers.setAuthorization("Bearer " + token);
 		return requestPost(signingUrl, headers, request, SignServerSignResponse.class);
