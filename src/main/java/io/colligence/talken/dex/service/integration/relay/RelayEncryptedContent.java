@@ -2,9 +2,9 @@ package io.colligence.talken.dex.service.integration.relay;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.colligence.talken.common.util.AES256Util;
 import io.colligence.talken.common.util.JSONWriter;
 import io.colligence.talken.common.util.RandomStringGenerator;
-import io.colligence.talken.dex.util.AES256Util;
 
 import javax.crypto.KeyGenerator;
 import java.security.GeneralSecurityException;
