@@ -97,5 +97,8 @@ public class DexSettings {
 		private String deanchorFeePivotAsset;
 		private double deanchorFeeAmount;
 		private double deanchorFeeRateCtxFactor;
+
+		private int refundRetryInterval;
+		private int refundMaxRetry;
 	}
 }

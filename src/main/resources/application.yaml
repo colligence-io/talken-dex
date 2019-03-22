@@ -58,6 +58,8 @@ talken:
       deanchorFeePivotAsset: "BTC"
       deanchorFeeAmount: 0.001
       deanchorFeeRateCtxFactor: 0.5
+      refundRetryInterval: 600
+      refundMaxRetry: 5
 
 ###############################################################################
 # LOCAL Profile                                                               #
