@@ -1,7 +1,6 @@
 package io.colligence.talken.dex.scheduler.txmonitor;
 
 import io.colligence.talken.dex.api.service.DexTaskId;
-import org.stellar.sdk.Transaction;
 import org.stellar.sdk.responses.TransactionResponse;
 import org.stellar.sdk.xdr.*;
 import shadow.com.google.common.io.BaseEncoding;
@@ -12,7 +11,7 @@ public class TaskTransactionResponse {
 
 	private DexTaskId taskId;
 	private TransactionResponse response;
-	private String bareXdr;
+	//	private Transaction tx;
 	private TransactionResult result;
 
 	public TaskTransactionResponse(DexTaskId taskId, TransactionResponse response) {
@@ -22,14 +21,12 @@ public class TaskTransactionResponse {
 	}
 
 	private void parse() throws TaskTransactionProcessError {
-		try {
-			// build bare xdr
-			Transaction tx = Transaction.fromEnvelopeXdr(response.getEnvelopeXdr());
-			tx.getSignatures().clear();
-			this.bareXdr = tx.toEnvelopeXdrBase64();
-		} catch(Exception ex) {
-			throw new TaskTransactionProcessError("EnvelopeDecodeError", ex);
-		}
+//		try {
+//			// build bare xdr
+//			tx = Transaction.fromEnvelopeXdr(response.getEnvelopeXdr());
+//		} catch(Exception ex) {
+//			throw new TaskTransactionProcessError("EnvelopeDecodeError", ex);
+//		}
 
 		try {
 			// decode result
@@ -51,10 +48,10 @@ public class TaskTransactionResponse {
 	public TransactionResponse getResponse() {
 		return response;
 	}
-
-	public String getBareXdr() {
-		return bareXdr;
-	}
+//
+//	public Transaction getTx() {
+//		return tx;
+//	}
 
 	public TransactionResult getResult() {
 		return result;

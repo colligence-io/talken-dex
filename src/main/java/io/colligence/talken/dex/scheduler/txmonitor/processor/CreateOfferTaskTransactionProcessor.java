@@ -20,6 +20,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
 import org.stellar.sdk.xdr.*;
 
+import java.util.Base64;
 import java.util.Optional;
 
 import static io.colligence.talken.common.persistence.jooq.Tables.DEX_CREATEOFFER_TASK;
@@ -57,9 +58,15 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 				DexCreateofferTaskRecord createTaskRecord = opt_createTaskRecord.get();
 
 				// TODO : is this always right? same result? even when operation order mismatch?
-				// check tx envelope integrity
-				if(!taskTxResponse.getBareXdr().equals(createTaskRecord.getTxXdr()))
-					throw new TaskTransactionProcessError("TXEnvelopeNotMatch", "{} {} not match", taskTxResponse.getBareXdr(), createTaskRecord.getTxXdr());
+
+				byte[] createBytes = Base64.getDecoder().decode(createTaskRecord.getTxXdr());
+				byte[] resultBytes = Base64.getDecoder().decode(taskTxResponse.getResponse().getEnvelopeXdr());
+
+				// -1 means do not compare last byte, which represent signature number
+				for(int i = 0; i < createBytes.length - 1; i++) {
+					if(createBytes[i] != resultBytes[i])
+						throw new TaskTransactionProcessError("TXEnvelopeNotMatch", "{} {} not match", taskTxResponse.getResponse().getEnvelopeXdr(), createTaskRecord.getTxXdr());
+				}
 
 				// extract feeResult and offerResult
 				PaymentResult feeResult = null;
