@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.Memo;
 import org.stellar.sdk.MemoText;
 import org.stellar.sdk.Server;
-import org.stellar.sdk.Transaction;
 import org.stellar.sdk.requests.RequestBuilder;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.TransactionResponse;
@@ -61,16 +60,6 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 
 	@PostConstruct
 	private void init() {
-		try {
-			// build bare xdr
-			Transaction tx = Transaction.fromEnvelopeXdr("AAAAAG1u4I7fC+rH5KyewwcZuyl0EYFVAbxbDJN19deBKBadAAAAZAAFY5IAAAAdAAAAAAAAAAEAAAAYVEFMS0VONjc4TUFQb0EtVU5VdGtNcTEyAAAAAQAAAAAAAAABAAAAADVs5NgEJLm7fUKfRHVRuhVCEJvRZ//MKmt+PPLuVcXPAAAAAUVUSAAAAAAAYd9ZBblylzMUam+f0kGAiv2p8yzd/xX0qO4z5yBXoTYAAAAAAAAAAgAAAAAAAAABgSgWnQAAAEDm2KxEFlzcfRzSThEiL3w0GZI5CfTfHQbhsL3xnKnbFlVfQ01la0WkKeaeFMtlZ9sXhjuRnMPQ0Nw0bv++EMMK");
-			tx.getSignatures().clear();
-			String aa = tx.toEnvelopeXdrBase64();
-			logger.info(aa);
-		} catch(Exception ex) {
-			throw new TaskTransactionProcessError("EnvelopeDecodeError", ex);
-		}
-
 		// reset status if local
 		if(RunningProfile.isLocal()) {
 			dslContext.deleteFrom(DEX_STATUS).where().execute();
