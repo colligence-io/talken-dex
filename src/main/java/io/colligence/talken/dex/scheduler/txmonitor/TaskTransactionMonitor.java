@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.Memo;
 import org.stellar.sdk.MemoText;
 import org.stellar.sdk.Server;
+import org.stellar.sdk.Transaction;
 import org.stellar.sdk.requests.RequestBuilder;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.TransactionResponse;
@@ -60,6 +61,16 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 
 	@PostConstruct
 	private void init() {
+		try {
+			// build bare xdr
+			Transaction tx = Transaction.fromEnvelopeXdr("AAAAAG1u4I7fC+rH5KyewwcZuyl0EYFVAbxbDJN19deBKBadAAAAZAAFY5IAAAAdAAAAAAAAAAEAAAAYVEFMS0VONjc4TUFQb0EtVU5VdGtNcTEyAAAAAQAAAAAAAAABAAAAADVs5NgEJLm7fUKfRHVRuhVCEJvRZ//MKmt+PPLuVcXPAAAAAUVUSAAAAAAAYd9ZBblylzMUam+f0kGAiv2p8yzd/xX0qO4z5yBXoTYAAAAAAAAAAgAAAAAAAAABgSgWnQAAAEDm2KxEFlzcfRzSThEiL3w0GZI5CfTfHQbhsL3xnKnbFlVfQ01la0WkKeaeFMtlZ9sXhjuRnMPQ0Nw0bv++EMMK");
+			tx.getSignatures().clear();
+			String aa = tx.toEnvelopeXdrBase64();
+			logger.info(aa);
+		} catch(Exception ex) {
+			throw new TaskTransactionProcessError("EnvelopeDecodeError", ex);
+		}
+
 		// reset status if local
 		if(RunningProfile.isLocal()) {
 			dslContext.deleteFrom(DEX_STATUS).where().execute();
@@ -108,26 +119,26 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 
 		for(TransactionResponse txRecord : txPage.getRecords()) {
 			try {
-//				logger.trace("{} {} {} {}", txRecord.getHash(), txRecord.getLedger(), txRecord.getCreatedAt(), txRecord.getPagingToken());
 				Memo memo = txRecord.getMemo();
 				if(memo instanceof MemoText) {
 					String memoText = ((MemoText) memo).getText();
 					if(memoText.startsWith("TALKEN")) {
+						DexTxResultRecord resultRecord = new DexTxResultRecord();
+						resultRecord.setTxid(txRecord.getHash());
+						resultRecord.setTxhash(txRecord.getHash());
+						resultRecord.setLedger(txRecord.getLedger());
+						resultRecord.setCreatedat(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
+						resultRecord.setSourceaccount(txRecord.getSourceAccount().getAccountId());
+						resultRecord.setEnvelopexdr(txRecord.getEnvelopeXdr());
+						resultRecord.setResultxdr(txRecord.getResultXdr());
+						resultRecord.setResultmetaxdr(txRecord.getResultMetaXdr());
+						resultRecord.setFeepaid(txRecord.getFeePaid());
+
 						try {
 							DexTaskId dexTaskId = taskIdService.decode_taskId(memoText);
 
-							DexTxResultRecord resultRecord = new DexTxResultRecord();
-							resultRecord.setTxid(txRecord.getHash());
-							resultRecord.setTxhash(txRecord.getHash());
 							resultRecord.setMemotaskid(dexTaskId.getId());
 							resultRecord.setTasktype(dexTaskId.getType());
-							resultRecord.setLedger(txRecord.getLedger());
-							resultRecord.setCreatedat(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
-							resultRecord.setSourceaccount(txRecord.getSourceAccount().getAccountId());
-							resultRecord.setEnvelopexdr(txRecord.getEnvelopeXdr());
-							resultRecord.setResultxdr(txRecord.getResultXdr());
-							resultRecord.setResultmetaxdr(txRecord.getResultMetaXdr());
-							resultRecord.setFeepaid(txRecord.getFeePaid());
 
 							TaskTransactionResponse txResponse = new TaskTransactionResponse(dexTaskId, txRecord);
 							resultRecord.setOfferidfromresult(txResponse.getOfferIdFromResult());
@@ -156,12 +167,20 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 									resultRecord.setErrormessage(result.getError().getMessage());
 								}
 							}
-
-							dslContext.attach(resultRecord);
-							resultRecord.store();
 						} catch(TaskIntegrityCheckFailedException e) {
-							logger.warn("Invalid DexTaskId [{}] detected : txHash = {}", memoText, txRecord.getHash());
+							logger.error("Invalid DexTaskId [{}] detected : txHash = {}", memoText, txRecord.getHash());
+							resultRecord.setProcessSuccessFlag(false);
+							resultRecord.setErrorcode("InvalidTaskID");
+							resultRecord.setErrormessage(memoText + " is a invalid taskid. integrity check failed.");
+						} catch(Exception ex) {
+							logger.exception(ex);
+							resultRecord.setProcessSuccessFlag(false);
+							resultRecord.setErrorcode(ex.getClass().getSimpleName());
+							resultRecord.setErrormessage(ex.getMessage());
 						}
+
+						dslContext.attach(resultRecord);
+						resultRecord.store();
 					}
 				}
 				// mark last checked tx

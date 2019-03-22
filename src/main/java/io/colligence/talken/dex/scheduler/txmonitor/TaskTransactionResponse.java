@@ -7,9 +7,6 @@ import org.stellar.sdk.xdr.*;
 import shadow.com.google.common.io.BaseEncoding;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Base64;
 
 public class TaskTransactionResponse {
 
@@ -26,22 +23,17 @@ public class TaskTransactionResponse {
 
 	private void parse() throws TaskTransactionProcessError {
 		try {
-			TransactionEnvelope xdr = Transaction.fromEnvelopeXdr(response.getEnvelopeXdr()).toEnvelopeXdr();
-
-			// remove signatures
-			xdr.setSignatures(new DecoratedSignature[0]);
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			XdrDataOutputStream xdos = new XdrDataOutputStream(baos);
-			TransactionEnvelope.encode(xdos, xdr);
-			this.bareXdr = Base64.getEncoder().encodeToString(baos.toByteArray());
+			// build bare xdr
+			Transaction tx = Transaction.fromEnvelopeXdr(response.getEnvelopeXdr());
+			tx.getSignatures().clear();
+			this.bareXdr = tx.toEnvelopeXdrBase64();
 		} catch(Exception ex) {
 			throw new TaskTransactionProcessError("EnvelopeDecodeError", ex);
 		}
 
 		try {
 			// decode result
-			BaseEncoding base64Encoding = BaseEncoding.base64();
-			byte[] bytes = base64Encoding.decode(response.getResultXdr());
+			byte[] bytes = BaseEncoding.base64().decode(response.getResultXdr());
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
 			XdrDataInputStream xdrInputStream = new XdrDataInputStream(inputStream);
 			this.result = TransactionResult.decode(xdrInputStream);
