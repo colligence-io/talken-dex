@@ -130,7 +130,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 		try {
 			DexTaskId taskId = taskIdService.decode_taskId(taskInfo.getTaskid());
 
-			logger.info("{} processing started", taskId);
+			logger.info("{} processing started, trial = {}", taskId, logRecord.getTrialno());
 
 			Asset assetType = maService.getAssetType(taskInfo.getRefundassetcode());
 			// pick horizon server
@@ -169,7 +169,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 				logRecord.setSuccessFlag(true);
 				logRecord.setTxResulthash(txResponse.getHash());
 				logRecord.setTxResultxdr(txResponse.getResultXdr());
-				logger.info("Offer fee refund success for {} : {} to {} amount = {} {}", taskId.getId(), taskInfo.getFeecollectaccount(), taskInfo.getRefundaccount(), StellarConverter.rawToDoubleString(taskInfo.getRefundamountraw()), taskInfo.getRefundassetcode());
+				logger.info("Offer fee refund success for {} : trial = {}, {} to {} amount = {} {}", taskId.getId(), logRecord.getTrialno(), taskInfo.getFeecollectaccount(), taskInfo.getRefundaccount(), StellarConverter.rawToDoubleString(taskInfo.getRefundamountraw()), taskInfo.getRefundassetcode());
 			} else {
 				SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
 				logRecord.setSuccessFlag(false);
