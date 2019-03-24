@@ -73,7 +73,7 @@ public class OfferService {
 		dslContext.attach(taskRecord);
 		taskRecord.store();
 
-		logger.debug("{} generated. userId = {}", dexTaskId, userId);
+		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
 
 		// calculate fee
@@ -237,7 +237,7 @@ public class OfferService {
 			logger.warn("Create offer result for {} not found, this may cause unexpected refund result.");
 		}
 
-		logger.debug("{} generated. userId = {}", dexTaskId, userId);
+		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
 		// build encData for DeleteOffer request
 		RelayEncryptedContent<BareTxInfo> encData;

@@ -122,7 +122,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 	}
 
 	private void refund(RefundTask taskInfo) {
-		logger.debug("Starting refund process for {}", taskInfo.getTaskid());
+		logger.info("{} processing started", taskInfo.getTaskid());
 
 		DexCreateofferRefundTaskTxlogRecord logRecord = new DexCreateofferRefundTaskTxlogRecord();
 		logRecord.setTaskid(taskInfo.getTaskid());

@@ -33,9 +33,9 @@ public class CreateOfferRefundTaskTransactionProcessor implements TaskTransactio
 					.execute();
 
 			if(updated == 0)
-				logger.error("Refund task {} not updated", taskTxResponse.getTaskId().getId());
+				logger.error("{} not updated", taskTxResponse.getTaskId());
 			else
-				logger.info("Refund task {} marked as checked.", taskTxResponse.getTaskId().getId());
+				logger.info("{} marked as checked.", taskTxResponse.getTaskId());
 		} catch(Exception ex) {
 			return TaskTransactionProcessResult.error("Processing", ex);
 		}

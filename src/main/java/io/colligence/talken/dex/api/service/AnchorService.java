@@ -82,7 +82,7 @@ public class AnchorService {
 		dslContext.attach(taskRecord);
 		taskRecord.store();
 
-		logger.debug("{} generated. userId = {}", dexTaskId, userId);
+		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
 		AncServerAnchorRequest req = new AncServerAnchorRequest();
 		req.setTaskId(dexTaskId.getId());
@@ -202,7 +202,7 @@ public class AnchorService {
 		dslContext.attach(taskRecord);
 		taskRecord.store();
 
-		logger.debug("{} generated. userId = {}", dexTaskId, userId);
+		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
 		// calculate fee
 		FeeCalculationService.Fee fee;
