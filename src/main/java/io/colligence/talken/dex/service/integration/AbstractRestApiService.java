@@ -23,6 +23,7 @@ public abstract class AbstractRestApiService {
 
 	protected <T extends CodeMessageResponseInterface> APIResult<T> requestPost(String url, HttpHeaders requestHeaders, Object requestBody, Class<T> responseClass) {
 		APIResult<T> result = new APIResult<>(responseClass.getSimpleName().replaceAll("(Response|response)$", ""));
+		HttpResponse response = null;
 		try {
 
 			ByteArrayContent body = null;
@@ -35,10 +36,10 @@ public abstract class AbstractRestApiService {
 
 			if(requestHeaders != null) httpRequest.setHeaders(requestHeaders);
 
-			HttpResponse response = httpRequest.execute();
-			result.setResponseCode(response.getStatusCode());
+			response = httpRequest.execute();
 
-			if(result.getResponseCode() != 200) {
+			result.setResponseCode(response.getStatusCode());
+			if(response.isSuccessStatusCode()) {
 				result.setError(Integer.toString(response.getStatusCode()), response.getStatusMessage());
 			} else {
 				ObjectMapper mapper = new ObjectMapper();
@@ -52,9 +53,16 @@ public abstract class AbstractRestApiService {
 					result.setError(String.valueOf(responseData.getCode()), responseData.getMessage());
 				}
 			}
+		} catch(HttpResponseException ex) {
+			result.setError(Integer.toString(ex.getStatusCode()), ex.getStatusMessage());
 		} catch(Exception e) {
 			result.setException(e);
+		} finally {
+			try {
+				if(response != null) response.disconnect();
+			} catch(Exception ignore) {}
 		}
+
 		return result;
 	}
 }
