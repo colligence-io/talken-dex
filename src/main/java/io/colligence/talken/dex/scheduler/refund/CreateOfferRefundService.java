@@ -122,14 +122,15 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 	}
 
 	private void refund(RefundTask taskInfo) {
-		logger.info("{} processing started", taskInfo.getTaskid());
-
 		DexCreateofferRefundTaskTxlogRecord logRecord = new DexCreateofferRefundTaskTxlogRecord();
 		logRecord.setTaskid(taskInfo.getTaskid());
 		if(taskInfo.getTrialNo() == null) logRecord.setTrialno(0);
 		else logRecord.setTrialno(taskInfo.getTrialNo() + 1);
+
 		try {
 			DexTaskId taskId = taskIdService.decode_taskId(taskInfo.getTaskid());
+
+			logger.info("{} processing started", taskId);
 
 			Asset assetType = maService.getAssetType(taskInfo.getRefundassetcode());
 			// pick horizon server
@@ -168,7 +169,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 				logRecord.setSuccessFlag(true);
 				logRecord.setTxResulthash(txResponse.getHash());
 				logRecord.setTxResultxdr(txResponse.getResultXdr());
-				logger.info("Offer fee refund success for {} : {} to {} amount = {} {}", taskInfo.getTaskid(), taskInfo.getFeecollectaccount(), taskInfo.getRefundaccount(), StellarConverter.rawToDoubleString(taskInfo.getRefundamountraw()), taskInfo.getRefundassetcode());
+				logger.info("Offer fee refund success for {} : {} to {} amount = {} {}", taskId.getId(), taskInfo.getFeecollectaccount(), taskInfo.getRefundaccount(), StellarConverter.rawToDoubleString(taskInfo.getRefundamountraw()), taskInfo.getRefundassetcode());
 			} else {
 				SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
 				logRecord.setSuccessFlag(false);
