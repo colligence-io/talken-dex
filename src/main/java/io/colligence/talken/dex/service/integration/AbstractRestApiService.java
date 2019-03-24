@@ -39,6 +39,7 @@ public abstract class AbstractRestApiService {
 			response = httpRequest.execute();
 
 			result.setResponseCode(response.getStatusCode());
+
 			if(!response.isSuccessStatusCode()) {
 				result.setError(Integer.toString(response.getStatusCode()), response.getStatusMessage());
 			} else {
@@ -59,7 +60,11 @@ public abstract class AbstractRestApiService {
 			result.setException(e);
 		} finally {
 			try {
-				if(response != null) response.disconnect();
+				if(response != null) {
+					// ensure set response code even on exception
+					result.setResponseCode(response.getStatusCode());
+					response.disconnect();
+				}
 			} catch(Exception ignore) {}
 		}
 
