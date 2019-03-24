@@ -39,7 +39,7 @@ public abstract class AbstractRestApiService {
 			response = httpRequest.execute();
 
 			result.setResponseCode(response.getStatusCode());
-			if(response.isSuccessStatusCode()) {
+			if(!response.isSuccessStatusCode()) {
 				result.setError(Integer.toString(response.getStatusCode()), response.getStatusMessage());
 			} else {
 				ObjectMapper mapper = new ObjectMapper();
