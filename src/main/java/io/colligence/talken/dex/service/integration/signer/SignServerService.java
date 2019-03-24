@@ -2,7 +2,6 @@ package io.colligence.talken.dex.service.integration.signer;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpStatusCodes;
-import io.colligence.talken.common.persistence.vault.VaultSecretReader;
 import io.colligence.talken.common.util.ByteArrayUtils;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.DexSettings;
@@ -25,6 +24,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @Scope("singleton")
@@ -34,20 +34,13 @@ public class SignServerService extends AbstractRestApiService {
 	@Autowired
 	private DexSettings dexSettings;
 
-	@Autowired
-	private VaultSecretReader vaultSecretReader;
-
 	private static String signingUrl;
 	private static String introduceUrl;
 	private static String answerUrl;
 
 	private static String token;
 
-	private static SignServerKeyMap keymap = new SignServerKeyMap();
-
-	private static class SignServerKeyMap extends HashMap<String, String> {
-		private static final long serialVersionUID = -6982099027984561756L;
-	}
+	private static Map<String, String> answers = new HashMap<>();
 
 	@PostConstruct
 	private void init() {
@@ -88,9 +81,22 @@ public class SignServerService extends AbstractRestApiService {
 				return;
 			}
 
+			Map<String, String> newAnswers = new HashMap<>();
+			for(Map.Entry<String, String> _kv : answerResult.getData().getData().getWelcomePackage().entrySet()) {
+				byte[] kquestion = Base64.getDecoder().decode(_kv.getValue());
+				byte[] kanswer = keyPair.sign(kquestion);
+
+				newAnswers.put(_kv.getKey(), Base64.getEncoder().encodeToString(kanswer));
+			}
+
 			logger.info("Received new signServer JWT Token");
+
 			token = answerResult.getData().getData().getWelcomePresent();
+			answers = newAnswers;
+
 		} catch(Exception e) {
+			token = null;
+			answers = new HashMap<>();
 			logger.exception(e);
 		}
 	}
@@ -121,25 +127,17 @@ public class SignServerService extends AbstractRestApiService {
 		return requestPost(signingUrl, headers, request, SignServerSignResponse.class);
 	}
 
-	private String getAddressKeyID(String address) {
-		if(!keymap.containsKey("XLM:" + address))
-			keymap = vaultSecretReader.readSecret("signserver-keymap", SignServerKeyMap.class);
-		return keymap.get("XLM:" + address);
-	}
-
 	public void signTransaction(Transaction tx) throws SigningException {
 		String accountId = tx.getSourceAccount().getAccountId();
 
-		String keyId = getAddressKeyID(accountId);
-		if(keyId == null) {
+		if(!answers.containsKey("XLM:" + accountId))
 			throw new SigningException(accountId, "Cannot find ssk");
-		}
 
 		SignServerSignRequest ssReq = new SignServerSignRequest();
-		ssReq.setKeyID(keyId);
 		ssReq.setAddress(accountId);
 		ssReq.setType("XLM");
 		ssReq.setData(ByteArrayUtils.toHexString(tx.hash()));
+		ssReq.setAnswer(answers.get("XLM:" + accountId));
 
 		APIResult<SignServerSignResponse> signResult = requestSign(ssReq);
 
