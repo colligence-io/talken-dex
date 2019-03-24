@@ -71,7 +71,7 @@ public class TaskTransactionMonitor implements ApplicationContextAware {
 		});
 	}
 
-	@Scheduled(fixedDelay = 3000)
+	@Scheduled(fixedDelay = 4000, initialDelay = 10000)
 	private void checkTask() {
 		int processed = -1;
 		do {

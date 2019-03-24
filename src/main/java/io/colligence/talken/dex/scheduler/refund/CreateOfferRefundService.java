@@ -69,7 +69,7 @@ public class CreateOfferRefundService {
 	}
 
 	// check refund tasks
-	@Scheduled(fixedDelay = 10000)
+	@Scheduled(fixedDelay = 10000, initialDelay = 10000)
 	private void do_schedule() {
 
 		/*
