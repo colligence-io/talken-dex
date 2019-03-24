@@ -55,6 +55,7 @@ public abstract class AbstractRestApiService {
 				}
 			}
 		} catch(HttpResponseException ex) {
+			result.setResponseCode(ex.getStatusCode());
 			result.setError(Integer.toString(ex.getStatusCode()), ex.getStatusMessage());
 		} catch(Exception e) {
 			result.setException(e);
