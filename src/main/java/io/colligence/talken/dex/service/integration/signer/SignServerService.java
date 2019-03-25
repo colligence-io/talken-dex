@@ -64,15 +64,18 @@ public class SignServerService extends AbstractRestApiService {
 				return;
 			}
 
-			byte[] question = Base64.getDecoder().decode(introResult.getData().getData().getQuestion());
+			String question = introResult.getData().getData().getQuestion();
+
+			byte[] qBytes = Base64.getDecoder().decode(question);
 
 			KeyPair keyPair = KeyPair.fromSecretSeed(privateKey);
 
-			byte[] signature = keyPair.sign(question);
+			byte[] sBytes = keyPair.sign(qBytes);
 
 			SignServerAnswerRequest request2 = new SignServerAnswerRequest();
 			request2.setMyNameIs(dexSettings.getSignServer().getAppName());
-			request2.setMyAnswerIs(Base64.getEncoder().encodeToString(signature));
+			request2.setYourQuestionWas(question);
+			request2.setMyAnswerIs(Base64.getEncoder().encodeToString(sBytes));
 
 			APIResult<SignServerAnswerResponse> answerResult = requestPost(answerUrl, request2, SignServerAnswerResponse.class);
 
@@ -101,12 +104,21 @@ public class SignServerService extends AbstractRestApiService {
 		}
 	}
 
-	private APIResult<SignServerSignResponse> requestSign(SignServerSignRequest request) throws SigningException {
+	private APIResult<SignServerSignResponse> requestSign(String accountId, byte[] message) throws SigningException {
 		if(token == null) updateAccessToken();
 
 		if(token == null) {
-			throw new SigningException(request.getAddress(), "Cannot request sign, access token is null");
+			throw new SigningException(accountId, "Cannot request sign, access token is null");
 		}
+
+		if(!answers.containsKey("XLM:" + accountId))
+			throw new SigningException(accountId, "Cannot find ssk");
+
+		SignServerSignRequest request = new SignServerSignRequest();
+		request.setAddress(accountId);
+		request.setType("XLM");
+		request.setData(ByteArrayUtils.toHexString(message));
+		request.setAnswer(answers.get("XLM:" + accountId));
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAuthorization("Bearer " + token);
@@ -130,16 +142,7 @@ public class SignServerService extends AbstractRestApiService {
 	public void signTransaction(Transaction tx) throws SigningException {
 		String accountId = tx.getSourceAccount().getAccountId();
 
-		if(!answers.containsKey("XLM:" + accountId))
-			throw new SigningException(accountId, "Cannot find ssk");
-
-		SignServerSignRequest ssReq = new SignServerSignRequest();
-		ssReq.setAddress(accountId);
-		ssReq.setType("XLM");
-		ssReq.setData(ByteArrayUtils.toHexString(tx.hash()));
-		ssReq.setAnswer(answers.get("XLM:" + accountId));
-
-		APIResult<SignServerSignResponse> signResult = requestSign(ssReq);
+		APIResult<SignServerSignResponse> signResult = requestSign(accountId, tx.hash());
 
 		if(!signResult.isSuccess()) {
 			throw new SigningException(accountId, signResult.getErrorCode() + " : " + signResult.getErrorMessage());
