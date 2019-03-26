@@ -1,11 +1,12 @@
+spring.profiles.include: 'common'
 ###############################################################################
-# Common Profile                                                              #
+# Default                                                                     #
 ###############################################################################
----
 spring:
+  profiles:
+    active: common
   main:
     allow-bean-definition-overriding: true
-  profiles: common
   http:
     encoding:
       charset: UTF-8
