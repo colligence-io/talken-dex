@@ -5,6 +5,10 @@ import io.colligence.talken.common.exception.TalkenException;
 public abstract class DexException extends TalkenException {
 	private static final long serialVersionUID = -3368616269685308480L;
 
+	static {
+		loadDefaultMessageFormats(DexExceptionType.class, "i18n/dexException.properties");
+	}
+
 	protected DexException(TalkenException.ExceptionTypeEnum type, Object... args) {
 		super(type, args);
 	}
