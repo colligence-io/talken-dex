@@ -21,11 +21,7 @@ apply plugin: 'com.apollographql.android'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-bootJar {
-    baseName = "talken-dex-server"
-    group = "io.colligence"
-    version = "0.0.1-SNAPSHOT"
-}
+
 repositories {
     maven {
         url "https://jitpack.io"
@@ -34,19 +30,37 @@ repositories {
     mavenCentral()
     maven { url 'https://maven.google.com' }
 }
+
+bootJar {
+    baseName = "talken-dex-server"
+    group = "io.colligence"
+    version = "0.0.1-SNAPSHOT"
+}
+
+jar {
+    manifest.attributes provider: 'gradle'
+}
+
+apollo {
+    customTypeMapping = [
+            "Date": "java.time.LocalDateTime"
+    ]
+}
+
 configurations {
     compile.exclude module: "spring-boot-starter-tomcat"
 }
+
 dependencies {
     compile project(":talken-common-java")
-    
+
     compileOnly('org.projectlombok:lombok:1.18.4')
 
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-jetty')
     compile('org.springframework.boot:spring-boot-starter-cache')
-    
+
     // Spring Data
     compile('org.springframework.boot:spring-boot-starter-jdbc')
     compile('org.springframework.boot:spring-boot-starter-aop')
@@ -69,19 +83,9 @@ dependencies {
 
     // Apollo GraphQL
     compile('com.apollographql.apollo:apollo-runtime:1.0.0-alpha5')
-    
+
     testCompile('org.springframework.boot:spring-boot-starter-test')
 
     // devtools
     runtime('org.springframework.boot:spring-boot-devtools')
-}
-
-jar {
-    manifest.attributes provider: 'gradle'
-}
-
-apollo {
-    customTypeMapping = [
-            "Date" : "java.time.LocalDateTime"
-    ]
 }
