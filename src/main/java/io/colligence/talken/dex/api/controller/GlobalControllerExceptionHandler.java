@@ -1,13 +1,13 @@
 package io.colligence.talken.dex.api.controller;
 
 
-import io.colligence.talken.common.CLGException;
+import io.colligence.talken.common.exception.TalkenException;
+import io.colligence.talken.common.service.MessageService;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.dex.exception.APIErrorException;
 import io.colligence.talken.dex.exception.InternalServerErrorException;
 import io.colligence.talken.dex.exception.ParameterViolationException;
 import io.colligence.talken.dex.exception.UnauthorizedException;
-import io.colligence.talken.dex.service.MessageService;
 import io.colligence.talken.dex.service.integration.APIResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,7 +26,7 @@ public class GlobalControllerExceptionHandler {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(GlobalControllerExceptionHandler.class);
 
 	@Autowired
-	MessageService ms;
+	private MessageService ms;
 
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(HttpMessageNotReadableException.class)
@@ -64,15 +64,15 @@ public class GlobalControllerExceptionHandler {
 	public DexResponse<APIResult> handleCLGException(APIErrorException e, Locale locale) {
 		// FIXME : e.getApiResult is too sensitive to return as result body, consider hide it
 		logger.exception(e);
-		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, e.getApiResult()));
+		return DexResponse.buildResponse(new DexResponseBody<>(e.getErrorCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, e.getApiResult()));
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	@ExceptionHandler(CLGException.class)
+	@ExceptionHandler(TalkenException.class)
 	@ResponseBody
-	public DexResponse<Void> handleCLGException(CLGException e, Locale locale) {
+	public DexResponse<Void> handleCLGException(TalkenException e, Locale locale) {
 		logger.exception(e);
-		return DexResponse.buildResponse(new DexResponseBody<>(e.getCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, null));
+		return DexResponse.buildResponse(new DexResponseBody<>(e.getErrorCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, null));
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

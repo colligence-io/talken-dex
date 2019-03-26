@@ -1,8 +1,8 @@
 package io.colligence.talken.dex.config;
 
 import io.colligence.talken.common.CommonConsts;
+import io.colligence.talken.common.service.MessageService;
 import io.colligence.talken.common.util.PostLaunchExecutor;
-import io.colligence.talken.dex.service.MessageService;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;

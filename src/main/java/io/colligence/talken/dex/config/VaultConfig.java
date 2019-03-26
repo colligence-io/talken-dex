@@ -5,7 +5,6 @@ import io.colligence.talken.common.persistence.vault.VaultSetting;
 import io.colligence.talken.common.util.PrefixedLogger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.vault.client.VaultEndpoint;
 
 import java.net.URI;
 
@@ -25,8 +24,8 @@ public class VaultConfig extends TalkenVaultConfiguration {
 	private String password;
 
 	@Override
-	public VaultEndpoint vaultEndpoint() {
-		return VaultEndpoint.from(vaultUri);
+	protected URI getVaultUri() {
+		return vaultUri;
 	}
 
 	@Override

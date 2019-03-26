@@ -21,9 +21,9 @@ import org.stellar.sdk.responses.TradeAggregationResponse;
 import java.time.LocalDateTime;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static io.colligence.talken.common.CommonConsts.REDIS.KEY_ASSET_OHLCV_UPDATED;
 import static io.colligence.talken.common.CommonConsts.ZONE_UTC;
 import static io.colligence.talken.common.persistence.jooq.Tables.*;
+import static io.colligence.talken.common.persistence.redis.RedisConsts.KEY_ASSET_OHLCV_UPDATED;
 
 @Service
 @Scope("singleton")

@@ -2,11 +2,11 @@ package io.colligence.talken.dex.api.service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.colligence.talken.common.CommonConsts;
 import io.colligence.talken.common.persistence.enums.LangTypeEnum;
 import io.colligence.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.colligence.talken.common.persistence.jooq.tables.pojos.TokenExchangeRate;
 import io.colligence.talken.common.persistence.jooq.tables.records.*;
+import io.colligence.talken.common.persistence.redis.RedisConsts;
 import io.colligence.talken.common.util.PrefixedLogger;
 import io.colligence.talken.common.util.UTCUtil;
 import io.colligence.talken.common.util.collection.DoubleKeyObject;
@@ -93,7 +93,7 @@ public class TokenMetaService {
 	public void checkTaExrAndUpdate() throws TokenMetaLoadException {
 		boolean reloaded = false;
 		Long redisTaDataUpdated = null;
-		Object taval = redisTemplate.opsForValue().get(CommonConsts.REDIS.KEY_ASSET_OHLCV_UPDATED);
+		Object taval = redisTemplate.opsForValue().get(RedisConsts.KEY_ASSET_OHLCV_UPDATED);
 		if(taval != null) {
 			redisTaDataUpdated = Long.valueOf(taval.toString());
 			if(lastTradeAggregationUpdatedTimestamp < redisTaDataUpdated) {
@@ -104,7 +104,7 @@ public class TokenMetaService {
 		}
 
 		Long redisExrDataUpdated = null;
-		Object exrval = redisTemplate.opsForValue().get(CommonConsts.REDIS.KEY_ASSET_EXRATE_UPDATED);
+		Object exrval = redisTemplate.opsForValue().get(RedisConsts.KEY_ASSET_EXRATE_UPDATED);
 		if(exrval != null) {
 			redisExrDataUpdated = Long.valueOf(exrval.toString());
 			if(lastExchangeRateUpdatedTimestamp < redisExrDataUpdated) {

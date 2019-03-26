@@ -1,8 +1,8 @@
 package io.colligence.talken.dex;
 
-import io.colligence.talken.common.CLGException;
+import io.colligence.talken.common.exception.TalkenException;
 
-public enum DexExceptionType implements CLGException.ExceptionType {
+public enum DexExceptionType implements TalkenException.ExceptionTypeEnum {
 	INTERNAL_SERVER_ERROR(0),
 	UNAUTHORIZED(1),
 	PARAMETER_VIOLATION(2),
@@ -22,21 +22,25 @@ public enum DexExceptionType implements CLGException.ExceptionType {
 	SIGNING_ERROR(53),
 	CANNOT_LOAD_TOKEN_META_DATA(54);
 
-	private final int eCode;
-	private final String messageKey;
+	private final int code;
 
-	DexExceptionType(int eCode) {
-		this.eCode = CLGException.buildErrorCode(CLGException.Module.DEX, eCode);
-		this.messageKey = CLGException.buildMessageKey(CLGException.Module.DEX.toString(), this.toString());
+	DexExceptionType(int code) {
+		this.code = code;
+	}
+
+
+	@Override
+	public TalkenException.Module getModule() {
+		return TalkenException.Module.DEX;
 	}
 
 	@Override
 	public int getCode() {
-		return eCode;
+		return code;
 	}
 
 	@Override
-	public String getMessageKey() {
-		return messageKey;
+	public String getName() {
+		return name();
 	}
 }
