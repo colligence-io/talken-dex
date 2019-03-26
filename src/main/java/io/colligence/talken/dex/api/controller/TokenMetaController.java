@@ -1,7 +1,7 @@
 package io.colligence.talken.dex.api.controller;
 
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.DexException;
+import io.colligence.talken.dex.exception.DexException;
 import io.colligence.talken.dex.api.service.TokenMetaData;
 import io.colligence.talken.dex.api.service.TokenMetaService;
 import org.springframework.beans.factory.annotation.Autowired;

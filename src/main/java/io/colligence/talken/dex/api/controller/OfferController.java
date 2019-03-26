@@ -1,7 +1,7 @@
 package io.colligence.talken.dex.api.controller;
 
 import io.colligence.talken.common.util.PrefixedLogger;
-import io.colligence.talken.dex.DexException;
+import io.colligence.talken.dex.exception.DexException;
 import io.colligence.talken.dex.api.dto.*;
 import io.colligence.talken.dex.api.service.OfferService;
 import io.colligence.talken.dex.config.auth.AuthInfo;

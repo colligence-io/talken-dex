@@ -1,7 +1,5 @@
 package io.colligence.talken.dex.exception;
 
-import io.colligence.talken.dex.DexException;
-import io.colligence.talken.dex.DexExceptionType;
 import io.colligence.talken.dex.service.integration.APIResult;
 
 public class APIErrorException extends DexException {
@@ -10,7 +8,7 @@ public class APIErrorException extends DexException {
 	private APIResult apiResult;
 
 	public APIErrorException(APIResult apiResult) {
-		super(DexExceptionType.API_RETURNED_ERROR, apiResult.getApiName(), apiResult.getErrorCode());
+		super(DexExceptionTypeEnum.API_RETURNED_ERROR, apiResult.getApiName(), apiResult.getErrorCode());
 		this.apiResult = apiResult;
 	}
 

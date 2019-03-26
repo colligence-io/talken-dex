@@ -1,8 +1,8 @@
-package io.colligence.talken.dex;
+package io.colligence.talken.dex.exception;
 
 import io.colligence.talken.common.exception.TalkenException;
 
-public enum DexExceptionType implements TalkenException.ExceptionTypeEnum {
+public enum DexExceptionTypeEnum implements TalkenException.ExceptionTypeEnum {
 	INTERNAL_SERVER_ERROR(0),
 	UNAUTHORIZED(1),
 	PARAMETER_VIOLATION(2),
@@ -24,7 +24,7 @@ public enum DexExceptionType implements TalkenException.ExceptionTypeEnum {
 
 	private final int code;
 
-	DexExceptionType(int code) {
+	DexExceptionTypeEnum(int code) {
 		this.code = code;
 	}
 

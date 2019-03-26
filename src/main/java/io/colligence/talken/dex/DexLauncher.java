@@ -4,6 +4,7 @@ import io.colligence.talken.common.Bootstrap;
 import io.colligence.talken.common.CommonConsts;
 import io.colligence.talken.dex.config.auth.AccessTokenInterceptor;
 import io.colligence.talken.dex.exception.AccountNotFoundException;
+import io.colligence.talken.dex.exception.DexException;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 
