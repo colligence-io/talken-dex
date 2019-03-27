@@ -5,12 +5,10 @@ import io.talken.common.service.MessageService;
 import io.talken.common.util.PostLaunchExecutor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 @Configuration
-@ComponentScan("io.talken.dex")
 public class DexRootConfig {
 
 	// PostLauncherExecutor
