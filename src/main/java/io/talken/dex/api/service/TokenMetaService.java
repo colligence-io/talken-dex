@@ -19,6 +19,7 @@ import io.talken.dex.service.integration.stellar.StellarNetworkService;
 import io.talken.dex.util.StellarConverter;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ import static io.talken.common.persistence.jooq.Tables.*;
 
 @Service
 @Scope("singleton")
+@DependsOn("dbmigration")
 public class TokenMetaService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaService.class);
 
