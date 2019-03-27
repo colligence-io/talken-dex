@@ -1,8 +1,8 @@
 package io.talken.dex.scheduler.tradeaggr;
 
+import io.talken.common.persistence.jooq.tables.TOKEN_META;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
-import io.talken.common.persistence.jooq.tables.TOKEN_META;
 import io.talken.dex.api.service.TokenMetaService;
 import io.talken.dex.exception.TokenMetaDataNotFoundException;
 import io.talken.dex.service.integration.stellar.StellarNetworkService;
@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static io.talken.common.CommonConsts.ZONE_UTC;
+import static io.talken.common.persistence.jooq.Tables.*;
 import static io.talken.common.persistence.redis.RedisConsts.KEY_ASSET_OHLCV_UPDATED;
 
 @Service

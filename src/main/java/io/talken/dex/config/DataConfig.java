@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 
 @Configuration
-@ComponentScan("io.colligence.talken.common.persistence")
+@ComponentScan("io.talken.common.persistence")
 @EnableTransactionManagement
 public class DataConfig {
 	@Autowired

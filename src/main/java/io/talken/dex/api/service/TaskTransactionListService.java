@@ -1,5 +1,6 @@
 package io.talken.dex.api.service;
 
+
 import io.talken.common.persistence.jooq.tables.pojos.DexTxResult;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.dto.TaskTransactionResult;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static io.talken.common.persistence.jooq.Tables.*;
 
 @Service
 @Scope("singleton")

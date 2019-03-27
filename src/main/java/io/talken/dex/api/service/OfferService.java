@@ -9,7 +9,6 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.dto.CreateOfferResult;
 import io.talken.dex.api.dto.DeleteOfferResult;
 import io.talken.dex.api.dto.DexKeyResult;
-import io.colligence.talken.dex.exception.*;
 import io.talken.dex.exception.*;
 import io.talken.dex.service.integration.APIResult;
 import io.talken.dex.service.integration.relay.RelayAddContentsResponse;
@@ -29,6 +28,8 @@ import org.stellar.sdk.responses.AccountResponse;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Optional;
+
+import static io.talken.common.persistence.jooq.Tables.*;
 
 @Service
 @Scope("singleton")

@@ -13,7 +13,6 @@ import io.talken.common.util.collection.DoubleKeyObject;
 import io.talken.common.util.collection.DoubleKeyTable;
 import io.talken.common.util.collection.SingleKeyTable;
 import io.talken.dex.api.dto.UpdateHolderResult;
-import io.colligence.talken.dex.exception.*;
 import io.talken.dex.exception.*;
 import io.talken.dex.service.integration.signer.SignServerService;
 import io.talken.dex.service.integration.stellar.StellarNetworkService;
@@ -29,6 +28,8 @@ import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+
+import static io.talken.common.persistence.jooq.Tables.*;
 
 @Service
 @Scope("singleton")

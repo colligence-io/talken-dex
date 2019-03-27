@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 @Configuration
-@ComponentScan("io.colligence.talken.dex")
+@ComponentScan("io.talken.dex")
 public class DexRootConfig {
 
 	// PostLauncherExecutor
