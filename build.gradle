@@ -32,8 +32,8 @@ repositories {
 }
 
 bootJar {
-    baseName = "talken-dex-server"
-    group = "io.colligence"
+    baseName = "dex-server"
+    group = "io.talken"
     version = "0.0.1-SNAPSHOT"
 }
 
