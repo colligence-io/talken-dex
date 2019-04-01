@@ -1,6 +1,6 @@
 package io.talken.dex.api.controller;
 
-import io.talken.dex.exception.ParameterViolationException;
+import io.talken.dex.api.exception.ParameterViolationException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;

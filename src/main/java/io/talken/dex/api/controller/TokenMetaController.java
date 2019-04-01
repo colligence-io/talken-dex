@@ -1,8 +1,8 @@
 package io.talken.dex.api.controller;
 
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.exception.DexException;
-import io.talken.dex.api.service.TokenMetaData;
+import io.talken.dex.api.exception.DexException;
+import io.talken.dex.api.shared.TokenMetaData;
 import io.talken.dex.api.service.TokenMetaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;

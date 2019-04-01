@@ -6,18 +6,20 @@ import io.talken.common.persistence.jooq.tables.records.DexCreateofferTaskRecord
 import io.talken.common.persistence.jooq.tables.records.DexDeleteofferTaskRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferRecord;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.dto.CreateOfferResult;
-import io.talken.dex.api.dto.DeleteOfferResult;
-import io.talken.dex.api.dto.DexKeyResult;
-import io.talken.dex.exception.*;
-import io.talken.dex.service.integration.APIResult;
-import io.talken.dex.service.integration.relay.RelayAddContentsResponse;
-import io.talken.dex.service.integration.relay.RelayEncryptedContent;
-import io.talken.dex.service.integration.relay.RelayMsgTypeEnum;
-import io.talken.dex.service.integration.relay.RelayServerService;
-import io.talken.dex.service.integration.stellar.StellarNetworkService;
-import io.talken.dex.util.StellarConverter;
-import io.talken.dex.util.StellarSignVerifier;
+import io.talken.dex.api.controller.dto.CreateOfferResult;
+import io.talken.dex.api.controller.dto.DeleteOfferResult;
+import io.talken.dex.api.controller.dto.DexKeyResult;
+import io.talken.dex.api.exception.*;
+import io.talken.dex.api.service.integration.APIResult;
+import io.talken.dex.api.service.integration.relay.RelayAddContentsResponse;
+import io.talken.dex.api.service.integration.relay.RelayEncryptedContent;
+import io.talken.dex.api.service.integration.relay.RelayMsgTypeEnum;
+import io.talken.dex.api.service.integration.relay.RelayServerService;
+import io.talken.dex.api.service.integration.stellar.StellarNetworkService;
+import io.talken.dex.api.shared.BareTxInfo;
+import io.talken.dex.api.shared.DexTaskId;
+import io.talken.dex.api.shared.StellarConverter;
+import io.talken.dex.api.shared.StellarSignVerifier;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -37,9 +39,6 @@ public class OfferService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(OfferService.class);
 
 	@Autowired
-	private DexTaskIdService taskIdService;
-
-	@Autowired
 	private FeeCalculationService feeCalculationService;
 
 	@Autowired
@@ -55,7 +54,7 @@ public class OfferService {
 	private RelayServerService relayServerService;
 
 	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws TokenMetaDataNotFoundException, StellarException, APIErrorException, AssetConvertException, TokenMetaLoadException {
-		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.OFFER_CREATE);
+		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_CREATE);
 
 		// create task record
 		DexCreateofferTaskRecord taskRecord = new DexCreateofferTaskRecord();
@@ -191,7 +190,7 @@ public class OfferService {
 	}
 
 	public DexKeyResult createOfferDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
-		DexTaskId dexTaskId = taskIdService.decode_taskId(taskId);
+		DexTaskId dexTaskId = DexTaskId.decode_taskId(taskId);
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.OFFER_CREATE))
 			throw new TaskNotFoundException(taskId);
 
@@ -211,7 +210,7 @@ public class OfferService {
 	}
 
 	public DeleteOfferResult deleteOffer(long userId, long offerId, String sourceAccountId, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws TokenMetaDataNotFoundException, StellarException, APIErrorException {
-		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.OFFER_DELETE);
+		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_DELETE);
 
 		// create task record
 		DexDeleteofferTaskRecord taskRecord = new DexDeleteofferTaskRecord();
@@ -325,7 +324,7 @@ public class OfferService {
 	}
 
 	public DexKeyResult deleteOfferDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
-		DexTaskId dexTaskId = taskIdService.decode_taskId(taskId);
+		DexTaskId dexTaskId = DexTaskId.decode_taskId(taskId);
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.OFFER_DELETE))
 			throw new TaskNotFoundException(taskId);
 

@@ -1,11 +1,11 @@
 package io.talken.dex.api.service;
 
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.DexSettings;
-import io.talken.dex.exception.AssetConvertException;
-import io.talken.dex.exception.TokenMetaDataNotFoundException;
-import io.talken.dex.exception.TokenMetaLoadException;
-import io.talken.dex.util.StellarConverter;
+import io.talken.dex.api.DexSettings;
+import io.talken.dex.api.exception.AssetConvertException;
+import io.talken.dex.api.exception.TokenMetaDataNotFoundException;
+import io.talken.dex.api.exception.TokenMetaLoadException;
+import io.talken.dex.api.shared.StellarConverter;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;

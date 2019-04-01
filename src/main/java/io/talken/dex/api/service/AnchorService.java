@@ -8,20 +8,22 @@ import io.talken.common.persistence.jooq.tables.records.DexDeanchorTaskRecord;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
-import io.talken.dex.api.dto.AnchorRequest;
-import io.talken.dex.api.dto.AnchorResult;
-import io.talken.dex.api.dto.DeanchorResult;
-import io.talken.dex.api.dto.DexKeyResult;
-import io.talken.dex.exception.*;
-import io.talken.dex.service.integration.APIResult;
-import io.talken.dex.service.integration.anchor.*;
-import io.talken.dex.service.integration.relay.RelayAddContentsResponse;
-import io.talken.dex.service.integration.relay.RelayEncryptedContent;
-import io.talken.dex.service.integration.relay.RelayMsgTypeEnum;
-import io.talken.dex.service.integration.relay.RelayServerService;
-import io.talken.dex.service.integration.stellar.StellarNetworkService;
-import io.talken.dex.util.StellarConverter;
-import io.talken.dex.util.StellarSignVerifier;
+import io.talken.dex.api.controller.dto.AnchorRequest;
+import io.talken.dex.api.controller.dto.AnchorResult;
+import io.talken.dex.api.controller.dto.DeanchorResult;
+import io.talken.dex.api.controller.dto.DexKeyResult;
+import io.talken.dex.api.exception.*;
+import io.talken.dex.api.service.integration.APIResult;
+import io.talken.dex.api.service.integration.anchor.*;
+import io.talken.dex.api.service.integration.relay.RelayAddContentsResponse;
+import io.talken.dex.api.service.integration.relay.RelayEncryptedContent;
+import io.talken.dex.api.service.integration.relay.RelayMsgTypeEnum;
+import io.talken.dex.api.service.integration.relay.RelayServerService;
+import io.talken.dex.api.service.integration.stellar.StellarNetworkService;
+import io.talken.dex.api.shared.BareTxInfo;
+import io.talken.dex.api.shared.DexTaskId;
+import io.talken.dex.api.shared.StellarConverter;
+import io.talken.dex.api.shared.StellarSignVerifier;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -39,9 +41,6 @@ import static io.talken.common.persistence.jooq.Tables.DEX_DEANCHOR_TASK;
 @Scope("singleton")
 public class AnchorService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AnchorService.class);
-
-	@Autowired
-	private DexTaskIdService taskIdService;
 
 	@Autowired
 	private StellarNetworkService stellarNetworkService;
@@ -64,7 +63,7 @@ public class AnchorService {
 	public AnchorResult anchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, AnchorRequest ancRequestBody) throws TokenMetaDataNotFoundException, APIErrorException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
 		String assetHolderAddress = tmService.getActiveHolderAccountAddress(assetCode);
 
-		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.ANCHOR);
+		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
 
 		// create task record
 		DexAnchorTaskRecord taskRecord = new DexAnchorTaskRecord();
@@ -166,7 +165,7 @@ public class AnchorService {
 	}
 
 	public DexKeyResult anchorDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
-		DexTaskId dexTaskId = taskIdService.decode_taskId(taskId);
+		DexTaskId dexTaskId = DexTaskId.decode_taskId(taskId);
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.ANCHOR))
 			throw new TaskNotFoundException(taskId);
 
@@ -186,7 +185,7 @@ public class AnchorService {
 	}
 
 	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws TokenMetaDataNotFoundException, StellarException, APIErrorException, AssetConvertException, TokenMetaLoadException {
-		DexTaskId dexTaskId = taskIdService.generate_taskId(DexTaskTypeEnum.DEANCHOR);
+		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 
 		// create task record
 		DexDeanchorTaskRecord taskRecord = new DexDeanchorTaskRecord();
@@ -347,7 +346,7 @@ public class AnchorService {
 	}
 
 	public DexKeyResult deanchorDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
-		DexTaskId dexTaskId = taskIdService.decode_taskId(taskId);
+		DexTaskId dexTaskId = DexTaskId.decode_taskId(taskId);
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.DEANCHOR))
 			throw new TaskNotFoundException(taskId);
 

@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="DexLauncher (verbose)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <module name="talken-dex.main" />
-    <option name="SPRING_BOOT_MAIN_CLASS" value="io.talken.dex.DexLauncher" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="io.talken.dex.api.DexLauncher" />
     <option name="VM_PARAMETERS" value="-Dorg.jooq.no-logo=true" />
     <option name="PROGRAM_PARAMETERS" value="-p local -v" />
     <option name="ALTERNATIVE_JRE_PATH" />

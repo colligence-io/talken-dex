@@ -1,12 +1,12 @@
 package io.talken.dex.api.controller;
 
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.exception.DexException;
-import io.talken.dex.api.dto.UpdateHolderRequest;
-import io.talken.dex.api.dto.UpdateHolderResult;
-import io.talken.dex.api.service.TokenMetaData;
+import io.talken.dex.api.exception.DexException;
+import io.talken.dex.api.controller.dto.UpdateHolderRequest;
+import io.talken.dex.api.controller.dto.UpdateHolderResult;
+import io.talken.dex.api.shared.TokenMetaData;
 import io.talken.dex.api.service.TokenMetaService;
-import io.talken.dex.exception.ParameterViolationException;
+import io.talken.dex.api.exception.ParameterViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

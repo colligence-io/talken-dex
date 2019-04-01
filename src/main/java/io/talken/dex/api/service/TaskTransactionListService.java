@@ -3,8 +3,8 @@ package io.talken.dex.api.service;
 
 import io.talken.common.persistence.jooq.tables.pojos.DexTxResult;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.dto.TaskTransactionResult;
-import io.talken.dex.api.dto.TxListRequest;
+import io.talken.dex.api.controller.dto.TaskTransactionResult;
+import io.talken.dex.api.controller.dto.TxListRequest;
 import org.jooq.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
