@@ -5,7 +5,9 @@ buildscript {
         }
         mavenCentral()
         jcenter()
-        maven { url 'https://maven.google.com' }
+        maven {
+            url 'https://maven.google.com'
+        }
     }
     dependencies {
         classpath('org.springframework.boot:spring-boot-gradle-plugin:2.1.3.RELEASE')
@@ -22,6 +24,7 @@ apply plugin: 'com.apollographql.android'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+
 repositories {
     maven {
         url "https://jitpack.io"
@@ -29,12 +32,23 @@ repositories {
     jcenter()
     mavenCentral()
     maven { url 'https://maven.google.com' }
+    maven {
+        credentials {
+            username talkenRepositoryUser
+            password talkenRepositoryPass
+        }
+        url talkenRepositoryUrl
+    }
 }
 
+project.group = "io.talken"
+project.version = "0.0.1-SNAPSHOT"
+
+
 bootJar {
-    baseName = "dex-server"
-    group = "io.talken"
-    version = "0.0.1-SNAPSHOT"
+    baseName = project.name
+    group = project.group
+    version = project.version
 }
 
 jar {
@@ -49,10 +63,13 @@ apollo {
 
 configurations {
     compile.exclude module: "spring-boot-starter-tomcat"
+    all {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
 }
 
 dependencies {
-    compile project(":talken-common-java")
+    compile('io.talken:talken-common-java:0.0.1-SNAPSHOT') { changing = true }
 
     compileOnly('org.projectlombok:lombok:1.18.4')
 

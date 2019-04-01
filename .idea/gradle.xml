@@ -9,21 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/talken-common-java" />
           </set>
         </option>
-        <option name="useQualifiedModuleNames" value="true" />
-      </GradleProjectSettings>
-      <GradleProjectSettings>
-        <option name="distributionType" value="DEFAULT_WRAPPED" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/talken-common-java/jooqGenerator" />
-        <option name="gradleHome" value="/usr/local/Cellar/gradle/4.9/libexec" />
-        <option name="modules">
-          <set>
-            <option value="$PROJECT_DIR$/talken-common-java/jooqGenerator" />
-          </set>
-        </option>
-        <option name="resolveModulePerSourceSet" value="false" />
         <option name="useQualifiedModuleNames" value="true" />
       </GradleProjectSettings>
     </option>
