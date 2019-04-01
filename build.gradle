@@ -24,6 +24,8 @@ apply plugin: 'com.apollographql.android'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+project.group = "io.talken"
+project.version = "0.0.1-SNAPSHOT"
 
 repositories {
     maven {
@@ -40,10 +42,6 @@ repositories {
         url talkenRepositoryUrl
     }
 }
-
-project.group = "io.talken"
-project.version = "0.0.1-SNAPSHOT"
-
 
 bootJar {
     baseName = project.name
