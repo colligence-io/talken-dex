@@ -9,6 +9,9 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/dex-api" />
+            <option value="$PROJECT_DIR$/dex-gov" />
+            <option value="$PROJECT_DIR$/dex-shared" />
           </set>
         </option>
         <option name="useQualifiedModuleNames" value="true" />

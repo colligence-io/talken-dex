@@ -1,0 +1,33 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url 'https://maven.google.com'
+        }
+    }
+    dependencies {
+        classpath('com.apollographql.apollo:apollo-gradle-plugin:1.0.0-alpha5')
+    }
+}
+
+repositories {
+    jcenter()
+    maven { url 'https://maven.google.com' }
+}
+
+apply plugin: 'com.apollographql.android'
+
+apollo {
+    customTypeMapping = [
+            "Date": "java.time.LocalDateTime"
+    ]
+}
+
+dependencies {
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-jetty')
+
+    // Apollo GraphQL
+    compile('com.apollographql.apollo:apollo-runtime:1.0.0-alpha5')
+}

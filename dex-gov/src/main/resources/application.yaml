@@ -1,0 +1,69 @@
+spring.profiles.include: ['common', 'shared']
+###############################################################################
+# Default                                                                     #
+###############################################################################
+spring:
+  profiles:
+    active: common
+  main:
+    allow-bean-definition-overriding: true
+    web-application-type: none
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+talken:
+  dex-gov:
+    scheduler:
+      pool-size: 4
+    fee:
+      offerFeeRate: 0.001
+      offerFeeRateCtxFactor: 0.5
+      deanchorFeePivotAsset: "BTC"
+      deanchorFeeAmount: 0.001
+      deanchorFeeRateCtxFactor: 0.5
+      refundRetryInterval: 600
+      refundMaxRetry: 5
+
+###############################################################################
+# LOCAL Profile                                                               #
+###############################################################################
+---
+spring:
+  profiles: local
+vault:
+  uri: "http://192.168.0.30:8200"
+  app-role: "tkn-dex"
+  secret-key: "1234"
+#logging:
+#  level:
+#    org.jooq.tools.LoggerListener: DEBUG
+
+###############################################################################
+# DEVELOPMENT Profile                                                         #
+###############################################################################
+---
+spring:
+  profiles: dev
+vault:
+  uri: "http://192.168.0.20:8200"
+  app-role: "tkn-dex"
+  secret-key: "9652fa4b5ad08bd8a5464eb491f7e1e1"
+#logging:
+#  level:
+#    io.colligence: DEBUG
+#    org.jooq.tools.LoggerListener: DEBUG
+
+###############################################################################
+# PRODUCTION Profile                                                          #
+###############################################################################
+#---
+#spring:
+#  profiles: prod
+#  datasource:
+#    url: jdbc:mariadb://192.168.0.20:4306/talken_db
+#    username: root
+#    password: 112233
+#    dbcp2:
+#      driver-class-name: org.mariadb.jdbc.Driver
