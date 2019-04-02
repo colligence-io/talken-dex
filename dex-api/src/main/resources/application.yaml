@@ -43,7 +43,7 @@ spring:
   profiles: local
 vault:
   uri: "http://192.168.0.30:8200"
-  app-role: "tkn-dex"
+  app-role: "tkn-dex-api"
   secret-key: "1234"
 #logging:
 #  level:
@@ -57,7 +57,7 @@ spring:
   profiles: dev
 vault:
   uri: "http://192.168.0.20:8200"
-  app-role: "tkn-dex"
+  app-role: "tkn-dex-api"
   secret-key: "9652fa4b5ad08bd8a5464eb491f7e1e1"
 #logging:
 #  level:
