@@ -3,7 +3,7 @@ package io.talken.dex.api;
 import io.talken.common.persistence.vault.VaultSecretReader;
 import io.talken.common.persistence.vault.data.VaultSecretDataDexSettings;
 import io.talken.common.persistence.vault.data.VaultSecretDataWebJwt;
-import io.talken.dex.api.shared.DexTaskId;
+import io.talken.dex.shared.DexTaskId;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
 
 @Component
 @ConfigurationProperties("talken.dex")
@@ -27,27 +26,12 @@ public class DexSettings {
 		randomStringTable = secret.getTaskIdSeed();
 		DexTaskId.init(randomStringTable);
 
-		signServer = new _SignServer();
-		signServer.addr = secret.getSignServerAddr();
-		signServer.appName = secret.getSignServerAppName();
-		signServer.appKey = secret.getSignServerAppKey();
-
 		VaultSecretDataWebJwt secret2 = secretReader.readSecret("web-jwt", VaultSecretDataWebJwt.class);
 		accessToken.jwtSecret = secret2.getSecret();
 		accessToken.jwtExpiration = secret2.getExpiration();
 	}
 
 	private String randomStringTable;
-
-	private _SignServer signServer;
-
-	@Getter
-	@Setter
-	public static class _SignServer {
-		private String addr;
-		private String appName;
-		private String appKey;
-	}
 
 	private _AccessToken accessToken;
 
@@ -57,23 +41,6 @@ public class DexSettings {
 		private String tokenHeader;
 		private String jwtSecret;
 		private int jwtExpiration;
-	}
-
-	private _Scheduler scheduler;
-
-	@Getter
-	@Setter
-	public static class _Scheduler {
-		private int poolSize;
-	}
-
-	private _Stellar stellar;
-
-	@Getter
-	@Setter
-	public static class _Stellar {
-		private String network;
-		private List<String> serverList;
 	}
 
 	private _Server server;

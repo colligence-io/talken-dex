@@ -2,8 +2,8 @@ package io.talken.dex.api.service.integration.anchor;
 
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.DexSettings;
-import io.talken.dex.api.service.integration.APIResult;
-import io.talken.dex.api.service.integration.AbstractRestApiService;
+import io.talken.dex.shared.service.integration.APIResult;
+import io.talken.dex.shared.service.integration.AbstractRestApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;

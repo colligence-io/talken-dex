@@ -2,7 +2,7 @@ package io.talken.dex.api.service.integration.txTunnel;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.talken.dex.api.service.integration.CodeMessageResponseInterface;
+import io.talken.dex.shared.service.integration.CodeMessageResponseInterface;
 import lombok.Data;
 
 @Data

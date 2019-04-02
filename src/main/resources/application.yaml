@@ -14,8 +14,6 @@ spring:
       force: true
 talken:
   dex:
-    scheduler:
-      pool-size: 4
     accessToken:
       token-header: "X-Auth-Token"
     stellar:

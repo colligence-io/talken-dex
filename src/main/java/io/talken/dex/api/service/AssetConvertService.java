@@ -1,11 +1,11 @@
 package io.talken.dex.api.service;
 
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.exception.AssetConvertException;
-import io.talken.dex.api.exception.TokenMetaDataNotFoundException;
-import io.talken.dex.api.exception.TokenMetaLoadException;
-import io.talken.dex.api.shared.StellarConverter;
-import io.talken.dex.api.shared.TokenMetaData;
+import io.talken.dex.shared.StellarConverter;
+import io.talken.dex.shared.TokenMetaTable;
+import io.talken.dex.shared.exception.AssetConvertException;
+import io.talken.dex.shared.exception.TokenMetaDataNotFoundException;
+import io.talken.dex.shared.exception.TokenMetaLoadException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class AssetConvertService {
 	}
 
 	public long convertRaw(Asset fromType, long amountRaw, Asset toType) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
-		tmService.checkTaExrAndUpdate();
+		tmService.checkAndReload();
 
 		final String from = StellarConverter.toAssetCode(fromType);
 		final String to = StellarConverter.toAssetCode(toType);
@@ -72,7 +72,7 @@ public class AssetConvertService {
 	}
 
 	public long exchangeRawToFiat(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
-		tmService.checkTaExrAndUpdate();
+		tmService.checkAndReload();
 
 		// exchange to fiat
 		if(!toCode.equalsIgnoreCase("USD") && !toCode.equalsIgnoreCase("KRW")) {
@@ -107,7 +107,7 @@ public class AssetConvertService {
 	}
 
 	private Double getClosePrice(String base, String counter) throws TokenMetaDataNotFoundException {
-		TokenMetaData baseMeta = tmService.getTokenMeta(base);
+		TokenMetaTable.Meta baseMeta = tmService.getTokenMeta(base);
 		if(baseMeta.getManagedInfo() == null) return null;
 		if(baseMeta.getManagedInfo().getMarketPair() == null) return null;
 		if(baseMeta.getManagedInfo().getMarketPair().get(counter) == null) return null;
@@ -115,7 +115,7 @@ public class AssetConvertService {
 	}
 
 	private Double getExchangeRate(String base, String counter) throws TokenMetaDataNotFoundException {
-		TokenMetaData baseMeta = tmService.getTokenMeta(base);
+		TokenMetaTable.Meta baseMeta = tmService.getTokenMeta(base);
 		if(baseMeta.getExchangeRate() == null) return null;
 		return baseMeta.getExchangeRate().get(counter);
 	}

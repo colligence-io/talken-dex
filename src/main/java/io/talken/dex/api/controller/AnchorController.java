@@ -4,7 +4,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.config.auth.AuthInfo;
 import io.talken.dex.api.config.auth.AuthRequired;
 import io.talken.dex.api.controller.dto.*;
-import io.talken.dex.api.exception.DexException;
+import io.talken.dex.shared.exception.DexException;
 import io.talken.dex.api.service.AnchorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;

@@ -1,7 +1,7 @@
 package io.talken.dex.api.controller;
 
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.exception.DexException;
+import io.talken.dex.shared.exception.DexException;
 import io.talken.dex.api.controller.dto.AssetConvertRequest;
 import io.talken.dex.api.controller.dto.AssetExchangeRequest;
 import io.talken.dex.api.controller.dto.TxListRequest;

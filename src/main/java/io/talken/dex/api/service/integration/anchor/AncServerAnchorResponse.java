@@ -1,7 +1,7 @@
 package io.talken.dex.api.service.integration.anchor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.talken.dex.api.service.integration.CodeMessageResponseInterface;
+import io.talken.dex.shared.service.integration.CodeMessageResponseInterface;
 import lombok.Data;
 
 @Data

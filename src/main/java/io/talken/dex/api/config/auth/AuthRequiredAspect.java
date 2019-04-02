@@ -1,7 +1,7 @@
 package io.talken.dex.api.config.auth;
 
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.exception.UnauthorizedException;
+import io.talken.dex.shared.exception.UnauthorizedException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

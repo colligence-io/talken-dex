@@ -1,7 +1,7 @@
 package io.talken.dex.api.config.auth;
 
 import io.talken.common.persistence.jooq.tables.pojos.User;
-import io.talken.dex.api.exception.UnauthorizedException;
+import io.talken.dex.shared.exception.UnauthorizedException;
 
 public class AuthInfo {
 	private User user = null;
