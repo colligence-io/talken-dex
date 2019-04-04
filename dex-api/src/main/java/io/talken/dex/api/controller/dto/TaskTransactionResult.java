@@ -2,40 +2,40 @@ package io.talken.dex.api.controller.dto;
 
 
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
-import io.talken.common.persistence.jooq.tables.pojos.DexTxResult;
+import io.talken.common.persistence.jooq.tables.pojos.DexTxmon;
 
 import java.time.LocalDateTime;
 
 public class TaskTransactionResult {
-	private DexTxResult dexTxResult;
+	private DexTxmon dexTxmon;
 
-	public TaskTransactionResult(DexTxResult dexTxResult) {
-		this.dexTxResult = dexTxResult;
+	public TaskTransactionResult(DexTxmon dexTxmon) {
+		this.dexTxmon = dexTxmon;
 	}
 
-	public String getTxId() {return dexTxResult.getTxid();}
+	public String getTxId() {return dexTxmon.getTxid();}
 
-	public String getTaskId() {return dexTxResult.getMemotaskid();}
+	public String getTaskId() {return dexTxmon.getMemotaskid();}
 
-	public DexTaskTypeEnum getTaskType() {return dexTxResult.getTasktype();}
+	public DexTaskTypeEnum getTaskType() {return dexTxmon.getTasktype();}
 
-	public String getTxHash() {return dexTxResult.getTxhash();}
+	public String getTxHash() {return dexTxmon.getTxhash();}
 
-	public Long getLedger() {return dexTxResult.getLedger();}
+	public Long getLedger() {return dexTxmon.getLedger();}
 
-	public LocalDateTime getCreatedAt() {return dexTxResult.getCreatedat();}
+	public LocalDateTime getCreatedAt() {return dexTxmon.getCreatedat();}
 
-	public String getSourceAccount() {return dexTxResult.getSourceaccount();}
+	public String getSourceAccount() {return dexTxmon.getSourceaccount();}
 
-	public String getEnvelopeXdr() {return dexTxResult.getEnvelopexdr();}
+	public String getEnvelopeXdr() {return dexTxmon.getEnvelopexdr();}
 
-	public String getResultXdr() {return dexTxResult.getResultxdr();}
+	public String getResultXdr() {return dexTxmon.getResultxdr();}
 
-	public String getResultMetaXdr() {return dexTxResult.getResultmetaxdr();}
+	public String getResultMetaXdr() {return dexTxmon.getResultmetaxdr();}
 
-	public Long getFeePaid() {return dexTxResult.getFeepaid();}
+	public Long getFeePaid() {return dexTxmon.getFeepaid();}
 
-	public Long getOfferId() {return dexTxResult.getOfferidfromresult();}
+	public Long getOfferId() {return dexTxmon.getOfferidfromresult();}
 
-	public Boolean getProcessSuccessFlag() {return dexTxResult.getProcessSuccessFlag();}
+	public Boolean getProcessSuccessFlag() {return dexTxmon.getProcessSuccessFlag();}
 }

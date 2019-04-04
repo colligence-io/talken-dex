@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.talken.common.persistence.enums.LangTypeEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.TokenEntry;
-import io.talken.common.persistence.jooq.tables.pojos.TokenManagedHolder;
-import io.talken.common.persistence.jooq.tables.pojos.TokenManagedInfo;
-import io.talken.common.persistence.jooq.tables.pojos.TokenManagedMarketPair;
+import io.talken.common.persistence.jooq.tables.pojos.TokenMetaManaged;
+import io.talken.common.persistence.jooq.tables.pojos.TokenMetaManagedHolder;
+import io.talken.common.persistence.jooq.tables.pojos.TokenMetaManagedMarketpair;
 import io.talken.common.util.collection.SingleKeyObject;
 import lombok.Getter;
 import lombok.Setter;
@@ -46,7 +46,7 @@ public class TokenMeta extends io.talken.common.persistence.jooq.tables.pojos.To
 
 	@Getter
 	@Setter
-	public static class ManagedInfo extends TokenManagedInfo {
+	public static class ManagedInfo extends TokenMetaManaged {
 		private static final long serialVersionUID = -4332284054048595977L;
 
 		private String assetCode;
@@ -62,13 +62,13 @@ public class TokenMeta extends io.talken.common.persistence.jooq.tables.pojos.To
 
 	@Getter
 	@Setter
-	public static class MarketPairInfo extends TokenManagedMarketPair {
+	public static class MarketPairInfo extends TokenMetaManagedMarketpair {
 		private static final long serialVersionUID = -5476500764748414007L;
 	}
 
 	@Getter
 	@Setter
-	public static class HolderAccountInfo extends TokenManagedHolder {
+	public static class HolderAccountInfo extends TokenMetaManagedHolder {
 		private static final long serialVersionUID = -8628865742603838879L;
 	}
 }

@@ -1,10 +1,10 @@
 package io.talken.dex.governance.scheduler.refund;
 
-import io.talken.common.persistence.jooq.tables.pojos.DexCreateofferRefundTask;
+import io.talken.common.persistence.jooq.tables.pojos.DexTaskRefundcreateofferfee;
 
 import java.time.LocalDateTime;
 
-public class RefundTask extends DexCreateofferRefundTask {
+public class RefundTask extends DexTaskRefundcreateofferfee {
 	private Boolean successFlag;
 	private Integer trialNo;
 	private LocalDateTime logTime;

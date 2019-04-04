@@ -3,8 +3,8 @@ package io.talken.dex.api.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
-import io.talken.common.persistence.jooq.tables.records.DexAnchorTaskRecord;
-import io.talken.common.persistence.jooq.tables.records.DexDeanchorTaskRecord;
+import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
+import io.talken.common.persistence.jooq.tables.records.DexTaskDeanchorRecord;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
@@ -34,8 +34,8 @@ import org.stellar.sdk.responses.AccountResponse;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import static io.talken.common.persistence.jooq.Tables.DEX_ANCHOR_TASK;
-import static io.talken.common.persistence.jooq.Tables.DEX_DEANCHOR_TASK;
+import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
+import static io.talken.common.persistence.jooq.Tables.DEX_TASK_DEANCHOR;
 
 @Service
 @Scope("singleton")
@@ -66,7 +66,7 @@ public class AnchorService {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
 
 		// create task record
-		DexAnchorTaskRecord taskRecord = new DexAnchorTaskRecord();
+		DexTaskAnchorRecord taskRecord = new DexTaskAnchorRecord();
 		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
 		taskRecord.setStep(1);
@@ -169,8 +169,8 @@ public class AnchorService {
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.ANCHOR))
 			throw new TaskNotFoundException(taskId);
 
-		DexAnchorTaskRecord taskRecord = dslContext.selectFrom(DEX_ANCHOR_TASK)
-				.where(DEX_ANCHOR_TASK.TASKID.eq(taskId))
+		DexTaskAnchorRecord taskRecord = dslContext.selectFrom(DEX_TASK_ANCHOR)
+				.where(DEX_TASK_ANCHOR.TASKID.eq(taskId))
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
 
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);
@@ -188,7 +188,7 @@ public class AnchorService {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 
 		// create task record
-		DexDeanchorTaskRecord taskRecord = new DexDeanchorTaskRecord();
+		DexTaskDeanchorRecord taskRecord = new DexTaskDeanchorRecord();
 		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
 
@@ -350,8 +350,8 @@ public class AnchorService {
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.DEANCHOR))
 			throw new TaskNotFoundException(taskId);
 
-		DexDeanchorTaskRecord taskRecord = dslContext.selectFrom(DEX_DEANCHOR_TASK)
-				.where(DEX_DEANCHOR_TASK.TASKID.eq(taskId))
+		DexTaskDeanchorRecord taskRecord = dslContext.selectFrom(DEX_TASK_DEANCHOR)
+				.where(DEX_TASK_DEANCHOR.TASKID.eq(taskId))
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
 
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);

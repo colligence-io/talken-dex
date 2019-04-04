@@ -2,9 +2,9 @@ package io.talken.dex.api.service;
 
 
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
-import io.talken.common.persistence.jooq.tables.records.DexCreateofferTaskRecord;
-import io.talken.common.persistence.jooq.tables.records.DexDeleteofferTaskRecord;
-import io.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferRecord;
+import io.talken.common.persistence.jooq.tables.records.DexTaskCreateofferRecord;
+import io.talken.common.persistence.jooq.tables.records.DexTaskDeleteofferRecord;
+import io.talken.common.persistence.jooq.tables.records.DexTxmonCreateofferRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.dto.CreateOfferResult;
 import io.talken.dex.api.controller.dto.DeleteOfferResult;
@@ -57,7 +57,7 @@ public class OfferService {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_CREATE);
 
 		// create task record
-		DexCreateofferTaskRecord taskRecord = new DexCreateofferTaskRecord();
+		DexTaskCreateofferRecord taskRecord = new DexTaskCreateofferRecord();
 		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
 
@@ -194,8 +194,8 @@ public class OfferService {
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.OFFER_CREATE))
 			throw new TaskNotFoundException(taskId);
 
-		DexCreateofferTaskRecord taskRecord = dslContext.selectFrom(DEX_CREATEOFFER_TASK)
-				.where(DEX_CREATEOFFER_TASK.TASKID.eq(taskId))
+		DexTaskCreateofferRecord taskRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER)
+				.where(DEX_TASK_CREATEOFFER.TASKID.eq(taskId))
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
 
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);
@@ -213,7 +213,7 @@ public class OfferService {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_DELETE);
 
 		// create task record
-		DexDeleteofferTaskRecord taskRecord = new DexDeleteofferTaskRecord();
+		DexTaskDeleteofferRecord taskRecord = new DexTaskDeleteofferRecord();
 		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
 
@@ -225,12 +225,12 @@ public class OfferService {
 		dslContext.attach(taskRecord);
 		taskRecord.store();
 
-		Optional<DexTxResultCreateofferRecord> opt_dexCreateOfferResultRecord = dslContext.selectFrom(DEX_TX_RESULT_CREATEOFFER)
-				.where(DEX_TX_RESULT_CREATEOFFER.OFFERID.eq(offerId))
+		Optional<DexTxmonCreateofferRecord> opt_dexCreateOfferResultRecord = dslContext.selectFrom(DEX_TXMON_CREATEOFFER)
+				.where(DEX_TXMON_CREATEOFFER.OFFERID.eq(offerId))
 				.fetchOptional();
 
 		if(opt_dexCreateOfferResultRecord.isPresent()) {
-			taskRecord.setCreateofferTaskid(opt_dexCreateOfferResultRecord.get().getTaskid());
+			taskRecord.setCreateofferTaskid(opt_dexCreateOfferResultRecord.get().getTaskidCrof());
 		} else {
 			// TODO : determine what to do, force proceed? or drop
 			logger.warn("Create offer result for {} not found, this may cause unexpected refund result.");
@@ -328,8 +328,8 @@ public class OfferService {
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.OFFER_DELETE))
 			throw new TaskNotFoundException(taskId);
 
-		DexDeleteofferTaskRecord taskRecord = dslContext.selectFrom(DEX_DELETEOFFER_TASK)
-				.where(DEX_DELETEOFFER_TASK.TASKID.eq(taskId))
+		DexTaskDeleteofferRecord taskRecord = dslContext.selectFrom(DEX_TASK_DELETEOFFER)
+				.where(DEX_TASK_DELETEOFFER.TASKID.eq(taskId))
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
 
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);

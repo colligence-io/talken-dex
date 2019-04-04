@@ -70,11 +70,11 @@ public class TradeAggregationService {
 		TOKEN_META counter = TOKEN_META.as("counter");
 
 		Result<Record> mpList = dslContext
-				.selectFrom(TOKEN_MANAGED_MARKET_PAIR
-						.leftOuterJoin(base).on(base.ID.eq(TOKEN_MANAGED_MARKET_PAIR.TOKEN_META_ID))
-						.leftOuterJoin(counter).on(counter.ID.eq(TOKEN_MANAGED_MARKET_PAIR.COUNTER_META_ID))
+				.selectFrom(TOKEN_META_MANAGED_MARKETPAIR
+						.leftOuterJoin(base).on(base.ID.eq(TOKEN_META_MANAGED_MARKETPAIR.TM_ID))
+						.leftOuterJoin(counter).on(counter.ID.eq(TOKEN_META_MANAGED_MARKETPAIR.TM_ID_COUNTER))
 				)
-				.where(TOKEN_MANAGED_MARKET_PAIR.ACTIVE_FLAG.eq(true))
+				.where(TOKEN_META_MANAGED_MARKETPAIR.ACTIVE_FLAG.eq(true))
 				.fetch();
 
 		AssetOHLCData ohlcData = new AssetOHLCData();
@@ -102,17 +102,17 @@ public class TradeAggregationService {
 					AssetOHLCData.Counter olhc = ohlcData.ofBase(baseAsset).ofCounter(counterAsset);
 
 					try {
-						int updated = dslContext.update(TOKEN_MANAGED_MARKET_PAIR)
-								.set(TOKEN_MANAGED_MARKET_PAIR.AGGR_TIMESTAMP, UTCUtil.ts2ldt(aggr.getTimestamp() / 1000))
-								.set(TOKEN_MANAGED_MARKET_PAIR.BASE_VOLUME, Double.valueOf(aggr.getBaseVolume()))
-								.set(TOKEN_MANAGED_MARKET_PAIR.COUNTER_VOLUME, Double.valueOf(aggr.getCounterVolume()))
-								.set(TOKEN_MANAGED_MARKET_PAIR.TRADE_COUNT, aggr.getTradeCount())
-								.set(TOKEN_MANAGED_MARKET_PAIR.PRICE_AVG, Double.valueOf(aggr.getAvg()))
-								.set(TOKEN_MANAGED_MARKET_PAIR.PRICE_O, Double.valueOf(aggr.getOpen()))
-								.set(TOKEN_MANAGED_MARKET_PAIR.PRICE_H, Double.valueOf(aggr.getHigh()))
-								.set(TOKEN_MANAGED_MARKET_PAIR.PRICE_L, Double.valueOf(aggr.getLow()))
-								.set(TOKEN_MANAGED_MARKET_PAIR.PRICE_C, Double.valueOf(aggr.getClose()))
-								.where(TOKEN_MANAGED_MARKET_PAIR.ID.eq(_mpRecord.get(TOKEN_MANAGED_MARKET_PAIR.ID)))
+						int updated = dslContext.update(TOKEN_META_MANAGED_MARKETPAIR)
+								.set(TOKEN_META_MANAGED_MARKETPAIR.AGGR_TIMESTAMP, UTCUtil.ts2ldt(aggr.getTimestamp() / 1000))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.BASE_VOLUME, Double.valueOf(aggr.getBaseVolume()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.COUNTER_VOLUME, Double.valueOf(aggr.getCounterVolume()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.TRADE_COUNT, aggr.getTradeCount())
+								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_AVG, Double.valueOf(aggr.getAvg()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_O, Double.valueOf(aggr.getOpen()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_H, Double.valueOf(aggr.getHigh()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_L, Double.valueOf(aggr.getLow()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_C, Double.valueOf(aggr.getClose()))
+								.where(TOKEN_META_MANAGED_MARKETPAIR.ID.eq(_mpRecord.get(TOKEN_META_MANAGED_MARKETPAIR.ID)))
 								.execute();
 
 						olhc.setBase_volume(Double.valueOf(aggr.getBaseVolume()));
@@ -150,7 +150,7 @@ public class TradeAggregationService {
 		}
 
 		try {
-			dslContext.update(DEX_STATUS).set(DEX_STATUS.TRADEAGGRLASTTIMESTAMP, endTimeLdt).execute();
+			dslContext.update(DEX_GOV_STATUS).set(DEX_GOV_STATUS.TRADEAGGRLASTTIMESTAMP, endTimeLdt).execute();
 		} catch(Exception ex) {
 			logger.exception(ex, "Cannot update dex_status.tradeAggrLastTimestamp", ex.getMessage());
 		}

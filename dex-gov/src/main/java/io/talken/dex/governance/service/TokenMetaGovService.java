@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.talken.common.persistence.enums.LangTypeEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
-import io.talken.common.persistence.jooq.tables.pojos.TokenExchangeRate;
+import io.talken.common.persistence.jooq.tables.pojos.TokenMetaExrate;
 import io.talken.common.persistence.jooq.tables.records.*;
 import io.talken.common.persistence.redis.AssetExchangeRate;
 import io.talken.common.persistence.redis.AssetOHLCData;
@@ -126,8 +126,8 @@ public class TokenMetaGovService {
 
 			// preload token_meta_id / marketpairList map
 			Map<Long, List<TokenMeta.MarketPairInfo>> _tmpMap = new HashMap<>();
-			for(TokenManagedMarketPairRecord _tmp : dslContext.selectFrom(TOKEN_MANAGED_MARKET_PAIR).fetch()) {
-				Long metaId = _tmp.getTokenMetaId();
+			for(TokenMetaManagedMarketpairRecord _tmp : dslContext.selectFrom(TOKEN_META_MANAGED_MARKETPAIR).fetch()) {
+				Long metaId = _tmp.getTmId();
 				if(!_tmpMap.containsKey(metaId))
 					_tmpMap.put(metaId, new ArrayList<>());
 				_tmpMap.get(metaId).add(_tmp.into(TokenMeta.MarketPairInfo.class));
@@ -135,8 +135,8 @@ public class TokenMetaGovService {
 
 			// preload token_meta_id / managedHolderList map
 			Map<Long, List<TokenMeta.HolderAccountInfo>> _tmhMap = new HashMap<>();
-			for(TokenManagedHolderRecord _tmh : dslContext.selectFrom(TOKEN_MANAGED_HOLDER).fetch()) {
-				Long metaId = _tmh.getTokenMetaId();
+			for(TokenMetaManagedHolderRecord _tmh : dslContext.selectFrom(TOKEN_META_MANAGED_HOLDER).fetch()) {
+				Long metaId = _tmh.getTmId();
 				if(!_tmhMap.containsKey(metaId))
 					_tmhMap.put(metaId, new ArrayList<>());
 				_tmhMap.get(metaId).add(_tmh.into(TokenMeta.HolderAccountInfo.class));
@@ -144,23 +144,23 @@ public class TokenMetaGovService {
 
 			// preload token_meta_id / managedInfo map
 			Map<Long, TokenMeta.ManagedInfo> _miMap = new HashMap<>();
-			for(TokenManagedInfoRecord _tmi : dslContext.selectFrom(TOKEN_MANAGED_INFO).fetch()) {
-				_miMap.put(_tmi.getTokenMetaId(), _tmi.into(TokenMeta.ManagedInfo.class));
+			for(TokenMetaManagedRecord _tmi : dslContext.selectFrom(TOKEN_META_MANAGED).fetch()) {
+				_miMap.put(_tmi.getTmId(), _tmi.into(TokenMeta.ManagedInfo.class));
 			}
 
 			// preload token_meta_id / token_exchange_rate map
-			Map<Long, List<TokenExchangeRate>> _erMap = new HashMap<>();
-			for(TokenExchangeRateRecord _er : dslContext.selectFrom(TOKEN_EXCHANGE_RATE).fetch()) {
-				Long metaId = _er.getTokenMetaId();
+			Map<Long, List<TokenMetaExrate>> _erMap = new HashMap<>();
+			for(TokenMetaExrateRecord _er : dslContext.selectFrom(TOKEN_META_EXRATE).fetch()) {
+				Long metaId = _er.getTmId();
 				if(!_erMap.containsKey(metaId))
 					_erMap.put(metaId, new ArrayList<>());
-				_erMap.get(metaId).add(_er.into(TokenExchangeRate.class));
+				_erMap.get(metaId).add(_er.into(TokenMetaExrate.class));
 			}
 
 			// preload token_meta_id / token_info map
 			Map<Long, Map<LangTypeEnum, TokenMeta.EntryInfo>> _teMap = new HashMap<>();
 			for(TokenEntryRecord _te : dslContext.selectFrom(TOKEN_ENTRY).fetch()) {
-				Long metaId = _te.getTokenMetaId();
+				Long metaId = _te.getTmId();
 				if(!_teMap.containsKey(metaId))
 					_teMap.put(metaId, new HashMap<>());
 				_teMap.get(metaId).put(_te.getLangcode(), _te.into(TokenMeta.EntryInfo.class));
@@ -169,7 +169,7 @@ public class TokenMetaGovService {
 			// preload token_meta_id / token_aux list map
 			Map<Long, Map<TokenMetaAuxCodeEnum, Object>> _auxMap = new HashMap<>();
 			for(TokenMetaAuxRecord _aux : dslContext.selectFrom(TOKEN_META_AUX).fetch()) {
-				Long metaId = _aux.getTokenMetaId();
+				Long metaId = _aux.getTmId();
 				if(!_auxMap.containsKey(metaId))
 					_auxMap.put(metaId, new HashMap<>());
 
@@ -229,7 +229,7 @@ public class TokenMetaGovService {
 				// build exchange rate
 				if(_erMap.containsKey(metaId)) {
 					Map<String, Double> exr = new HashMap<>();
-					for(TokenExchangeRate _er : _erMap.get(metaId))
+					for(TokenMetaExrate _er : _erMap.get(metaId))
 						exr.put(_er.getCountertype(), _er.getPrice());
 					_tm.setExchangeRate(exr);
 				}
@@ -256,7 +256,7 @@ public class TokenMetaGovService {
 
 				mi.setMarketPair(new HashMap<>());
 				for(TokenMeta.MarketPairInfo _mp : _tmpMap.get(_tmd.getId())) {
-					mi.getMarketPair().put(tmIdMap.get(_mp.getCounterMetaId()).getSymbol(), _mp);
+					mi.getMarketPair().put(tmIdMap.get(_mp.getTmIdCounter()).getSymbol(), _mp);
 				}
 			}
 

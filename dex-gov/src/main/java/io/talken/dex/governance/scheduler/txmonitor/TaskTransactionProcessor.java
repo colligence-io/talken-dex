@@ -6,5 +6,5 @@ import io.talken.dex.shared.exception.TransactionResultProcessingException;
 public interface TaskTransactionProcessor {
 	DexTaskTypeEnum getDexTaskType();
 
-	TaskTransactionProcessResult process(TaskTransactionResponse taskTxResponse) throws TransactionResultProcessingException;
+	TaskTransactionProcessResult process(Long txmId, TaskTransactionResponse taskTxResponse) throws TransactionResultProcessingException;
 }

@@ -10,7 +10,7 @@ import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import static io.talken.common.persistence.jooq.Tables.DEX_CREATEOFFER_REFUND_TASK;
+import static io.talken.common.persistence.jooq.Tables.DEX_TASK_REFUNDCREATEOFFERFEE;
 
 @Component
 public class CreateOfferRefundTaskTransactionProcessor implements TaskTransactionProcessor {
@@ -25,11 +25,11 @@ public class CreateOfferRefundTaskTransactionProcessor implements TaskTransactio
 	}
 
 	@Override
-	public TaskTransactionProcessResult process(TaskTransactionResponse taskTxResponse) {
+	public TaskTransactionProcessResult process(Long txmId, TaskTransactionResponse taskTxResponse) {
 		try {
-			int updated = dslContext.update(DEX_CREATEOFFER_REFUND_TASK)
-					.set(DEX_CREATEOFFER_REFUND_TASK.CHECKED_FLAG, true)
-					.where(DEX_CREATEOFFER_REFUND_TASK.TASKID.eq(taskTxResponse.getTaskId().getId()))
+			int updated = dslContext.update(DEX_TASK_REFUNDCREATEOFFERFEE)
+					.set(DEX_TASK_REFUNDCREATEOFFERFEE.CHECKED_FLAG, true)
+					.where(DEX_TASK_REFUNDCREATEOFFERFEE.TASKID.eq(taskTxResponse.getTaskId().getId()))
 					.execute();
 
 			if(updated == 0)

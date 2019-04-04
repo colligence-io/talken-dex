@@ -2,18 +2,15 @@ package io.talken.dex.governance.scheduler.txmonitor.processor;
 
 
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
-import io.talken.common.persistence.jooq.tables.records.DexCreateofferRefundTaskRecord;
-import io.talken.common.persistence.jooq.tables.records.DexCreateofferTaskRecord;
-import io.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferClaimedRecord;
-import io.talken.common.persistence.jooq.tables.records.DexTxResultCreateofferRecord;
+import io.talken.common.persistence.jooq.tables.records.*;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.shared.DexTaskId;
-import io.talken.dex.shared.StellarConverter;
-import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.governance.scheduler.txmonitor.TaskTransactionProcessError;
 import io.talken.dex.governance.scheduler.txmonitor.TaskTransactionProcessResult;
 import io.talken.dex.governance.scheduler.txmonitor.TaskTransactionProcessor;
 import io.talken.dex.governance.scheduler.txmonitor.TaskTransactionResponse;
+import io.talken.dex.shared.DexTaskId;
+import io.talken.dex.shared.StellarConverter;
+import io.talken.dex.shared.TransactionBlockExecutor;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -23,7 +20,7 @@ import org.stellar.sdk.xdr.*;
 import java.util.Base64;
 import java.util.Optional;
 
-import static io.talken.common.persistence.jooq.Tables.DEX_CREATEOFFER_TASK;
+import static io.talken.common.persistence.jooq.Tables.DEX_TASK_CREATEOFFER;
 
 @Component
 public class CreateOfferTaskTransactionProcessor implements TaskTransactionProcessor {
@@ -41,15 +38,15 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 	}
 
 	@Override
-	public TaskTransactionProcessResult process(TaskTransactionResponse taskTxResponse) {
+	public TaskTransactionProcessResult process(Long txmId, TaskTransactionResponse taskTxResponse) {
 		try {
 			TransactionBlockExecutor.of(txMgr).transactional(() -> {
-				Optional<DexCreateofferTaskRecord> opt_createTaskRecord = dslContext.selectFrom(DEX_CREATEOFFER_TASK).where(DEX_CREATEOFFER_TASK.TASKID.eq(taskTxResponse.getTaskId().getId())).fetchOptional();
+				Optional<DexTaskCreateofferRecord> opt_createTaskRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER).where(DEX_TASK_CREATEOFFER.TASKID.eq(taskTxResponse.getTaskId().getId())).fetchOptional();
 
 				if(!opt_createTaskRecord.isPresent())
 					throw new TaskTransactionProcessError("TaskIdNotFound");
 
-				DexCreateofferTaskRecord createTaskRecord = opt_createTaskRecord.get();
+				DexTaskCreateofferRecord createTaskRecord = opt_createTaskRecord.get();
 
 				// TODO : is this always right? same result? even when operation order mismatch?
 				byte[] createBytes = Base64.getDecoder().decode(createTaskRecord.getTxXdr());
@@ -82,33 +79,18 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 				if(offerResult == null || offerResult.getSuccess() == null)
 					throw new TaskTransactionProcessError("NoOfferSuccessNode", "No manage offer operation entry found");
 
-				// insert claimed list
-				if(offerResult.getSuccess().getOffersClaimed() != null) {
-					for(ClaimOfferAtom claimed : offerResult.getSuccess().getOffersClaimed()) {
-						DexTxResultCreateofferClaimedRecord takeRecord = new DexTxResultCreateofferClaimedRecord();
-						takeRecord.setTaskid(taskTxResponse.getTaskId().getId());
-						takeRecord.setSelleraccount(createTaskRecord.getSourceaccount());
-						takeRecord.setTakeofferid(claimed.getOfferID().getUint64());
-						takeRecord.setSoldassettype(StellarConverter.toAssetCode(claimed.getAssetSold()));
-						takeRecord.setSoldamountraw(claimed.getAmountSold().getInt64());
-						takeRecord.setBoughtassettype(StellarConverter.toAssetCode(claimed.getAssetBought()));
-						takeRecord.setBoughtamountraw(claimed.getAmountBought().getInt64());
-						dslContext.attach(takeRecord);
-						takeRecord.store();
-					}
-				}
 
 				// insert result record
-				DexTxResultCreateofferRecord resultRecord = new DexTxResultCreateofferRecord();
-				resultRecord.setTxid(taskTxResponse.getTxHash());
-				resultRecord.setTaskid(taskTxResponse.getTaskId().getId());
+				DexTxmonCreateofferRecord txCreateOfferRecord = new DexTxmonCreateofferRecord();
+				txCreateOfferRecord.setTxmId(txmId);
+				txCreateOfferRecord.setTaskidCrof(taskTxResponse.getTaskId().getId());
 
 				OfferEntry made = offerResult.getSuccess().getOffer().getOffer();
 				if(made != null) {
-					resultRecord.setOfferid(made.getOfferID().getUint64());
+					txCreateOfferRecord.setOfferid(made.getOfferID().getUint64());
 
 					long makeAmountRaw = made.getAmount().getInt64();
-					resultRecord.setMakeamountraw(makeAmountRaw);
+					txCreateOfferRecord.setMakeamountraw(makeAmountRaw);
 
 					long refundAmountRaw = (long) ((double) feeAmountRaw * ((double) makeAmountRaw / (double) createTaskRecord.getSellamountraw()));
 
@@ -116,9 +98,9 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 						// insert refund task
 						DexTaskId refundTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_REFUNDFEE);
 
-						DexCreateofferRefundTaskRecord refundTaskRecord = new DexCreateofferRefundTaskRecord();
+						DexTaskRefundcreateofferfeeRecord refundTaskRecord = new DexTaskRefundcreateofferfeeRecord();
 						refundTaskRecord.setTaskid(refundTaskId.getId());
-						refundTaskRecord.setCreateofferTaskid(createTaskRecord.getTaskid());
+						refundTaskRecord.setTaskidCrof(createTaskRecord.getTaskid());
 						refundTaskRecord.setFeecollectaccount(createTaskRecord.getFeecollectaccount());
 						refundTaskRecord.setRefundassetcode(createTaskRecord.getFeeassetcode());
 						refundTaskRecord.setRefundamountraw(refundAmountRaw);
@@ -126,12 +108,30 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 						dslContext.attach(refundTaskRecord);
 						refundTaskRecord.store();
 						logger.info("{} generated by scheduler. userId = {}", refundTaskId, createTaskRecord.getUserId());
-						resultRecord.setRefundtaskid(refundTaskRecord.getTaskid());
+						txCreateOfferRecord.setTaskidRecrof(refundTaskRecord.getTaskid());
 					}
 				}
 
-				dslContext.attach(resultRecord);
-				resultRecord.store();
+				dslContext.attach(txCreateOfferRecord);
+				txCreateOfferRecord.store();
+
+				// insert claimed list
+				if(offerResult.getSuccess().getOffersClaimed() != null) {
+					for(ClaimOfferAtom claimed : offerResult.getSuccess().getOffersClaimed()) {
+						DexTxmonCreateofferClaimedRecord txClaimedRecord = new DexTxmonCreateofferClaimedRecord();
+						txClaimedRecord.setTxmcoId(txCreateOfferRecord.getId());
+						txClaimedRecord.setSelleraccount(createTaskRecord.getSourceaccount());
+						txClaimedRecord.setTakeofferid(claimed.getOfferID().getUint64());
+						txClaimedRecord.setSoldassettype(StellarConverter.toAssetCode(claimed.getAssetSold()));
+						txClaimedRecord.setSoldamountraw(claimed.getAmountSold().getInt64());
+						txClaimedRecord.setBoughtassettype(StellarConverter.toAssetCode(claimed.getAssetBought()));
+						txClaimedRecord.setBoughtamountraw(claimed.getAmountBought().getInt64());
+						dslContext.attach(txClaimedRecord);
+						txClaimedRecord.store();
+					}
+				}
+
+
 			});
 		} catch(TaskTransactionProcessError error) {
 			return TaskTransactionProcessResult.error(error);
