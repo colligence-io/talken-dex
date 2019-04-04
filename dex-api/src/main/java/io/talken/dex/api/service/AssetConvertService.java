@@ -145,45 +145,6 @@ public class AssetConvertService {
 		throw new AssetConvertException(fromCode, toCode);
 	}
 
-	public double exchange(String fromCode, double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
-		return StellarConverter.rawToDouble(exchangeRawToFiat(fromCode, StellarConverter.doubleToRaw(amount), toCode));
-	}
-
-	public long exchangeRawToFiat(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
-		tmService.checkAndReload();
-
-		// exchange to fiat
-		if(!toCode.equalsIgnoreCase("USD") && !toCode.equalsIgnoreCase("KRW")) {
-			throw new AssetConvertException(fromCode, toCode);
-		}
-
-		Double rate = getExchangeRate(fromCode, toCode);
-		if(rate != null) {
-			return (long) (amountRaw * rate);
-		}
-
-		// try interchange with trade aggregation data
-		// ex: MOBI -> BTC -> KRW
-		for(String ic : INTERCHANGE) {
-			if(!ic.equals(fromCode)) {
-				Double ic_rate = getClosePrice(fromCode, ic);
-				if(ic_rate != null) {
-					Double ic_rate2 = getExchangeRate(ic, toCode);
-					if(ic_rate2 != null) {
-						rate = ic_rate * ic_rate2;
-						break;
-					}
-				}
-			}
-		}
-
-		if(rate != null) {
-			return (long) (amountRaw * rate);
-		}
-
-		throw new AssetConvertException(fromCode, toCode);
-	}
-
 	private Double getClosePrice(String base, String counter) throws TokenMetaDataNotFoundException {
 		TokenMetaTable.Meta baseMeta = tmService.getTokenMeta(base);
 		if(baseMeta.getManagedInfo() == null) return null;
