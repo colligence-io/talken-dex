@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.Asset;
 
+import java.math.BigDecimal;
+
 @Service
 @Scope("singleton")
 public class AssetConvertService {
@@ -21,14 +23,6 @@ public class AssetConvertService {
 
 	// interchange assets, in order
 	private static final String[] INTERCHANGE = new String[]{"BTC", "ETH", "XLM", "CTX"};
-
-	public double convert(String fromCode, double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
-		return StellarConverter.rawToDouble(convertRaw(fromCode, StellarConverter.doubleToRaw(amount), toCode));
-	}
-
-	public long convertRaw(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
-		return convertRaw(tmService.getAssetType(fromCode), amountRaw, tmService.getAssetType(toCode));
-	}
 
 	public long convertRaw(Asset fromType, long amountRaw, Asset toType) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
 		tmService.checkAndReload();
@@ -65,6 +59,90 @@ public class AssetConvertService {
 		}
 
 		throw new AssetConvertException(from, to);
+	}
+
+	public BigDecimal convert(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+		return convertBigDecimal(fromCode, amount, toCode);
+	}
+
+	private BigDecimal convertBigDecimal(String fromCode, BigDecimal amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+		return convertBigDecimal(tmService.getAssetType(fromCode), amountRaw, tmService.getAssetType(toCode));
+	}
+
+	private BigDecimal convertBigDecimal(Asset fromType, BigDecimal amountRaw, Asset toType) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+		tmService.checkAndReload();
+
+		final String from = StellarConverter.toAssetCode(fromType);
+		final String to = StellarConverter.toAssetCode(toType);
+
+		// first look up TradeAggregation data
+		Double rate = getClosePrice(from, to);
+
+		if(rate != null) {
+			return amountRaw.multiply(BigDecimal.valueOf(rate));
+		}
+
+		// try interchange
+		for(String ic : INTERCHANGE) {
+			Double ic_rate = getClosePrice(from, ic);
+			if(ic_rate != null) {
+				Double ic_rate2 = getClosePrice(ic, to);
+				if(ic_rate2 != null) {
+					rate = ic_rate * ic_rate2;
+					break;
+				}
+			}
+		}
+		if(rate != null) {
+			return amountRaw.multiply(BigDecimal.valueOf(rate));
+		}
+
+		// fallback to CoinMarketCap data
+		rate = getExchangeRate(from, to);
+		if(rate != null) {
+			return amountRaw.multiply(BigDecimal.valueOf(rate));
+		}
+
+		throw new AssetConvertException(from, to);
+	}
+
+	public BigDecimal exchange(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+		return exchangeRawToFiat(fromCode, amount, toCode);
+	}
+
+	private BigDecimal exchangeRawToFiat(String fromCode, BigDecimal amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+		tmService.checkAndReload();
+
+		// exchange to fiat
+		if(!toCode.equalsIgnoreCase("USD") && !toCode.equalsIgnoreCase("KRW")) {
+			throw new AssetConvertException(fromCode, toCode);
+		}
+
+		Double rate = getExchangeRate(fromCode, toCode);
+		if(rate != null) {
+			return amountRaw.multiply(BigDecimal.valueOf(rate));
+		}
+
+		// try interchange with trade aggregation data
+		// ex: MOBI -> BTC -> KRW
+		for(String ic : INTERCHANGE) {
+			if(!ic.equals(fromCode)) {
+				Double ic_rate = getClosePrice(fromCode, ic);
+				if(ic_rate != null) {
+					Double ic_rate2 = getExchangeRate(ic, toCode);
+					if(ic_rate2 != null) {
+						rate = ic_rate * ic_rate2;
+						break;
+					}
+				}
+			}
+		}
+
+		if(rate != null) {
+			return amountRaw.multiply(BigDecimal.valueOf(rate));
+		}
+
+		throw new AssetConvertException(fromCode, toCode);
 	}
 
 	public double exchange(String fromCode, double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {

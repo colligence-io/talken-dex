@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -32,15 +33,23 @@ public class MiscController {
 	private TaskTransactionListService txListService;
 
 	@RequestMapping(value = RequestMappings.CONVERT_ASSET, method = RequestMethod.POST)
-	public DexResponse<Double> convert(@RequestBody AssetConvertRequest postBody) throws DexException {
+	public DexResponse<BigDecimal> convert(@RequestBody AssetConvertRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(assetConvertService.convert(postBody.getFrom(), postBody.getAmount(), postBody.getTo()));
+		BigDecimal amount = new BigDecimal(postBody.getAmount());
+		BigDecimal result = assetConvertService
+				.convert(postBody.getFrom(), amount, postBody.getTo())
+				.setScale(7, BigDecimal.ROUND_UP);
+		return DexResponse.buildResponse(result);
 	}
 
 	@RequestMapping(value = RequestMappings.EXCHANGE_ASSET, method = RequestMethod.POST)
-	public DexResponse<Double> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException {
+	public DexResponse<BigDecimal> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(assetConvertService.exchange(postBody.getFrom(), postBody.getAmount(), postBody.getTo()));
+		BigDecimal amount = new BigDecimal(postBody.getAmount());
+		BigDecimal result = assetConvertService
+				.exchange(postBody.getFrom(), amount, postBody.getTo())
+				.setScale(7, BigDecimal.ROUND_UP);
+		return DexResponse.buildResponse(result);
 	}
 
 	@AuthRequired
