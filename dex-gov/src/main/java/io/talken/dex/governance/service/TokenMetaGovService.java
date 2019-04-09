@@ -139,13 +139,24 @@ public class TokenMetaGovService {
 				Long metaId = _tmh.getTmId();
 				if(!_tmhMap.containsKey(metaId))
 					_tmhMap.put(metaId, new ArrayList<>());
-				_tmhMap.get(metaId).add(_tmh.into(TokenMeta.HolderAccountInfo.class));
+
+				TokenMeta.HolderAccountInfo _tmhData = _tmh.into(TokenMeta.HolderAccountInfo.class);
+				_tmhData.setAddress(_tmhData.getAddress().trim());
+
+				_tmhMap.get(metaId).add(_tmhData);
 			}
 
 			// preload token_meta_id / managedInfo map
 			Map<Long, TokenMeta.ManagedInfo> _miMap = new HashMap<>();
 			for(TokenMetaManagedRecord _tmi : dslContext.selectFrom(TOKEN_META_MANAGED).fetch()) {
-				_miMap.put(_tmi.getTmId(), _tmi.into(TokenMeta.ManagedInfo.class));
+
+				TokenMeta.ManagedInfo _miData = _tmi.into(TokenMeta.ManagedInfo.class);
+				_miData.setIssueraddress(_miData.getIssueraddress().trim());
+				_miData.setBaseaddress(_miData.getBaseaddress());
+				_miData.setOfferfeeholderaddress(_miData.getOfferfeeholderaddress().trim());
+				_miData.setDeancfeeholderaddress(_miData.getDeancfeeholderaddress().trim());
+
+				_miMap.put(_tmi.getTmId(), _miData);
 			}
 
 			// preload token_meta_id / token_exchange_rate map
@@ -179,7 +190,7 @@ public class TokenMetaGovService {
 						data = _aux.getDataD();
 						break;
 					case STRING:
-						data = _aux.getDataS();
+						data = (_aux.getDataS() != null) ? _aux.getDataS().trim() : "";
 						break;
 					case INT:
 						data = _aux.getDataI();
