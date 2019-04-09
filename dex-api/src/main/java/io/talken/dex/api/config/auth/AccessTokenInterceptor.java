@@ -1,13 +1,13 @@
 package io.talken.dex.api.config.auth;
 
-import io.talken.common.persistence.jooq.tables.pojos.User;
-import io.talken.common.util.JwtUtil;
-import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.ApiSettings;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import io.talken.common.persistence.jooq.tables.pojos.User;
+import io.talken.common.service.JWTService;
+import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.api.ApiSettings;
 import io.talken.dex.shared.exception.auth.AccessTokenNotFoundException;
 import io.talken.dex.shared.exception.auth.AccessTokenValidationException;
 import io.talken.dex.shared.exception.auth.AuthenticationException;
@@ -35,7 +35,8 @@ public class AccessTokenInterceptor implements HandlerInterceptor {
 	@Autowired
 	private AuthInfo authInfo;
 
-	private JwtUtil jwtUtil;
+	@Autowired
+	private JWTService jwtService;
 
 	private static String tokenHeader;
 
@@ -48,7 +49,7 @@ public class AccessTokenInterceptor implements HandlerInterceptor {
 	@PostConstruct
 	private void init() {
 		tokenHeader = apiSettings.getAccessToken().getTokenHeader();
-		jwtUtil = new JwtUtil(apiSettings.getAccessToken().getJwtSecret(), apiSettings.getAccessToken().getJwtExpiration());
+//		jwtService = new JwtUtil(apiSettings.getAccessToken().getJwtSecret(), apiSettings.getAccessToken().getJwtExpiration());
 	}
 
 	@Override
@@ -59,7 +60,7 @@ public class AccessTokenInterceptor implements HandlerInterceptor {
 				throw new AccessTokenNotFoundException();
 			} else {
 				try {
-					Long userId = (fixedUserId != null) ? fixedUserId : jwtUtil.getUserIdFromJWT(token);
+					Long userId = (fixedUserId != null) ? fixedUserId : jwtService.getUserIdFromJWT(token);
 					loadUserInfo(userId);
 				} catch(SignatureException ex) {
 					// Invalid JWT signature
