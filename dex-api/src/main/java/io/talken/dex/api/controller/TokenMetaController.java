@@ -17,20 +17,20 @@ public class TokenMetaController {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaController.class);
 
 	@Autowired
-	private TokenMetaService maService;
+	private TokenMetaService tmService;
 
 	@RequestMapping(value = RequestMappings.TMS_MI_LIST, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable> managedInfoList() throws DexException {
-		return DexResponse.buildResponse(maService.getManagedInfoList());
+		return DexResponse.buildResponse(tmService.getManagedInfoList());
 	}
 
 	@RequestMapping(value = RequestMappings.TMS_TM_INFO, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable.Meta> tokenMeta(@PathVariable @NotEmpty String symbol) throws DexException {
-		return DexResponse.buildResponse(maService.getTokenMeta(symbol));
+		return DexResponse.buildResponse(tmService.getTokenMeta(symbol));
 	}
 
 	@RequestMapping(value = RequestMappings.TMS_TM_LIST, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable> tokenMetaList() throws DexException {
-		return DexResponse.buildResponse(maService.getTokenMetaList());
+		return DexResponse.buildResponse(tmService.getTokenMetaList());
 	}
 }

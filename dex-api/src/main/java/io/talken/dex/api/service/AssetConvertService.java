@@ -25,8 +25,6 @@ public class AssetConvertService {
 	private static final String[] INTERCHANGE = new String[]{"BTC", "ETH", "XLM", "CTX"};
 
 	public long convertRaw(Asset fromType, long amountRaw, Asset toType) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
-		tmService.checkAndReload();
-
 		final String from = StellarConverter.toAssetCode(fromType);
 		final String to = StellarConverter.toAssetCode(toType);
 
@@ -70,8 +68,6 @@ public class AssetConvertService {
 	}
 
 	private BigDecimal convertBigDecimal(Asset fromType, BigDecimal amountRaw, Asset toType) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
-		tmService.checkAndReload();
-
 		final String from = StellarConverter.toAssetCode(fromType);
 		final String to = StellarConverter.toAssetCode(toType);
 
@@ -111,8 +107,6 @@ public class AssetConvertService {
 	}
 
 	private BigDecimal exchangeRawToFiat(String fromCode, BigDecimal amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
-		tmService.checkAndReload();
-
 		// exchange to fiat
 		if(!toCode.equalsIgnoreCase("USD") && !toCode.equalsIgnoreCase("KRW")) {
 			throw new AssetConvertException(fromCode, toCode);

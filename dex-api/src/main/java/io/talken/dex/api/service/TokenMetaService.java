@@ -11,6 +11,7 @@ import io.talken.dex.shared.exception.TokenMetaLoadException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.Asset;
 import org.stellar.sdk.KeyPair;
@@ -36,7 +37,8 @@ public class TokenMetaService {
 		checkAndReload();
 	}
 
-	public void checkAndReload() throws TokenMetaLoadException {
+	@Scheduled(fixedDelay = 1000)
+	private void checkAndReload() throws TokenMetaLoadException {
 		try {
 			boolean reload = false;
 			if(tmTable == null || loadTimestamp == null) reload = true;
