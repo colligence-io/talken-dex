@@ -14,24 +14,28 @@ public class StellarConverter {
 
 	private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX");
 
+	private static BigDecimal scale(BigDecimal bd) {
+		return bd.setScale(7, BigDecimal.ROUND_UP);
+	}
+
 	public static long actualToRaw(double value) {
-		return actualToRaw(new BigDecimal(value));
+		return actualToRaw(scale(new BigDecimal(Double.toString(value))));
 	}
 
 	public static long actualToRaw(BigDecimal value) {
-		return value.multiply(multiplierBD).longValue();
+		return scale(value).multiply(multiplierBD).longValue();
 	}
 
 	public static String actualToString(double value) {
-		return actualToString(new BigDecimal(value));
+		return actualToString(scale(new BigDecimal(Double.toString(value))));
 	}
 
 	public static String actualToString(BigDecimal value) {
-		return value.setScale(7, BigDecimal.ROUND_UP).toString();//String.format("%.7f", value);
+		return scale(value).toString();
 	}
 
 	public static BigDecimal rawToActual(long value) {
-		return new BigDecimal(value).divide(multiplierBD, BigDecimal.ROUND_UP);
+		return scale(new BigDecimal(value)).divide(multiplierBD, BigDecimal.ROUND_UP);
 	}
 
 	public static String rawToActualString(long value) {
