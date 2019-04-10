@@ -24,7 +24,7 @@ public class AssetConvertService {
 	// interchange assets, in order
 	private static final String[] INTERCHANGE = new String[]{"BTC", "ETH", "XLM", "CTX"};
 
-	public BigDecimal convert(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+	public BigDecimal convert(String fromCode, Double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
 		return StellarConverter.rawToActual(convertRaw(fromCode, StellarConverter.actualToRaw(amount), toCode));
 	}
 
@@ -67,7 +67,7 @@ public class AssetConvertService {
 		throw new AssetConvertException(from, to);
 	}
 
-	public BigDecimal exchange(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+	public BigDecimal exchange(String fromCode, Double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
 		return StellarConverter.rawToActual(exchangeRawToFiat(fromCode, StellarConverter.actualToRaw(amount), toCode));
 	}
 

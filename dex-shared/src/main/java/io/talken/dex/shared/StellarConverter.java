@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter;
 public class StellarConverter {
 
 	private static final double multiplier = 10000000;
-	private static final BigDecimal multiplierBD = BigDecimal.valueOf(10000000);
+	private static final BigDecimal multiplierBD = BigDecimal.valueOf(multiplier);
 
 	private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX");
 
@@ -18,8 +18,12 @@ public class StellarConverter {
 		return bd.setScale(7, BigDecimal.ROUND_UP);
 	}
 
+	public static BigDecimal doubleToActual(double value) {
+		return scale(new BigDecimal(Double.toString(value)));
+	}
+
 	public static long actualToRaw(double value) {
-		return actualToRaw(scale(new BigDecimal(Double.toString(value))));
+		return actualToRaw(doubleToActual(value));
 	}
 
 	public static long actualToRaw(BigDecimal value) {
@@ -27,7 +31,7 @@ public class StellarConverter {
 	}
 
 	public static String actualToString(double value) {
-		return actualToString(scale(new BigDecimal(Double.toString(value))));
+		return actualToString(doubleToActual(value));
 	}
 
 	public static String actualToString(BigDecimal value) {
