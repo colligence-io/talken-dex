@@ -64,8 +64,8 @@ public class OfferService {
 		taskRecord.setIspassive(false);
 		taskRecord.setSourceaccount(sourceAccountId);
 		taskRecord.setSellassetcode(sellAssetCode);
-		taskRecord.setSellrequestedamountraw(StellarConverter.doubleToRaw(sellAssetAmount));
-		taskRecord.setSellpriceraw(StellarConverter.doubleToRaw(sellAssetPrice));
+		taskRecord.setSellrequestedamountraw(StellarConverter.actualToRaw(sellAssetAmount));
+		taskRecord.setSellpriceraw(StellarConverter.actualToRaw(sellAssetPrice));
 		taskRecord.setBuyassetcode(buyAssetCode);
 		taskRecord.setFeebyctx(feeByCtx);
 
@@ -78,7 +78,7 @@ public class OfferService {
 		// calculate fee
 		FeeCalculationService.Fee fee;
 		try {
-			fee = feeCalculationService.calculateOfferFee(sellAssetCode, StellarConverter.doubleToRaw(sellAssetAmount), feeByCtx);
+			fee = feeCalculationService.calculateOfferFee(sellAssetCode, StellarConverter.actualToRaw(sellAssetAmount), feeByCtx);
 		} catch(TokenMetaLoadException ex) {
 			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
 
@@ -113,7 +113,7 @@ public class OfferService {
 				// build fee operation
 				txBuilder.addOperation(
 						new PaymentOperation
-								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), StellarConverter.rawToDoubleString(fee.getFeeAmountRaw()))
+								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), StellarConverter.rawToActualString(fee.getFeeAmountRaw()))
 								.build()
 				);
 			}
@@ -121,7 +121,7 @@ public class OfferService {
 			// build manage offer operation
 			txBuilder.addOperation(
 					new ManageOfferOperation
-							.Builder(fee.getSellAssetType(), buyAssetType, StellarConverter.rawToDoubleString(fee.getSellAmountRaw()), StellarConverter.doubleToString(sellAssetPrice)).setOfferId(0)
+							.Builder(fee.getSellAssetType(), buyAssetType, StellarConverter.rawToActualString(fee.getSellAmountRaw()), StellarConverter.actualToString(sellAssetPrice)).setOfferId(0)
 							.build()
 			);
 
@@ -181,11 +181,11 @@ public class OfferService {
 		result.setTaskId(dexTaskId.getId());
 		result.setTransId(taskRecord.getRlyTransid());
 		result.setSellAssetCode(taskRecord.getSellassetcode());
-		result.setSellAmount(StellarConverter.rawToDouble(taskRecord.getSellamountraw()));
-		result.setSellPrice(StellarConverter.rawToDouble(taskRecord.getSellpriceraw()));
+		result.setSellAmount(StellarConverter.rawToActual(taskRecord.getSellamountraw()).doubleValue());
+		result.setSellPrice(StellarConverter.rawToActual(taskRecord.getSellpriceraw()).doubleValue());
 		result.setBuyAssetCode(taskRecord.getBuyassetcode());
 		result.setFeeAssetCode(taskRecord.getFeeassetcode());
-		result.setFeeAmount(StellarConverter.rawToDouble(taskRecord.getFeeamountraw()));
+		result.setFeeAmount(StellarConverter.rawToActual(taskRecord.getFeeamountraw()).doubleValue());
 		return result;
 	}
 
@@ -221,7 +221,7 @@ public class OfferService {
 		taskRecord.setOfferid(offerId);
 		taskRecord.setSellassetcode(sellAssetCode);
 		taskRecord.setBuyassetcode(buyAssetCode);
-		taskRecord.setSellpriceraw(StellarConverter.doubleToRaw(sellAssetPrice));
+		taskRecord.setSellpriceraw(StellarConverter.actualToRaw(sellAssetPrice));
 		dslContext.attach(taskRecord);
 		taskRecord.store();
 
@@ -260,7 +260,7 @@ public class OfferService {
 			// build manage offer operation
 			txBuilder.addOperation(
 					new ManageOfferOperation
-							.Builder(sellAssetType, buyAssetType, "0", StellarConverter.doubleToString(sellAssetPrice))
+							.Builder(sellAssetType, buyAssetType, "0", StellarConverter.actualToString(sellAssetPrice))
 							.setOfferId(offerId)
 							.build()
 			);
@@ -318,8 +318,8 @@ public class OfferService {
 		result.setTransId(taskRecord.getRlyTransid());
 		result.setOfferId(taskRecord.getOfferid());
 		result.setSellAssetCode(taskRecord.getSellassetcode());
-		result.setSellAmount(StellarConverter.rawToDouble(taskRecord.getSellpriceraw()));
-		result.setSellPrice(StellarConverter.rawToDouble(taskRecord.getSellpriceraw()));
+		result.setSellAmount(StellarConverter.rawToActual(taskRecord.getSellpriceraw()).doubleValue());
+		result.setSellPrice(StellarConverter.rawToActual(taskRecord.getSellpriceraw()).doubleValue());
 		return result;
 	}
 

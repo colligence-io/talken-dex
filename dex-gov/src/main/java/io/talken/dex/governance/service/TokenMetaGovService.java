@@ -407,7 +407,7 @@ public class TokenMetaGovService {
 						.addOperation(
 								new ChangeTrustOperation.Builder(
 										target.getAssetType(),
-										String.valueOf(StellarConverter.rawToDoubleString(Long.MAX_VALUE))
+										String.valueOf(StellarConverter.rawToActualString(Long.MAX_VALUE))
 								).build()
 						)
 						.build();

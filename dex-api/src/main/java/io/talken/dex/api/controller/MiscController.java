@@ -35,9 +35,8 @@ public class MiscController {
 	@RequestMapping(value = RequestMappings.CONVERT_ASSET, method = RequestMethod.POST)
 	public DexResponse<BigDecimal> convert(@RequestBody AssetConvertRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		BigDecimal amount = new BigDecimal(postBody.getAmount());
 		BigDecimal result = assetConvertService
-				.convert(postBody.getFrom(), amount, postBody.getTo())
+				.convert(postBody.getFrom(), new BigDecimal(postBody.getAmount()), postBody.getTo())
 				.setScale(7, BigDecimal.ROUND_UP);
 		return DexResponse.buildResponse(result);
 	}
@@ -45,9 +44,8 @@ public class MiscController {
 	@RequestMapping(value = RequestMappings.EXCHANGE_ASSET, method = RequestMethod.POST)
 	public DexResponse<BigDecimal> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
-		BigDecimal amount = new BigDecimal(postBody.getAmount());
 		BigDecimal result = assetConvertService
-				.exchange(postBody.getFrom(), amount, postBody.getTo())
+				.exchange(postBody.getFrom(),  new BigDecimal(postBody.getAmount()), postBody.getTo())
 				.setScale(7, BigDecimal.ROUND_UP);
 		return DexResponse.buildResponse(result);
 	}

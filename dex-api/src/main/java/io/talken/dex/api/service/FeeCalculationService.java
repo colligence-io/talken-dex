@@ -37,7 +37,7 @@ public class FeeCalculationService {
 	@PostConstruct
 	private void init() throws TokenMetaDataNotFoundException {
 		deanchorPivotAssetType = maService.getAssetType(apiSettings.getFee().getDeanchorFeePivotAsset());
-		deanchorPivotAmountRaw = StellarConverter.doubleToRaw(apiSettings.getFee().getDeanchorFeeAmount());
+		deanchorPivotAmountRaw = StellarConverter.actualToRaw(apiSettings.getFee().getDeanchorFeeAmount());
 	}
 
 	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaDataNotFoundException, AssetConvertException, TokenMetaLoadException {

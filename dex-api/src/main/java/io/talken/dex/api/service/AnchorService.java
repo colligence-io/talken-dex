@@ -76,7 +76,7 @@ public class AnchorService {
 		taskRecord.setTradeaddr(tradeWalletAddress);
 		taskRecord.setHolderaddr(assetHolderAddress);
 		taskRecord.setAssetcode(assetCode);
-		taskRecord.setAmountraw(StellarConverter.doubleToRaw(amount));
+		taskRecord.setAmountraw(StellarConverter.actualToRaw(amount));
 
 		dslContext.attach(taskRecord);
 		taskRecord.store();
@@ -160,7 +160,7 @@ public class AnchorService {
 		result.setHolderAccountAddress(assetHolderAddress);
 		result.setTransId(taskRecord.getRlyTransid());
 		result.setAssetCode(taskRecord.getAssetcode());
-		result.setAmount(StellarConverter.rawToDouble(taskRecord.getAmountraw()));
+		result.setAmount(StellarConverter.rawToActual(taskRecord.getAmountraw()).doubleValue());
 		return result;
 	}
 
@@ -195,7 +195,7 @@ public class AnchorService {
 		taskRecord.setPrivateaddr(privateWalletAddress);
 		taskRecord.setTradeaddr(tradeWalletAddress);
 		taskRecord.setAssetcode(assetCode);
-		taskRecord.setAmountraw(StellarConverter.doubleToRaw(amount));
+		taskRecord.setAmountraw(StellarConverter.actualToRaw(amount));
 		taskRecord.setFeebyctx(feeByCtx);
 
 		dslContext.attach(taskRecord);
@@ -206,7 +206,7 @@ public class AnchorService {
 		// calculate fee
 		FeeCalculationService.Fee fee;
 		try {
-			fee = feeCalculationService.calculateDeanchorFee(assetCode, StellarConverter.doubleToRaw(amount), feeByCtx);
+			fee = feeCalculationService.calculateDeanchorFee(assetCode, StellarConverter.actualToRaw(amount), feeByCtx);
 		} catch(TokenMetaLoadException ex) {
 			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
 
@@ -240,7 +240,7 @@ public class AnchorService {
 			if(fee.getFeeAmountRaw() > 0) {
 				txBuilder.addOperation(
 						new PaymentOperation
-								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), StellarConverter.rawToDoubleString(fee.getFeeAmountRaw()))
+								.Builder(fee.getFeeCollectorAccount(), fee.getFeeAssetType(), StellarConverter.rawToActualString(fee.getFeeAmountRaw()))
 								.build()
 				);
 			}
@@ -248,7 +248,7 @@ public class AnchorService {
 			// build deanchor operation
 			txBuilder.addOperation(
 					new PaymentOperation
-							.Builder(baseAccount, fee.getSellAssetType(), StellarConverter.rawToDoubleString(fee.getSellAmountRaw()))
+							.Builder(baseAccount, fee.getSellAssetType(), StellarConverter.rawToActualString(fee.getSellAmountRaw()))
 							.build()
 			);
 
@@ -288,7 +288,7 @@ public class AnchorService {
 		ancRequest.setFrom(taskRecord.getTradeaddr());
 		ancRequest.setTo(taskRecord.getBaseaccount());
 		ancRequest.setAddress(taskRecord.getPrivateaddr());
-		ancRequest.setValue(StellarConverter.rawToDouble(taskRecord.getDeanchoramountraw()));
+		ancRequest.setValue(StellarConverter.rawToActual(taskRecord.getDeanchoramountraw()).doubleValue());
 		ancRequest.setMemo(UTCUtil.getNow().toString());
 
 		APIResult<AncServerDeanchorResponse> deanchorResult = anchorServerService.requestDeanchor(ancRequest);
@@ -339,9 +339,9 @@ public class AnchorService {
 		result.setTaskId(dexTaskId.getId());
 		result.setTransId(taskRecord.getRlyTransid());
 		result.setFeeAssetCode(taskRecord.getFeeassettype());
-		result.setFeeAmount(StellarConverter.rawToDouble(taskRecord.getFeeamountraw()));
+		result.setFeeAmount(StellarConverter.rawToActual(taskRecord.getFeeamountraw()).doubleValue());
 		result.setDeanchorAssetCode(taskRecord.getAssetcode());
-		result.setDeanchorAmount(StellarConverter.rawToDouble(taskRecord.getDeanchoramountraw()));
+		result.setDeanchorAmount(StellarConverter.rawToActual(taskRecord.getDeanchoramountraw()).doubleValue());
 		return result;
 	}
 

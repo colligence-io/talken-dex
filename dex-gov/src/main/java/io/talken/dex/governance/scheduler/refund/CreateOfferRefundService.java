@@ -144,7 +144,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 					.addMemo(Memo.text(taskId.getId()))
 					.addOperation(
 							new PaymentOperation
-									.Builder(destination, assetType, StellarConverter.rawToDoubleString(taskInfo.getRefundamountraw()))
+									.Builder(destination, assetType, StellarConverter.rawToActualString(taskInfo.getRefundamountraw()))
 									.build()
 					).build();
 
@@ -165,7 +165,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 				logRecord.setSuccessFlag(true);
 				logRecord.setTxResulthash(txResponse.getHash());
 				logRecord.setTxResultxdr(txResponse.getResultXdr());
-				logger.info("Offer fee refund success for {} : trial = {}, {} to {} amount = {} {}", taskId.getId(), logRecord.getTrialno(), taskInfo.getFeecollectaccount(), taskInfo.getRefundaccount(), StellarConverter.rawToDoubleString(taskInfo.getRefundamountraw()), taskInfo.getRefundassetcode());
+				logger.info("Offer fee refund success for {} : trial = {}, {} to {} amount = {} {}", taskId.getId(), logRecord.getTrialno(), taskInfo.getFeecollectaccount(), taskInfo.getRefundaccount(), StellarConverter.rawToActualString(taskInfo.getRefundamountraw()), taskInfo.getRefundassetcode());
 			} else {
 				SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
 				logRecord.setSuccessFlag(false);
