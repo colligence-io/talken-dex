@@ -129,6 +129,13 @@ public class AnchorService {
 			throw new InternalServerErrorException(e);
 		}
 
+		// set trans description
+		encData.addDescription("privateWalletAddress", taskRecord.getPrivateaddr());
+		encData.addDescription("tradeWalletAddress", taskRecord.getTradeaddr());
+		encData.addDescription("assetHolderAddress", taskRecord.getHolderaddr());
+		encData.addDescription("assetCode", taskRecord.getAssetcode());
+		encData.addDescription("amount", StellarConverter.rawToActualString(taskRecord.getAmountraw()));
+
 		// send relay addContents request
 		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.ANCHOR, userId, dexTaskId, encData);
 
@@ -309,6 +316,15 @@ public class AnchorService {
 		taskRecord.setAncIndex(deanchorResult.getData().getData().getIndex());
 		taskRecord.update();
 
+
+		// set trans description
+		encData.addDescription("privateWalletAddress", taskRecord.getPrivateaddr());
+		encData.addDescription("tradeWalletAddress", taskRecord.getTradeaddr());
+		encData.addDescription("baseAccountAddress", taskRecord.getBaseaccount());
+		encData.addDescription("assetCode", taskRecord.getAssetcode());
+		encData.addDescription("amount", StellarConverter.rawToActualString(taskRecord.getAmountraw()));
+		encData.addDescription("feeAssetCode", taskRecord.getFeeassettype());
+		encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
 
 		// send relay addContents request
 		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DEANCHOR, userId, dexTaskId, encData);

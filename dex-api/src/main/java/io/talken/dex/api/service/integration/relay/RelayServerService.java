@@ -23,6 +23,7 @@ import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -65,6 +66,10 @@ public class RelayServerService {
 		contents.put("taskId", dexTaskId.getId());
 		contents.put("data", encData.getEncrypted());
 
+		for(Map.Entry<String, String> _dkv : encData.getDescription().entrySet()) {
+			contents.put("d_" + _dkv.getKey(), _dkv.getValue());
+		}
+
 		apolloClient.mutate(
 				RelayAddContentsMutation.builder()
 						.msgType(msgType.getMsgType())
@@ -78,12 +83,12 @@ public class RelayServerService {
 			@Override
 			public void onResponse(@NotNull Response<RelayAddContentsMutation.Data> response) {
 				APIResult<RelayAddContentsResponse> apiResult = new APIResult<>("RelayAddContents");
-				if (response.hasErrors()) {
+				if(response.hasErrors()) {
 					StringBuilder sb = new StringBuilder();
-					for (Error error : response.errors()) sb.append(error.message()).append("\n");
+					for(Error error : response.errors()) sb.append(error.message()).append("\n");
 					apiResult.setError("RelayError", sb.toString());
 				} else {
-					if (response.data() != null) {
+					if(response.data() != null) {
 						try {
 							RelayAddContentsResponse result = new RelayAddContentsResponse();
 							result.setTransId(response.data().addContents().transId());
@@ -92,7 +97,7 @@ public class RelayServerService {
 							result.setEndDt(response.data().addContents().endDt());
 							apiResult.setSuccess(true);
 							apiResult.setData(result);
-						} catch (Exception ex) {
+						} catch(Exception ex) {
 							apiResult.setException(ex);
 						}
 					} else {
@@ -116,7 +121,7 @@ public class RelayServerService {
 		try {
 			// FIXME : set timeout for get
 			relayAddContentsResponseAPIResult = completableFuture.get();
-		} catch (Exception e) {
+		} catch(Exception e) {
 			relayAddContentsResponseAPIResult = new APIResult<>("RelayAddContents");
 			relayAddContentsResponseAPIResult.setException(e);
 		}

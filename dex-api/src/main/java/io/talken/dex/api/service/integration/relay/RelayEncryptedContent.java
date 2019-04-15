@@ -9,14 +9,18 @@ import io.talken.common.util.RandomStringGenerator;
 import javax.crypto.KeyGenerator;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RelayEncryptedContent<T> {
 	private T data;
 	private String key;
 	private String encrypted;
+	private Map<String, String> description;
 
 	public RelayEncryptedContent(T data) throws JsonProcessingException, GeneralSecurityException {
 		this.data = data;
+		this.description = new HashMap<>();
 		encrypt();
 	}
 
@@ -36,11 +40,19 @@ public class RelayEncryptedContent<T> {
 		return data;
 	}
 
+	public void addDescription(String key, String value) {
+		this.description.put(key, value);
+	}
+
 	public String getKey() {
 		return key;
 	}
 
 	public String getEncrypted() {
 		return encrypted;
+	}
+
+	public Map<String, String> getDescription() {
+		return this.description;
 	}
 }

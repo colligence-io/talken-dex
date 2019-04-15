@@ -151,6 +151,14 @@ public class OfferService {
 			throw new StellarException(ex);
 		}
 
+		// set trans description
+		encData.addDescription("tradeWalletAddress", taskRecord.getSourceaccount());
+		encData.addDescription("sellAssetCode", taskRecord.getSellassetcode());
+		encData.addDescription("sellPrice", StellarConverter.rawToActualString(taskRecord.getSellpriceraw()));
+		encData.addDescription("sellAmount", StellarConverter.rawToActualString(taskRecord.getSellamountraw()));
+		encData.addDescription("buyAssetCode", taskRecord.getBuyassetcode());
+		encData.addDescription("feeAssetCode", taskRecord.getFeeassetcode());
+		encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
 
 		// send relay addContents request
 		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.CREATEOFFER, userId, dexTaskId, encData);
@@ -287,6 +295,12 @@ public class OfferService {
 			throw new StellarException(ex);
 		}
 
+		// set trans description
+		encData.addDescription("tradeWalletAddress", taskRecord.getSourceaccount());
+		encData.addDescription("offerId", Long.toString(taskRecord.getOfferid()));
+		encData.addDescription("sellAssetCode", taskRecord.getSellassetcode());
+		encData.addDescription("buyAssetCode", StellarConverter.rawToActualString(taskRecord.getSellpriceraw()));
+		encData.addDescription("sellPrice", StellarConverter.rawToActualString(taskRecord.getSellpriceraw()));
 
 		// send relay addContents request
 		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DELETEOFFER, userId, dexTaskId, encData);
