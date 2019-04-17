@@ -4,6 +4,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.ApiSettings;
 import io.talken.dex.shared.StellarConverter;
 import io.talken.dex.shared.exception.AssetConvertException;
+import io.talken.dex.shared.exception.NotEnoughBalanceException;
 import io.talken.dex.shared.exception.TokenMetaDataNotFoundException;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
 import lombok.Getter;
@@ -40,7 +41,7 @@ public class FeeCalculationService {
 		deanchorPivotAmountRaw = StellarConverter.actualToRaw(apiSettings.getFee().getDeanchorFeeAmount());
 	}
 
-	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaDataNotFoundException, AssetConvertException, TokenMetaLoadException {
+	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaDataNotFoundException, AssetConvertException, TokenMetaLoadException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);
@@ -67,10 +68,14 @@ public class FeeCalculationService {
 				fee.sellAmountRaw = amountRaw - fee.feeAmountRaw;
 			}
 		}
+
+		if(fee.sellAmountRaw <= 0)
+			throw new NotEnoughBalanceException(fee.feeAssetType.getType(), StellarConverter.rawToActualString(fee.feeAmountRaw));
+
 		return fee;
 	}
 
-	public Fee calculateDeanchorFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaDataNotFoundException, AssetConvertException, TokenMetaLoadException {
+	public Fee calculateDeanchorFee(String assetCode, long amountRaw, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaDataNotFoundException, AssetConvertException, TokenMetaLoadException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);
@@ -97,6 +102,10 @@ public class FeeCalculationService {
 				fee.sellAmountRaw = amountRaw - fee.feeAmountRaw;
 			}
 		}
+
+		if(fee.sellAmountRaw <= 0)
+			throw new NotEnoughBalanceException(fee.feeAssetType.getType(), StellarConverter.rawToActualString(fee.feeAmountRaw));
+
 		return fee;
 	}
 
