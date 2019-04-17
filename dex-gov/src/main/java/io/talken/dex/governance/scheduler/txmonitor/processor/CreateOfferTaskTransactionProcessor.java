@@ -42,15 +42,27 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 
 	@Override
 	public TaskTransactionProcessResult process(Long txmId, TaskTransactionResponse taskTxResponse) {
+		DexTaskCreateofferRecord createTaskRecord;
+		try {
+			Optional<DexTaskCreateofferRecord> opt_taskRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER).where(DEX_TASK_CREATEOFFER.TASKID.eq(taskTxResponse.getTaskId().getId())).fetchOptional();
+
+			if(!opt_taskRecord.isPresent())
+				throw new TaskTransactionProcessError("TaskIdNotFound");
+
+			createTaskRecord = opt_taskRecord.get();
+
+			// update task as signed tx catched
+			createTaskRecord.setSignedTxCatchFlag(true);
+			createTaskRecord.update();
+		} catch(TaskTransactionProcessError error) {
+			return TaskTransactionProcessResult.error(error);
+		} catch(Exception ex) {
+			return TaskTransactionProcessResult.error("Processing", ex);
+		}
+
+		// check tx integrity and create refund task queue
 		try {
 			TransactionBlockExecutor.of(txMgr).transactional(() -> {
-				Optional<DexTaskCreateofferRecord> opt_createTaskRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER).where(DEX_TASK_CREATEOFFER.TASKID.eq(taskTxResponse.getTaskId().getId())).fetchOptional();
-
-				if(!opt_createTaskRecord.isPresent())
-					throw new TaskTransactionProcessError("TaskIdNotFound");
-
-				DexTaskCreateofferRecord createTaskRecord = opt_createTaskRecord.get();
-
 				// TODO : is this always right? same result? even when operation order mismatch?
 				byte[] createBytes = Base64.getDecoder().decode(createTaskRecord.getTxXdr());
 				byte[] resultBytes = Base64.getDecoder().decode(taskTxResponse.getResponse().getEnvelopeXdr());
