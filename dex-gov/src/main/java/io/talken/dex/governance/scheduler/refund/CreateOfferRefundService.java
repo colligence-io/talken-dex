@@ -1,6 +1,6 @@
 package io.talken.dex.governance.scheduler.refund;
 
-import io.talken.common.persistence.jooq.tables.records.DexTaskRefundcreateofferfeeTxlogRecord;
+import io.talken.common.persistence.jooq.tables.records.DexTaskRefundcreateofferfeeRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.dex.governance.GovSettings;
@@ -33,7 +33,9 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_REFUNDCREATEOFFERFEE;
-import static io.talken.common.persistence.jooq.Tables.DEX_TASK_REFUNDCREATEOFFERFEE_TXLOG;
+import static io.talken.common.persistence.jooq.Tables.DEX_TQUEUE_REFUNDCREATEOFFERFEE;
+
+//
 
 @Service
 @Scope("singleton")
@@ -85,13 +87,13 @@ where (rt.checked_flag is null or rt.checked_flag = false)
   and (lastLog.success_flag is null or lastLog.success_flag = false)
 		 */
 
-		Field<Integer> partitionizedRownum = DSL.rowNumber().over().partitionBy(DEX_TASK_REFUNDCREATEOFFERFEE_TXLOG.TASKID).orderBy(DEX_TASK_REFUNDCREATEOFFERFEE_TXLOG.CREATE_TIMESTAMP.desc()).as("rn");
+		Field<Integer> partitionizedRownum = DSL.rowNumber().over().partitionBy(DEX_TASK_REFUNDCREATEOFFERFEE.TASKID).orderBy(DEX_TASK_REFUNDCREATEOFFERFEE.CREATE_TIMESTAMP.desc()).as("rn");
 
 		Table<Record> lastLog = dslContext
 				.select(DSL.asterisk())
 				.from(dslContext
 						.select(DSL.asterisk(), partitionizedRownum)
-						.from(DEX_TASK_REFUNDCREATEOFFERFEE_TXLOG)
+						.from(DEX_TASK_REFUNDCREATEOFFERFEE)
 				)
 				.where(partitionizedRownum.eq(1))
 				.asTable("lastLog");
@@ -99,10 +101,10 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 		Field<Boolean> success_flag_field = lastLog.field("success_flag", Boolean.class).as("success_flag");
 
 		List<RefundTask> taskList = dslContext
-				.select(DEX_TASK_REFUNDCREATEOFFERFEE.asterisk(), success_flag_field, lastLog.field("trialNo", Integer.class), lastLog.field("create_timestamp", LocalDateTime.class).as("logTime"))
-				.from(DEX_TASK_REFUNDCREATEOFFERFEE.leftOuterJoin(lastLog).on(DEX_TASK_REFUNDCREATEOFFERFEE.TASKID.eq(lastLog.field("taskId", String.class))))
+				.select(DEX_TQUEUE_REFUNDCREATEOFFERFEE.asterisk(), success_flag_field, lastLog.field("trialNo", Integer.class), lastLog.field("create_timestamp", LocalDateTime.class).as("logTime"))
+				.from(DEX_TQUEUE_REFUNDCREATEOFFERFEE.leftOuterJoin(lastLog).on(DEX_TQUEUE_REFUNDCREATEOFFERFEE.TASKID.eq(lastLog.field("taskId", String.class))))
 				.where(
-						(DEX_TASK_REFUNDCREATEOFFERFEE.CHECKED_FLAG.eq(false).or(DEX_TASK_REFUNDCREATEOFFERFEE.CHECKED_FLAG.isNull()))
+						(DEX_TQUEUE_REFUNDCREATEOFFERFEE.FINISHED_FLAG.eq(false).or(DEX_TQUEUE_REFUNDCREATEOFFERFEE.FINISHED_FLAG.isNull()))
 								.and(success_flag_field.eq(false).or(success_flag_field.isNull()))
 				).fetchInto(RefundTask.class);
 
@@ -118,7 +120,7 @@ where (rt.checked_flag is null or rt.checked_flag = false)
 	}
 
 	private void refund(RefundTask taskInfo) {
-		DexTaskRefundcreateofferfeeTxlogRecord logRecord = new DexTaskRefundcreateofferfeeTxlogRecord();
+		DexTaskRefundcreateofferfeeRecord logRecord = new DexTaskRefundcreateofferfeeRecord();
 		logRecord.setTaskid(taskInfo.getTaskid());
 		if(taskInfo.getTrialNo() == null) logRecord.setTrialno(0);
 		else logRecord.setTrialno(taskInfo.getTrialNo() + 1);

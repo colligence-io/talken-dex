@@ -69,8 +69,6 @@ public class AnchorService {
 		DexTaskAnchorRecord taskRecord = new DexTaskAnchorRecord();
 		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
-		taskRecord.setStep(1);
-		taskRecord.setFinishFlag(false);
 
 		taskRecord.setPrivateaddr(privateWalletAddress);
 		taskRecord.setTradeaddr(tradeWalletAddress);
