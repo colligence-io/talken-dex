@@ -2,7 +2,6 @@ package io.talken.dex.shared;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
-import io.talken.common.persistence.enums.LangTypeEnum;
 import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import lombok.Data;
