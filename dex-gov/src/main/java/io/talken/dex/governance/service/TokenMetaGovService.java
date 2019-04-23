@@ -2,7 +2,7 @@ package io.talken.dex.governance.service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.talken.common.persistence.enums.LangTypeEnum;
+import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.TokenMetaExrate;
 import io.talken.common.persistence.jooq.tables.records.*;
@@ -169,12 +169,12 @@ public class TokenMetaGovService {
 			}
 
 			// preload token_meta_id / token_info map
-			Map<Long, Map<LangTypeEnum, TokenMeta.EntryInfo>> _teMap = new HashMap<>();
+			Map<Long, Map<RegionEnum, TokenMeta.EntryInfo>> _teMap = new HashMap<>();
 			for(TokenEntryRecord _te : dslContext.selectFrom(TOKEN_ENTRY).fetch()) {
 				Long metaId = _te.getTmId();
 				if(!_teMap.containsKey(metaId))
 					_teMap.put(metaId, new HashMap<>());
-				_teMap.get(metaId).put(_te.getLangcode(), _te.into(TokenMeta.EntryInfo.class));
+				_teMap.get(metaId).put(_te.getRegion(), _te.into(TokenMeta.EntryInfo.class));
 			}
 
 			// preload token_meta_id / token_aux list map
@@ -229,8 +229,8 @@ public class TokenMetaGovService {
 				}
 
 				// build name map
-				Map<LangTypeEnum, String> nameMap = new HashMap<>();
-				for(LangTypeEnum _lt : LangTypeEnum.values()) {
+				Map<RegionEnum, String> nameMap = new HashMap<>();
+				for(RegionEnum _lt : RegionEnum.values()) {
 					if(_tm.getEntryInfo() != null && _tm.getEntryInfo().containsKey(_lt))
 						nameMap.put(_lt, _tm.getEntryInfo().get(_lt).getName());
 					else nameMap.put(_lt, _tm.getNamekey());

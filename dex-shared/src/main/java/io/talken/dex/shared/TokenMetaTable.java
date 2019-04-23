@@ -3,6 +3,7 @@ package io.talken.dex.shared;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.LangTypeEnum;
+import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,8 +43,8 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private String thumbnailUrl;
 		private Integer viewUnitExpn;
 		private Integer cmcId;
-		private Map<LangTypeEnum, String> name = new HashMap<>();
-		private Map<LangTypeEnum, EntryInfo> entryInfo;
+		private Map<RegionEnum, String> name = new HashMap<>();
+		private Map<RegionEnum, EntryInfo> entryInfo;
 		private Map<TokenMetaAuxCodeEnum, Object> aux;
 		private Map<String, Double> exchangeRate;
 		private ManagedInfo managedInfo = null;
@@ -54,10 +55,10 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 			return managedInfo != null;
 		}
 
-		public EntryInfo forEntry(LangTypeEnum lang) {
+		public EntryInfo forEntry(RegionEnum region) {
 			if(entryInfo == null) entryInfo = new HashMap<>();
-			if(!entryInfo.containsKey(lang)) entryInfo.put(lang, new EntryInfo());
-			return entryInfo.get(lang);
+			if(!entryInfo.containsKey(region)) entryInfo.put(region, new EntryInfo());
+			return entryInfo.get(region);
 		}
 	}
 

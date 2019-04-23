@@ -1,7 +1,7 @@
 package io.talken.dex.governance.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.talken.common.persistence.enums.LangTypeEnum;
+import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.TokenEntry;
 import io.talken.common.persistence.jooq.tables.pojos.TokenMetaManaged;
@@ -27,8 +27,8 @@ public class TokenMeta extends io.talken.common.persistence.jooq.tables.pojos.To
 		return getSymbol().toUpperCase();
 	}
 
-	private Map<LangTypeEnum, String> name;
-	private Map<LangTypeEnum, EntryInfo> entryInfo;
+	private Map<RegionEnum, String> name;
+	private Map<RegionEnum, EntryInfo> entryInfo;
 	private ManagedInfo managedInfo = null;
 	private Map<TokenMetaAuxCodeEnum, Object> aux;
 	private Map<String, Double> exchangeRate;
