@@ -1,11 +1,10 @@
 package io.talken.dex.api.service;
 
+import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.StellarConverter;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.AssetConvertException;
-import io.talken.dex.shared.exception.TokenMetaDataNotFoundException;
-import io.talken.dex.shared.exception.TokenMetaLoadException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -24,15 +23,15 @@ public class AssetConvertService {
 	// interchange assets, in order
 	private static final String[] INTERCHANGE = new String[]{"BTC", "ETH", "XLM", "CTX"};
 
-	public BigDecimal convert(String fromCode, Double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+	public BigDecimal convert(String fromCode, Double amount, String toCode) throws AssetConvertException, TokenMetaNotFoundException {
 		return StellarConverter.rawToActual(convertRaw(fromCode, StellarConverter.actualToRaw(amount), toCode));
 	}
 
-	public long convertRaw(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+	public long convertRaw(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaNotFoundException {
 		return convertRaw(tmService.getAssetType(fromCode), amountRaw, tmService.getAssetType(toCode));
 	}
 
-	public long convertRaw(Asset fromType, long amountRaw, Asset toType) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+	public long convertRaw(Asset fromType, long amountRaw, Asset toType) throws AssetConvertException, TokenMetaNotFoundException {
 		final String from = StellarConverter.toAssetCode(fromType);
 		final String to = StellarConverter.toAssetCode(toType);
 
@@ -67,11 +66,11 @@ public class AssetConvertService {
 		throw new AssetConvertException(from, to);
 	}
 
-	public BigDecimal exchange(String fromCode, Double amount, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+	public BigDecimal exchange(String fromCode, Double amount, String toCode) throws AssetConvertException, TokenMetaNotFoundException {
 		return StellarConverter.rawToActual(exchangeRawToFiat(fromCode, StellarConverter.actualToRaw(amount), toCode));
 	}
 
-	public long exchangeRawToFiat(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaDataNotFoundException, TokenMetaLoadException {
+	public long exchangeRawToFiat(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaNotFoundException {
 		// exchange to fiat
 		if(!toCode.equalsIgnoreCase("USD") && !toCode.equalsIgnoreCase("KRW")) {
 			throw new AssetConvertException(fromCode, toCode);
@@ -104,7 +103,7 @@ public class AssetConvertService {
 		throw new AssetConvertException(fromCode, toCode);
 	}
 
-	private Double getClosePrice(String base, String counter) throws TokenMetaDataNotFoundException {
+	private Double getClosePrice(String base, String counter) throws TokenMetaNotFoundException {
 		TokenMetaTable.Meta baseMeta = tmService.getTokenMeta(base);
 		if(baseMeta.getManagedInfo() == null) return null;
 		if(baseMeta.getManagedInfo().getMarketPair() == null) return null;
@@ -112,7 +111,7 @@ public class AssetConvertService {
 		return baseMeta.getManagedInfo().getMarketPair().get(counter).getPriceC();
 	}
 
-	private Double getExchangeRate(String base, String counter) throws TokenMetaDataNotFoundException {
+	private Double getExchangeRate(String base, String counter) throws TokenMetaNotFoundException {
 		TokenMetaTable.Meta baseMeta = tmService.getTokenMeta(base);
 		if(baseMeta.getExchangeRate() == null) return null;
 		return baseMeta.getExchangeRate().get(counter);

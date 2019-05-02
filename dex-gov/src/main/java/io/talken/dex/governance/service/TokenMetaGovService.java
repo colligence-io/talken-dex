@@ -2,6 +2,7 @@ package io.talken.dex.governance.service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.TokenMetaExrate;
@@ -16,7 +17,6 @@ import io.talken.common.util.collection.SingleKeyTable;
 import io.talken.dex.governance.service.integration.signer.SignServerService;
 import io.talken.dex.shared.StellarConverter;
 import io.talken.dex.shared.TokenMetaTable;
-import io.talken.dex.shared.exception.TokenMetaDataNotFoundException;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
 import io.talken.dex.shared.service.StellarNetworkService;
 import org.jooq.DSLContext;
@@ -57,6 +57,7 @@ public class TokenMetaGovService {
 	private static Long lastExchangeRateUpdatedTimestamp = null;
 	private static Long loadTimestamp;
 
+	private Map<Long, TokenMeta> tmIdMap = new HashMap<>();
 	private SingleKeyTable<String, TokenMeta> tmTable = new SingleKeyTable<>();
 	private SingleKeyTable<String, TokenMeta> miTable = new SingleKeyTable<>();
 
@@ -211,13 +212,13 @@ public class TokenMetaGovService {
 			}
 
 			// preload token_meta_id / token meta data map
-			Map<Long, TokenMeta> tmIdMap = new HashMap<>();
+			Map<Long, TokenMeta> newTmIdMap = new HashMap<>();
 			for(TokenMetaRecord _tmr : dslContext.selectFrom(TOKEN_META).fetch()) {
-				tmIdMap.put(_tmr.getId(), _tmr.into(TokenMeta.class));
+				newTmIdMap.put(_tmr.getId(), _tmr.into(TokenMeta.class));
 			}
 
 			// Composite TokenMeta
-			for(TokenMeta _tm : tmIdMap.values()) {
+			for(TokenMeta _tm : newTmIdMap.values()) {
 				Long metaId = _tm.getId();
 
 				if(_auxMap.containsKey(metaId)) {
@@ -267,7 +268,7 @@ public class TokenMetaGovService {
 
 				mi.setMarketPair(new HashMap<>());
 				for(TokenMeta.MarketPairInfo _mp : _tmpMap.get(_tmd.getId())) {
-					mi.getMarketPair().put(tmIdMap.get(_mp.getTmIdCounter()).getSymbol(), _mp);
+					mi.getMarketPair().put(newTmIdMap.get(_mp.getTmIdCounter()).getSymbol(), _mp);
 				}
 			}
 
@@ -280,6 +281,7 @@ public class TokenMetaGovService {
 				//throw new TokenMetaLoadException("Cannot verify token meta data");
 			}
 
+			tmIdMap = newTmIdMap;
 			tmTable = newTmTable;
 			miTable = newMiTable;
 			loadTimestamp = UTCUtil.getNowTimestamp_s();
@@ -439,40 +441,43 @@ public class TokenMetaGovService {
 		}
 	}
 
-	private TokenMeta.ManagedInfo getPack(String assetCode) throws TokenMetaDataNotFoundException {
+	public TokenMeta getMeta(String assetCode) throws TokenMetaNotFoundException {
 		return Optional.ofNullable(
-				Optional.ofNullable(
-						miTable.select(assetCode)
-				).orElseThrow(() -> new TokenMetaDataNotFoundException(assetCode))
-						.getManagedInfo())
-				.orElseThrow(() -> new TokenMetaDataNotFoundException(assetCode));
+				tmTable.select(assetCode)
+		).orElseThrow(() -> new TokenMetaNotFoundException(assetCode));
 	}
 
-	public Asset getAssetType(String code) throws TokenMetaDataNotFoundException {
-		return getPack(code).getAssetType();
+	public TokenMeta.ManagedInfo getManaged(String assetCode) throws TokenMetaNotFoundException {
+		return Optional.ofNullable(
+				miTable.select(assetCode).getManagedInfo()
+		).orElseThrow(() -> new TokenMetaNotFoundException(assetCode));
+	}
+
+	public TokenMeta getTokenMetaById(Long tm_id) throws TokenMetaNotFoundException {
+		return Optional.ofNullable(tmIdMap.get(tm_id)).orElseThrow(() -> new TokenMetaNotFoundException(Long.toString(tm_id)));
 	}
 //
 //	public KeyPair getOfferFeeHolderAccount(String code) throws TokenMetaNotFoundException {
-//		return getPack(code).getOfferFeeHolder();
+//		return getManaged(code).getOfferFeeHolder();
 //	}
 //
 //	public KeyPair getDeanchorFeeHolderAccount(String code) throws TokenMetaNotFoundException {
-//		return getPack(code).getDeanchorFeeHolder();
+//		return getManaged(code).getDeanchorFeeHolder();
 //	}
 //
 //	public KeyPair getBaseAccount(String code) throws TokenMetaNotFoundException {
-//		return getPack(code).getAssetBase();
+//		return getManaged(code).getAssetBase();
 //	}
 //
 //	public String getActiveHolderAccountAddress(String code) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException {
-//		Optional<TokenMeta.HolderAccountInfo> opt_aha = getPack(code).getAssetHolderAccounts().stream()
+//		Optional<TokenMeta.HolderAccountInfo> opt_aha = getManaged(code).getAssetHolderAccounts().stream()
 //				.filter(TokenMeta.HolderAccountInfo::getActiveFlag)
 //				.findAny();
 //		if (opt_aha.isPresent()) return opt_aha.get().getAddress();
 //		else {
 //			logger.warn("There is no active asset holder account for {}, use random hot account.", code);
 //
-//			Optional<TokenMeta.HolderAccountInfo> opt_ahh = getPack(code).getAssetHolderAccounts().stream()
+//			Optional<TokenMeta.HolderAccountInfo> opt_ahh = getManaged(code).getAssetHolderAccounts().stream()
 //					.filter(TokenMeta.HolderAccountInfo::getHotFlag)
 //					.findAny();
 //			if (opt_ahh.isPresent()) return opt_ahh.get().getAddress();
@@ -482,7 +487,7 @@ public class TokenMetaGovService {
 //
 //	public UpdateHolderResult updateHolder(String assetCode, String address, Boolean isHot, Boolean isActive) throws TokenMetaNotFoundException, AccountNotFoundException, UpdateHolderStatusException {
 //
-//		TokenMeta.ManagedInfo pack = getPack(assetCode);
+//		TokenMeta.ManagedInfo pack = getManaged(assetCode);
 //		List<TokenMeta.HolderAccountInfo> holders = pack.getAssetHolderAccounts();
 //
 //		Optional<TokenMeta.HolderAccountInfo> opt_ah = holders.stream().filter(_ah -> _ah.getAddress().equals(address)).findAny();

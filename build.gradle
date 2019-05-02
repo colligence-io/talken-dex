@@ -33,9 +33,10 @@ subprojects {
 
     repositories {
         mavenCentral()
-        maven {
-            url "https://jitpack.io"
-        }
+        jcenter()
+        maven { url "https://jitpack.io" }
+        maven { url "https://dl.bintray.com/ethereum/maven/" }
+//        mavenLocal()
         maven {
             credentials {
                 username talkenRepositoryUser
@@ -79,6 +80,9 @@ subprojects {
 
         // stellar sdk
         compile('com.github.stellar:java-stellar-sdk:0.6.0')
+
+        // ethereumj sdk
+        compile('org.ethereum:ethereumj-core:1.12.+')
 
         // devtools
         runtime('org.springframework.boot:spring-boot-devtools')

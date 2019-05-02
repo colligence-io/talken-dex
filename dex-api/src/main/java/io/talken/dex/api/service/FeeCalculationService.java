@@ -1,12 +1,11 @@
 package io.talken.dex.api.service;
 
+import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.ApiSettings;
 import io.talken.dex.shared.StellarConverter;
 import io.talken.dex.shared.exception.AssetConvertException;
 import io.talken.dex.shared.exception.NotEnoughBalanceException;
-import io.talken.dex.shared.exception.TokenMetaDataNotFoundException;
-import io.talken.dex.shared.exception.TokenMetaLoadException;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -36,12 +35,12 @@ public class FeeCalculationService {
 	private static final long MINIMUM_FEE_RAW = 1;
 
 	@PostConstruct
-	private void init() throws TokenMetaDataNotFoundException {
+	private void init() throws TokenMetaNotFoundException {
 		deanchorPivotAssetType = maService.getAssetType(apiSettings.getFee().getDeanchorFeePivotAsset());
 		deanchorPivotAmountRaw = StellarConverter.actualToRaw(apiSettings.getFee().getDeanchorFeeAmount());
 	}
 
-	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaDataNotFoundException, AssetConvertException, TokenMetaLoadException {
+	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaNotFoundException, AssetConvertException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);
@@ -75,7 +74,7 @@ public class FeeCalculationService {
 		return fee;
 	}
 
-	public Fee calculateDeanchorFee(String assetCode, long amountRaw, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaDataNotFoundException, AssetConvertException, TokenMetaLoadException {
+	public Fee calculateDeanchorFee(String assetCode, long amountRaw, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaNotFoundException, AssetConvertException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);

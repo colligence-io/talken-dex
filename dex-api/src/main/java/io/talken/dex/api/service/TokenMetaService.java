@@ -2,11 +2,11 @@ package io.talken.dex.api.service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.ActiveAssetHolderAccountNotFoundException;
-import io.talken.dex.shared.exception.TokenMetaDataNotFoundException;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -76,8 +76,8 @@ public class TokenMetaService {
 		}
 	}
 
-	public TokenMetaTable.Meta getTokenMeta(String symbol) throws TokenMetaDataNotFoundException {
-		if(!tmTable.containsKey(symbol.toUpperCase())) throw new TokenMetaDataNotFoundException(symbol);
+	public TokenMetaTable.Meta getTokenMeta(String symbol) throws TokenMetaNotFoundException {
+		if(!tmTable.containsKey(symbol.toUpperCase())) throw new TokenMetaNotFoundException(symbol);
 		return tmTable.get(symbol.toUpperCase());
 	}
 
@@ -89,32 +89,32 @@ public class TokenMetaService {
 		return miTable;
 	}
 
-	private TokenMetaTable.ManagedInfo getPack(String assetCode) throws TokenMetaDataNotFoundException {
+	private TokenMetaTable.ManagedInfo getPack(String assetCode) throws TokenMetaNotFoundException {
 		return Optional.ofNullable(
 				Optional.ofNullable(
 						miTable.get(assetCode)
-				).orElseThrow(() -> new TokenMetaDataNotFoundException(assetCode))
+				).orElseThrow(() -> new TokenMetaNotFoundException(assetCode))
 						.getManagedInfo())
-				.orElseThrow(() -> new TokenMetaDataNotFoundException(assetCode));
+				.orElseThrow(() -> new TokenMetaNotFoundException(assetCode));
 	}
 
-	public Asset getAssetType(String code) throws TokenMetaDataNotFoundException {
+	public Asset getAssetType(String code) throws TokenMetaNotFoundException {
 		return getPack(code).getCache().getAssetType();
 	}
 
-	public KeyPair getOfferFeeHolderAccount(String code) throws TokenMetaDataNotFoundException {
+	public KeyPair getOfferFeeHolderAccount(String code) throws TokenMetaNotFoundException {
 		return getPack(code).getCache().getOfferFeeHolder();
 	}
 
-	public KeyPair getDeanchorFeeHolderAccount(String code) throws TokenMetaDataNotFoundException {
+	public KeyPair getDeanchorFeeHolderAccount(String code) throws TokenMetaNotFoundException {
 		return getPack(code).getCache().getDeanchorFeeHolder();
 	}
 
-	public KeyPair getBaseAccount(String code) throws TokenMetaDataNotFoundException {
+	public KeyPair getBaseAccount(String code) throws TokenMetaNotFoundException {
 		return getPack(code).getCache().getAssetBase();
 	}
 
-	public String getActiveHolderAccountAddress(String code) throws TokenMetaDataNotFoundException, ActiveAssetHolderAccountNotFoundException {
+	public String getActiveHolderAccountAddress(String code) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException {
 		Optional<TokenMetaTable.HolderAccountInfo> opt_aha = getPack(code).getAssetHolderAccounts().stream()
 				.filter(TokenMetaTable.HolderAccountInfo::getActiveFlag)
 				.findAny();

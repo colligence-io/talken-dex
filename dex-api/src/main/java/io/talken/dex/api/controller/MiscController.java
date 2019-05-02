@@ -1,5 +1,6 @@
 package io.talken.dex.api.controller;
 
+import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.config.auth.AuthInfo;
 import io.talken.dex.api.config.auth.AuthRequired;
@@ -33,7 +34,7 @@ public class MiscController {
 	private TaskTransactionListService txListService;
 
 	@RequestMapping(value = RequestMappings.CONVERT_ASSET, method = RequestMethod.POST)
-	public DexResponse<BigDecimal> convert(@RequestBody AssetConvertRequest postBody) throws DexException {
+	public DexResponse<BigDecimal> convert(@RequestBody AssetConvertRequest postBody) throws DexException, TokenMetaNotFoundException {
 		DTOValidator.validate(postBody);
 		BigDecimal result = assetConvertService
 				.convert(postBody.getFrom(), postBody.getAmount(), postBody.getTo())
@@ -42,7 +43,7 @@ public class MiscController {
 	}
 
 	@RequestMapping(value = RequestMappings.EXCHANGE_ASSET, method = RequestMethod.POST)
-	public DexResponse<BigDecimal> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException {
+	public DexResponse<BigDecimal> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException, TokenMetaNotFoundException {
 		DTOValidator.validate(postBody);
 		BigDecimal result = assetConvertService
 				.exchange(postBody.getFrom(), postBody.getAmount(), postBody.getTo())

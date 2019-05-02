@@ -1,6 +1,7 @@
 package io.talken.dex.api.service;
 
 
+import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskCreateofferRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskDeleteofferRecord;
@@ -53,7 +54,7 @@ public class OfferService {
 	@Autowired
 	private RelayServerService relayServerService;
 
-	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaDataNotFoundException, StellarException, APIErrorException, AssetConvertException, TokenMetaLoadException {
+	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaNotFoundException, StellarException, APIErrorException, AssetConvertException {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_CREATE);
 
 		// create task record
@@ -79,7 +80,7 @@ public class OfferService {
 		FeeCalculationService.Fee fee;
 		try {
 			fee = feeCalculationService.calculateOfferFee(sellAssetCode, StellarConverter.actualToRaw(sellAssetAmount), feeByCtx);
-		} catch(TokenMetaLoadException ex) {
+		} catch(Exception ex) {
 			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
 
 			taskRecord.setErrorposition("calculate fee");
@@ -217,7 +218,7 @@ public class OfferService {
 		return result;
 	}
 
-	public DeleteOfferResult deleteOffer(long userId, long offerId, String sourceAccountId, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws TokenMetaDataNotFoundException, StellarException, APIErrorException {
+	public DeleteOfferResult deleteOffer(long userId, long offerId, String sourceAccountId, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws TokenMetaNotFoundException, StellarException, APIErrorException {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_DELETE);
 
 		// create task record

@@ -1,11 +1,11 @@
 package io.talken.dex.governance.scheduler.tradeaggr;
 
+import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.jooq.tables.TOKEN_META;
 import io.talken.common.persistence.redis.AssetOHLCData;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.dex.governance.service.TokenMetaGovService;
-import io.talken.dex.shared.exception.TokenMetaDataNotFoundException;
 import io.talken.dex.shared.service.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -83,8 +83,8 @@ public class TradeAggregationService {
 			try {
 				String baseAsset = _mpRecord.get(base.SYMBOL);
 				String counterAsset = _mpRecord.get(counter.SYMBOL);
-				Asset baseAssetType = maService.getAssetType(baseAsset);
-				Asset counterAssetType = maService.getAssetType(counterAsset);
+				Asset baseAssetType = maService.getManaged(baseAsset).getAssetType();
+				Asset counterAssetType = maService.getManaged(counterAsset).getAssetType();
 
 				TradeAggregationResponse aggr = null;
 				try {
@@ -137,7 +137,7 @@ public class TradeAggregationService {
 					logger.debug("No trade aggregation data for {}/{} {}~{}", counterAsset, baseAsset, startTime, endTime);
 				}
 
-			} catch(TokenMetaDataNotFoundException ex) {
+			} catch(TokenMetaNotFoundException ex) {
 				logger.exception(ex);
 			}
 		}
