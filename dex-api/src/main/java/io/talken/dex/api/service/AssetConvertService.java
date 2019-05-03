@@ -32,9 +32,8 @@ public class AssetConvertService {
 	}
 
 	public long convertRaw(Asset fromType, long amountRaw, Asset toType) throws AssetConvertException, TokenMetaNotFoundException {
-		// TODO : assets from equels to (Asset)
-		if (fromType.equals(toType))
-			return 1L;
+		if(fromType.equals(toType))
+			return amountRaw;
 
 		final String from = StellarConverter.toAssetCode(fromType);
 		final String to = StellarConverter.toAssetCode(toType);
@@ -75,6 +74,9 @@ public class AssetConvertService {
 	}
 
 	public long exchangeRawToFiat(String fromCode, long amountRaw, String toCode) throws AssetConvertException, TokenMetaNotFoundException {
+		if(fromCode.equals(toCode))
+			return amountRaw;
+
 		// exchange to fiat
 		if(!toCode.equalsIgnoreCase("USD") && !toCode.equalsIgnoreCase("KRW")) {
 			throw new AssetConvertException(fromCode, toCode);
