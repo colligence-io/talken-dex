@@ -7,6 +7,10 @@ talken:
       network: test
       serverList:
         - "http://192.168.0.37:8000"
+    ethereum:
+      network: test
+      serverList:
+        - "http://192.168.0.37:40303"
 #
 ################################################################################
 ## LOCAL Profile                                                               #

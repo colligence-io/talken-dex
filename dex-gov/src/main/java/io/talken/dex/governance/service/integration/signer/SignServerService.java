@@ -4,10 +4,10 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpStatusCodes;
 import io.talken.common.util.ByteArrayUtils;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.governance.GovSettings;
 import io.talken.dex.shared.exception.SigningException;
 import io.talken.dex.shared.service.integration.APIResult;
 import io.talken.dex.shared.service.integration.AbstractRestApiService;
-import io.talken.dex.governance.GovSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -17,14 +17,18 @@ import org.stellar.sdk.xdr.DecoratedSignature;
 import org.stellar.sdk.xdr.PublicKey;
 import org.stellar.sdk.xdr.SignatureHint;
 import org.stellar.sdk.xdr.XdrDataOutputStream;
+import org.web3j.crypto.*;
+import org.web3j.rlp.RlpEncoder;
+import org.web3j.rlp.RlpList;
+import org.web3j.rlp.RlpString;
+import org.web3j.rlp.RlpType;
+import org.web3j.utils.Bytes;
+import org.web3j.utils.Numeric;
 
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Scope("singleton")
@@ -59,7 +63,7 @@ public class SignServerService extends AbstractRestApiService {
 
 			APIResult<SignServerIntroduceResponse> introResult = requestPost(introduceUrl, request, SignServerIntroduceResponse.class);
 
-			if (!introResult.isSuccess()) {
+			if(!introResult.isSuccess()) {
 				logger.error("Cannot get signServer Token : {}, {}, {}", introResult.getResponseCode(), introResult.getErrorCode(), introResult.getErrorMessage());
 				return;
 			}
@@ -79,13 +83,13 @@ public class SignServerService extends AbstractRestApiService {
 
 			APIResult<SignServerAnswerResponse> answerResult = requestPost(answerUrl, request2, SignServerAnswerResponse.class);
 
-			if (!answerResult.isSuccess()) {
+			if(!answerResult.isSuccess()) {
 				logger.error("Cannot get signServer Token : {}, {}, {}", answerResult.getResponseCode(), answerResult.getErrorCode(), answerResult.getErrorMessage());
 				return;
 			}
 
 			Map<String, String> newAnswers = new HashMap<>();
-			for (Map.Entry<String, String> _kv : answerResult.getData().getData().getWelcomePackage().entrySet()) {
+			for(Map.Entry<String, String> _kv : answerResult.getData().getData().getWelcomePackage().entrySet()) {
 				byte[] kquestion = Base64.getDecoder().decode(_kv.getValue());
 				byte[] kanswer = keyPair.sign(kquestion);
 
@@ -97,37 +101,37 @@ public class SignServerService extends AbstractRestApiService {
 			token = answerResult.getData().getData().getWelcomePresent();
 			answers = newAnswers;
 
-		} catch (Exception e) {
+		} catch(Exception e) {
 			token = null;
 			answers = new HashMap<>();
 			logger.exception(e);
 		}
 	}
 
-	private APIResult<SignServerSignResponse> requestSign(String accountId, byte[] message) throws SigningException {
-		if (token == null) updateAccessToken();
+	private APIResult<SignServerSignResponse> requestSign(String bc, String address, byte[] message) throws SigningException {
+		if(token == null) updateAccessToken();
 
-		if (token == null) {
-			throw new SigningException(accountId, "Cannot request sign, access token is null");
+		if(token == null) {
+			throw new SigningException(address, "Cannot request sign, access token is null");
 		}
 
-		if (!answers.containsKey("XLM:" + accountId))
-			throw new SigningException(accountId, "Cannot find ssk");
+		if(!answers.containsKey(bc + ":" + address))
+			throw new SigningException(address, "Cannot find ssk");
 
 		SignServerSignRequest request = new SignServerSignRequest();
-		request.setAddress(accountId);
-		request.setType("XLM");
+		request.setAddress(address);
+		request.setType(bc);
 		request.setData(ByteArrayUtils.toHexString(message));
-		request.setAnswer(answers.get("XLM:" + accountId));
+		request.setAnswer(answers.get(bc + ":" + address));
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAuthorization("Bearer " + token);
 		APIResult<SignServerSignResponse> result = requestPost(signingUrl, headers, request, SignServerSignResponse.class);
 
-		if (result.isSuccess()) return result;
+		if(result.isSuccess()) return result;
 
 		// if failed code is not "UNAUTHORIZED", just return error result
-		if (result.getResponseCode() != HttpStatusCodes.STATUS_CODE_UNAUTHORIZED) {
+		if(result.getResponseCode() != HttpStatusCodes.STATUS_CODE_UNAUTHORIZED) {
 			return result;
 		}
 
@@ -139,12 +143,12 @@ public class SignServerService extends AbstractRestApiService {
 		return requestPost(signingUrl, headers, request, SignServerSignResponse.class);
 	}
 
-	public void signTransaction(Transaction tx) throws SigningException {
+	public void signStellarTransaction(Transaction tx) throws SigningException {
 		String accountId = tx.getSourceAccount().getAccountId();
 
-		APIResult<SignServerSignResponse> signResult = requestSign(accountId, tx.hash());
+		APIResult<SignServerSignResponse> signResult = requestSign("XLM", accountId, tx.hash());
 
-		if (!signResult.isSuccess()) {
+		if(!signResult.isSuccess()) {
 			throw new SigningException(accountId, signResult.getErrorCode() + " : " + signResult.getErrorMessage());
 		}
 
@@ -161,7 +165,7 @@ public class SignServerService extends AbstractRestApiService {
 			byte[] publicKeyBytes = publicKeyBytesStream.toByteArray();
 			byte[] signatureHintBytes = Arrays.copyOfRange(publicKeyBytes, publicKeyBytes.length - 4, publicKeyBytes.length);
 			signatureHint.setSignatureHint(signatureHintBytes);
-		} catch (IOException e) {
+		} catch(IOException e) {
 			throw new SigningException(e, accountId, e.getMessage());
 		}
 
@@ -170,5 +174,67 @@ public class SignServerService extends AbstractRestApiService {
 		decoratedSignature.setSignature(signature);
 
 		tx.getSignatures().add(decoratedSignature);
+	}
+
+
+	public byte[] signEthereumTransaction(RawTransaction tx, String from) throws SigningException {
+
+		byte[] encodedTx = TransactionEncoder.encode(tx);
+
+		byte[] hexMessage = Hash.sha3(encodedTx);
+
+		APIResult<SignServerSignResponse> signResult = requestSign("ETH", from, hexMessage);
+
+		byte[] sigBytes = ByteArrayUtils.fromHexString(signResult.getData().getData().getSignature());
+
+		byte[] r = Arrays.copyOfRange(sigBytes, 0, 32);
+		byte[] s = Arrays.copyOfRange(sigBytes, 32, 64);
+		byte v = sigBytes[64];
+		if(v != 27 && v != 28) {
+			v = (byte) (27 + (v % 2));
+		}
+
+		Sign.SignatureData signatureData = new Sign.SignatureData(v, r, s);
+
+		String messageKey;
+		try {
+			messageKey = Sign.signedMessageToKey(encodedTx, signatureData).toString(16);
+		} catch(Exception ex) {
+			throw new SigningException(ex, from, "verification failed (1)");
+		}
+		String signerAddress = Keys.getAddress(messageKey);
+		if(!from.toLowerCase().equals("0x" + signerAddress.toLowerCase())) throw new SigningException(from, "verification failed (2)");
+
+
+		List<RlpType> result = new ArrayList<>();
+
+		result.add(RlpString.create(tx.getNonce()));
+		result.add(RlpString.create(tx.getGasPrice()));
+		result.add(RlpString.create(tx.getGasLimit()));
+
+		// an empty to address (contract creation) should not be encoded as a numeric 0 value
+		String to = tx.getTo();
+		if(to != null && to.length() > 0) {
+			// addresses that start with zeros should be encoded with the zeros included, not
+			// as numeric values
+			result.add(RlpString.create(Numeric.hexStringToByteArray(to)));
+		} else {
+			result.add(RlpString.create(""));
+		}
+
+		result.add(RlpString.create(tx.getValue()));
+
+		// value field will already be hex encoded, so we need to convert into binary first
+		byte[] data = Numeric.hexStringToByteArray(tx.getData());
+		result.add(RlpString.create(data));
+
+		if(signatureData != null) {
+			result.add(RlpString.create(signatureData.getV()));
+			result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getR())));
+			result.add(RlpString.create(Bytes.trimLeadingZeroes(signatureData.getS())));
+		}
+
+		RlpList rlpList = new RlpList(result);
+		return RlpEncoder.encode(rlpList);
 	}
 }

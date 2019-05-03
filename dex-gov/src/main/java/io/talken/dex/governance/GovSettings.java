@@ -52,15 +52,6 @@ public class GovSettings {
 		private int poolSize;
 	}
 
-	private _Stellar stellar;
-
-	@Getter
-	@Setter
-	public static class _Stellar {
-		private String network;
-		private List<String> serverList;
-	}
-
 	private _Fee fee;
 
 	@Getter

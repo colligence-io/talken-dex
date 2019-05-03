@@ -126,7 +126,7 @@ public class CreateOfferRefundService {
 //			logRecord.setTxXdr(bareTxInfo.getEnvelopeXdr());
 //
 //			logger.debug("Request sign for {} {}", source.getAccountId(), logRecord.getTxHash());
-//			signerService.signTransaction(tx);
+//			signerService.signStellarTransaction(tx);
 //
 //			logger.debug("Sending refund TX to stellar network.");
 //			SubmitTransactionResponse txResponse = server.submitTransaction(tx);

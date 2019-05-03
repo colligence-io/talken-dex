@@ -86,7 +86,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 					sendLog = new BctxLog();
 					sendLog.setSuccessFlag(false);
 					sendLog.setErrorcode("NoTxSender");
-					sendLog.setErrormessage("TxSender " + bctxRecord.getPlatform() + "not found");
+					sendLog.setErrormessage("TxSender " + bctxRecord.getPlatform() + " not found");
 				}
 			} catch(Exception ex) {
 				sendLog = new BctxLog();

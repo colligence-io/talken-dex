@@ -21,13 +21,13 @@ import java.util.StringJoiner;
 public abstract class AbstractStellarTxSender extends TxSender {
 	private final PrefixedLogger logger;
 
+	@Autowired
+	private StellarNetworkService stellarNetworkService;
+
 	public AbstractStellarTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
 		super(platform);
 		this.logger = logger;
 	}
-
-	@Autowired
-	private StellarNetworkService stellarNetworkService;
 
 	protected void sendStellarTx(Asset asset, Bctx bctx, BctxLog log) throws Exception {
 		// pick horizon server
@@ -55,7 +55,7 @@ public abstract class AbstractStellarTxSender extends TxSender {
 		log.setRequest(JSONWriter.toJsonString(bareTxInfo));
 
 		logger.debug("Request sign for {} {}", source.getAccountId(), bareTxInfo.getHash());
-		signServer().signTransaction(tx);
+		signServer().signStellarTransaction(tx);
 
 		logger.debug("Sending TX to stellar network.");
 		SubmitTransactionResponse txResponse = server.submitTransaction(tx);

@@ -82,7 +82,7 @@ subprojects {
         compile('com.github.stellar:java-stellar-sdk:0.6.0')
 
         // ethereumj sdk
-        compile('org.ethereum:ethereumj-core:1.12.+')
+        compile('org.web3j:core:4.2.0')
 
         // devtools
         runtime('org.springframework.boot:spring-boot-devtools')

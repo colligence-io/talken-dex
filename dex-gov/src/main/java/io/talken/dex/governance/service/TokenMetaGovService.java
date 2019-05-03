@@ -414,7 +414,7 @@ public class TokenMetaGovService {
 						)
 						.build();
 
-				signServerService.signTransaction(tx);
+				signServerService.signStellarTransaction(tx);
 
 				SubmitTransactionResponse txResponse = server.submitTransaction(tx);
 
