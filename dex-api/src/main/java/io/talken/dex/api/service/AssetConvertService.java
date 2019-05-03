@@ -32,6 +32,10 @@ public class AssetConvertService {
 	}
 
 	public long convertRaw(Asset fromType, long amountRaw, Asset toType) throws AssetConvertException, TokenMetaNotFoundException {
+		// TODO : assets from equels to (Asset)
+		if (fromType.equals(toType))
+			return 1L;
+
 		final String from = StellarConverter.toAssetCode(fromType);
 		final String to = StellarConverter.toAssetCode(toType);
 
