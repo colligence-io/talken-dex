@@ -58,12 +58,10 @@ vault:
 ###############################################################################
 # PRODUCTION Profile                                                          #
 ###############################################################################
-#---
-#spring:
-#  profiles: prod
-#  datasource:
-#    url: jdbc:mariadb://192.168.0.20:4306/talken_db
-#    username: root
-#    password: 112233
-#    dbcp2:
-#      driver-class-name: org.mariadb.jdbc.Driver
+---
+spring:
+  profiles: production
+vault:
+  uri: "http://10.27.27.11:8200"
+  app-role: "tkn-dex-gov"
+  secret-key: "7aTHTprh3x3HYgvzjnH800hyvOexIVx7Dh2qzmPysUyvXdwrxS9ppXdKamMbHOEt"
