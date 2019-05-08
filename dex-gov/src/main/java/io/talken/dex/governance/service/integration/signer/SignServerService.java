@@ -51,11 +51,10 @@ public class SignServerService extends AbstractRestApiService {
 		signingUrl = govSettings.getSignServer().getAddr() + "/sign";
 		introduceUrl = govSettings.getSignServer().getAddr() + "/introduce";
 		answerUrl = govSettings.getSignServer().getAddr() + "/answer";
-
 		updateAccessToken();
 	}
 
-	private void updateAccessToken() {
+	private synchronized void updateAccessToken() {
 		try {
 			String privateKey = govSettings.getSignServer().getAppKey();
 			SignServerIntroduceRequest request = new SignServerIntroduceRequest();
@@ -64,7 +63,7 @@ public class SignServerService extends AbstractRestApiService {
 			APIResult<SignServerIntroduceResponse> introResult = requestPost(introduceUrl, request, SignServerIntroduceResponse.class);
 
 			if(!introResult.isSuccess()) {
-				logger.error("Cannot get signServer Token : {}, {}, {}", introResult.getResponseCode(), introResult.getErrorCode(), introResult.getErrorMessage());
+				logger.error("Cannot get signServerAccess  Token : {}, {}, {}", introResult.getResponseCode(), introResult.getErrorCode(), introResult.getErrorMessage());
 				return;
 			}
 
@@ -84,7 +83,7 @@ public class SignServerService extends AbstractRestApiService {
 			APIResult<SignServerAnswerResponse> answerResult = requestPost(answerUrl, request2, SignServerAnswerResponse.class);
 
 			if(!answerResult.isSuccess()) {
-				logger.error("Cannot get signServer Token : {}, {}, {}", answerResult.getResponseCode(), answerResult.getErrorCode(), answerResult.getErrorMessage());
+				logger.error("Cannot get signServer Acces Token : {}, {}, {}", answerResult.getResponseCode(), answerResult.getErrorCode(), answerResult.getErrorMessage());
 				return;
 			}
 
@@ -96,7 +95,7 @@ public class SignServerService extends AbstractRestApiService {
 				newAnswers.put(_kv.getKey(), Base64.getEncoder().encodeToString(kanswer));
 			}
 
-			logger.info("Received new signServer JWT Token");
+			logger.info("Received new signServer Access Token");
 
 			token = answerResult.getData().getData().getWelcomePresent();
 			answers = newAnswers;
@@ -111,6 +110,21 @@ public class SignServerService extends AbstractRestApiService {
 	private APIResult<SignServerSignResponse> requestSign(String bc, String address, byte[] message) throws SigningException {
 		if(token == null) updateAccessToken();
 
+		APIResult<SignServerSignResponse> result = requestSign2(bc, address, message);
+
+		// case of unauthorized result, mostly case of token expiration
+		// try update access token and send request again
+		if(result.getResponseCode() == HttpStatusCodes.STATUS_CODE_UNAUTHORIZED) {
+			logger.debug("ss unauthorized, token might be expired, getting new one");
+			updateAccessToken();
+
+			result = requestSign2(bc, address, message);
+		}
+
+		return result;
+	}
+
+	private APIResult<SignServerSignResponse> requestSign2(String bc, String address, byte[] message) throws SigningException {
 		if(token == null) {
 			throw new SigningException(address, "Cannot request sign, access token is null");
 		}
@@ -125,20 +139,6 @@ public class SignServerService extends AbstractRestApiService {
 		request.setAnswer(answers.get(bc + ":" + address));
 
 		HttpHeaders headers = new HttpHeaders();
-		headers.setAuthorization("Bearer " + token);
-		APIResult<SignServerSignResponse> result = requestPost(signingUrl, headers, request, SignServerSignResponse.class);
-
-		if(result.isSuccess()) return result;
-
-		// if failed code is not "UNAUTHORIZED", just return error result
-		if(result.getResponseCode() != HttpStatusCodes.STATUS_CODE_UNAUTHORIZED) {
-			return result;
-		}
-
-		// case of unauthorized result, mostly case of token expiration
-		// try update access token and send request again
-		logger.debug("ss token expired, getting new one");
-		updateAccessToken();
 		headers.setAuthorization("Bearer " + token);
 		return requestPost(signingUrl, headers, request, SignServerSignResponse.class);
 	}
@@ -203,7 +203,8 @@ public class SignServerService extends AbstractRestApiService {
 			throw new SigningException(ex, from, "verification failed (1)");
 		}
 		String signerAddress = Keys.getAddress(messageKey);
-		if(!from.toLowerCase().equals("0x" + signerAddress.toLowerCase())) throw new SigningException(from, "verification failed (2)");
+		if(!from.toLowerCase().equals("0x" + signerAddress.toLowerCase()))
+			throw new SigningException(from, "verification failed (2)");
 
 
 		List<RlpType> result = new ArrayList<>();
