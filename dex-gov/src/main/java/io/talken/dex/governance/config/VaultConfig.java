@@ -17,9 +17,6 @@ public class VaultConfig extends TalkenVaultConfiguration {
 	@Value("${vault.app-role}")
 	private String appRole;
 
-	@Value("${vault.hostname:}")
-	private String hostname;
-
 	@Value("${vault.secret-key}")
 	private String password;
 
@@ -30,6 +27,6 @@ public class VaultConfig extends TalkenVaultConfiguration {
 
 	@Override
 	protected VaultSetting getSetting() {
-		return new VaultSetting(appRole, hostname, password);
+		return new VaultSetting(appRole, password);
 	}
 }
