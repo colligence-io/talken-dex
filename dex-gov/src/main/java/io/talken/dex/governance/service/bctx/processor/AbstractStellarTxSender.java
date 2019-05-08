@@ -69,6 +69,7 @@ public abstract class AbstractStellarTxSender extends TxSender {
 
 		if(txResponse.isSuccess()) {
 			log.setSuccessFlag(true);
+			log.setBcRefId(txResponse.getHash());
 			log.setResponse(JSONWriter.toJsonString(resObj));
 		} else {
 			SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
