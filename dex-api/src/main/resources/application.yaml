@@ -16,10 +16,6 @@ talken:
   dex-api:
     accessToken:
       token-header: "X-Auth-Token"
-    stellar:
-      network: test
-      serverList:
-        - "http://192.168.0.37:8000"
     server:
       rly-address: http://192.168.0.33:3888/graphql
       wlt-address: http://192.168.0.33:3232/bws/api
@@ -74,3 +70,10 @@ vault:
   uri: "http://10.27.27.11:8200"
   app-role: "tkn-dex-api"
   secret-key: "EaGofP7DnxGeTnL0d0cbC8RiLwpuqwb8U2E5aPNy5y9BZcNfYwSHS2R8LkfjAmSn"
+talken:
+  dex-api:
+    server:
+      rly-address: http://192.168.0.36:3888/graphql
+      wlt-address: http://192.168.0.35:3232/bws/api
+      txt-server-id: "DEX"
+      anc-address: http://192.168.0.49:3480
