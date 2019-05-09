@@ -69,7 +69,6 @@ spring:
 vault:
   uri: "http://10.27.27.11:8200"
   app-role: "tkn-dex-api"
-  secret-key: "EaGofP7DnxGeTnL0d0cbC8RiLwpuqwb8U2E5aPNy5y9BZcNfYwSHS2R8LkfjAmSn"
 talken:
   dex-api:
     server:
