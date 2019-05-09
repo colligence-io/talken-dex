@@ -64,3 +64,4 @@ spring:
 vault:
   uri: "http://10.27.27.11:8200"
   app-role: "tkn-dex-gov"
+  secret-key: ""
