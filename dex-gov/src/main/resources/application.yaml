@@ -21,7 +21,7 @@ talken:
       offerFeeRate: 0.001
       offerFeeRateCtxFactor: 0.5
       deanchorFeePivotAsset: "BTC"
-      deanchorFeeAmount: 0.001
+      deanchorFeeAmount: 0.0001
       deanchorFeeRateCtxFactor: 0.5
       refundRetryInterval: 600
       refundMaxRetry: 5
