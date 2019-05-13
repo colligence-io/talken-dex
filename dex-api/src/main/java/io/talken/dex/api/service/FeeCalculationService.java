@@ -5,7 +5,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.ApiSettings;
 import io.talken.dex.shared.StellarConverter;
 import io.talken.dex.shared.exception.AssetConvertException;
-import io.talken.dex.shared.exception.NotEnoughBalanceException;
+import io.talken.dex.shared.exception.EffectiveAmountIsNegativeException;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -40,7 +40,7 @@ public class FeeCalculationService {
 		deanchorPivotAmountRaw = StellarConverter.actualToRaw(apiSettings.getFee().getDeanchorFeeAmount());
 	}
 
-	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaNotFoundException, AssetConvertException {
+	public Fee calculateOfferFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaNotFoundException, AssetConvertException, EffectiveAmountIsNegativeException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);
@@ -69,12 +69,12 @@ public class FeeCalculationService {
 		}
 
 		if(fee.sellAmountRaw <= 0)
-			throw new NotEnoughBalanceException(fee.feeAssetType.getType(), StellarConverter.rawToActualString(fee.feeAmountRaw));
+			throw new EffectiveAmountIsNegativeException(StellarConverter.toAssetCode(fee.feeAssetType), StellarConverter.rawToActualString(fee.feeAmountRaw));
 
 		return fee;
 	}
 
-	public Fee calculateDeanchorFee(String assetCode, long amountRaw, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaNotFoundException, AssetConvertException {
+	public Fee calculateDeanchorFee(String assetCode, long amountRaw, boolean feeByCtx) throws TokenMetaNotFoundException, AssetConvertException, EffectiveAmountIsNegativeException {
 		Fee fee = new Fee();
 
 		fee.sellAssetType = maService.getAssetType(assetCode);
@@ -103,7 +103,7 @@ public class FeeCalculationService {
 		}
 
 		if(fee.sellAmountRaw <= 0)
-			throw new NotEnoughBalanceException(fee.feeAssetType.getType(), StellarConverter.rawToActualString(fee.feeAmountRaw));
+			throw new EffectiveAmountIsNegativeException(StellarConverter.toAssetCode(fee.feeAssetType), StellarConverter.rawToActualString(fee.feeAmountRaw));
 
 		return fee;
 	}

@@ -54,7 +54,7 @@ public class OfferService {
 	@Autowired
 	private RelayServerService relayServerService;
 
-	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaNotFoundException, StellarException, APIErrorException, AssetConvertException {
+	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws TokenMetaNotFoundException, StellarException, APIErrorException, AssetConvertException, EffectiveAmountIsNegativeException {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_CREATE);
 
 		// create task record

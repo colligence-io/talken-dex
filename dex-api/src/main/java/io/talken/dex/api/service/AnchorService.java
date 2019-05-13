@@ -190,7 +190,7 @@ public class AnchorService {
 		return result;
 	}
 
-	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws NotEnoughBalanceException, TokenMetaNotFoundException, StellarException, APIErrorException, AssetConvertException {
+	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws TokenMetaNotFoundException, StellarException, APIErrorException, AssetConvertException, EffectiveAmountIsNegativeException {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 
 		// create task record
