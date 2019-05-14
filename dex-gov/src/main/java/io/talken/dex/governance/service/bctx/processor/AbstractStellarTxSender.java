@@ -41,13 +41,16 @@ public abstract class AbstractStellarTxSender extends TxSender {
 
 		KeyPair destination = KeyPair.fromAccountId(bctx.getAddressTo());
 
-		Transaction tx = stellarNetworkService.getTransactionBuilderFor(sourceAccount)
-				.addMemo(Memo.text(bctx.getTxAux()))
+		Transaction.Builder txBuilder = stellarNetworkService.getTransactionBuilderFor(sourceAccount)
 				.addOperation(
 						new PaymentOperation
 								.Builder(destination, asset, StellarConverter.actualToString(bctx.getAmount()))
 								.build()
-				).build();
+				);
+
+		if(bctx.getTxAux() != null) txBuilder.addMemo(Memo.text(bctx.getTxAux()));
+
+		Transaction tx = txBuilder.build();
 
 		// build tx
 		BareTxInfo bareTxInfo = BareTxInfo.build(tx);
