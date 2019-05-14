@@ -3,7 +3,7 @@
   "schema": {
     "README_request" : "To request the schema from a url instead, remove the 'file' JSON property above (and optionally delete the default graphql.schema.json file).",
     "request": {
-      "url" : "http://dev.talken.io:3888/graphql",
+      "url" : "http://192.168.0.33:3888/graphql",
       "method" : "POST",
       "README_postIntrospectionQuery" : "Whether to POST an introspectionQuery to the url. If the url always returns the schema JSON, set to false and consider using GET",
       "postIntrospectionQuery" : true,
@@ -19,8 +19,8 @@
   "README_endpoints": "A list of GraphQL endpoints that can be queried from '.graphql' files in the IDE",
   "endpoints" : [
     {
-      "name": "Default (http://dev.talken.io:3888/graphql)",
-      "url": "http://dev.talken.io:3888/graphql",
+      "name": "Talken Mobile Relay",
+      "url": "http://192.168.0.33:3888/graphql",
       "options" : {
         "headers": {
           "user-agent" : "JS GraphQL"
