@@ -18,7 +18,7 @@ import io.talken.dex.governance.service.integration.signer.SignServerService;
 import io.talken.dex.shared.StellarConverter;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
-import io.talken.dex.shared.service.StellarNetworkService;
+import io.talken.dex.shared.service.blockchain.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
@@ -405,7 +405,9 @@ public class TokenMetaGovService {
 
 			if(!trusted) {
 				logger.info("No trust on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
-				Transaction tx = stellarNetworkService.getTransactionBuilderFor(sourceAccount)
+				Transaction tx = new Transaction.Builder(sourceAccount)
+						.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+						.setOperationFee(stellarNetworkService.getNetworkFee())
 						.addOperation(
 								new ChangeTrustOperation.Builder(
 										target.getAssetType(),

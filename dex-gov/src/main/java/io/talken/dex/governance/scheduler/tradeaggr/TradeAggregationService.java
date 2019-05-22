@@ -6,7 +6,7 @@ import io.talken.common.persistence.redis.AssetOHLCData;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.dex.governance.service.TokenMetaGovService;
-import io.talken.dex.shared.service.StellarNetworkService;
+import io.talken.dex.shared.service.blockchain.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;

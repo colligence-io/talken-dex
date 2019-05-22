@@ -2,6 +2,7 @@ package io.talken.dex.governance;
 
 import io.talken.common.persistence.vault.VaultSecretReader;
 import io.talken.common.persistence.vault.data.VaultSecretDataDexSettings;
+import io.talken.dex.shared.DexSettings;
 import io.talken.dex.shared.DexTaskId;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,10 +14,10 @@ import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Component
-@ConfigurationProperties("talken.dex-gov")
+@ConfigurationProperties("talken.dex")
 @Getter
 @Setter
-public class GovSettings {
+public class GovSettings extends DexSettings {
 	@Autowired
 	private VaultSecretReader secretReader;
 
@@ -50,21 +51,5 @@ public class GovSettings {
 	@Setter
 	public static class _Scheduler {
 		private int poolSize;
-	}
-
-	private _Fee fee;
-
-	@Getter
-	@Setter
-	public static class _Fee {
-		private double offerFeeRate;
-		private double offerFeeRateCtxFactor;
-
-		private String deanchorFeePivotAsset;
-		private double deanchorFeeAmount;
-		private double deanchorFeeRateCtxFactor;
-
-		private int refundRetryInterval;
-		private int refundMaxRetry;
 	}
 }

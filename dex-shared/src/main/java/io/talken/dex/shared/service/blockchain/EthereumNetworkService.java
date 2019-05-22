@@ -1,8 +1,10 @@
-package io.talken.dex.shared.service;
+package io.talken.dex.shared.service.blockchain;
 
 
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.collection.ObjectPair;
+import io.talken.dex.shared.DexSettings;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -18,26 +20,24 @@ import java.util.stream.Collectors;
 
 @Service
 @Scope("singleton")
+@RequiredArgsConstructor
 public class EthereumNetworkService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumNetworkService.class);
 
-	@Autowired
-	private EthereumSetting ethereumSetting;
+	private final DexSettings dexSettings;
 
 	private List<ObjectPair<String, Boolean>> serverList = new ArrayList<>();
 	private SecureRandom random = new SecureRandom();
 
-//	private static final int BASE_FEE = 100;
-
 	@PostConstruct
 	private void init() {
-		if(ethereumSetting.getNetwork().equalsIgnoreCase("test")) {
+		if(dexSettings.getBcnode().getEthereum().getNetwork().equalsIgnoreCase("test")) {
 			logger.info("Using Ethereum TEST Network.");
 		} else {
 			logger.info("Using Ethereum PUBLIC Network.");
 		}
-		for(String _s : ethereumSetting.getServerList()) {
-			logger.info("Ethereum node {} added.", _s);
+		for(String _s : dexSettings.getBcnode().getEthereum().getServerList()) {
+			logger.info("Ethereum jsonrpc endpoint {} added.", _s);
 			serverList.add(new ObjectPair<>(_s, true));
 		}
 	}
@@ -48,14 +48,9 @@ public class EthereumNetworkService {
 		logger.debug("Connected to Ethereum client version: " + web3j.web3ClientVersion().send().getWeb3ClientVersion());
 		return web3j;
 	}
-//
-//	public Transaction.Builder getTransactionBuilderFor(TransactionBuilderAccount sourceAccount) {
-//		return new Transaction.Builder(sourceAccount)
-//				.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-//				.setOperationFee(getBaseFee());
-//	}
 
-//	public int getBaseFee() {
-//		return BASE_FEE;
-//	}
+	public int getNetworkFee() {
+		// TODO : get proper price
+		return 10;
+	}
 }

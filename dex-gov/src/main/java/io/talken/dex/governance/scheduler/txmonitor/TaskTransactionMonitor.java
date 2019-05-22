@@ -8,7 +8,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.StellarConverter;
 import io.talken.dex.shared.exception.TaskIntegrityCheckFailedException;
-import io.talken.dex.shared.service.StellarNetworkService;
+import io.talken.dex.shared.service.blockchain.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;

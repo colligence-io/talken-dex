@@ -3,6 +3,7 @@ package io.talken.dex.api;
 import io.talken.common.persistence.vault.VaultSecretReader;
 import io.talken.common.persistence.vault.data.VaultSecretDataDexSettings;
 import io.talken.common.persistence.vault.data.VaultSecretDataWebJwt;
+import io.talken.dex.shared.DexSettings;
 import io.talken.dex.shared.DexTaskId;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,10 +14,10 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 
 @Component
-@ConfigurationProperties("talken.dex-api")
+@ConfigurationProperties("talken.dex")
 @Getter
 @Setter
-public class ApiSettings {
+public class ApiSettings extends DexSettings {
 	@Autowired
 	private VaultSecretReader secretReader;
 
@@ -43,31 +44,13 @@ public class ApiSettings {
 		private int jwtExpiration;
 	}
 
-	private _Server server;
+	private _Integration server;
 
 	@Getter
 	@Setter
-	public static class _Server {
+	public static class _Integration {
 		private String rlyAddress;
 		private String wltAddress;
 		private String ancAddress;
-		private String txtAddress;
-		private String txtServerId;
-	}
-
-	private _Fee fee;
-
-	@Getter
-	@Setter
-	public static class _Fee {
-		private double offerFeeRate;
-		private double offerFeeRateCtxFactor;
-
-		private String deanchorFeePivotAsset;
-		private double deanchorFeeAmount;
-		private double deanchorFeeRateCtxFactor;
-
-		private int refundRetryInterval;
-		private int refundMaxRetry;
 	}
 }

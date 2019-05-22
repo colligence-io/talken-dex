@@ -8,7 +8,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.bctx.TxSender;
 import io.talken.dex.governance.service.integration.signer.SignServerService;
-import io.talken.dex.shared.service.EthereumNetworkService;
+import io.talken.dex.shared.service.blockchain.EthereumNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.web3j.crypto.RawTransaction;
@@ -47,8 +47,7 @@ public class EthereumTxSender extends TxSender {
 
 		BigInteger nonce = ethGetTransactionCount.getTransactionCount();
 
-		// TODO : get proper price
-		BigInteger gasPrice = Convert.toWei("10", Convert.Unit.GWEI).toBigInteger();
+		BigInteger gasPrice = Convert.toWei(String.valueOf(ethereumNetworkService.getNetworkFee()), Convert.Unit.GWEI).toBigInteger();
 
 		BigInteger gasLimit = lastBlock.getGasLimit();
 

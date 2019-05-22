@@ -8,7 +8,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.TxSender;
 import io.talken.dex.shared.BareTxInfo;
 import io.talken.dex.shared.StellarConverter;
-import io.talken.dex.shared.service.StellarNetworkService;
+import io.talken.dex.shared.service.blockchain.StellarNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
@@ -41,7 +41,9 @@ public abstract class AbstractStellarTxSender extends TxSender {
 
 		KeyPair destination = KeyPair.fromAccountId(bctx.getAddressTo());
 
-		Transaction.Builder txBuilder = stellarNetworkService.getTransactionBuilderFor(sourceAccount)
+		Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount)
+				.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+				.setOperationFee(stellarNetworkService.getNetworkFee())
 				.addOperation(
 						new PaymentOperation
 								.Builder(destination, asset, StellarConverter.actualToString(bctx.getAmount()))

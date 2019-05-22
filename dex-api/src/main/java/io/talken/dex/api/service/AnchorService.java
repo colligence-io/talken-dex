@@ -23,7 +23,7 @@ import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.StellarConverter;
 import io.talken.dex.shared.StellarSignVerifier;
 import io.talken.dex.shared.exception.*;
-import io.talken.dex.shared.service.StellarNetworkService;
+import io.talken.dex.shared.service.blockchain.StellarNetworkService;
 import io.talken.dex.shared.service.integration.APIResult;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -239,7 +239,9 @@ public class AnchorService {
 
 			KeyPair baseAccount = tmService.getBaseAccount(assetCode);
 
-			Transaction.Builder txBuilder = stellarNetworkService.getTransactionBuilderFor(sourceAccount)
+			Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount)
+					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+					.setOperationFee(stellarNetworkService.getNetworkFee())
 					.addMemo(Memo.text(dexTaskId.getId()));
 
 			// build fee operation
