@@ -7,13 +7,13 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties("message")
 public class AncServerDeanchorResponse implements CodeMessageResponseInterface {
-	private int code;
+	private String code;
 	private String description;
 	private _Data data;
 
 	@Override
 	public boolean isSuccess() {
-		return code == 200;
+		return "200".equals(code);
 	}
 
 	@Override

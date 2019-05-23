@@ -3,7 +3,7 @@ package io.talken.dex.api.service;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.ApiSettings;
-import io.talken.dex.shared.StellarConverter;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.exception.AssetConvertException;
 import io.talken.dex.shared.exception.EffectiveAmountIsNegativeException;
 import lombok.Getter;

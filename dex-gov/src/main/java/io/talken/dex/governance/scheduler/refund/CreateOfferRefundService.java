@@ -119,7 +119,7 @@ public class CreateOfferRefundService {
 //					).build();
 //
 //			// build tx
-//			BareTxInfo bareTxInfo = BareTxInfo.build(tx);
+//			StellarRawTxInfo bareTxInfo = StellarRawTxInfo.build(tx);
 //
 //			logRecord.setTxSeq(bareTxInfo.getSequence());
 //			logRecord.setTxHash(bareTxInfo.getHash());

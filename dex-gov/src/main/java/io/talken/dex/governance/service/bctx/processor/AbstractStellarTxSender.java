@@ -6,9 +6,9 @@ import io.talken.common.persistence.jooq.tables.pojos.BctxLog;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.TxSender;
-import io.talken.dex.shared.BareTxInfo;
-import io.talken.dex.shared.StellarConverter;
-import io.talken.dex.shared.service.blockchain.StellarNetworkService;
+import io.talken.dex.shared.service.blockchain.stellar.StellarRawTxInfo;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
+import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
@@ -55,11 +55,11 @@ public abstract class AbstractStellarTxSender extends TxSender {
 		Transaction tx = txBuilder.build();
 
 		// build tx
-		BareTxInfo bareTxInfo = BareTxInfo.build(tx);
+		StellarRawTxInfo stellarRawTxInfo = StellarRawTxInfo.build(tx);
 
-		log.setRequest(JSONWriter.toJsonString(bareTxInfo));
+		log.setRequest(JSONWriter.toJsonString(stellarRawTxInfo));
 
-		logger.debug("Request sign for {} {}", source.getAccountId(), bareTxInfo.getHash());
+		logger.debug("Request sign for {} {}", source.getAccountId(), stellarRawTxInfo.getHash());
 		signServer().signStellarTransaction(tx);
 
 		logger.debug("Sending TX to stellar network.");

@@ -1,4 +1,4 @@
-package io.talken.dex.shared;
+package io.talken.dex.shared.service.blockchain.stellar;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.dex.shared.exception.SignatureVerificationFailedException;

@@ -1,21 +1,16 @@
-package io.talken.dex.shared.service.blockchain;
+package io.talken.dex.shared.service.blockchain.stellar;
 
 
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.shared.DexSettings;
+import io.talken.dex.shared.service.blockchain.RandomServerPicker;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.Network;
 import org.stellar.sdk.Server;
 
 import javax.annotation.PostConstruct;
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Scope("singleton")
@@ -25,8 +20,7 @@ public class StellarNetworkService {
 
 	private final DexSettings dexSettings;
 
-	private List<ObjectPair<String, Boolean>> serverList = new ArrayList<>();
-	private SecureRandom random = new SecureRandom();
+	private final RandomServerPicker serverPicker = new RandomServerPicker();
 
 	private static final int BASE_FEE = 100;
 
@@ -41,13 +35,12 @@ public class StellarNetworkService {
 		}
 		for(String _s : dexSettings.getBcnode().getStellar().getServerList()) {
 			logger.info("Horizon {} added.", _s);
-			serverList.add(new ObjectPair<>(_s, true));
+			serverPicker.add(_s);
 		}
 	}
 
 	public Server pickServer() {
-		List<String> availableServers = serverList.stream().filter(_sl -> _sl.second().equals(true)).map(ObjectPair::first).collect(Collectors.toList());
-		return new Server(availableServers.get(random.nextInt(serverList.size())));
+		return new Server(serverPicker.pick());
 	}
 
 	public int getNetworkFee() {

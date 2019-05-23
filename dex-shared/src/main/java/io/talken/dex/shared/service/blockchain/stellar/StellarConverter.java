@@ -1,4 +1,4 @@
-package io.talken.dex.shared;
+package io.talken.dex.shared.service.blockchain.stellar;
 
 import org.stellar.sdk.Asset;
 import org.stellar.sdk.AssetTypeCreditAlphaNum;

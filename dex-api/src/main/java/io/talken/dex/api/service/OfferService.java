@@ -14,12 +14,12 @@ import io.talken.dex.api.service.integration.relay.RelayAddContentsResponse;
 import io.talken.dex.api.service.integration.relay.RelayEncryptedContent;
 import io.talken.dex.api.service.integration.relay.RelayMsgTypeEnum;
 import io.talken.dex.api.service.integration.relay.RelayServerService;
-import io.talken.dex.shared.BareTxInfo;
+import io.talken.dex.shared.service.blockchain.stellar.StellarRawTxInfo;
 import io.talken.dex.shared.DexTaskId;
-import io.talken.dex.shared.StellarConverter;
-import io.talken.dex.shared.StellarSignVerifier;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
+import io.talken.dex.shared.service.blockchain.stellar.StellarSignVerifier;
 import io.talken.dex.shared.exception.*;
-import io.talken.dex.shared.service.blockchain.StellarNetworkService;
+import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import io.talken.dex.shared.service.integration.APIResult;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,7 +93,7 @@ public class OfferService {
 		}
 
 		// build encData for CreateOffer request
-		RelayEncryptedContent<BareTxInfo> encData;
+		RelayEncryptedContent<StellarRawTxInfo> encData;
 		try {
 			// pick horizon server
 			Server server = stellarNetworkService.pickServer();
@@ -129,17 +129,17 @@ public class OfferService {
 			);
 
 			// build tx
-			BareTxInfo bareTxInfo = BareTxInfo.build(txBuilder.build());
+			StellarRawTxInfo stellarRawTxInfo = StellarRawTxInfo.build(txBuilder.build());
 
-			encData = new RelayEncryptedContent<>(bareTxInfo);
+			encData = new RelayEncryptedContent<>(stellarRawTxInfo);
 
 			taskRecord.setSellamountraw(fee.getSellAmountRaw());
 			taskRecord.setFeeassetcode(StellarConverter.toAssetCode(fee.getFeeAssetType()));
 			taskRecord.setFeeamountraw(fee.getFeeAmountRaw());
 			taskRecord.setFeecollectaccount(fee.getFeeCollectorAccount().getAccountId());
-			taskRecord.setTxSeq(bareTxInfo.getSequence());
-			taskRecord.setTxHash(bareTxInfo.getHash());
-			taskRecord.setTxXdr(bareTxInfo.getEnvelopeXdr());
+			taskRecord.setTxSeq(stellarRawTxInfo.getSequence());
+			taskRecord.setTxHash(stellarRawTxInfo.getHash());
+			taskRecord.setTxXdr(stellarRawTxInfo.getEnvelopeXdr());
 			taskRecord.update();
 
 		} catch(GeneralSecurityException | IOException | RuntimeException ex) {
@@ -250,7 +250,7 @@ public class OfferService {
 		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
 		// build encData for DeleteOffer request
-		RelayEncryptedContent<BareTxInfo> encData;
+		RelayEncryptedContent<StellarRawTxInfo> encData;
 		try {
 			// pick horizon server
 			Server server = stellarNetworkService.pickServer();
@@ -279,13 +279,13 @@ public class OfferService {
 			);
 
 			// build tx
-			BareTxInfo bareTxInfo = BareTxInfo.build(txBuilder.build());
+			StellarRawTxInfo stellarRawTxInfo = StellarRawTxInfo.build(txBuilder.build());
 
-			encData = new RelayEncryptedContent<>(bareTxInfo);
+			encData = new RelayEncryptedContent<>(stellarRawTxInfo);
 
-			taskRecord.setTxSeq(bareTxInfo.getSequence());
-			taskRecord.setTxHash(bareTxInfo.getHash());
-			taskRecord.setTxXdr(bareTxInfo.getEnvelopeXdr());
+			taskRecord.setTxSeq(stellarRawTxInfo.getSequence());
+			taskRecord.setTxHash(stellarRawTxInfo.getHash());
+			taskRecord.setTxXdr(stellarRawTxInfo.getEnvelopeXdr());
 			taskRecord.update();
 
 		} catch(GeneralSecurityException | IOException | RuntimeException ex) {

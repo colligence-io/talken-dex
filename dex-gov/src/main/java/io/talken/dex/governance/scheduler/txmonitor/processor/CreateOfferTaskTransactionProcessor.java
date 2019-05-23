@@ -12,7 +12,7 @@ import io.talken.dex.governance.scheduler.txmonitor.TaskTransactionResponse;
 import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.shared.DexTaskId;
-import io.talken.dex.shared.StellarConverter;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;

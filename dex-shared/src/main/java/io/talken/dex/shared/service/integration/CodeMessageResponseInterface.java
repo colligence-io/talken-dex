@@ -3,7 +3,7 @@ package io.talken.dex.shared.service.integration;
 public interface CodeMessageResponseInterface {
 	boolean isSuccess();
 
-	int getCode();
+	String getCode();
 
 	String getMessage();
 }

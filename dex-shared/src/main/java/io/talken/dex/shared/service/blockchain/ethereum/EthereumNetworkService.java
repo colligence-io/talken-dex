@@ -1,11 +1,10 @@
-package io.talken.dex.shared.service.blockchain;
+package io.talken.dex.shared.service.blockchain.ethereum;
 
 
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.shared.DexSettings;
+import io.talken.dex.shared.service.blockchain.RandomServerPicker;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
@@ -13,10 +12,6 @@ import org.web3j.protocol.http.HttpService;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Scope("singleton")
@@ -26,8 +21,7 @@ public class EthereumNetworkService {
 
 	private final DexSettings dexSettings;
 
-	private List<ObjectPair<String, Boolean>> serverList = new ArrayList<>();
-	private SecureRandom random = new SecureRandom();
+	private final RandomServerPicker serverPicker = new RandomServerPicker();
 
 	@PostConstruct
 	private void init() {
@@ -38,13 +32,12 @@ public class EthereumNetworkService {
 		}
 		for(String _s : dexSettings.getBcnode().getEthereum().getServerList()) {
 			logger.info("Ethereum jsonrpc endpoint {} added.", _s);
-			serverList.add(new ObjectPair<>(_s, true));
+			serverPicker.add(_s);
 		}
 	}
 
 	public Web3j newClient() throws IOException {
-		List<String> availableServers = serverList.stream().filter(_sl -> _sl.second().equals(true)).map(ObjectPair::first).collect(Collectors.toList());
-		Web3j web3j = Web3j.build(new HttpService(availableServers.get(random.nextInt(serverList.size()))));
+		Web3j web3j = Web3j.build(new HttpService(serverPicker.pick()));
 		logger.debug("Connected to Ethereum client version: " + web3j.web3ClientVersion().send().getWeb3ClientVersion());
 		return web3j;
 	}

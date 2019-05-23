@@ -8,7 +8,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.bctx.TxSender;
 import io.talken.dex.governance.service.integration.signer.SignServerService;
-import io.talken.dex.shared.service.blockchain.EthereumNetworkService;
+import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.web3j.crypto.RawTransaction;

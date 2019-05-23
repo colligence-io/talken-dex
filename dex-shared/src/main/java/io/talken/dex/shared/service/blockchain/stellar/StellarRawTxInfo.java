@@ -1,4 +1,4 @@
-package io.talken.dex.shared;
+package io.talken.dex.shared.service.blockchain.stellar;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import lombok.Data;
@@ -8,13 +8,13 @@ import org.stellar.sdk.Transaction;
 import java.io.IOException;
 
 @Data
-public class BareTxInfo {
+public class StellarRawTxInfo {
 	private String networkPhrase;
 	private long sequence;
 	private String hash;
 	private String envelopeXdr;
 
-	public static BareTxInfo build(Transaction tx) throws IOException {
+	public static StellarRawTxInfo build(Transaction tx) throws IOException {
 //		// encode tx to envelope,
 //	  // bare tx build issue is fixed in stellar sdk
 //		TransactionEnvelope xdr = new TransactionEnvelope();
@@ -26,7 +26,7 @@ public class BareTxInfo {
 //		byte[] txEnvelope = baos.toByteArray();
 
 		// encode to base64
-		BareTxInfo txInfo = new BareTxInfo();
+		StellarRawTxInfo txInfo = new StellarRawTxInfo();
 		txInfo.setNetworkPhrase(Network.current().getNetworkPassphrase());
 		txInfo.setSequence(tx.getSequenceNumber());
 		txInfo.setHash(ByteArrayUtil.toHexString(tx.hash()));

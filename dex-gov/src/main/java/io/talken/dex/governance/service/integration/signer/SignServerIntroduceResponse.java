@@ -5,13 +5,13 @@ import lombok.Data;
 
 @Data
 public class SignServerIntroduceResponse implements CodeMessageResponseInterface {
-	private int code;
+	private String code;
 	private String message;
 	private _Data data;
 
 	@Override
 	public boolean isSuccess() {
-		return code == 200;
+		return "200".equals(code);
 	}
 
 	@Data

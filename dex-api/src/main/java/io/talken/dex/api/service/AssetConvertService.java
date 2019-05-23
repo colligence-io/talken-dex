@@ -2,7 +2,7 @@ package io.talken.dex.api.service;
 
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.shared.StellarConverter;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.AssetConvertException;
 import org.springframework.beans.factory.annotation.Autowired;

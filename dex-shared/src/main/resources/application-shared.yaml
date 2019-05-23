@@ -12,6 +12,10 @@ talken:
         network: test
         serverList:
           - "http://192.168.0.37:40303"
+      luniverse:
+        network: main
+        serverList:
+          - "https://api.luniverse.io"
     fee:
       offerFeeRate: 0.001
       offerFeeRateCtxFactor: 0.5
@@ -20,6 +24,7 @@ talken:
       deanchorFeeRateCtxFactor: 0.5
       refundRetryInterval: 600
       refundMaxRetry: 5
+
 ################################################################################
 ## LOCAL Profile                                                               #
 ################################################################################
