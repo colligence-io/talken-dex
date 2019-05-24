@@ -1,6 +1,5 @@
 package io.talken.dex.shared.service.blockchain.luniverse;
 
-import io.talken.common.persistence.vault.data.VaultSecretDataLuniverse;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.DexSettings;
 import io.talken.dex.shared.exception.APIErrorException;
@@ -40,19 +39,19 @@ public class LuniverseNetworkService {
 		}
 
 		// luniverse has only one endpoint. This is intended
-		client = new LuniverseApiClient(serverPicker.pick(), dexSettings.getBcnode().getLuniverse().getAux().get(VaultSecretDataLuniverse.AUXKEY_APIKEY));
+		client = new LuniverseApiClient(serverPicker.pick(), dexSettings.getBcnode().getLuniverse().getAux().getApiKey());
 	}
 
 	private String getIssuer() {
-		return dexSettings.getBcnode().getLuniverse().getAux().get(VaultSecretDataLuniverse.AUXKEY_ISSUER);
+		return dexSettings.getBcnode().getLuniverse().getAux().getCompanyWallet();
 	}
 
 	private String getPrivateKey() {
-		return dexSettings.getBcnode().getLuniverse().getAux().get(VaultSecretDataLuniverse.AUXKEY_PRIVATEKEY);
+		return dexSettings.getBcnode().getLuniverse().getAux().getCompanyWalletPrivateKey();
 	}
 
 	private String getPointBase() {
-		return dexSettings.getBcnode().getLuniverse().getAux().get(VaultSecretDataLuniverse.AUXKEY_POINTBASE);
+		return dexSettings.getBcnode().getLuniverse().getAux().getTalkp_base();
 	}
 
 	public LuniverseApiClient getClient() {
