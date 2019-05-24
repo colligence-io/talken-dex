@@ -59,7 +59,7 @@ public class LuniverseApiClient extends AbstractRestApiService {
 	}
 
 	public APIResult<LuniverseTransactionResponse> sendPoint(String from, String to, String amount) {
-		LuniverseSendPoint_A2A_Request request = new LuniverseSendPoint_A2A_Request();
+		LuniverseSendPointRequest<String, String> request = new LuniverseSendPointRequest<>();
 		request.setFrom(from);
 		request.setTo(to);
 		request.setAmount(Convert.toWei(amount, Convert.Unit.ETHER).toString());
@@ -68,7 +68,7 @@ public class LuniverseApiClient extends AbstractRestApiService {
 	}
 
 	public APIResult<LuniverseTransactionResponse> sendPoint(String from, LuniverseWalletRequest to, String amount) {
-		LuniverseSendPoint_A2U_Request request = new LuniverseSendPoint_A2U_Request();
+		LuniverseSendPointRequest<String, LuniverseWalletRequest> request = new LuniverseSendPointRequest<>();
 		request.setFrom(from);
 		request.setTo(to);
 		request.setAmount(Convert.toWei(amount, Convert.Unit.ETHER).toString());
@@ -77,7 +77,7 @@ public class LuniverseApiClient extends AbstractRestApiService {
 	}
 
 	public APIResult<LuniverseTransactionResponse> sendPoint(LuniverseWalletRequest from, String to, String amount) {
-		LuniverseSendPoint_U2A_Request request = new LuniverseSendPoint_U2A_Request();
+		LuniverseSendPointRequest<LuniverseWalletRequest, String> request = new LuniverseSendPointRequest<>();
 		request.setFrom(from);
 		request.setTo(to);
 		request.setAmount(Convert.toWei(amount, Convert.Unit.ETHER).toString());
@@ -99,5 +99,21 @@ public class LuniverseApiClient extends AbstractRestApiService {
 		request.setSignedTx(Numeric.cleanHexPrefix(Numeric.toHexString(signedTx)));
 
 		return requestPost(this.apiUri + "/tx/v1.0/transactions/send_talkp", authHeader(), request, LuniverseResponse.class);
+	}
+
+	public APIResult<LuniverseTransactionResponse> redeemPoint(LuniverseWalletRequest from, String amount) {
+		LuniverseRedeemPointRequest<LuniverseWalletRequest> request = new LuniverseRedeemPointRequest<>();
+		request.setFrom(from);
+		request.setAmount(Convert.toWei(amount, Convert.Unit.ETHER).toString());
+
+		return requestPost(this.apiUri + "/tx/v1.0/transactions/redeem_talkp", authHeader(), request, LuniverseTransactionResponse.class);
+	}
+
+	public APIResult<LuniverseTransactionResponse> redeemPoint(String from, String amount) {
+		LuniverseRedeemPointRequest<String> request = new LuniverseRedeemPointRequest<>();
+		request.setFrom(from);
+		request.setAmount(Convert.toWei(amount, Convert.Unit.ETHER).toString());
+
+		return requestPost(this.apiUri + "/tx/v1.0/transactions/redeem_talkp", authHeader(), request, LuniverseTransactionResponse.class);
 	}
 }

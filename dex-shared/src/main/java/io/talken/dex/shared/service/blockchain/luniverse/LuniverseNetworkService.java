@@ -78,15 +78,18 @@ public class LuniverseNetworkService {
 		if(!sendr.isSuccess()) throw new APIErrorException(sendr);
 	}
 
-	public BigDecimal getPointBalance(String address) throws APIErrorException {
-		APIResult<LuniverseWalletBalanceResponse> balance = getClient().getWalletBalance(address, MTS, STS);
+	public BigDecimal getTalkBalance(String address) throws APIErrorException {
+		APIResult<LuniverseWalletBalanceResponse> balance = getClient().getWalletBalance(address, MTS);
 		if(!balance.isSuccess()) throw new APIErrorException(balance);
 
 		return Convert.fromWei(balance.getData().getData().getBalance(), Convert.Unit.ETHER);
 	}
 
-	public BigDecimal getPointBaseBalance() throws APIErrorException {
-		return getPointBalance(getPointBase());
+	public BigDecimal getPointBalance(String address) throws APIErrorException {
+		APIResult<LuniverseWalletBalanceResponse> balance = getClient().getWalletBalance(address, MTS, STS);
+		if(!balance.isSuccess()) throw new APIErrorException(balance);
+
+		return Convert.fromWei(balance.getData().getData().getBalance(), Convert.Unit.ETHER);
 	}
 
 	public void distributePoint(String userKey, String amount) throws APIErrorException {
