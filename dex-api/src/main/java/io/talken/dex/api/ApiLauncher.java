@@ -2,12 +2,13 @@ package io.talken.dex.api;
 
 import io.talken.common.Bootstrap;
 import io.talken.common.CommonConsts;
+import io.talken.common.DefaultApplication;
 import io.talken.dex.api.config.auth.AccessTokenInterceptor;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 
 @SpringBootApplication(scanBasePackages = {"io.talken.dex.api"}, exclude = {ErrorMvcAutoConfiguration.class})
-public class ApiLauncher {
+public class ApiLauncher extends DefaultApplication {
 	public static void main(String[] args) {
 		// Parse arguments
 		for(int i = 0; i < args.length; i++) {
