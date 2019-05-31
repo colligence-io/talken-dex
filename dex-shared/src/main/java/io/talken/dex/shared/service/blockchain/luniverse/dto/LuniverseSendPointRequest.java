@@ -1,10 +1,13 @@
 package io.talken.dex.shared.service.blockchain.luniverse.dto;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Setter;
 
 @Data
 public class LuniverseSendPointRequest<F, T> {
 	private F from;
+	@Setter(AccessLevel.NONE)
 	private Inputs<T> inputs = new Inputs<>();
 
 	public void setTo(T to) {

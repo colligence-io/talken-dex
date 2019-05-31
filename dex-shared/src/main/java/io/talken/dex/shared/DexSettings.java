@@ -17,7 +17,7 @@ public class DexSettings {
 
 	@PostConstruct
 	private void readVaultSecret() {
-		this.getBcnode().getLuniverse().aux = secretReader.readSecret("luniverse", VaultSecretDataLuniverse.class);
+		this.getBcnode().getLuniverse().secret = secretReader.readSecret("luniverse", VaultSecretDataLuniverse.class);
 	}
 
 	private _Fee fee;
@@ -41,16 +41,25 @@ public class DexSettings {
 	@Getter
 	@Setter
 	public static class _BCNodes {
-		private NodeServerList<Void> stellar;
-		private NodeServerList<Void> ethereum;
-		private NodeServerList<VaultSecretDataLuniverse> luniverse;
+		private NodeServerList stellar;
+		private NodeServerList ethereum;
+		private _Luniverse luniverse;
 	}
 
 	@Getter
 	@Setter
-	public static class NodeServerList<T> {
+	public static class NodeServerList {
 		private String network;
 		private List<String> serverList;
-		private T aux;
+	}
+
+	@Getter
+	@Setter
+	public static class _Luniverse {
+		private VaultSecretDataLuniverse secret;
+		private String apiUri;
+		private String rpcUri;
+		private String mtSymbol;
+		private String stSymbol;
 	}
 }

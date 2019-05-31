@@ -41,6 +41,14 @@ public class APIResult<T> {
 		setError(cause.getClass().getSimpleName(), cause.getMessage());
 	}
 
+	public void copyErrorFrom(APIResult<?> origin) {
+		this.responseCode = origin.responseCode;
+		this.isSuccess = origin.isSuccess;
+		this.cause = origin.cause;
+		this.errorCode = origin.errorCode;
+		this.errorMessage = origin.errorMessage;
+	}
+
 	@Override
 	public String toString() {
 		return "APIResult{" +

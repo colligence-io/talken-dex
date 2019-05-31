@@ -13,9 +13,10 @@ talken:
         serverList:
           - "http://192.168.0.37:40303"
       luniverse:
-        network: main
-        serverList:
-          - "https://api.luniverse.io"
+        apiUri: "https://api.luniverse.io"
+        rpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
+        mtSymbol: "FT9754"
+        stSymbol: "TALKP"
     fee:
       offerFeeRate: 0.001
       offerFeeRateCtxFactor: 0.5

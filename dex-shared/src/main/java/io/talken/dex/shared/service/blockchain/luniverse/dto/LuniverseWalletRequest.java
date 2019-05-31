@@ -5,10 +5,11 @@ import lombok.Data;
 
 @Data
 public class LuniverseWalletRequest {
-	private final String walletType = LuniverseApiClient.LUNIVERSE_PKMS_WALLET;
+	private final String walletType;
 	private String userKey;
 
-	public LuniverseWalletRequest(String userKey) {
+	public LuniverseWalletRequest(String walletType, String userKey) {
+		this.walletType = walletType;
 		this.userKey = userKey;
 	}
 }
