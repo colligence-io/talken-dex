@@ -1,10 +1,12 @@
 package io.talken.dex.governance.service.talkp;
 
+import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.integration.signer.SignServerService;
 import io.talken.dex.shared.DexSettings;
 import io.talken.dex.shared.exception.APIErrorException;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumSignInterface;
+import io.talken.dex.shared.service.blockchain.ethereum.StandardERC20ContractFunctions;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseApiClient;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import io.talken.dex.shared.service.blockchain.luniverse.dto.LuniverseRawTx;
@@ -15,13 +17,22 @@ import io.talken.dex.shared.service.integration.APIResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.datatypes.Function;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.EthBlock;
+import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.utils.Convert;
+import org.web3j.utils.Numeric;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 @Service
 @Scope("singleton")
@@ -138,4 +149,40 @@ public class TalkenPointService {
 
 		return result;
 	}
+//
+//
+//	protected void test() throws Exception {
+//		Web3j web3j = getClient().createRpcClient();
+//
+//		BigInteger amount = Convert.toWei("10", Convert.Unit.ETHER).toBigInteger();
+//
+//		LuniverseSendPointRequest<String, String> request = new LuniverseSendPointRequest<>();
+//		request.setFrom(getIssuer());
+//		logger.info(request.getFrom());
+//		request.setTo(getPointBase());
+//		request.setAmount(amount.toString());
+//		APIResult<LuniverseTransactionResponse> ltxResult = getClient().requestTx("send_talkp", request);
+//
+//		BigInteger nonce = new BigInteger(Numeric.cleanHexPrefix(ltxResult.getData().getData().getRawTx().getNonce()), 16);
+//		BigInteger gasPrice = new BigInteger(Numeric.cleanHexPrefix(ltxResult.getData().getData().getRawTx().getGasPrice()), 16);
+//		BigInteger gasLimit = new BigInteger(Numeric.cleanHexPrefix(ltxResult.getData().getData().getRawTx().getGasLimit()), 16);
+//
+//		RawTransaction rawTx;
+//
+//		Function function = StandardERC20ContractFunctions.transfer("0xf3bb0ac384e706f57733db9e8c0e02d8b5df3519", amount);
+//
+//		String encodedFunction = FunctionEncoder.encode(function);
+//
+//		rawTx = RawTransaction.createTransaction(nonce, gasPrice, gasLimit, "0x0567F057F6B93bDE83785996BfBB111725D51318", encodedFunction);
+//
+//		logger.info(JSONWriter.toJsonString(rawTx));
+//
+//		byte[] txSigned = TransactionEncoder.signMessage(rawTx, Credentials.create("9273946b86f55bd3f0d6a355b31d9f9f5068be851ca1db6a248fa3e3e7c4795e"));
+//
+//		logger.debug("Sending TX to ethereum network.");
+//		EthSendTransaction ethSendTx = web3j.ethSendRawTransaction(Numeric.toHexString(txSigned)).sendAsync().get();
+//
+//		logger.info(JSONWriter.toJsonString(ethSendTx));
+//
+//	}
 }

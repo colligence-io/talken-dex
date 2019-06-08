@@ -23,8 +23,8 @@ public class AnchorServerService extends AbstractRestApiService {
 
 	@PostConstruct
 	private void init() {
-		anchoringApiUrl = apiSettings.getServer().getAncAddress() + "/exchange/anchor/asset/anchor";
-		deanchoringApiUrl = apiSettings.getServer().getAncAddress() + "/exchange/anchor/asset/deanchor";
+		anchoringApiUrl = apiSettings.getIntegration().getAncAddress() + "/exchange/anchor/asset/anchor";
+		deanchoringApiUrl = apiSettings.getIntegration().getAncAddress() + "/exchange/anchor/asset/deanchor";
 	}
 
 	public APIResult<AncServerAnchorResponse> requestAnchor(AncServerAnchorRequest request) {

@@ -44,7 +44,7 @@ public class ApiSettings extends DexSettings {
 		private int jwtExpiration;
 	}
 
-	private _Integration server;
+	private _Integration integration;
 
 	@Getter
 	@Setter
