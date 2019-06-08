@@ -15,9 +15,9 @@ import io.talken.common.util.collection.DoubleKeyObject;
 import io.talken.common.util.collection.DoubleKeyTable;
 import io.talken.common.util.collection.SingleKeyTable;
 import io.talken.dex.governance.service.integration.signer.SignServerService;
-import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -334,7 +334,10 @@ public class TokenMetaGovService {
 				mi.setBaseAddress(_mi.getBaseaddress());
 				mi.setOfferFeeHolderAddress(_mi.getOfferfeeholderaddress());
 				mi.setDeancFeeHolderAddress(_mi.getDeancfeeholderaddress());
-				mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getUpdateTimestamp()));
+				if(_mi.getUpdateTimestamp() == null)
+					mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getCreateTimestamp()));
+				else
+					mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getUpdateTimestamp()));
 
 				if(_mi.getMarketPair() != null) {
 					_mi.getMarketPair().forEach((_mpKey, _mp) -> {
