@@ -40,19 +40,12 @@ public class TokenMetaService {
 	@Scheduled(fixedDelay = 1000)
 	private void checkAndReload() throws TokenMetaLoadException {
 		try {
-			boolean reload = false;
-			if(tmTable == null || loadTimestamp == null) reload = true;
-			else {
-				Object tmval = redisTemplate.opsForValue().get(TokenMetaTable.REDIS_UDPATED_KEY);
-				if(tmval != null) {
-					Long redisTmUpdated = Long.valueOf(tmval.toString());
-					if(loadTimestamp < redisTmUpdated) {
-						reload = true;
-					}
-				}
-			}
+			Long redisTmUpdated =
+					Optional.ofNullable(redisTemplate.opsForValue().get(TokenMetaTable.REDIS_UDPATED_KEY))
+							.map((o) -> Long.valueOf(o.toString()))
+							.orElseThrow(() -> new TokenMetaLoadException("cannot find cached meta"));
 
-			if(reload) {
+			if(!redisTmUpdated.equals(loadTimestamp)) {
 				ObjectMapper mapper = new ObjectMapper();
 				mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -67,10 +60,12 @@ public class TokenMetaService {
 
 				tmTable = newTmTable;
 				miTable = newMiTable;
-				loadTimestamp = UTCUtil.getNowTimestamp_s();
+				loadTimestamp = redisTmUpdated;
 
 				logger.info("Token Meta loaded : all {}, managed {}, timestamp {}", tmTable.size(), miTable.size(), loadTimestamp);
 			}
+		} catch(TokenMetaLoadException ex) {
+			throw ex;
 		} catch(Exception ex) {
 			throw new TokenMetaLoadException(ex);
 		}
