@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.UTCUtil;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.ActiveAssetHolderAccountNotFoundException;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
@@ -37,7 +36,7 @@ public class TokenMetaService {
 		checkAndReload();
 	}
 
-	@Scheduled(fixedDelay = 1000)
+	@Scheduled(fixedDelay = 1000, initialDelay = 5000)
 	private void checkAndReload() throws TokenMetaLoadException {
 		try {
 			Long redisTmUpdated =
