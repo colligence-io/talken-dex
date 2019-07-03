@@ -1,12 +1,14 @@
 package io.talken.dex.api.service;
 
 
+import io.talken.common.exception.common.RestApiErrorException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskCreateofferRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskDeleteofferRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTxmonCreateofferRecord;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.integration.RestApiResult;
 import io.talken.dex.api.controller.dto.CreateOfferResult;
 import io.talken.dex.api.controller.dto.DeleteOfferResult;
 import io.talken.dex.api.controller.dto.DexKeyResult;
@@ -20,7 +22,6 @@ import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarSignVerifier;
 import io.talken.dex.shared.exception.*;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
-import io.talken.dex.shared.service.integration.APIResult;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -54,7 +55,7 @@ public class OfferService {
 	@Autowired
 	private RelayServerService relayServerService;
 
-	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws TokenMetaNotFoundException, StellarException, APIErrorException, AssetConvertException, EffectiveAmountIsNegativeException {
+	public CreateOfferResult createOffer(long userId, String sourceAccountId, String sellAssetCode, double sellAssetAmount, String buyAssetCode, double sellAssetPrice, boolean feeByCtx) throws TokenMetaNotFoundException, StellarException, RestApiErrorException, AssetConvertException, EffectiveAmountIsNegativeException {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_CREATE);
 
 		// create task record
@@ -164,7 +165,7 @@ public class OfferService {
 		encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
 
 		// send relay addContents request
-		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.CREATEOFFER, userId, dexTaskId, encData);
+		RestApiResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.CREATEOFFER, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
@@ -175,7 +176,7 @@ public class OfferService {
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new APIErrorException(relayResult);
+			throw new RestApiErrorException(relayResult);
 		}
 
 		// update task record
@@ -220,7 +221,7 @@ public class OfferService {
 		return result;
 	}
 
-	public DeleteOfferResult deleteOffer(long userId, long offerId, String sourceAccountId, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws TokenMetaNotFoundException, StellarException, APIErrorException {
+	public DeleteOfferResult deleteOffer(long userId, long offerId, String sourceAccountId, String sellAssetCode, String buyAssetCode, double sellAssetPrice) throws TokenMetaNotFoundException, StellarException, RestApiErrorException {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_DELETE);
 
 		// create task record
@@ -308,7 +309,7 @@ public class OfferService {
 		encData.addDescription("sellPrice", StellarConverter.rawToActualString(taskRecord.getSellpriceraw()));
 
 		// send relay addContents request
-		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DELETEOFFER, userId, dexTaskId, encData);
+		RestApiResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DELETEOFFER, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
@@ -319,7 +320,7 @@ public class OfferService {
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new APIErrorException(relayResult);
+			throw new RestApiErrorException(relayResult);
 		}
 
 		// update task record

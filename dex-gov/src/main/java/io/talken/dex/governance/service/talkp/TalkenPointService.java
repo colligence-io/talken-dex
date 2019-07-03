@@ -1,38 +1,27 @@
 package io.talken.dex.governance.service.talkp;
 
-import io.talken.common.util.JSONWriter;
+import io.talken.common.exception.common.RestApiErrorException;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.integration.RestApiResult;
 import io.talken.dex.governance.service.integration.signer.SignServerService;
 import io.talken.dex.shared.DexSettings;
-import io.talken.dex.shared.exception.APIErrorException;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumSignInterface;
-import io.talken.dex.shared.service.blockchain.ethereum.StandardERC20ContractFunctions;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseApiClient;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import io.talken.dex.shared.service.blockchain.luniverse.dto.LuniverseRawTx;
 import io.talken.dex.shared.service.blockchain.luniverse.dto.LuniverseRedeemPointRequest;
 import io.talken.dex.shared.service.blockchain.luniverse.dto.LuniverseSendPointRequest;
 import io.talken.dex.shared.service.blockchain.luniverse.dto.LuniverseTransactionResponse;
-import io.talken.dex.shared.service.integration.APIResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.datatypes.Function;
 import org.web3j.crypto.Credentials;
-import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
-import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthBlock;
-import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.utils.Convert;
-import org.web3j.utils.Numeric;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 @Service
 @Scope("singleton")
@@ -73,39 +62,39 @@ public class TalkenPointService {
 		return dexSettings.getBcnode().getLuniverse().getSecret().getTalkp_base();
 	}
 
-	public BigDecimal getTalkBalance(String userAddress) throws APIErrorException {
+	public BigDecimal getTalkBalance(String userAddress) throws RestApiErrorException {
 		return luniverseNetworkService.getBalance(userAddress, MTS);
 	}
 
-	public BigDecimal getPointBalance(String userAddress) throws APIErrorException {
+	public BigDecimal getPointBalance(String userAddress) throws RestApiErrorException {
 		return luniverseNetworkService.getBalance(userAddress, MTS, STS);
 	}
 
-	public APIResult<String> issuePoint(String amount) throws APIErrorException {
+	public RestApiResult<String> issuePoint(String amount) throws RestApiErrorException {
 		return sendPoint(getIssuer(), getPointBase(), amount);
 	}
 
-	public APIResult<String> distributePoint(String userAddress, String amount) throws APIErrorException {
+	public RestApiResult<String> distributePoint(String userAddress, String amount) throws RestApiErrorException {
 		return sendPoint(getPointBase(), userAddress, amount);
 	}
 
-	public APIResult<String> reclaimPoint(String userAddress, String amount) throws APIErrorException {
+	public RestApiResult<String> reclaimPoint(String userAddress, String amount) throws RestApiErrorException {
 		return sendPoint(userAddress, getPointBase(), amount);
 	}
 
-	public APIResult<LuniverseTransactionResponse> switchPoint(String userAddress, String amount) throws APIErrorException {
+	public RestApiResult<LuniverseTransactionResponse> switchPoint(String userAddress, String amount) throws RestApiErrorException {
 		return redeemPoint(userAddress, amount);
 	}
 
-	private APIResult<LuniverseTransactionResponse> redeemPoint(String address, String amount) throws APIErrorException {
+	private RestApiResult<LuniverseTransactionResponse> redeemPoint(String address, String amount) throws RestApiErrorException {
 		LuniverseRedeemPointRequest<String> request = new LuniverseRedeemPointRequest<>();
 		request.setFrom(address);
 		request.setAmount(Convert.toWei(amount, Convert.Unit.ETHER).toString());
 		return getClient().requestTx("redeem_talkp", request);
 	}
 
-	private APIResult<String> sendPoint(String from, String to, String amount) throws APIErrorException {
-		APIResult<String> result = new APIResult<>("sendPoint");
+	private RestApiResult<String> sendPoint(String from, String to, String amount) throws RestApiErrorException {
+		RestApiResult<String> result = new RestApiResult<>("sendPoint");
 
 		try {
 			LuniverseSendPointRequest<String, String> request = new LuniverseSendPointRequest<>();
@@ -113,9 +102,9 @@ public class TalkenPointService {
 			request.setTo(to);
 			request.setAmount(Convert.toWei(amount, Convert.Unit.ETHER).toString());
 
-			APIResult<LuniverseTransactionResponse> ltxResult = getClient().requestTx("send_talkp", request);
+			RestApiResult<LuniverseTransactionResponse> ltxResult = getClient().requestTx("send_talkp", request);
 
-			if(!ltxResult.isSuccess()) throw new APIErrorException(ltxResult);
+			if(!ltxResult.isSuccess()) throw new RestApiErrorException(ltxResult);
 
 			LuniverseRawTx rawTx = ltxResult.getData().getData().getRawTx();
 			if(rawTx != null) {
@@ -128,9 +117,9 @@ public class TalkenPointService {
 					signer = (tx) -> ssService.signEthereumTransaction(tx, from);
 				}
 
-				APIResult<EthSendTransaction> rtxResult = getClient().submitSignedTxViaRPC(rawTx, signer);
+				RestApiResult<EthSendTransaction> rtxResult = getClient().submitSignedTxViaRPC(rawTx, signer);
 
-				if(!rtxResult.isSuccess()) throw new APIErrorException(rtxResult);
+				if(!rtxResult.isSuccess()) throw new RestApiErrorException(rtxResult);
 
 				result.setSuccess(true);
 				result.setData(rtxResult.getData().getTransactionHash());
@@ -139,12 +128,12 @@ public class TalkenPointService {
 				result.setData(ltxResult.getData().getData().getTxHash());
 			}
 
-		} catch(APIErrorException ex) {
+		} catch(RestApiErrorException ex) {
 			throw ex;
 		} catch(Exception ex) {
 			result.setSuccess(false);
 			result.setException(ex);
-			throw new APIErrorException(result);
+			throw new RestApiErrorException(result);
 		}
 
 		return result;

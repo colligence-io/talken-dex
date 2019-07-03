@@ -8,7 +8,6 @@ public enum DexExceptionTypeEnum implements TalkenException.ExceptionTypeEnum {
 	PARAMETER_VIOLATION(2),
 	TASK_NOT_FOUND(3),
 	STELLAR_EXCEPTION(4),
-	API_RETURNED_ERROR(5),
 	TASK_INTEGRITY_CHECK_FAILED(6),
 	ACCOUNT_NOT_FOUND(7),
 	TX_HASH_NOT_MATCH(8),

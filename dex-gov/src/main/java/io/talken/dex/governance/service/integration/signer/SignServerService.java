@@ -4,10 +4,10 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpStatusCodes;
 import io.talken.common.util.ByteArrayUtils;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.integration.RestApiResult;
+import io.talken.common.util.integration.AbstractRestApiService;
 import io.talken.dex.governance.GovSettings;
 import io.talken.dex.shared.exception.SigningException;
-import io.talken.dex.shared.service.integration.APIResult;
-import io.talken.dex.shared.service.integration.AbstractRestApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -60,7 +60,7 @@ public class SignServerService extends AbstractRestApiService {
 			SignServerIntroduceRequest request = new SignServerIntroduceRequest();
 			request.setMyNameIs(govSettings.getSignServer().getAppName());
 
-			APIResult<SignServerIntroduceResponse> introResult = requestPost(introduceUrl, request, SignServerIntroduceResponse.class);
+			RestApiResult<SignServerIntroduceResponse> introResult = requestPost(introduceUrl, request, SignServerIntroduceResponse.class);
 
 			if(!introResult.isSuccess()) {
 				logger.error("Cannot get signServerAccess  Token : {}, {}, {}", introResult.getResponseCode(), introResult.getErrorCode(), introResult.getErrorMessage());
@@ -80,7 +80,7 @@ public class SignServerService extends AbstractRestApiService {
 			request2.setYourQuestionWas(question);
 			request2.setMyAnswerIs(Base64.getEncoder().encodeToString(sBytes));
 
-			APIResult<SignServerAnswerResponse> answerResult = requestPost(answerUrl, request2, SignServerAnswerResponse.class);
+			RestApiResult<SignServerAnswerResponse> answerResult = requestPost(answerUrl, request2, SignServerAnswerResponse.class);
 
 			if(!answerResult.isSuccess()) {
 				logger.error("Cannot get signServer Acces Token : {}, {}, {}", answerResult.getResponseCode(), answerResult.getErrorCode(), answerResult.getErrorMessage());
@@ -107,10 +107,10 @@ public class SignServerService extends AbstractRestApiService {
 		}
 	}
 
-	private APIResult<SignServerSignResponse> requestSign(String bc, String address, byte[] message) throws SigningException {
+	private RestApiResult<SignServerSignResponse> requestSign(String bc, String address, byte[] message) throws SigningException {
 		if(token == null) updateAccessToken();
 
-		APIResult<SignServerSignResponse> result = requestSign2(bc, address, message);
+		RestApiResult<SignServerSignResponse> result = requestSign2(bc, address, message);
 
 		// case of unauthorized result, mostly case of token expiration
 		// try update access token and send request again
@@ -124,7 +124,7 @@ public class SignServerService extends AbstractRestApiService {
 		return result;
 	}
 
-	private APIResult<SignServerSignResponse> requestSign2(String bc, String address, byte[] message) throws SigningException {
+	private RestApiResult<SignServerSignResponse> requestSign2(String bc, String address, byte[] message) throws SigningException {
 		if(token == null) {
 			throw new SigningException(address, "Cannot request sign, access token is null");
 		}
@@ -146,7 +146,7 @@ public class SignServerService extends AbstractRestApiService {
 	public void signStellarTransaction(Transaction tx) throws SigningException {
 		String accountId = tx.getSourceAccount().getAccountId();
 
-		APIResult<SignServerSignResponse> signResult = requestSign("XLM", accountId, tx.hash());
+		RestApiResult<SignServerSignResponse> signResult = requestSign("XLM", accountId, tx.hash());
 
 		if(!signResult.isSuccess()) {
 			throw new SigningException(accountId, signResult.getErrorCode() + " : " + signResult.getErrorMessage());
@@ -183,7 +183,7 @@ public class SignServerService extends AbstractRestApiService {
 
 		byte[] hexMessage = Hash.sha3(encodedTx);
 
-		APIResult<SignServerSignResponse> signResult = requestSign("ETH", from, hexMessage);
+		RestApiResult<SignServerSignResponse> signResult = requestSign("ETH", from, hexMessage);
 
 		byte[] sigBytes = ByteArrayUtils.fromHexString(signResult.getData().getData().getSignature());
 

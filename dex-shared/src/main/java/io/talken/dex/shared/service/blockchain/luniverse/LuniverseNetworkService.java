@@ -1,10 +1,10 @@
 package io.talken.dex.shared.service.blockchain.luniverse;
 
+import io.talken.common.exception.common.RestApiErrorException;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.integration.RestApiResult;
 import io.talken.dex.shared.DexSettings;
-import io.talken.dex.shared.exception.APIErrorException;
 import io.talken.dex.shared.service.blockchain.luniverse.dto.LuniverseWalletBalanceResponse;
-import io.talken.dex.shared.service.integration.APIResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -40,13 +40,13 @@ public class LuniverseNetworkService {
 		return client;
 	}
 
-	public BigDecimal getBalance(String address, String mts) throws APIErrorException {
+	public BigDecimal getBalance(String address, String mts) throws RestApiErrorException {
 		return getBalance(address, mts, null);
 	}
 
-	public BigDecimal getBalance(String address, String mts, String sts) throws APIErrorException {
-		APIResult<LuniverseWalletBalanceResponse> balance = getClient().getWalletBalance(address, mts, sts);
-		if(!balance.isSuccess()) throw new APIErrorException(balance);
+	public BigDecimal getBalance(String address, String mts, String sts) throws RestApiErrorException {
+		RestApiResult<LuniverseWalletBalanceResponse> balance = getClient().getWalletBalance(address, mts, sts);
+		if(!balance.isSuccess()) throw new RestApiErrorException(balance);
 
 		return Convert.fromWei(balance.getData().getData().getBalance(), Convert.Unit.ETHER);
 	}

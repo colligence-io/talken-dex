@@ -20,7 +20,7 @@ subprojects {
     targetCompatibility = 1.8
 
     group = "io.talken"
-    version = "1.0.3"
+    version = "1.0.4-SNAPSHOT"
 
     bootJar {
         baseName = "talken-" + project.name
@@ -54,7 +54,7 @@ subprojects {
     }
 
     dependencies {
-        compile('io.talken:java-common:20190627-1') { changing = true }
+        compile('io.talken:java-common:20190703-1') { changing = true }
 
         compileOnly('org.projectlombok:lombok:1.18.4')
 
@@ -67,9 +67,6 @@ subprojects {
 
         // configuration processor
         compile('org.springframework.boot:spring-boot-configuration-processor')
-
-        // google http client
-        compile('com.google.http-client:google-http-client-jackson2:1.27.0')
 
         // Redis
         compile('org.springframework.boot:spring-boot-starter-data-redis')

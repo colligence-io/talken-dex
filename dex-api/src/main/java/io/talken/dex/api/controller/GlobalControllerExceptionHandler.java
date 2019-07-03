@@ -2,13 +2,13 @@ package io.talken.dex.api.controller;
 
 
 import io.talken.common.exception.TalkenException;
+import io.talken.common.exception.common.RestApiErrorException;
 import io.talken.common.service.MessageService;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.shared.exception.APIErrorException;
+import io.talken.common.util.integration.RestApiResult;
 import io.talken.dex.shared.exception.InternalServerErrorException;
 import io.talken.dex.shared.exception.ParameterViolationException;
 import io.talken.dex.shared.exception.UnauthorizedException;
-import io.talken.dex.shared.service.integration.APIResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -59,9 +59,9 @@ public class GlobalControllerExceptionHandler {
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	@ExceptionHandler(APIErrorException.class)
+	@ExceptionHandler(RestApiErrorException.class)
 	@ResponseBody
-	public DexResponse<APIResult> handleCLGException(APIErrorException e, Locale locale) {
+	public DexResponse<RestApiResult> handleCLGException(RestApiErrorException e, Locale locale) {
 		// FIXME : e.getApiResult is too sensitive to return as result body, consider hide it
 		logger.exception(e);
 		return DexResponse.buildResponse(new DexResponseBody<>(e.getErrorCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, e.getApiResult()));

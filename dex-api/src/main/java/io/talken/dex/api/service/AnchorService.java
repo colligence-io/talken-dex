@@ -2,6 +2,7 @@ package io.talken.dex.api.service;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.talken.common.exception.common.RestApiErrorException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
@@ -9,6 +10,7 @@ import io.talken.common.persistence.jooq.tables.records.DexTaskDeanchorRecord;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
+import io.talken.common.util.integration.RestApiResult;
 import io.talken.dex.api.controller.dto.AnchorRequest;
 import io.talken.dex.api.controller.dto.AnchorResult;
 import io.talken.dex.api.controller.dto.DeanchorResult;
@@ -24,7 +26,6 @@ import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarSignVerifier;
 import io.talken.dex.shared.exception.*;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
-import io.talken.dex.shared.service.integration.APIResult;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -61,7 +62,7 @@ public class AnchorService {
 	@Autowired
 	private DSLContext dslContext;
 
-	public AnchorResult anchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, AnchorRequest ancRequestBody) throws TokenMetaNotFoundException, APIErrorException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
+	public AnchorResult anchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, AnchorRequest ancRequestBody) throws TokenMetaNotFoundException, RestApiErrorException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
 		String assetHolderAddress = tmService.getActiveHolderAccountAddress(assetCode);
 
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
@@ -93,7 +94,7 @@ public class AnchorService {
 		req.setMemo(UTCUtil.getNow().toString());
 
 		// request anchor monitor
-		APIResult<AncServerAnchorResponse> anchorResult = anchorServerService.requestAnchor(req);
+		RestApiResult<AncServerAnchorResponse> anchorResult = anchorServerService.requestAnchor(req);
 		if(!anchorResult.isSuccess()) {
 			// update task record
 			logger.error("{} failed. : {}", dexTaskId, anchorResult.toString());
@@ -103,7 +104,7 @@ public class AnchorService {
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new APIErrorException(anchorResult);
+			throw new RestApiErrorException(anchorResult);
 		}
 
 		// update task record
@@ -136,7 +137,7 @@ public class AnchorService {
 		encData.addDescription("amount", StellarConverter.rawToActualString(taskRecord.getAmountraw()));
 
 		// send relay addContents request
-		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.ANCHOR, userId, dexTaskId, encData);
+		RestApiResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.ANCHOR, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
@@ -147,7 +148,7 @@ public class AnchorService {
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new APIErrorException(relayResult);
+			throw new RestApiErrorException(relayResult);
 		}
 
 		// update task record
@@ -190,7 +191,7 @@ public class AnchorService {
 		return result;
 	}
 
-	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws TokenMetaNotFoundException, StellarException, APIErrorException, AssetConvertException, EffectiveAmountIsNegativeException {
+	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, Double amount, Boolean feeByCtx) throws TokenMetaNotFoundException, StellarException, RestApiErrorException, AssetConvertException, EffectiveAmountIsNegativeException {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 
 		// create task record
@@ -299,7 +300,7 @@ public class AnchorService {
 		ancRequest.setValue(StellarConverter.rawToActual(taskRecord.getDeanchoramountraw()).doubleValue());
 		ancRequest.setMemo(UTCUtil.getNow().toString());
 
-		APIResult<AncServerDeanchorResponse> deanchorResult = anchorServerService.requestDeanchor(ancRequest);
+		RestApiResult<AncServerDeanchorResponse> deanchorResult = anchorServerService.requestDeanchor(ancRequest);
 
 		if(!deanchorResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, deanchorResult);
@@ -310,7 +311,7 @@ public class AnchorService {
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new APIErrorException(deanchorResult);
+			throw new RestApiErrorException(deanchorResult);
 		}
 
 		// update task record
@@ -328,7 +329,7 @@ public class AnchorService {
 		encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
 
 		// send relay addContents request
-		APIResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DEANCHOR, userId, dexTaskId, encData);
+		RestApiResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DEANCHOR, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
@@ -339,7 +340,7 @@ public class AnchorService {
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new APIErrorException(relayResult);
+			throw new RestApiErrorException(relayResult);
 		}
 
 		// update task record

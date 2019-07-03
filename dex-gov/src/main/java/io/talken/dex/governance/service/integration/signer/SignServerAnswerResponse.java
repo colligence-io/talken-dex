@@ -1,12 +1,12 @@
 package io.talken.dex.governance.service.integration.signer;
 
-import io.talken.dex.shared.service.integration.CodeMessageResponseInterface;
+import io.talken.common.util.integration.RestApiResponseInterface;
 import lombok.Data;
 
 import java.util.Map;
 
 @Data
-public class SignServerAnswerResponse implements CodeMessageResponseInterface {
+public class SignServerAnswerResponse implements RestApiResponseInterface {
 	private String code;
 	private String message;
 	private _Data data;
