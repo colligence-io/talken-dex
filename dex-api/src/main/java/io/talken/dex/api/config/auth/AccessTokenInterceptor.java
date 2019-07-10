@@ -1,9 +1,11 @@
 package io.talken.dex.api.config.auth;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import io.talken.common.exception.runtime.JwtValidateRuntimeException;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.service.JWTService;
 import io.talken.common.util.PrefixedLogger;
@@ -62,6 +64,9 @@ public class AccessTokenInterceptor implements HandlerInterceptor {
 				try {
 					Long userId = (fixedUserId != null) ? fixedUserId : jwtService.getUserIdFromJWT(token);
 					loadUserInfo(userId);
+				} catch(JwtValidateRuntimeException ex) {
+					// Invalid JWT signature
+					throw new AccessTokenValidationException("Invalid AccessToken", ex);
 				} catch(SignatureException ex) {
 					// Invalid JWT signature
 					throw new AccessTokenValidationException("Invalid AccessToken", ex);
