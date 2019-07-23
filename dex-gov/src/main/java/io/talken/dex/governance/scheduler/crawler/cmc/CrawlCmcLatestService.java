@@ -9,6 +9,7 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
+import io.talken.common.RunningProfile;
 import io.talken.common.persistence.jooq.tables.records.TokenMetaRecord;
 import io.talken.common.persistence.mongodb.cmc.CMCLatestData;
 import io.talken.common.persistence.mongodb.cmc.CMCLatestEntryData;
@@ -32,7 +33,9 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicLong;
 
+import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.*;
 
 @Service
@@ -60,12 +63,23 @@ public class CrawlCmcLatestService {
 	@Autowired
 	private DataSourceTransactionManager txMgr;
 
+	private static AtomicLong counter = new AtomicLong(0);
+
 	public static class CoinMarketCapLatestResult extends CoinMarketCapResult<CMCLatestData> {}
 
-	@Scheduled(cron = "0 */2 * * * *", zone = "UTC")
+	@Scheduled(cron = "0 */10 * * * *", zone = ZONE_UTC)
 	private void crawl() {
+		counter.incrementAndGet();
 		try {
-			crawlCMCLatest();
+			if(RunningProfile.isProduction()) {
+				crawlCMCLatest();
+			} else { // for saving CMC credit, run every 4 hours only
+				if(counter.get() % 24 == 0) {
+					crawlCMCLatest();
+				} else {
+					logger.trace("Skip CMC crawler task for saving credit.");
+				}
+			}
 		} catch(Exception ex) {
 			logger.exception(ex);
 		}
