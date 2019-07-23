@@ -48,17 +48,17 @@ public class SignServerService extends AbstractRestApiService {
 
 	@PostConstruct
 	private void init() {
-		signingUrl = govSettings.getSignServer().getAddr() + "/sign";
-		introduceUrl = govSettings.getSignServer().getAddr() + "/introduce";
-		answerUrl = govSettings.getSignServer().getAddr() + "/answer";
+		signingUrl = govSettings.getIntegration().getSignServer().getAddr() + "/sign";
+		introduceUrl = govSettings.getIntegration().getSignServer().getAddr() + "/introduce";
+		answerUrl = govSettings.getIntegration().getSignServer().getAddr() + "/answer";
 		updateAccessToken();
 	}
 
 	private synchronized void updateAccessToken() {
 		try {
-			String privateKey = govSettings.getSignServer().getAppKey();
+			String privateKey = govSettings.getIntegration().getSignServer().getAppKey();
 			SignServerIntroduceRequest request = new SignServerIntroduceRequest();
-			request.setMyNameIs(govSettings.getSignServer().getAppName());
+			request.setMyNameIs(govSettings.getIntegration().getSignServer().getAppName());
 
 			RestApiResult<SignServerIntroduceResponse> introResult = requestPost(introduceUrl, request, SignServerIntroduceResponse.class);
 
@@ -76,7 +76,7 @@ public class SignServerService extends AbstractRestApiService {
 			byte[] sBytes = keyPair.sign(qBytes);
 
 			SignServerAnswerRequest request2 = new SignServerAnswerRequest();
-			request2.setMyNameIs(govSettings.getSignServer().getAppName());
+			request2.setMyNameIs(govSettings.getIntegration().getSignServer().getAppName());
 			request2.setYourQuestionWas(question);
 			request2.setMyAnswerIs(Base64.getEncoder().encodeToString(sBytes));
 

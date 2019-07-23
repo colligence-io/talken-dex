@@ -15,6 +15,9 @@ spring:
       force: true
 talken:
   dex:
+    integration:
+      coinMarketCap:
+        latestUrl: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest
     scheduler:
       pool-size: 4
 
