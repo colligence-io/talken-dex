@@ -36,7 +36,7 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private Long id;
 		private String nameKey;
 		private String symbol;
-		private BlockChainPlatformEnum platform;
+		private String platform;
 		private Boolean nativeFlag;
 		private String iconUrl;
 		private String thumbnailUrl;

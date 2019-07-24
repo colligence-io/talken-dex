@@ -14,7 +14,7 @@ public class EthereumErc20TxSender extends AbstractEthereumTxSender {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumErc20TxSender.class);
 
 	public EthereumErc20TxSender() {
-		super(BlockChainPlatformEnum.ERC20_TOKEN, logger);
+		super(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN, logger);
 	}
 
 	@Override

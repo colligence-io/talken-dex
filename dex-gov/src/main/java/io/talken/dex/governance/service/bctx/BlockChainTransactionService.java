@@ -74,8 +74,8 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 			BctxLog sendLog;
 
 			try {
-				if(txSenders.has(bctxRecord.getPlatform())) {
-					sendLog = txSenders.select(bctxRecord.getPlatform()).buildAndSendTx(bctxRecord.into(Bctx.class));
+				if(txSenders.has(bctxRecord.getBctxType())) {
+					sendLog = txSenders.select(bctxRecord.getBctxType()).buildAndSendTx(bctxRecord.into(Bctx.class));
 					if(sendLog == null) {
 						sendLog = new BctxLog();
 						sendLog.setSuccessFlag(false);
@@ -86,7 +86,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 					sendLog = new BctxLog();
 					sendLog.setSuccessFlag(false);
 					sendLog.setErrorcode("NoTxSender");
-					sendLog.setErrormessage("TxSender " + bctxRecord.getPlatform() + " not found");
+					sendLog.setErrormessage("TxSender " + bctxRecord.getBctxType() + " not found");
 				}
 			} catch(Exception ex) {
 				sendLog = new BctxLog();
@@ -112,7 +112,8 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 				} else {
 					logger.info("[BCTX#{}] BcTx Failed, {} : {}", bctxRecord.getId(), logRecord.getErrorcode(), logRecord.getErrormessage());
 					bctxRecord.setStatus(BctxStatusEnum.FAILED);
-					bctxRecord.setScheduleTimestamp(UTCUtil.getNow().plusSeconds(RETRY_INTERVAL));
+					// FIXME : AUTORETRY DISABLED FOR SAFETY
+//					bctxRecord.setScheduleTimestamp(UTCUtil.getNow().plusSeconds(RETRY_INTERVAL));
 				}
 
 				dslContext.attach(logRecord);

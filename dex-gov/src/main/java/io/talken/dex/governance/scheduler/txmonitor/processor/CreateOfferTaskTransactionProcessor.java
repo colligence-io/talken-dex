@@ -116,7 +116,7 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 						// insert refund bctx
 						BctxRecord bctxRecord = new BctxRecord();
 						TokenMeta.ManagedInfo managed = tmService.getManaged(createTaskRecord.getFeeassetcode());
-						bctxRecord.setPlatform(BlockChainPlatformEnum.STELLAR_TOKEN);
+						bctxRecord.setBctxType(BlockChainPlatformEnum.STELLAR_TOKEN);
 						bctxRecord.setSymbol(managed.getAssetCode());
 						bctxRecord.setPlatformAux(managed.getIssueraddress());
 						bctxRecord.setAddressFrom(createTaskRecord.getFeecollectaccount());

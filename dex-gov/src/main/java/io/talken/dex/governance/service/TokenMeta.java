@@ -3,10 +3,7 @@ package io.talken.dex.governance.service;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
-import io.talken.common.persistence.jooq.tables.pojos.TokenEntry;
-import io.talken.common.persistence.jooq.tables.pojos.TokenMetaManaged;
-import io.talken.common.persistence.jooq.tables.pojos.TokenMetaManagedHolder;
-import io.talken.common.persistence.jooq.tables.pojos.TokenMetaManagedMarketpair;
+import io.talken.common.persistence.jooq.tables.pojos.*;
 import io.talken.common.util.collection.SingleKeyObject;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,6 +24,7 @@ public class TokenMeta extends io.talken.common.persistence.jooq.tables.pojos.To
 		return getSymbol().toUpperCase();
 	}
 
+	private Boolean nativeFlag;
 	private Map<RegionEnum, String> name;
 	private Map<RegionEnum, EntryInfo> entryInfo;
 	private ManagedInfo managedInfo = null;

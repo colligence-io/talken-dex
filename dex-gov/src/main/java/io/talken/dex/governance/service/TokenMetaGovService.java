@@ -6,6 +6,7 @@ import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.TokenMetaExrate;
+import io.talken.common.persistence.jooq.tables.pojos.TokenMetaPlatform;
 import io.talken.common.persistence.jooq.tables.records.*;
 import io.talken.common.persistence.redis.AssetExchangeRate;
 import io.talken.common.persistence.redis.AssetOHLCData;
@@ -126,29 +127,29 @@ public class TokenMetaGovService {
 			SingleKeyTable<String, TokenMeta> newMiTable = new SingleKeyTable<>();
 
 			// preload token_meta_id / marketpairList map
-			Map<Long, List<TokenMeta.MarketPairInfo>> _tmpMap = new HashMap<>();
+			Map<Long, List<TokenMeta.MarketPairInfo>> _tmMpMap = new HashMap<>();
 			for(TokenMetaManagedMarketpairRecord _tmp : dslContext.selectFrom(TOKEN_META_MANAGED_MARKETPAIR).fetch()) {
 				Long metaId = _tmp.getTmId();
-				if(!_tmpMap.containsKey(metaId))
-					_tmpMap.put(metaId, new ArrayList<>());
-				_tmpMap.get(metaId).add(_tmp.into(TokenMeta.MarketPairInfo.class));
+				if(!_tmMpMap.containsKey(metaId))
+					_tmMpMap.put(metaId, new ArrayList<>());
+				_tmMpMap.get(metaId).add(_tmp.into(TokenMeta.MarketPairInfo.class));
 			}
 
 			// preload token_meta_id / managedHolderList map
-			Map<Long, List<TokenMeta.HolderAccountInfo>> _tmhMap = new HashMap<>();
+			Map<Long, List<TokenMeta.HolderAccountInfo>> _tmHaMap = new HashMap<>();
 			for(TokenMetaManagedHolderRecord _tmh : dslContext.selectFrom(TOKEN_META_MANAGED_HOLDER).fetch()) {
 				Long metaId = _tmh.getTmId();
-				if(!_tmhMap.containsKey(metaId))
-					_tmhMap.put(metaId, new ArrayList<>());
+				if(!_tmHaMap.containsKey(metaId))
+					_tmHaMap.put(metaId, new ArrayList<>());
 
 				TokenMeta.HolderAccountInfo _tmhData = _tmh.into(TokenMeta.HolderAccountInfo.class);
 				_tmhData.setAddress(_tmhData.getAddress().trim());
 
-				_tmhMap.get(metaId).add(_tmhData);
+				_tmHaMap.get(metaId).add(_tmhData);
 			}
 
 			// preload token_meta_id / managedInfo map
-			Map<Long, TokenMeta.ManagedInfo> _miMap = new HashMap<>();
+			Map<Long, TokenMeta.ManagedInfo> _tmMiMap = new HashMap<>();
 			for(TokenMetaManagedRecord _tmi : dslContext.selectFrom(TOKEN_META_MANAGED).fetch()) {
 
 				TokenMeta.ManagedInfo _miData = _tmi.into(TokenMeta.ManagedInfo.class);
@@ -157,7 +158,7 @@ public class TokenMetaGovService {
 				_miData.setOfferfeeholderaddress(_miData.getOfferfeeholderaddress().trim());
 				_miData.setDeancfeeholderaddress(_miData.getDeancfeeholderaddress().trim());
 
-				_miMap.put(_tmi.getTmId(), _miData);
+				_tmMiMap.put(_tmi.getTmId(), _miData);
 			}
 
 			// preload token_meta_id / token_exchange_rate map
@@ -170,12 +171,12 @@ public class TokenMetaGovService {
 			}
 
 			// preload token_meta_id / token_info map
-			Map<Long, Map<RegionEnum, TokenMeta.EntryInfo>> _teMap = new HashMap<>();
+			Map<Long, Map<RegionEnum, TokenMeta.EntryInfo>> _tmEiMap = new HashMap<>();
 			for(TokenEntryRecord _te : dslContext.selectFrom(TOKEN_ENTRY).fetch()) {
 				Long metaId = _te.getTmId();
-				if(!_teMap.containsKey(metaId))
-					_teMap.put(metaId, new HashMap<>());
-				_teMap.get(metaId).put(_te.getRegion(), _te.into(TokenMeta.EntryInfo.class));
+				if(!_tmEiMap.containsKey(metaId))
+					_tmEiMap.put(metaId, new HashMap<>());
+				_tmEiMap.get(metaId).put(_te.getRegion(), _te.into(TokenMeta.EntryInfo.class));
 			}
 
 			// preload token_meta_id / token_aux list map
@@ -211,6 +212,12 @@ public class TokenMetaGovService {
 				_auxMap.get(metaId).put(_aux.getAuxCode(), data);
 			}
 
+			// preload token_meta_platform
+			Map<String, TokenMetaPlatform> _tmpMap = new HashMap<>();
+			for(TokenMetaPlatformRecord _tmp : dslContext.selectFrom(TOKEN_META_PLATFORM).fetch()) {
+				_tmpMap.put(_tmp.getPlatform(), _tmp.into(TokenMetaPlatform.class));
+			}
+
 			// preload token_meta_id / token meta data map
 			Map<Long, TokenMeta> newTmIdMap = new HashMap<>();
 			for(TokenMetaRecord _tmr : dslContext.selectFrom(TOKEN_META).fetch()) {
@@ -221,12 +228,16 @@ public class TokenMetaGovService {
 			for(TokenMeta _tm : newTmIdMap.values()) {
 				Long metaId = _tm.getId();
 
+				if(_tm.getPlatform() != null && _tmpMap.containsKey(_tm.getPlatform())) {
+					_tm.setNativeFlag(_tmpMap.get(_tm.getPlatform()).getNativeFlag());
+				}
+
 				if(_auxMap.containsKey(metaId)) {
 					_tm.setAux(_auxMap.get(metaId));
 				}
 
-				if(_teMap.containsKey(metaId)) {
-					_tm.setEntryInfo(_teMap.get(metaId));
+				if(_tmEiMap.containsKey(metaId)) {
+					_tm.setEntryInfo(_tmEiMap.get(metaId));
 				}
 
 				// build name map
@@ -246,8 +257,8 @@ public class TokenMetaGovService {
 					_tm.setExchangeRate(exr);
 				}
 
-				if(_miMap.containsKey(metaId)) {
-					_tm.setManagedInfo(_miMap.get(metaId));
+				if(_tmMiMap.containsKey(metaId)) {
+					_tm.setManagedInfo(_tmMiMap.get(metaId));
 					newMiTable.insert(_tm);
 				}
 
@@ -258,7 +269,7 @@ public class TokenMetaGovService {
 			for(TokenMeta _tmd : newMiTable.__getRawData().values()) {
 				logger.info("Load managed accounts for {}({})", _tmd.getNamekey(), _tmd.getSymbol());
 				TokenMeta.ManagedInfo mi = _tmd.getManagedInfo();
-				mi.setAssetHolderAccounts(_tmhMap.get(_tmd.getId()));
+				mi.setAssetHolderAccounts(_tmHaMap.get(_tmd.getId()));
 				mi.setAssetCode(_tmd.getSymbol());
 				mi.setAssetIssuer(KeyPair.fromAccountId(mi.getIssueraddress()));
 				mi.setAssetType(new AssetTypeCreditAlphaNum4(_tmd.getSymbol(), mi.getAssetIssuer()));
@@ -267,7 +278,7 @@ public class TokenMetaGovService {
 				mi.setOfferFeeHolder(KeyPair.fromAccountId(mi.getOfferfeeholderaddress()));
 
 				mi.setMarketPair(new HashMap<>());
-				for(TokenMeta.MarketPairInfo _mp : _tmpMap.get(_tmd.getId())) {
+				for(TokenMeta.MarketPairInfo _mp : _tmMpMap.get(_tmd.getId())) {
 					mi.getMarketPair().put(newTmIdMap.get(_mp.getTmIdCounter()).getSymbol(), _mp);
 				}
 			}
