@@ -278,8 +278,10 @@ public class TokenMetaGovService {
 				mi.setOfferFeeHolder(KeyPair.fromAccountId(mi.getOfferfeeholderaddress()));
 
 				mi.setMarketPair(new HashMap<>());
-				for(TokenMeta.MarketPairInfo _mp : _tmMpMap.get(_tmd.getId())) {
-					mi.getMarketPair().put(newTmIdMap.get(_mp.getTmIdCounter()).getSymbol(), _mp);
+				if(_tmMpMap.containsKey(_tmd.getId())) {
+					for(TokenMeta.MarketPairInfo _mp : _tmMpMap.get(_tmd.getId())) {
+						mi.getMarketPair().put(newTmIdMap.get(_mp.getTmIdCounter()).getSymbol(), _mp);
+					}
 				}
 			}
 
