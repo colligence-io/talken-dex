@@ -1,4 +1,4 @@
-package io.talken.dex.governance.service.bctx.processor;
+package io.talken.dex.governance.service.bctx.txsender;
 
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.util.PrefixedLogger;

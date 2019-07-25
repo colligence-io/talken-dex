@@ -1,4 +1,4 @@
-package io.talken.dex.governance.scheduler.txmonitor;
+package io.talken.dex.governance.service.bctx.monitor.stellar.dextask;
 
 import org.slf4j.helpers.MessageFormatter;
 

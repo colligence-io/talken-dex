@@ -1,18 +1,18 @@
-package io.talken.dex.governance.service.bctx.processor;
+package io.talken.dex.governance.service.bctx.txsender;
 
+import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
-import io.talken.common.persistence.jooq.tables.pojos.BctxLog;
+import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.bctx.TxSender;
-import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
 import io.talken.dex.shared.service.blockchain.ethereum.StandardERC20ContractFunctions;
+import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.datatypes.Function;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -23,54 +23,64 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 
-public abstract class AbstractEthereumTxSender extends TxSender {
+public abstract class AbstractLuniverseTxSender extends TxSender {
 	private final PrefixedLogger logger;
 
 	@Autowired
-	private EthereumNetworkService ethereumNetworkService;
+	private LuniverseNetworkService luniverseNetworkService;
 
-	public AbstractEthereumTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
+	public AbstractLuniverseTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
 		super(platform);
 		this.logger = logger;
 	}
 
 	@Override
-	public void sendTx(TokenMeta meta, Bctx bctx, BctxLog log) throws Exception {
+	public boolean sendTx(TokenMeta meta, Bctx bctx, BctxLogRecord log) throws Exception {
 		String metaCA = meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString();
 		String bctxCA = bctx.getPlatformAux();
 
 		if(metaCA == null && bctxCA == null) {
-			sendEthereumTx(null, bctx, log);
+			return sendLuniverseTx(null, bctx, log);
 		} else if(metaCA != null && bctxCA != null && metaCA.equals(bctxCA)) {
-			sendEthereumTx(meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString(), bctx, log);
+			return sendLuniverseTx(meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString(), bctx, log);
 		} else {
-			log.setSuccessFlag(false);
+			log.setStatus(BctxStatusEnum.FAILED);
 			log.setErrorcode("CONTRACT_ID_NOT_MATCH");
 			log.setErrormessage("CONTRACT_ID of bctx is not match with TokenMeta.");
+			return false;
 		}
 	}
 
-	protected void sendEthereumTx(String contractAddr, Bctx bctx, BctxLog log) throws Exception {
-		Web3j web3j = ethereumNetworkService.newClient();
+	protected boolean sendLuniverseTx(String contractAddr, Bctx bctx, BctxLogRecord log) throws Exception {
+		Web3j web3j = luniverseNetworkService.newMainRpcClient();
 
 		BigInteger nonce = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.LATEST).send().getTransactionCount();
 
-		BigInteger gasPrice = ethereumNetworkService.getGasPrice(web3j);
+		BigInteger gasPrice = luniverseNetworkService.getGasPrice(web3j);
 
-		BigInteger gasLimit = ethereumNetworkService.getGasLimit(web3j);
+		BigInteger gasLimit = luniverseNetworkService.getGasLimit(web3j);
 
 		BigInteger amount = Convert.toWei(bctx.getAmount(), Convert.Unit.ETHER).toBigInteger();
 
 		RawTransaction rawTx;
 
 		if(contractAddr != null) {
-			Function function = StandardERC20ContractFunctions.transfer(bctx.getAddressTo(), amount);
+			rawTx = RawTransaction.createTransaction(
+					nonce,
+					gasPrice,
+					gasLimit,
+					contractAddr,
+					FunctionEncoder.encode(StandardERC20ContractFunctions.transfer(bctx.getAddressTo(), amount))
+			);
 
-			String encodedFunction = FunctionEncoder.encode(function);
-
-			rawTx = RawTransaction.createTransaction(nonce, gasPrice, gasLimit, contractAddr, encodedFunction);
 		} else {
-			rawTx = RawTransaction.createEtherTransaction(nonce, gasPrice, gasLimit, bctx.getAddressTo(), amount);
+			rawTx = RawTransaction.createEtherTransaction(
+					nonce,
+					gasPrice,
+					gasLimit,
+					bctx.getAddressTo(),
+					amount
+			);
 		}
 
 		log.setRequest(JSONWriter.toJsonString(rawTx));
@@ -78,7 +88,7 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		logger.debug("Request sign for {} bctx#{}", bctx.getAddressFrom(), bctx.getId());
 		byte[] txSigned = signServer().signEthereumTransaction(rawTx, bctx.getAddressFrom());
 
-		logger.debug("Sending TX to ethereum network.");
+		logger.debug("Sending TX to luniverse network.");
 		EthSendTransaction ethSendTx = web3j.ethSendRawTransaction(Numeric.toHexString(txSigned)).send();
 
 		log.setResponse(JSONWriter.toJsonString(ethSendTx));
@@ -87,12 +97,13 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		String txHash = ethSendTx.getTransactionHash();
 
 		if(error == null) {
-			log.setSuccessFlag(true);
 			log.setBcRefId(txHash);
+			log.setResponse(ethSendTx.getRawResponse());
+			return true;
 		} else {
-			log.setSuccessFlag(false);
 			log.setErrorcode(Integer.toString(error.getCode()));
 			log.setErrormessage(error.getMessage());
+			return false;
 		}
 	}
 }

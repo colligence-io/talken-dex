@@ -1,7 +1,9 @@
 package io.talken.dex.governance.service.bctx.monitor.luniverse;
 
 import io.talken.common.RunningProfile;
+import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -18,12 +20,13 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @Scope("singleton")
-public class LuniverseTxMonitor {
+public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt> {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(LuniverseTxMonitor.class);
 
 	@Autowired
@@ -94,6 +97,10 @@ public class LuniverseTxMonitor {
 					if(block != null) {
 						logger.verbose("Luniverse block {} contains {} tx.", block.getNumber(), block.getTransactions().size());
 
+						callBlockHandlerStack(block);
+
+						List<TransactionReceipt> receipts = new ArrayList<>();
+
 						if(block.getTransactions().size() > 0) {
 							for(EthBlock.TransactionResult tx : block.getTransactions()) {
 
@@ -109,7 +116,8 @@ public class LuniverseTxMonitor {
 								if(txHash != null) {
 									Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(txHash).send().getTransactionReceipt();
 									if(opt_receipt.isPresent()) {
-										mongoTemplate.save(new LuniverseTxReceiptDocument(opt_receipt.get()));
+										callTxHandlerStack(opt_receipt.get());
+										receipts.add(opt_receipt.get());
 									} else {
 										logger.error("Cannot get tx receipt from network, cancel monitoring");
 										break;
@@ -122,6 +130,10 @@ public class LuniverseTxMonitor {
 						}
 
 						mongoTemplate.save(new LuniverseBlockDocument(block));
+						for(TransactionReceipt receipt : receipts) {
+							mongoTemplate.save(new LuniverseTxReceiptDocument(receipt));
+						}
+
 						cursor = block.getNumber();
 					} else {
 						logger.error("GetBlock {} returned null, cancel monitoring");
@@ -131,6 +143,15 @@ public class LuniverseTxMonitor {
 			}
 		} catch(Exception ex) {
 			logger.exception(ex);
+		}
+	}
+
+	@Override
+	protected TxReceipt toTxMonitorReceipt(TransactionReceipt tx) {
+		if(tx.isStatusOK()) {
+			return TxReceipt.ofSuccessful(tx.getTransactionHash(), JSONWriter.toJsonStringSafe(tx));
+		} else {
+			return TxReceipt.ofFailed(tx.getTransactionHash(), JSONWriter.toJsonStringSafe(tx));
 		}
 	}
 }

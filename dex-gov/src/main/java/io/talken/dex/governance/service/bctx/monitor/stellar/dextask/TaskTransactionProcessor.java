@@ -1,4 +1,4 @@
-package io.talken.dex.governance.scheduler.txmonitor;
+package io.talken.dex.governance.service.bctx.monitor.stellar.dextask;
 
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.dex.shared.exception.TransactionResultProcessingException;

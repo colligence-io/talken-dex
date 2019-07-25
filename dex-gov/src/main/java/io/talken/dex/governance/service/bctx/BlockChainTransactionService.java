@@ -4,7 +4,6 @@ package io.talken.dex.governance.service.bctx;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
-import io.talken.common.persistence.jooq.tables.pojos.BctxLog;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.util.PrefixedLogger;
@@ -39,7 +38,6 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 	// constructor autowire with lomkok
 	private final DataSourceTransactionManager txMgr;
 
-
 	private final SingleKeyTable<BlockChainPlatformEnum, TxSender> txSenders = new SingleKeyTable<>();
 
 	private ApplicationContext applicationContext;
@@ -56,67 +54,71 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 		Map<String, TxSender> txsBeans = applicationContext.getBeansOfType(TxSender.class);
 		txsBeans.forEach((_name, _bean) -> {
 			txSenders.insert(_bean);
-			logger.debug("TxSender for [{}] registered.", _bean.getPlatform());
+			logger.info("TxSender for [{}] registered.", _bean.getPlatform());
+		});
+
+		Map<String, TxMonitor> txmBeans = applicationContext.getBeansOfType(TxMonitor.class);
+		txmBeans.forEach((_name, _bean) -> {
+			logger.info("TxMonitor [{}] loaded.", _bean.getClass().getSimpleName());
 		});
 	}
 
 	@Scheduled(fixedDelay = 1000, initialDelay = 3000)
 	private void checkQueue() {
 		Result<BctxRecord> txQueue = dslContext.selectFrom(BCTX)
-				.where(
-						BCTX.STATUS.eq(BctxStatusEnum.QUEUED)
-								.and(BCTX.SCHEDULE_TIMESTAMP.isNull().or(BCTX.SCHEDULE_TIMESTAMP.ne(UTCUtil.getNow())))
-				)
-				.fetch();
-
+				.where(BCTX.STATUS.eq(BctxStatusEnum.QUEUED)
+						.and(BCTX.SCHEDULE_TIMESTAMP.isNull().or(BCTX.SCHEDULE_TIMESTAMP.ne(UTCUtil.getNow())))
+				).fetch();
 
 		for(BctxRecord bctxRecord : txQueue) {
-			BctxLog sendLog;
 
+			// create new logRecord
+			BctxLogRecord logRecord = new BctxLogRecord();
 			try {
-				if(txSenders.has(bctxRecord.getBctxType())) {
-					sendLog = txSenders.select(bctxRecord.getBctxType()).buildAndSendTx(bctxRecord.into(Bctx.class));
-					if(sendLog == null) {
-						sendLog = new BctxLog();
-						sendLog.setSuccessFlag(false);
-						sendLog.setErrorcode("NullResult");
-						sendLog.setErrormessage("TxSender returned null");
-					}
-				} else {
-					sendLog = new BctxLog();
-					sendLog.setSuccessFlag(false);
-					sendLog.setErrorcode("NoTxSender");
-					sendLog.setErrormessage("TxSender " + bctxRecord.getBctxType() + " not found");
-				}
+				bctxRecord.setStatus(BctxStatusEnum.SENT);
+				logRecord.setBctxId(bctxRecord.getId());
+				dslContext.attach(logRecord);
+
+				// mark as sent for failover safety, prevent sending repeatly
+				TransactionBlockExecutor.of(txMgr).transactional(() -> {
+					bctxRecord.update();
+					logRecord.store();
+				});
 			} catch(Exception ex) {
-				sendLog = new BctxLog();
-				sendLog.setSuccessFlag(false);
-				sendLog.setErrorcode(ex.getClass().getSimpleName());
-				sendLog.setErrormessage(ex.getMessage());
+				logger.exception(ex, "Cannot create new bctx_log record. bctx canceled.");
+				break;
 			}
 
 			try {
-				BctxLogRecord logRecord = new BctxLogRecord();
-				logRecord.setBctxId(bctxRecord.getId());
-				logRecord.setRequest(sendLog.getRequest());
-				logRecord.setResponse(sendLog.getResponse());
-				logRecord.setBcRefId(sendLog.getBcRefId());
-				logRecord.setSuccessFlag(sendLog.getSuccessFlag());
-				logRecord.setErrorcode(sendLog.getErrorcode());
-				logRecord.setErrormessage(sendLog.getErrormessage());
+				if(txSenders.has(bctxRecord.getBctxType())) {
+					boolean successful = txSenders.select(bctxRecord.getBctxType()).buildAndSendTx(bctxRecord.into(Bctx.class), logRecord);
+					if(successful) {
+						logRecord.setStatus(BctxStatusEnum.SENT);
+					} else {
+						logRecord.setStatus(BctxStatusEnum.FAILED);
+					}
+				} else {
+					logRecord.setStatus(BctxStatusEnum.FAILED);
+					logRecord.setErrorcode("NoTxSender");
+					logRecord.setErrormessage("TxSender " + bctxRecord.getBctxType() + " not found");
+				}
+			} catch(Exception ex) {
+				logRecord.setStatus(BctxStatusEnum.FAILED);
+				logRecord.setErrorcode(ex.getClass().getSimpleName());
+				logRecord.setErrormessage(ex.getMessage());
+			}
 
-				if(sendLog.getSuccessFlag() != null && sendLog.getSuccessFlag()) {
-					logger.info("[BCTX#{}] BcTx Success", bctxRecord.getId());
-					bctxRecord.setStatus(BctxStatusEnum.FINISHED);
-					bctxRecord.setBcRefId(sendLog.getBcRefId());
+			try {
+				if(logRecord.getStatus().equals(BctxStatusEnum.SENT)) {
+					logger.info("[BCTX#{}] BcTx Successfully sent", bctxRecord.getId());
+					bctxRecord.setStatus(BctxStatusEnum.SENT);
+					bctxRecord.setBcRefId(logRecord.getBcRefId());
 				} else {
 					logger.info("[BCTX#{}] BcTx Failed, {} : {}", bctxRecord.getId(), logRecord.getErrorcode(), logRecord.getErrormessage());
 					bctxRecord.setStatus(BctxStatusEnum.FAILED);
 					// FIXME : AUTORETRY DISABLED FOR SAFETY
 //					bctxRecord.setScheduleTimestamp(UTCUtil.getNow().plusSeconds(RETRY_INTERVAL));
 				}
-
-				dslContext.attach(logRecord);
 
 				TransactionBlockExecutor.of(txMgr).transactional(() -> {
 					bctxRecord.update();

@@ -1,11 +1,12 @@
-package io.talken.dex.governance.scheduler.txmonitor;
+package io.talken.dex.governance.service.bctx.monitor.stellar.dextask;
 
 import io.talken.dex.shared.DexTaskId;
+import io.talken.dex.shared.service.blockchain.stellar.StellarXdrDecoder;
 import org.stellar.sdk.responses.TransactionResponse;
-import org.stellar.sdk.xdr.*;
-import shadow.com.google.common.io.BaseEncoding;
-
-import java.io.ByteArrayInputStream;
+import org.stellar.sdk.xdr.ManageOfferResult;
+import org.stellar.sdk.xdr.OperationResult;
+import org.stellar.sdk.xdr.OperationType;
+import org.stellar.sdk.xdr.TransactionResult;
 
 public class TaskTransactionResponse {
 
@@ -30,10 +31,7 @@ public class TaskTransactionResponse {
 
 		try {
 			// decode result
-			byte[] bytes = BaseEncoding.base64().decode(response.getResultXdr());
-			ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-			XdrDataInputStream xdrInputStream = new XdrDataInputStream(inputStream);
-			this.result = TransactionResult.decode(xdrInputStream);
+			this.result = StellarXdrDecoder.decodeResultXdr(response);
 		} catch(Exception ex) {
 			throw new TaskTransactionProcessError("ResultDecodeError", ex);
 		}

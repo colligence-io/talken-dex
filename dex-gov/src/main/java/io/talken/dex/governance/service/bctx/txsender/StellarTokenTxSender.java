@@ -1,8 +1,8 @@
-package io.talken.dex.governance.service.bctx.processor;
+package io.talken.dex.governance.service.bctx.txsender;
 
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
-import io.talken.common.persistence.jooq.tables.pojos.BctxLog;
+import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.TokenMeta;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ public class StellarTokenTxSender extends AbstractStellarTxSender {
 	}
 
 	@Override
-	public void sendTx(TokenMeta meta, Bctx bctx, BctxLog log) throws Exception {
-		sendStellarTx(meta.getManagedInfo().getAssetType(), bctx, log);
+	public boolean sendTx(TokenMeta meta, Bctx bctx, BctxLogRecord log) throws Exception {
+		return sendStellarTx(meta.getManagedInfo().getAssetType(), bctx, log);
 	}
 }

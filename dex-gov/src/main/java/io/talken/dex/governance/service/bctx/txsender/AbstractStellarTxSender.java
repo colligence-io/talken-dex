@@ -1,8 +1,10 @@
-package io.talken.dex.governance.service.bctx.processor;
+package io.talken.dex.governance.service.bctx.txsender;
 
+import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
 import io.talken.common.persistence.jooq.tables.pojos.BctxLog;
+import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.TxSender;
@@ -29,7 +31,7 @@ public abstract class AbstractStellarTxSender extends TxSender {
 		this.logger = logger;
 	}
 
-	protected void sendStellarTx(Asset asset, Bctx bctx, BctxLog log) throws Exception {
+	protected boolean sendStellarTx(Asset asset, Bctx bctx, BctxLogRecord log) throws Exception {
 		// pick horizon server
 		Server server = stellarNetworkService.pickServer();
 
@@ -73,16 +75,17 @@ public abstract class AbstractStellarTxSender extends TxSender {
 		resObj.put("extras", txResponse.getExtras());
 
 		if(txResponse.isSuccess()) {
-			log.setSuccessFlag(true);
 			log.setBcRefId(txResponse.getHash());
 			log.setResponse(JSONWriter.toJsonString(resObj));
+			return true;
 		} else {
 			SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
-			log.setSuccessFlag(false);
-			log.setErrorcode(resultCodes.getTransactionResultCode());
 			StringJoiner sj = new StringJoiner(",");
 			if(resultCodes.getOperationsResultCodes() != null) resultCodes.getOperationsResultCodes().forEach(sj::add);
+
+			log.setErrorcode(resultCodes.getTransactionResultCode());
 			log.setErrormessage(sj.toString());
+			return false;
 		}
 	}
 }

@@ -1,14 +1,10 @@
-package io.talken.dex.governance.scheduler.txmonitor.processor;
+package io.talken.dex.governance.service.bctx.monitor.stellar.dextask;
 
 
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.*;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.governance.scheduler.txmonitor.TaskTransactionProcessError;
-import io.talken.dex.governance.scheduler.txmonitor.TaskTransactionProcessResult;
-import io.talken.dex.governance.scheduler.txmonitor.TaskTransactionProcessor;
-import io.talken.dex.governance.scheduler.txmonitor.TaskTransactionResponse;
 import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.shared.DexTaskId;
