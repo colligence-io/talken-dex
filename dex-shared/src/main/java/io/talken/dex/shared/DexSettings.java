@@ -58,7 +58,8 @@ public class DexSettings {
 	public static class _Luniverse {
 		private VaultSecretDataLuniverse secret;
 		private String apiUri;
-		private String rpcUri;
+		private String sideRpcUri;
+		private String mainRpcUri;
 		private String mtSymbol;
 		private String stSymbol;
 	}

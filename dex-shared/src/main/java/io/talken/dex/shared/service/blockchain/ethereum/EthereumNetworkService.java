@@ -14,6 +14,7 @@ import org.web3j.abi.datatypes.Type;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
@@ -21,6 +22,7 @@ import org.web3j.utils.Convert;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 
 @Service
@@ -48,13 +50,18 @@ public class EthereumNetworkService {
 
 	public Web3j newClient() throws IOException {
 		Web3j web3j = Web3j.build(new HttpService(serverPicker.pick()));
-		//logger.debug("Connected to Ethereum client version: " + web3j.web3ClientVersion().send().getWeb3ClientVersion());
+		logger.trace("Connected to Ethereum client version: " + web3j.web3ClientVersion().send().getWeb3ClientVersion());
 		return web3j;
 	}
 
-	public int getNetworkFee() {
-		// TODO : get proper price
-		return 10;
+	public BigInteger getGasPrice(Web3j web3j) {
+		// TODO : calculate or get proper value
+		return Convert.toWei("10", Convert.Unit.GWEI).toBigInteger();
+	}
+
+	public BigInteger getGasLimit(Web3j web3j) throws IOException {
+		EthBlock.Block lastBlock = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock();
+		return lastBlock.getGasLimit();
 	}
 
 	public BigDecimal getErc20BalanceOf(String owner, String contractAddress) throws Exception {
@@ -71,6 +78,10 @@ public class EthereumNetworkService {
 		).sendAsync().get();
 
 		List<Type> decoded = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
-		return Convert.fromWei(decoded.get(0).getValue().toString(), Convert.Unit.ETHER);
+
+		if(decoded.size() > 0)
+			return Convert.fromWei(decoded.get(0).getValue().toString(), Convert.Unit.ETHER);
+		else
+			return BigDecimal.ZERO;
 	}
 }
