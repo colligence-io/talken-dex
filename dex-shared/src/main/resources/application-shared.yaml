@@ -14,7 +14,8 @@ talken:
           - "http://192.168.0.37:40303"
       luniverse:
         apiUri: "https://api.luniverse.io"
-        rpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
+        mainRpcUri: "http://133.186.197.245:18545"
+        sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
         mtSymbol: "FT9754"
         stSymbol: "TALKP"
     fee:
