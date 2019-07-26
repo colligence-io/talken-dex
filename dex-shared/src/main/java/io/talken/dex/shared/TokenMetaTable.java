@@ -41,6 +41,7 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private String iconUrl;
 		private String thumbnailUrl;
 		private Integer viewUnitExpn;
+		private Integer unitDecimals;
 		private Integer cmcId;
 		private Map<RegionEnum, String> name = new HashMap<>();
 		private Map<RegionEnum, EntryInfo> entryInfo;

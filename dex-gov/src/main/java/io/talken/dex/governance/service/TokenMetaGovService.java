@@ -320,6 +320,7 @@ public class TokenMetaGovService {
 			meta.setIconUrl(_tm.getIconUrl());
 			meta.setThumbnailUrl(_tm.getThumbnailUrl());
 			meta.setViewUnitExpn(_tm.getViewUnitExpn());
+			meta.setUnitDecimals(_tm.getUnitDecimals());
 			meta.setCmcId(_tm.getCmcId());
 			meta.setName(_tm.getName());
 
