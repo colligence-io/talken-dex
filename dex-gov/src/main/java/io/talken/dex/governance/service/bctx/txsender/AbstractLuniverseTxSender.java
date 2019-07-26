@@ -36,7 +36,10 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 
 	@Override
 	public boolean sendTx(TokenMeta meta, Bctx bctx, BctxLogRecord log) throws Exception {
-		String metaCA = meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString();
+		String metaCA = null;
+		if(meta.getAux() != null && meta.getAux().containsKey(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID)) {
+			metaCA = meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString();
+		}
 		String bctxCA = bctx.getPlatformAux();
 
 		if(metaCA == null && bctxCA == null) {
