@@ -1,4 +1,4 @@
-package io.talken.dex.governance.service.bctx.monitor.luniverse;
+package io.talken.dex.governance.service.bctx.monitor.ethereum;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -8,9 +8,9 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 
 import java.math.BigInteger;
 
-@Document("luniverse_block")
+@Document("ethereum_block")
 @Data
-public class LuniverseBlockDocument {
+public class EthereumBlockDocument {
 	@Id
 	private String id;
 
@@ -19,11 +19,8 @@ public class LuniverseBlockDocument {
 
 	private EthBlock.Block data;
 
-	public LuniverseBlockDocument() {
-	}
-
-	public static LuniverseBlockDocument from(EthBlock.Block block) {
-		LuniverseBlockDocument rtn = new LuniverseBlockDocument();
+	public static EthereumBlockDocument from(EthBlock.Block block) {
+		EthereumBlockDocument rtn = new EthereumBlockDocument();
 		rtn.id = block.getHash();
 		rtn.number = block.getNumber();
 		rtn.data = block;

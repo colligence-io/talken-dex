@@ -68,11 +68,12 @@ public class LuniverseNetworkService {
 	}
 
 	public BigInteger getGasPrice(Web3j web3j) throws IOException {
+		// recommended from lambda256
 		return web3j.ethGasPrice().send().getGasPrice();
 	}
 
 	public BigInteger getGasLimit(Web3j web3j) {
-// 3200000
+// 3200000 이 권장되지만, 계좌에 77 이상의 LUK가 있어야 하므로 현재 테스트 상황에서 권장값 사용 불가
 		return new BigInteger("100000");
 	}
 

@@ -1,9 +1,10 @@
-package io.talken.dex.governance.service.bctx.processor;
+package io.talken.dex.governance.service.bctx.txsender;
 
+import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
-import io.talken.common.persistence.jooq.tables.pojos.BctxLog;
+import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.TokenMeta;
@@ -20,6 +21,7 @@ import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public abstract class AbstractLuniverseTxSender extends TxSender {
@@ -34,31 +36,45 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 	}
 
 	@Override
-	public void sendTx(TokenMeta meta, Bctx bctx, BctxLog log) throws Exception {
-		String metaCA = meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString();
+	public boolean sendTx(TokenMeta meta, Bctx bctx, BctxLogRecord log) throws Exception {
+		String metaCA = null;
+		if(meta.getAux() != null && meta.getAux().containsKey(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID)) {
+			metaCA = meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString();
+		}
 		String bctxCA = bctx.getPlatformAux();
 
 		if(metaCA == null && bctxCA == null) {
-			sendLuniverseTx(null, bctx, log);
+			return sendLuniverseTx(null, meta.getUnitDecimals(), bctx, log);
 		} else if(metaCA != null && bctxCA != null && metaCA.equals(bctxCA)) {
-			sendLuniverseTx(meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString(), bctx, log);
+			return sendLuniverseTx(meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString(), meta.getUnitDecimals(), bctx, log);
 		} else {
-			log.setSuccessFlag(false);
+			log.setStatus(BctxStatusEnum.FAILED);
 			log.setErrorcode("CONTRACT_ID_NOT_MATCH");
 			log.setErrormessage("CONTRACT_ID of bctx is not match with TokenMeta.");
+			return false;
 		}
 	}
 
-	protected void sendLuniverseTx(String contractAddr, Bctx bctx, BctxLog log) throws Exception {
+	protected boolean sendLuniverseTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
 		Web3j web3j = luniverseNetworkService.newMainRpcClient();
 
 		BigInteger nonce = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.LATEST).send().getTransactionCount();
+		BigInteger nonce_p = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.PENDING).send().getTransactionCount();
+		if(nonce_p != null && (nonce_p.compareTo(nonce) > 0)) {
+			nonce = nonce_p;
+		}
 
 		BigInteger gasPrice = luniverseNetworkService.getGasPrice(web3j);
 
 		BigInteger gasLimit = luniverseNetworkService.getGasLimit(web3j);
 
-		BigInteger amount = Convert.toWei(bctx.getAmount(), Convert.Unit.ETHER).toBigInteger();
+		BigInteger amount;
+		if(decimals != null) {
+			amount = bctx.getAmount().multiply(BigDecimal.TEN.pow(decimals)).toBigInteger();
+		} else {
+			amount = Convert.toWei(bctx.getAmount(), Convert.Unit.ETHER).toBigInteger();
+		}
+
 
 		RawTransaction rawTx;
 
@@ -95,12 +111,13 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 		String txHash = ethSendTx.getTransactionHash();
 
 		if(error == null) {
-			log.setSuccessFlag(true);
 			log.setBcRefId(txHash);
+			log.setResponse(ethSendTx.getRawResponse());
+			return true;
 		} else {
-			log.setSuccessFlag(false);
 			log.setErrorcode(Integer.toString(error.getCode()));
 			log.setErrormessage(error.getMessage());
+			return false;
 		}
 	}
 }

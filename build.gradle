@@ -54,7 +54,7 @@ subprojects {
     }
 
     dependencies {
-        compile('io.talken:java-common:20190724-5') { changing = true }
+        compile('io.talken:java-common:20190726-4') { changing = true }
 
         compileOnly('org.projectlombok:lombok:1.18.4')
 
@@ -76,7 +76,7 @@ subprojects {
         compile('com.github.stellar:java-stellar-sdk:0.6.0')
 
         // ethereum web3j sdk
-        compile('org.web3j:core:4.2.0')
+        compile('org.web3j:core:4.3.0')
 
         // devtools
         runtime('org.springframework.boot:spring-boot-devtools')

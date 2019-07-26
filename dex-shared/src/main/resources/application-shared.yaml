@@ -11,7 +11,7 @@ talken:
       ethereum:
         network: test
         serverList:
-          - "http://192.168.0.37:40303"
+          - "http://192.168.0.37:8545"
       luniverse:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://133.186.197.245:18545"
