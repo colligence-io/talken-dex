@@ -1,17 +1,14 @@
-package io.talken.dex.governance.service.bctx.monitor.stellar;
+package io.talken.dex.governance.service.bctx.monitor.stellar.dextask;
 
 import io.talken.common.RunningProfile;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTxmonRecord;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.governance.service.bctx.monitor.stellar.dextask.TaskTransactionProcessResult;
-import io.talken.dex.governance.service.bctx.monitor.stellar.dextask.TaskTransactionProcessor;
-import io.talken.dex.governance.service.bctx.monitor.stellar.dextask.TaskTransactionResponse;
+import io.talken.dex.governance.service.bctx.monitor.stellar.StellarTxMonitor;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.exception.TaskIntegrityCheckFailedException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
-import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;

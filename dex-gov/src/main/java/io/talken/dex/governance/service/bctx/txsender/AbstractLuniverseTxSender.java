@@ -21,6 +21,7 @@ import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public abstract class AbstractLuniverseTxSender extends TxSender {
@@ -43,9 +44,9 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 		String bctxCA = bctx.getPlatformAux();
 
 		if(metaCA == null && bctxCA == null) {
-			return sendLuniverseTx(null, bctx, log);
+			return sendLuniverseTx(null, meta.getUnitDecimals(), bctx, log);
 		} else if(metaCA != null && bctxCA != null && metaCA.equals(bctxCA)) {
-			return sendLuniverseTx(meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString(), bctx, log);
+			return sendLuniverseTx(meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString(), meta.getUnitDecimals(), bctx, log);
 		} else {
 			log.setStatus(BctxStatusEnum.FAILED);
 			log.setErrorcode("CONTRACT_ID_NOT_MATCH");
@@ -54,7 +55,7 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 		}
 	}
 
-	protected boolean sendLuniverseTx(String contractAddr, Bctx bctx, BctxLogRecord log) throws Exception {
+	protected boolean sendLuniverseTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
 		Web3j web3j = luniverseNetworkService.newMainRpcClient();
 
 		BigInteger nonce = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.LATEST).send().getTransactionCount();
@@ -67,7 +68,13 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 
 		BigInteger gasLimit = luniverseNetworkService.getGasLimit(web3j);
 
-		BigInteger amount = Convert.toWei(bctx.getAmount(), Convert.Unit.ETHER).toBigInteger();
+		BigInteger amount;
+		if(decimals != null) {
+			amount = bctx.getAmount().multiply(BigDecimal.TEN.pow(decimals)).toBigInteger();
+		} else {
+			amount = Convert.toWei(bctx.getAmount(), Convert.Unit.ETHER).toBigInteger();
+		}
+
 
 		RawTransaction rawTx;
 

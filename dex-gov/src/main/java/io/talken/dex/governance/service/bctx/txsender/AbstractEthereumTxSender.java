@@ -22,6 +22,7 @@ import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public abstract class AbstractEthereumTxSender extends TxSender {
@@ -44,9 +45,9 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		String bctxCA = bctx.getPlatformAux();
 
 		if(metaCA == null && bctxCA == null) {
-			return sendEthereumTx(null, bctx, log);
+			return sendEthereumTx(null, meta.getUnitDecimals(), bctx, log);
 		} else if(metaCA != null && bctxCA != null && metaCA.equals(bctxCA)) {
-			return sendEthereumTx(meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString(), bctx, log);
+			return sendEthereumTx(meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString(), meta.getUnitDecimals(), bctx, log);
 		} else {
 			log.setStatus(BctxStatusEnum.FAILED);
 			log.setErrorcode("CONTRACT_ID_NOT_MATCH");
@@ -55,7 +56,7 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		}
 	}
 
-	protected boolean sendEthereumTx(String contractAddr, Bctx bctx, BctxLogRecord log) throws Exception {
+	protected boolean sendEthereumTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
 		Web3j web3j = ethereumNetworkService.newClient();
 
 		BigInteger nonce = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.LATEST).send().getTransactionCount();
@@ -68,7 +69,12 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
 		BigInteger gasLimit = ethereumNetworkService.getGasLimit(web3j);
 
-		BigInteger amount = Convert.toWei(bctx.getAmount(), Convert.Unit.ETHER).toBigInteger();
+		BigInteger amount;
+		if(decimals != null) {
+			amount = bctx.getAmount().multiply(BigDecimal.TEN.pow(decimals)).toBigInteger();
+		} else {
+			amount = Convert.toWei(bctx.getAmount(), Convert.Unit.ETHER).toBigInteger();
+		}
 
 		RawTransaction rawTx;
 

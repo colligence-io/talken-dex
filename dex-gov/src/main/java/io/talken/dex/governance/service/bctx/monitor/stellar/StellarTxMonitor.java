@@ -4,6 +4,7 @@ import io.talken.common.RunningProfile;
 import io.talken.common.persistence.jooq.tables.records.DexGovStatusRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.TxMonitor;
+import io.talken.dex.governance.service.bctx.monitor.stellar.dextask.DexTaskTransactionHandler;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
