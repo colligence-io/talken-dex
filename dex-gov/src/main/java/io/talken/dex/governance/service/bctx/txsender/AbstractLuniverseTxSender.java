@@ -55,6 +55,10 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 		Web3j web3j = luniverseNetworkService.newMainRpcClient();
 
 		BigInteger nonce = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.LATEST).send().getTransactionCount();
+		BigInteger nonce_p = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.PENDING).send().getTransactionCount();
+		if(nonce_p != null && (nonce_p.compareTo(nonce) > 0)) {
+			nonce = nonce_p;
+		}
 
 		BigInteger gasPrice = luniverseNetworkService.getGasPrice(web3j);
 

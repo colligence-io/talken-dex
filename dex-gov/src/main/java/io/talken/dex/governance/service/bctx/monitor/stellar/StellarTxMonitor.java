@@ -2,7 +2,6 @@ package io.talken.dex.governance.service.bctx.monitor.stellar;
 
 import io.talken.common.RunningProfile;
 import io.talken.common.persistence.jooq.tables.records.DexGovStatusRecord;
-import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
@@ -112,12 +111,10 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 		receiptObj.put("sourceAccount", tx.getSourceAccount().getAccountId());
 		receiptObj.put("createdAt", tx.getCreatedAt());
 
-		String receipt = JSONWriter.toJsonStringSafe(receiptObj);
-
 		if(tx.isSuccessful()) {
-			return TxReceipt.ofSuccessful(tx.getHash(), receipt);
+			return TxReceipt.ofSuccessful(tx.getHash(), receiptObj);
 		} else {
-			return TxReceipt.ofFailed(tx.getHash(), receipt);
+			return TxReceipt.ofFailed(tx.getHash(), receiptObj);
 		}
 	}
 }

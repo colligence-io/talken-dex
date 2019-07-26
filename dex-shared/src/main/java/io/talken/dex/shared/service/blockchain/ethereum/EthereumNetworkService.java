@@ -56,12 +56,21 @@ public class EthereumNetworkService {
 
 	public BigInteger getGasPrice(Web3j web3j) {
 		// TODO : calculate or get proper value
-		return Convert.toWei("10", Convert.Unit.GWEI).toBigInteger();
+		return Convert.toWei("20", Convert.Unit.GWEI).toBigInteger();
+//
+//		try {
+//			return web3j.ethGasPrice().send().getGasPrice();
+//		} catch(Exception ex) {
+//
+//		}
 	}
 
 	public BigInteger getGasLimit(Web3j web3j) throws IOException {
-		EthBlock.Block lastBlock = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock();
-		return lastBlock.getGasLimit();
+		// TODO : calculate or get proper value
+		return new BigInteger("250000");
+
+//		EthBlock.Block lastBlock = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock();
+//		return lastBlock.getGasLimit();
 	}
 
 	public BigDecimal getErc20BalanceOf(String owner, String contractAddress) throws Exception {

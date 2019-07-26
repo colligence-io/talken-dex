@@ -2,6 +2,7 @@ package io.talken.dex.governance.service.bctx;
 
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
+import io.talken.common.util.GSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.AdminAlarmService;
 import io.talken.dex.shared.TransactionBlockExecutor;
@@ -113,19 +114,19 @@ public abstract class TxMonitor<TB, TT> {
 
 		private TxReceipt() {}
 
-		public static TxReceipt ofSuccessful(String txRefId, String receipt) {
+		public static TxReceipt ofSuccessful(String txRefId, Object receiptObject) {
 			TxReceipt rtn = new TxReceipt();
 			rtn.status = BctxStatusEnum.SUCCESS;
 			rtn.txRefId = txRefId;
-			rtn.receipt = receipt;
+			rtn.receipt = GSONWriter.toJsonStringSafe(receiptObject);
 			return rtn;
 		}
 
-		public static TxReceipt ofFailed(String txRefId, String receipt) {
+		public static TxReceipt ofFailed(String txRefId, Object receiptObject) {
 			TxReceipt rtn = new TxReceipt();
 			rtn.status = BctxStatusEnum.FAILED;
 			rtn.txRefId = txRefId;
-			rtn.receipt = receipt;
+			rtn.receipt = GSONWriter.toJsonStringSafe(receiptObject);
 			return rtn;
 		}
 	}

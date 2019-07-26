@@ -1,10 +1,10 @@
-package io.talken.dex.governance.service.bctx.monitor.luniverse;
+package io.talken.dex.governance.service.bctx.monitor.ethereum;
 
 import io.talken.common.RunningProfile;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.TxMonitor;
-import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
+import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Sort;
@@ -26,11 +26,11 @@ import java.util.Optional;
 
 @Service
 @Scope("singleton")
-public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt> {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(LuniverseTxMonitor.class);
+public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt> {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumTxMonitor.class);
 
 	@Autowired
-	private LuniverseNetworkService luniverseNetworkService;
+	private EthereumNetworkService ethNetworkService;
 
 	@Autowired
 	private MongoTemplate mongoTemplate;
@@ -40,22 +40,22 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 	@PostConstruct
 	private void init() {
 		if(RunningProfile.isLocal()) { // destroy log db at localhost
-			mongoTemplate.dropCollection(LuniverseBlockDocument.class);
-			mongoTemplate.dropCollection(LuniverseTxReceiptDocument.class);
+			mongoTemplate.dropCollection(EthereumBlockDocument.class);
+			mongoTemplate.dropCollection(EthereumTxReceiptDocument.class);
 		}
 	}
 
 	private BigInteger getCursor(Web3j web3j) throws Exception {
-		long count = mongoTemplate.count(new Query(), LuniverseBlockDocument.class);
+		long count = mongoTemplate.count(new Query(), EthereumBlockDocument.class);
 
 		if(count > 0) {
 			Query query = new Query();
 			query.limit(1);
 			query.with(new Sort(Sort.Direction.DESC, "number"));
-			List<LuniverseBlockDocument> lastBlock = mongoTemplate.find(query, LuniverseBlockDocument.class);
+			List<EthereumBlockDocument> lastBlock = mongoTemplate.find(query, EthereumBlockDocument.class);
 			return lastBlock.get(0).getNumber();
 		} else {
-			logger.info("Luniverse block collection not found, collect last 10 blocks for initial data.");
+			logger.info("Ethereum block collection not found, collect last 10 blocks for initial data.");
 			return getLatestBlockNumber(web3j).subtract(new BigInteger("10")); // initially collect 100 blocks
 		}
 	}
@@ -68,9 +68,9 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 	private void getBlocks() {
 		Web3j web3j;
 		try {
-			web3j = luniverseNetworkService.newMainRpcClient();
+			web3j = ethNetworkService.newClient();
 		} catch(Exception ex) {
-			logger.exception(ex, "Cannot get luniverse rpc client.");
+			logger.exception(ex, "Cannot get ethereum rpc client.");
 			return;
 		}
 
@@ -86,7 +86,7 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 			BigInteger latestBlockNumber = getLatestBlockNumber(web3j);
 
 			if(latestBlockNumber.compareTo(cursor) > 0) { // higher block found
-				logger.trace("Luniverse latest block {} found, current cursor = {}", latestBlockNumber, cursor);
+				logger.trace("Ethereum latest block {} found, current cursor = {}", latestBlockNumber, cursor);
 
 				for(int i = 0; i < MAXIMUM_LOOP && latestBlockNumber.compareTo(cursor) > 0; i++) {
 					BigInteger nextCursor = cursor.add(BigInteger.ONE);
@@ -95,7 +95,7 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 					EthBlock.Block block = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(nextCursor), false).send().getBlock();
 
 					if(block != null) {
-						logger.verbose("Luniverse block {} contains {} tx.", block.getNumber(), block.getTransactions().size());
+						logger.verbose("Ethereum block {} contains {} tx.", block.getNumber(), block.getTransactions().size());
 
 						callBlockHandlerStack(block);
 
@@ -129,9 +129,9 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 							}
 						}
 
-						mongoTemplate.save(LuniverseBlockDocument.from(block));
+						mongoTemplate.save(EthereumBlockDocument.from(block));
 						for(TransactionReceipt receipt : receipts) {
-							mongoTemplate.save(LuniverseTxReceiptDocument.from(receipt));
+							mongoTemplate.save(EthereumTxReceiptDocument.from(receipt));
 						}
 
 						cursor = block.getNumber();
