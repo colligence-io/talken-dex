@@ -1,7 +1,6 @@
 package io.talken.dex.governance.service.bctx.monitor.luniverse;
 
 import io.talken.common.RunningProfile;
-import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
