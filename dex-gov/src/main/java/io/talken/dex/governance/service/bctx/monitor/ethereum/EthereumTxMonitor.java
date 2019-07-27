@@ -1,14 +1,14 @@
 package io.talken.dex.governance.service.bctx.monitor.ethereum;
 
 import io.talken.common.RunningProfile;
+import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
@@ -34,25 +34,27 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 	@Autowired
 	private MongoTemplate mongoTemplate;
 
+	@Autowired
+	private ServiceStatusService<DexGovStatus> ssService;
+
 	private static final int MAXIMUM_LOOP = 1000; // get 100 blocks per loop, for reduce crawl load.
 
 	@PostConstruct
 	private void init() {
 		if(RunningProfile.isLocal()) { // destroy log db at localhost
+			ssService.status().getTxMonitor().getEthereum().setLastBlock(null);
+			ssService.save();
+
 			mongoTemplate.dropCollection(EthereumBlockDocument.class);
 			mongoTemplate.dropCollection(EthereumTxReceiptDocument.class);
 		}
 	}
 
 	private BigInteger getCursor(Web3j web3j) throws Exception {
-		long count = mongoTemplate.count(new Query(), EthereumBlockDocument.class);
+		Optional<BigInteger> opt_lastBlock = Optional.ofNullable(ssService.status().getTxMonitor().getEthereum().getLastBlock());
 
-		if(count > 0) {
-			Query query = new Query();
-			query.limit(1);
-			query.with(new Sort(Sort.Direction.DESC, "number"));
-			List<EthereumBlockDocument> lastBlock = mongoTemplate.find(query, EthereumBlockDocument.class);
-			return lastBlock.get(0).getNumber();
+		if(opt_lastBlock.isPresent()) {
+			return opt_lastBlock.get();
 		} else {
 			logger.info("Ethereum block collection not found, collect last 10 blocks for initial data.");
 			return getLatestBlockNumber(web3j).subtract(new BigInteger("10")); // initially collect 100 blocks
@@ -104,11 +106,12 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 							for(EthBlock.TransactionResult tx : block.getTransactions()) {
 
 								String txHash = null;
+								org.web3j.protocol.core.methods.response.Transaction transaction;
 
 								if(tx instanceof EthBlock.TransactionHash) {
 									txHash = (String) tx.get();
 								} else if(tx instanceof EthBlock.TransactionObject) {
-									org.web3j.protocol.core.methods.response.Transaction transaction = (org.web3j.protocol.core.methods.response.Transaction) tx.get();
+									transaction = (org.web3j.protocol.core.methods.response.Transaction) tx.get();
 									txHash = transaction.getHash();
 								}
 
@@ -127,6 +130,9 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 								}
 							}
 						}
+
+						ssService.status().getTxMonitor().getEthereum().setLastBlock(block.getNumber());
+						ssService.save();
 
 						mongoTemplate.save(EthereumBlockDocument.from(block));
 						for(TransactionReceipt receipt : receipts) {

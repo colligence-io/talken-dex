@@ -1,14 +1,14 @@
 package io.talken.dex.governance.service.bctx.monitor.luniverse;
 
 import io.talken.common.RunningProfile;
+import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
@@ -34,25 +34,27 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 	@Autowired
 	private MongoTemplate mongoTemplate;
 
+	@Autowired
+	private ServiceStatusService<DexGovStatus> ssService;
+
 	private static final int MAXIMUM_LOOP = 1000; // get 100 blocks per loop, for reduce crawl load.
 
 	@PostConstruct
 	private void init() {
 		if(RunningProfile.isLocal()) { // destroy log db at localhost
+			ssService.status().getTxMonitor().getLuniverse().setLastBlock(null);
+			ssService.save();
+
 			mongoTemplate.dropCollection(LuniverseBlockDocument.class);
 			mongoTemplate.dropCollection(LuniverseTxReceiptDocument.class);
 		}
 	}
 
 	private BigInteger getCursor(Web3j web3j) throws Exception {
-		long count = mongoTemplate.count(new Query(), LuniverseBlockDocument.class);
+		Optional<BigInteger> opt_lastBlock = Optional.ofNullable(ssService.status().getTxMonitor().getLuniverse().getLastBlock());
 
-		if(count > 0) {
-			Query query = new Query();
-			query.limit(1);
-			query.with(new Sort(Sort.Direction.DESC, "number"));
-			List<LuniverseBlockDocument> lastBlock = mongoTemplate.find(query, LuniverseBlockDocument.class);
-			return lastBlock.get(0).getNumber();
+		if(opt_lastBlock.isPresent()) {
+			return opt_lastBlock.get();
 		} else {
 			logger.info("Luniverse block collection not found, collect last 10 blocks for initial data.");
 			return getLatestBlockNumber(web3j).subtract(new BigInteger("10")); // initially collect 100 blocks
@@ -127,6 +129,9 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 								}
 							}
 						}
+
+						ssService.status().getTxMonitor().getLuniverse().setLastBlock(block.getNumber());
+						ssService.save();
 
 						mongoTemplate.save(LuniverseBlockDocument.from(block));
 						for(TransactionReceipt receipt : receipts) {

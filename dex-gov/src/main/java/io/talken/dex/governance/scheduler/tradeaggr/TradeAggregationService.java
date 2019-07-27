@@ -3,8 +3,10 @@ package io.talken.dex.governance.scheduler.tradeaggr;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.jooq.tables.TOKEN_META;
 import io.talken.common.persistence.redis.AssetOHLCData;
+import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import org.jooq.DSLContext;
@@ -24,7 +26,8 @@ import java.time.LocalDateTime;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static io.talken.common.CommonConsts.ZONE_UTC;
-import static io.talken.common.persistence.jooq.Tables.*;
+import static io.talken.common.persistence.jooq.Tables.TOKEN_META;
+import static io.talken.common.persistence.jooq.Tables.TOKEN_META_MANAGED_MARKETPAIR;
 
 @Service
 @Scope("singleton")
@@ -42,6 +45,9 @@ public class TradeAggregationService {
 
 	@Autowired
 	private DSLContext dslContext;
+
+	@Autowired
+	private ServiceStatusService<DexGovStatus> ssService;
 
 	private ReentrantLock lock = new ReentrantLock();
 
@@ -150,7 +156,8 @@ public class TradeAggregationService {
 		}
 
 		try {
-			dslContext.update(DEX_GOV_STATUS).set(DEX_GOV_STATUS.TRADEAGGRLASTTIMESTAMP, endTimeLdt).execute();
+			ssService.status().setLastTradeAggrExecutionTime(endTimeLdt);
+			ssService.save();
 		} catch(Exception ex) {
 			logger.exception(ex, "Cannot update dex_status.tradeAggrLastTimestamp", ex.getMessage());
 		}

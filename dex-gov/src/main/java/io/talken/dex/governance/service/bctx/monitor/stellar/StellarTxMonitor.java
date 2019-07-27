@@ -1,8 +1,9 @@
 package io.talken.dex.governance.service.bctx.monitor.stellar;
 
 import io.talken.common.RunningProfile;
-import io.talken.common.persistence.jooq.tables.records.DexGovStatusRecord;
+import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.governance.service.bctx.monitor.stellar.dextask.DexTaskTransactionHandler;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
@@ -21,7 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.talken.common.persistence.jooq.Tables.DEX_GOV_STATUS;
 
 @Service
 @Scope("singleton")
@@ -34,13 +34,17 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 	@Autowired
 	private DSLContext dslContext;
 
+	@Autowired
+	private ServiceStatusService<DexGovStatus> ssService;
+
 	private static final int TXREQUEST_LIMIT = 200;
 
 	@PostConstruct
 	private void init() {
 		// reset status if local
 		if(RunningProfile.isLocal()) {
-			dslContext.deleteFrom(DEX_GOV_STATUS).where().execute();
+			ssService.status().getTxMonitor().getStellar().setLastPagingToken(null);
+			ssService.save();
 		}
 	}
 
@@ -53,7 +57,7 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 	}
 
 	private int processNextTransactions() {
-		Optional<DexGovStatusRecord> opt_status = dslContext.selectFrom(DEX_GOV_STATUS).limit(1).fetchOptional();
+		Optional<String> opt_status = Optional.ofNullable(ssService.status().getTxMonitor().getStellar().getLastPagingToken());
 
 		Server server = stellarNetworkService.pickServer();
 
@@ -61,10 +65,8 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 		try {
 			if(opt_status.isPresent()) {
 				// 200 is maximum
-				txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(opt_status.get().getTxmonitorlastpagingtoken()).limit(TXREQUEST_LIMIT).includeFailed(false).execute();
+				txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(opt_status.get()).limit(TXREQUEST_LIMIT).includeFailed(false).execute();
 			} else {
-				// insert initial row
-				dslContext.insertInto(DEX_GOV_STATUS).columns(DEX_GOV_STATUS.TXMONITORLASTPAGINGTOKEN).values("0").execute();
 				// get last tx for initiation
 				txPage = server.transactions().order(RequestBuilder.Order.DESC).limit(1).includeFailed(false).execute();
 			}
@@ -84,10 +86,8 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 
 				callTxHandlerStack(txRecord);
 
-				// mark last checked tx
-				dslContext.update(DEX_GOV_STATUS)
-						.set(DEX_GOV_STATUS.TXMONITORLASTPAGINGTOKEN, txRecord.getPagingToken())
-						.execute();
+				ssService.status().getTxMonitor().getStellar().setLastPagingToken(txRecord.getPagingToken());
+				ssService.save();
 
 				processed++;
 			} catch(Exception ex) {

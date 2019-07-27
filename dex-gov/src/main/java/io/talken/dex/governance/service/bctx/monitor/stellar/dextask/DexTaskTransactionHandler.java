@@ -1,11 +1,10 @@
 package io.talken.dex.governance.service.bctx.monitor.stellar.dextask;
 
-import io.talken.common.RunningProfile;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTxmonRecord;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.governance.service.bctx.monitor.stellar.StellarTxMonitor;
 import io.talken.dex.governance.service.bctx.TxMonitor;
+import io.talken.dex.governance.service.bctx.monitor.stellar.StellarTxMonitor;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.exception.TaskIntegrityCheckFailedException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
@@ -25,7 +24,6 @@ import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.talken.common.persistence.jooq.Tables.DEX_GOV_STATUS;
 
 @Component
 @Scope("singleton")
@@ -53,10 +51,6 @@ public class DexTaskTransactionHandler implements ApplicationContextAware, TxMon
 	private void init() {
 		txMonitor.addTransactionHandler(this);
 
-		// reset status if local
-		if(RunningProfile.isLocal()) {
-			dslContext.deleteFrom(DEX_GOV_STATUS).where().execute();
-		}
 		Map<String, TaskTransactionProcessor> ascBeans = applicationContext.getBeansOfType(TaskTransactionProcessor.class);
 		ascBeans.forEach((_name, _asc) -> {
 			processors.put(_asc.getDexTaskType(), _asc);
