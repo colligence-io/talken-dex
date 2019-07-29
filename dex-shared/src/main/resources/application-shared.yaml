@@ -12,6 +12,7 @@ talken:
         network: test
         serverList:
           - "http://192.168.0.37:8545"
+        gasOracleUrl: "http://192.168.0.37:38084/ethgasAPI.json"
       luniverse:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://133.186.197.245:18545"

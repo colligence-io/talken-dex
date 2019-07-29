@@ -42,7 +42,7 @@ public class DexSettings {
 	@Setter
 	public static class _BCNodes {
 		private NodeServerList stellar;
-		private NodeServerList ethereum;
+		private _Ethereum ethereum;
 		private _Luniverse luniverse;
 	}
 
@@ -51,6 +51,12 @@ public class DexSettings {
 	public static class NodeServerList {
 		private String network;
 		private List<String> serverList;
+	}
+
+	@Getter
+	@Setter
+	public static class _Ethereum extends NodeServerList {
+		private String gasOracleUrl;
 	}
 
 	@Getter
