@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Configuration
 public class MongoConfig extends AbstractMongoConfiguration {
 	@Autowired
@@ -25,10 +28,14 @@ public class MongoConfig extends AbstractMongoConfiguration {
 
 	@Override
 	public MongoClient mongoClient() {
-		final ServerAddress addr = new ServerAddress(secret().getAddr(), secret().getPort());
+		final List<ServerAddress> addrs = new ArrayList<>();
+		for(VaultSecretDataMongoDB.Server server : secret().getServers()) {
+			addrs.add(new ServerAddress(server.getAddr(), server.getPort()));
+		}
+
 		final MongoCredential credential = MongoCredential.createCredential(secret().getUsername(), secret().getAuthSource(), secret().getPassword().toCharArray());
 		final MongoClientOptions options = MongoClientOptions.builder().build();
-		return new MongoClient(addr, credential, options);
+		return new MongoClient(addrs, credential, options);
 	}
 
 	@Override
