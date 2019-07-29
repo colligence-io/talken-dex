@@ -32,4 +32,8 @@ public class RequestMappings {
 	private static final String ADM = "/adm";
 	public static final String ADM_RELOAD_TM = ADM + "/reloadTokenMeta";
 	public static final String ADM_MI_UPDATEHOLDER = ADM + "/managedInfo/{symbol}/updateHolder";
+
+	private static final String BLOCK_CHAIN = DEX + "/bc";
+	private static final String BLOCK_CHAIN_LUNIVERSE = BLOCK_CHAIN + "/luniverse";
+	public static final String BLOCK_CHAIN_LUNIVERSE_GASPRICE = BLOCK_CHAIN_LUNIVERSE + "/gasPrice";
 }

@@ -1,7 +1,9 @@
-package io.talken.dex.api.controller;
+package io.talken.dex.api.controller.mapper;
 
 import io.talken.common.exception.TalkenException;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.api.controller.DexResponse;
+import io.talken.dex.api.controller.RequestMappings;
 import io.talken.dex.api.service.TokenMetaService;
 import io.talken.dex.shared.TokenMetaTable;
 import org.springframework.beans.factory.annotation.Autowired;

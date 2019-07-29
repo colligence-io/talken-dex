@@ -1,15 +1,16 @@
-package io.talken.dex.api.controller;
+package io.talken.dex.api.controller.mapper;
 
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.config.auth.AuthInfo;
 import io.talken.dex.api.config.auth.AuthRequired;
-import io.talken.dex.api.controller.dto.AssetConvertRequest;
-import io.talken.dex.api.controller.dto.AssetExchangeRequest;
-import io.talken.dex.api.controller.dto.TaskTransactionResult;
-import io.talken.dex.api.controller.dto.TxListRequest;
+import io.talken.dex.api.controller.DTOValidator;
+import io.talken.dex.api.controller.DexResponse;
+import io.talken.dex.api.controller.RequestMappings;
+import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.api.service.AssetConvertService;
 import io.talken.dex.api.service.TaskTransactionListService;
+import io.talken.dex.api.service.bc.LuniverseInfoService;
 import io.talken.dex.shared.exception.DexException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +30,9 @@ public class MiscController {
 
 	@Autowired
 	private AssetConvertService assetConvertService;
+
+	@Autowired
+	private LuniverseInfoService luniverseInfoService;
 
 	@Autowired
 	private TaskTransactionListService txListService;
@@ -56,5 +60,10 @@ public class MiscController {
 	public DexResponse<List<TaskTransactionResult>> txList(@RequestBody TxListRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(txListService.getTxList(postBody));
+	}
+
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_LUNIVERSE_GASPRICE, method = RequestMethod.GET)
+	public DexResponse<LuniverseGasPriceResult> luniverseGasPrice() throws DexException {
+		return DexResponse.buildResponse(luniverseInfoService.getGasPriceAndLimit());
 	}
 }

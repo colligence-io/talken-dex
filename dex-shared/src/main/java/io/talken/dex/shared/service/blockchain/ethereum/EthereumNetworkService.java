@@ -7,23 +7,13 @@ import io.talken.dex.shared.service.blockchain.RandomServerPicker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.FunctionReturnDecoder;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.request.Transaction;
-import org.web3j.protocol.core.methods.response.EthBlock;
-import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.List;
 
 @Service
 @Scope("singleton")
@@ -50,7 +40,8 @@ public class EthereumNetworkService {
 
 	public Web3j newClient() throws IOException {
 		Web3j web3j = Web3j.build(new HttpService(serverPicker.pick()));
-		logger.trace("Connected to Ethereum client version: " + web3j.web3ClientVersion().send().getWeb3ClientVersion());
+		// log too expensive
+//		logger.trace("Connected to Ethereum client version: " + web3j.web3ClientVersion().send().getWeb3ClientVersion());
 		return web3j;
 	}
 
@@ -71,26 +62,5 @@ public class EthereumNetworkService {
 
 //		EthBlock.Block lastBlock = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock();
 //		return lastBlock.getGasLimit();
-	}
-
-	public BigDecimal getErc20BalanceOf(String owner, String contractAddress) throws Exception {
-
-		Function function = StandardERC20ContractFunctions.balanceOf(owner);
-
-		EthCall response = newClient().ethCall(
-				Transaction.createEthCallTransaction(
-						owner,
-						contractAddress,
-						FunctionEncoder.encode(function)
-				),
-				DefaultBlockParameterName.LATEST
-		).sendAsync().get();
-
-		List<Type> decoded = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
-
-		if(decoded.size() > 0)
-			return Convert.fromWei(decoded.get(0).getValue().toString(), Convert.Unit.ETHER);
-		else
-			return BigDecimal.ZERO;
 	}
 }

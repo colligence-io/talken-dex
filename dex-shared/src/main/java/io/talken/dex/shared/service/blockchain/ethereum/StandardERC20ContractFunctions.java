@@ -3,13 +3,20 @@ package io.talken.dex.shared.service.blockchain.ethereum;
 import io.talken.common.util.PrefixedLogger;
 import lombok.Data;
 import org.web3j.abi.EventEncoder;
+import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.utils.Convert;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -123,5 +130,25 @@ public abstract class StandardERC20ContractFunctions {
 			this.to = to;
 			this.amount = amount;
 		}
+	}
+
+	public static BigDecimal getErc20BalanceOf(Web3j web3j, String contractAddress, String owner) throws Exception {
+		Function function = balanceOf(owner);
+
+		EthCall response = web3j.ethCall(
+				Transaction.createEthCallTransaction(
+						owner,
+						contractAddress,
+						FunctionEncoder.encode(function)
+				),
+				DefaultBlockParameterName.LATEST
+		).sendAsync().get();
+
+		List<Type> decoded = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
+
+		if(decoded.size() > 0)
+			return Convert.fromWei(decoded.get(0).getValue().toString(), Convert.Unit.ETHER);
+		else
+			return BigDecimal.ZERO;
 	}
 }
