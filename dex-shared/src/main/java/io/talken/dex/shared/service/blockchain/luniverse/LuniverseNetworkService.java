@@ -44,18 +44,12 @@ public class LuniverseNetworkService {
 		return client;
 	}
 
-	public Web3j newMainRpcClient() throws IOException {
-		Web3j web3j = Web3j.build(new HttpService(this.mainRpcUri));
-		// log too expensive
-//		logger.verbose("Connected to Main Luniverse client version: " + web3j.web3ClientVersion().send().getWeb3ClientVersion());
-		return web3j;
+	public Web3j newMainRpcClient() {
+		return Web3j.build(new HttpService(this.mainRpcUri));
 	}
 
-	public Web3j newSideRpcClient() throws IOException {
-		Web3j web3j = Web3j.build(new HttpService(this.sideRpcUri));
-		// log too expensive
-//		logger.verbose("Connected to Side Luniverse client version: " + web3j.web3ClientVersion().send().getWeb3ClientVersion());
-		return web3j;
+	public Web3j newSideRpcClient() {
+		return Web3j.build(new HttpService(this.sideRpcUri));
 	}
 
 	public BigInteger getGasPrice(Web3j web3j) throws IOException {

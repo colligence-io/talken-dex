@@ -12,7 +12,6 @@ import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.math.BigInteger;
 
 @Service
@@ -38,11 +37,8 @@ public class EthereumNetworkService {
 		}
 	}
 
-	public Web3j newClient() throws IOException {
-		Web3j web3j = Web3j.build(new HttpService(serverPicker.pick()));
-		// log too expensive
-//		logger.trace("Connected to Ethereum client version: " + web3j.web3ClientVersion().send().getWeb3ClientVersion());
-		return web3j;
+	public Web3j newClient() {
+		return Web3j.build(new HttpService(serverPicker.pick()));
 	}
 
 	public BigInteger getGasPrice(Web3j web3j) {
@@ -56,7 +52,7 @@ public class EthereumNetworkService {
 //		}
 	}
 
-	public BigInteger getGasLimit(Web3j web3j) throws IOException {
+	public BigInteger getGasLimit(Web3j web3j) {
 		// TODO : calculate or get proper value
 		return new BigInteger("250000");
 
