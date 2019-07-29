@@ -46,7 +46,6 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 			ssService.status().getTxMonitor().getEthereum().setLastBlock(null);
 			ssService.save();
 
-			mongoTemplate.dropCollection(EthereumBlockDocument.class);
 			mongoTemplate.dropCollection(EthereumTxReceiptDocument.class);
 		}
 	}
@@ -94,39 +93,37 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 					BigInteger nextCursor = cursor.add(BigInteger.ONE);
 
 					// get next block of cursor
-					EthBlock.Block block = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(nextCursor), false).send().getBlock();
+					EthBlock.Block block = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(nextCursor), true).send().getBlock();
 
 					if(block != null) {
 						logger.verbose("Ethereum block {} contains {} tx.", block.getNumber(), block.getTransactions().size());
 
 						callBlockHandlerStack(block);
 
-						List<TransactionReceipt> receipts = new ArrayList<>();
+						List<EthereumTxReceiptDocument> txReceiptDocuments = new ArrayList<>();
 
 						if(block.getTransactions().size() > 0) {
 							for(EthBlock.TransactionResult tx : block.getTransactions()) {
 
-								String txHash = null;
 								org.web3j.protocol.core.methods.response.Transaction transaction = null;
 
 								if(tx instanceof EthBlock.TransactionHash) {
-									txHash = (String) tx.get();
+									transaction = web3j.ethGetTransactionByHash((String) tx.get()).send().getTransaction().orElse(null);
 								} else if(tx instanceof EthBlock.TransactionObject) {
 									transaction = (org.web3j.protocol.core.methods.response.Transaction) tx.get();
-									txHash = transaction.getHash();
 								}
 
-								if(txHash != null) {
-									Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(txHash).send().getTransactionReceipt();
+								if(transaction != null) {
+									Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(transaction.getHash()).send().getTransactionReceipt();
 									if(opt_receipt.isPresent()) {
 										callTxHandlerStack(opt_receipt.get());
-										receipts.add(opt_receipt.get());
+										txReceiptDocuments.add(EthereumTxReceiptDocument.from(transaction, opt_receipt.get()));
 									} else {
 										logger.error("Cannot get tx receipt from network, cancel monitoring");
 										break;
 									}
 								} else {
-									logger.error("Cannot extract txHash from block response, cancel monitoring");
+									logger.error("Cannot extract tx from block response, cancel monitoring");
 									break;
 								}
 							}
@@ -136,8 +133,8 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 						ssService.status().getTxMonitor().getEthereum().setLastBlockTimestamp(UTCUtil.ts2ldt(block.getTimestamp().longValue()));
 						ssService.save();
 
-						for(TransactionReceipt receipt : receipts) {
-							mongoTemplate.save(EthereumTxReceiptDocument.from(receipt));
+						for(EthereumTxReceiptDocument txrDoc : txReceiptDocuments) {
+							mongoTemplate.save(txrDoc);
 						}
 
 						cursor = block.getNumber();
