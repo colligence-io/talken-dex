@@ -20,16 +20,19 @@ public class DexGovStatus {
 		@Data
 		public static class StellarTxMonitor {
 			private String lastPagingToken;
+			private LocalDateTime lastTokenTimestamp;
 		}
 
 		@Data
 		public static class EthereumTxMonitor {
 			private BigInteger lastBlock;
+			private LocalDateTime lastBlockTimestamp;
 		}
 
 		@Data
 		public static class LuniverseTxMonitor {
 			private BigInteger lastBlock;
+			private LocalDateTime lastBlockTimestamp;
 		}
 	}
 }

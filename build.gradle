@@ -72,6 +72,9 @@ subprojects {
         compile('org.springframework.boot:spring-boot-starter-data-redis')
         compile('redis.clients:jedis')
 
+        // MongoDB
+        compile('org.springframework.boot:spring-boot-starter-data-mongodb')
+        
         // stellar sdk
         compile('com.github.stellar:java-stellar-sdk:0.6.0')
 

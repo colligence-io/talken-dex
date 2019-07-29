@@ -3,6 +3,7 @@ package io.talken.dex.governance.service.bctx.monitor.ethereum;
 import io.talken.common.RunningProfile;
 import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.UTCUtil;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
@@ -65,7 +66,7 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 		return web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock().getNumber();
 	}
 
-	@Scheduled(fixedDelay = 3000)
+	@Scheduled(fixedDelay = 15000)
 	private void getBlocks() {
 		Web3j web3j;
 		try {
@@ -106,7 +107,7 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 							for(EthBlock.TransactionResult tx : block.getTransactions()) {
 
 								String txHash = null;
-								org.web3j.protocol.core.methods.response.Transaction transaction;
+								org.web3j.protocol.core.methods.response.Transaction transaction = null;
 
 								if(tx instanceof EthBlock.TransactionHash) {
 									txHash = (String) tx.get();
@@ -132,9 +133,9 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 						}
 
 						ssService.status().getTxMonitor().getEthereum().setLastBlock(block.getNumber());
+						ssService.status().getTxMonitor().getEthereum().setLastBlockTimestamp(UTCUtil.ts2ldt(block.getTimestamp().longValue()));
 						ssService.save();
 
-						mongoTemplate.save(EthereumBlockDocument.from(block));
 						for(TransactionReceipt receipt : receipts) {
 							mongoTemplate.save(EthereumTxReceiptDocument.from(receipt));
 						}

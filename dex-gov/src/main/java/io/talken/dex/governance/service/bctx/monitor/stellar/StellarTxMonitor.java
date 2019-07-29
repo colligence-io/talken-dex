@@ -6,6 +6,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.governance.service.bctx.monitor.stellar.dextask.DexTaskTransactionHandler;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,6 +69,7 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 				txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(opt_status.get()).limit(TXREQUEST_LIMIT).includeFailed(false).execute();
 			} else {
 				// get last tx for initiation
+				logger.info("Stellar tx collection not found, collect last page for initial data.");
 				txPage = server.transactions().order(RequestBuilder.Order.DESC).limit(1).includeFailed(false).execute();
 			}
 		} catch(Exception ex) {
@@ -87,6 +89,7 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 				callTxHandlerStack(txRecord);
 
 				ssService.status().getTxMonitor().getStellar().setLastPagingToken(txRecord.getPagingToken());
+				ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
 				ssService.save();
 
 				processed++;

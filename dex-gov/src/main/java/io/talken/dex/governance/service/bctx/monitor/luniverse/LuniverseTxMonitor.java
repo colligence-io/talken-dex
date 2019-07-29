@@ -3,6 +3,7 @@ package io.talken.dex.governance.service.bctx.monitor.luniverse;
 import io.talken.common.RunningProfile;
 import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.UTCUtil;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
@@ -106,11 +107,12 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 							for(EthBlock.TransactionResult tx : block.getTransactions()) {
 
 								String txHash = null;
+								org.web3j.protocol.core.methods.response.Transaction transaction = null;
 
 								if(tx instanceof EthBlock.TransactionHash) {
 									txHash = (String) tx.get();
 								} else if(tx instanceof EthBlock.TransactionObject) {
-									org.web3j.protocol.core.methods.response.Transaction transaction = (org.web3j.protocol.core.methods.response.Transaction) tx.get();
+									transaction = (org.web3j.protocol.core.methods.response.Transaction) tx.get();
 									txHash = transaction.getHash();
 								}
 
@@ -131,9 +133,9 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 						}
 
 						ssService.status().getTxMonitor().getLuniverse().setLastBlock(block.getNumber());
+						ssService.status().getTxMonitor().getLuniverse().setLastBlockTimestamp(UTCUtil.ts2ldt(block.getTimestamp().longValue()));
 						ssService.save();
 
-						mongoTemplate.save(LuniverseBlockDocument.from(block));
 						for(TransactionReceipt receipt : receipts) {
 							mongoTemplate.save(LuniverseTxReceiptDocument.from(receipt));
 						}
