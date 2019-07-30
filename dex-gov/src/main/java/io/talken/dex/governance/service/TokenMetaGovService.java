@@ -397,13 +397,14 @@ public class TokenMetaGovService {
 
 
 	private boolean verifyManaged(SingleKeyTable<String, TokenMeta> checkTarget) {
-		boolean trustFailed = false;
-		for(TokenMeta _tm : checkTarget.__getRawData().values()) {
-			if(!checkTrust(_tm.getManagedInfo().getAssetBase(), _tm.getManagedInfo())) trustFailed = true;
-			if(!checkTrust(_tm.getManagedInfo().getOfferFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
-			if(!checkTrust(_tm.getManagedInfo().getDeanchorFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
-		}
-		return !trustFailed;
+//		boolean trustFailed = false;
+//		for(TokenMeta _tm : checkTarget.__getRawData().values()) {
+//			if(!checkTrust(_tm.getManagedInfo().getAssetBase(), _tm.getManagedInfo())) trustFailed = true;
+//			if(!checkTrust(_tm.getManagedInfo().getOfferFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
+//			if(!checkTrust(_tm.getManagedInfo().getDeanchorFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
+//		}
+//		return !trustFailed;
+		return true;
 	}
 
 	private boolean checkTrust(KeyPair source, TokenMeta.ManagedInfo target) {
