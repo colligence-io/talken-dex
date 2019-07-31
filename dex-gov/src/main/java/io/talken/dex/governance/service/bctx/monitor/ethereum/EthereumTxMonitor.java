@@ -150,7 +150,7 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 
 						cursor = block.getNumber();
 					} else {
-						logger.error("GetBlock {} returned null, cancel monitoring");
+						logger.error("GetBlock {} returned null, cancel monitoring", nextCursor);
 						break;
 					}
 				}
