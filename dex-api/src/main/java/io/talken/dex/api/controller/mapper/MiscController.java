@@ -39,7 +39,7 @@ public class MiscController {
 	private TaskTransactionListService txListService;
 
 	@RequestMapping(value = RequestMappings.CONVERT_ASSET, method = RequestMethod.POST)
-	public DexResponse<BigDecimal> convert(@RequestBody AssetConvertRequest postBody) throws DexException, TokenMetaNotFoundException {
+	public DexResponse<BigDecimal> convert(@RequestBody AssetConvertRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
 		try {
 			BigDecimal result = assetConvertService
@@ -52,7 +52,7 @@ public class MiscController {
 	}
 
 	@RequestMapping(value = RequestMappings.EXCHANGE_ASSET, method = RequestMethod.POST)
-	public DexResponse<BigDecimal> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException, TokenMetaNotFoundException {
+	public DexResponse<BigDecimal> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
 		try {
 			BigDecimal result = assetConvertService
