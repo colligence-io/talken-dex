@@ -1,12 +1,14 @@
 package io.talken.dex.governance.service.bctx.monitor.ethereum;
 
 import io.talken.common.RunningProfile;
+import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
+import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -24,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static io.talken.common.persistence.jooq.Tables.BCTX_LOG;
+
 @Service
 @Scope("singleton")
 public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt> {
@@ -37,6 +41,9 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 
 	@Autowired
 	private ServiceStatusService<DexGovStatus> ssService;
+
+	@Autowired
+	private DSLContext dslContext;
 
 	private static final int MAXIMUM_LOOP = 1000; // get 100 blocks per loop, for reduce crawl load.
 
@@ -114,13 +121,17 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 								}
 
 								if(transaction != null) {
-									Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(transaction.getHash()).send().getTransactionReceipt();
-									if(opt_receipt.isPresent()) {
-										callTxHandlerStack(opt_receipt.get());
-										txReceiptDocuments.add(EthereumTxReceiptDocument.from(transaction, opt_receipt.get()));
-									} else {
-										logger.error("Cannot get tx receipt from network, cancel monitoring");
-										break;
+									// FIXME : remove after switch local ethNode
+									// checkBctxLog is not required on actual service
+									if(checkBctxLog(transaction.getHash())) {
+										Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(transaction.getHash()).send().getTransactionReceipt();
+										if(opt_receipt.isPresent()) {
+											callTxHandlerStack(opt_receipt.get());
+											txReceiptDocuments.add(EthereumTxReceiptDocument.from(transaction, opt_receipt.get()));
+										} else {
+											logger.error("Cannot get tx receipt from network, cancel monitoring");
+											break;
+										}
 									}
 								} else {
 									logger.error("Cannot extract tx from block response, cancel monitoring");
@@ -147,6 +158,11 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 		} catch(Exception ex) {
 			logger.exception(ex);
 		}
+	}
+
+	private boolean checkBctxLog(String txHash) {
+		return dslContext.selectFrom(BCTX_LOG).where(BCTX_LOG.STATUS.eq(BctxStatusEnum.SENT).and(BCTX_LOG.BC_REF_ID.eq(txHash)))
+				.fetchOptional().isPresent();
 	}
 
 	@Override
