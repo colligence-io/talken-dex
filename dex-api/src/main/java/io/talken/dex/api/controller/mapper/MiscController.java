@@ -11,6 +11,7 @@ import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.api.service.AssetConvertService;
 import io.talken.dex.api.service.TaskTransactionListService;
 import io.talken.dex.api.service.bc.LuniverseInfoService;
+import io.talken.dex.shared.exception.AssetConvertException;
 import io.talken.dex.shared.exception.DexException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,19 +41,27 @@ public class MiscController {
 	@RequestMapping(value = RequestMappings.CONVERT_ASSET, method = RequestMethod.POST)
 	public DexResponse<BigDecimal> convert(@RequestBody AssetConvertRequest postBody) throws DexException, TokenMetaNotFoundException {
 		DTOValidator.validate(postBody);
-		BigDecimal result = assetConvertService
-				.convert(postBody.getFrom(), postBody.getAmount(), postBody.getTo())
-				.setScale(7, BigDecimal.ROUND_UP);
-		return DexResponse.buildResponse(result);
+		try {
+			BigDecimal result = assetConvertService
+					.convert(postBody.getFrom(), postBody.getAmount(), postBody.getTo())
+					.setScale(7, BigDecimal.ROUND_UP);
+			return DexResponse.buildResponse(result);
+		} catch(AssetConvertException | TokenMetaNotFoundException ex) {
+			return DexResponse.buildResponse(BigDecimal.ZERO);
+		}
 	}
 
 	@RequestMapping(value = RequestMappings.EXCHANGE_ASSET, method = RequestMethod.POST)
 	public DexResponse<BigDecimal> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException, TokenMetaNotFoundException {
 		DTOValidator.validate(postBody);
-		BigDecimal result = assetConvertService
-				.exchange(postBody.getFrom(), postBody.getAmount(), postBody.getTo())
-				.setScale(7, BigDecimal.ROUND_UP);
-		return DexResponse.buildResponse(result);
+		try {
+			BigDecimal result = assetConvertService
+					.exchange(postBody.getFrom(), postBody.getAmount(), postBody.getTo())
+					.setScale(7, BigDecimal.ROUND_UP);
+			return DexResponse.buildResponse(result);
+		} catch(AssetConvertException | TokenMetaNotFoundException ex) {
+			return DexResponse.buildResponse(BigDecimal.ZERO);
+		}
 	}
 
 	@AuthRequired
