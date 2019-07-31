@@ -70,7 +70,7 @@ public class DexTaskTransactionHandler implements ApplicationContextAware, TxMon
 					txmRecord.setTxhash(tx.getHash());
 					txmRecord.setLedger(tx.getLedger());
 					txmRecord.setCreatedat(StellarConverter.toLocalDateTime(tx.getCreatedAt()));
-					txmRecord.setSourceaccount(tx.getSourceAccount().getAccountId());
+					txmRecord.setSourceaccount(tx.getSourceAccount());
 					txmRecord.setEnvelopexdr(tx.getEnvelopeXdr());
 					txmRecord.setResultxdr(tx.getResultXdr());
 					txmRecord.setResultmetaxdr(tx.getResultMetaXdr());
@@ -84,6 +84,8 @@ public class DexTaskTransactionHandler implements ApplicationContextAware, TxMon
 						txmRecord.setMemotaskid(dexTaskId.getId());
 						txmRecord.setTasktype(dexTaskId.getType());
 
+
+						// FIXME : check before applying stellar-sdk 0.9.0
 						TaskTransactionResponse txResponse = new TaskTransactionResponse(dexTaskId, tx);
 						txmRecord.setOfferidfromresult(txResponse.getOfferIdFromResult());
 

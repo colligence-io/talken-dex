@@ -109,7 +109,7 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 	public static class StellarCache {
 		private StellarCache(ManagedInfo mi) {
 			assetIssuer = KeyPair.fromAccountId(mi.issuerAddress);
-			assetType = Asset.createNonNativeAsset(mi.assetCode, assetIssuer);
+			assetType = Asset.createNonNativeAsset(mi.assetCode, assetIssuer.getAccountId());
 			assetBase = KeyPair.fromAccountId(mi.baseAddress);
 			offerFeeHolder = KeyPair.fromAccountId(mi.offerFeeHolderAddress);
 			deanchorFeeHolder = KeyPair.fromAccountId(mi.deancFeeHolderAddress);

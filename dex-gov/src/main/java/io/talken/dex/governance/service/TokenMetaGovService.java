@@ -2,6 +2,8 @@ package io.talken.dex.governance.service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
@@ -28,6 +30,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
+import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
@@ -272,7 +275,7 @@ public class TokenMetaGovService {
 				mi.setAssetHolderAccounts(_tmHaMap.get(_tmd.getId()));
 				mi.setAssetCode(_tmd.getSymbol());
 				mi.setAssetIssuer(KeyPair.fromAccountId(mi.getIssueraddress()));
-				mi.setAssetType(new AssetTypeCreditAlphaNum4(_tmd.getSymbol(), mi.getAssetIssuer()));
+				mi.setAssetType(new AssetTypeCreditAlphaNum4(_tmd.getSymbol(), mi.getAssetIssuer().getAccountId()));
 				mi.setAssetBase(KeyPair.fromAccountId(mi.getBaseaddress()));
 				mi.setDeanchorFeeHolder(KeyPair.fromAccountId(mi.getDeancfeeholderaddress()));
 				mi.setOfferFeeHolder(KeyPair.fromAccountId(mi.getOfferfeeholderaddress()));
@@ -397,14 +400,13 @@ public class TokenMetaGovService {
 
 
 	private boolean verifyManaged(SingleKeyTable<String, TokenMeta> checkTarget) {
-//		boolean trustFailed = false;
-//		for(TokenMeta _tm : checkTarget.__getRawData().values()) {
-//			if(!checkTrust(_tm.getManagedInfo().getAssetBase(), _tm.getManagedInfo())) trustFailed = true;
-//			if(!checkTrust(_tm.getManagedInfo().getOfferFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
-//			if(!checkTrust(_tm.getManagedInfo().getDeanchorFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
-//		}
-//		return !trustFailed;
-		return true;
+		boolean trustFailed = false;
+		for(TokenMeta _tm : checkTarget.__getRawData().values()) {
+			if(!checkTrust(_tm.getManagedInfo().getAssetBase(), _tm.getManagedInfo())) trustFailed = true;
+			if(!checkTrust(_tm.getManagedInfo().getOfferFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
+			if(!checkTrust(_tm.getManagedInfo().getDeanchorFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
+		}
+		return !trustFailed;
 	}
 
 	private boolean checkTrust(KeyPair source, TokenMeta.ManagedInfo target) {
@@ -415,7 +417,7 @@ public class TokenMetaGovService {
 		try {
 			Server server = stellarNetworkService.pickServer();
 
-			AccountResponse sourceAccount = server.accounts().account(KeyPair.fromAccountId(ta.accountID));
+			AccountResponse sourceAccount = server.accounts().account(KeyPair.fromAccountId(ta.accountID).getAccountId());
 
 			for(AccountResponse.Balance _bal : sourceAccount.getBalances()) {
 				if(ta.trustFor.equals(_bal.getAsset())) trusted = true;
@@ -423,7 +425,7 @@ public class TokenMetaGovService {
 
 			if(!trusted) {
 				logger.info("No trust on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
-				Transaction tx = new Transaction.Builder(sourceAccount)
+				Transaction tx = new Transaction.Builder(sourceAccount, stellarNetworkService.getNetwork())
 						.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
 						.setOperationFee(stellarNetworkService.getNetworkFee())
 						.addOperation(
@@ -447,6 +449,13 @@ public class TokenMetaGovService {
 					if(resultCodes.getOperationsResultCodes() != null) resultCodes.getOperationsResultCodes().forEach(sj::add);
 					logger.error("Cannot make trustline on {} for {} / {} : {} - {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId(), resultCodes.getTransactionResultCode(), sj.toString());
 				}
+			}
+		} catch(ErrorResponse er) {
+			try {
+				JsonObject json = new JsonParser().parse(er.getBody()).getAsJsonObject();
+				logger.error("Trustline Check Error {} : {} {}", source.getAccountId(), json.get("status").getAsString(), json.get("title").getAsString());
+			} catch(Exception ex) {
+				logger.error("Trustline Check Error {} : {} {}", source.getAccountId(), er.getBody(), er.getMessage());
 			}
 		} catch(Exception ex) {
 			logger.exception(ex, "Trust Check Exception : {}", source.getAccountId());

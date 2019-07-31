@@ -3,10 +3,7 @@ package io.talken.dex.governance.service.bctx.monitor.stellar.dextask;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.service.blockchain.stellar.StellarXdrDecoder;
 import org.stellar.sdk.responses.TransactionResponse;
-import org.stellar.sdk.xdr.ManageOfferResult;
-import org.stellar.sdk.xdr.OperationResult;
-import org.stellar.sdk.xdr.OperationType;
-import org.stellar.sdk.xdr.TransactionResult;
+import org.stellar.sdk.xdr.*;
 
 public class TaskTransactionResponse {
 
@@ -55,16 +52,18 @@ public class TaskTransactionResponse {
 		return result;
 	}
 
+
+	// FIXME : check when applying stellar-sdk 0.9.0
 	public Long getOfferIdFromResult() {
 		if(result != null) {
 			if(result.getResult() == null) return null;
 			if(result.getResult().getResults() == null || result.getResult().getResults().length == 0) return null;
 
 			// extract feeResult and offerResult
-			ManageOfferResult offerResult = null;
+			ManageSellOfferResult offerResult = null;
 			for(OperationResult operationResult : result.getResult().getResults()) {
-				if(operationResult.getTr().getDiscriminant() == OperationType.MANAGE_OFFER) {
-					offerResult = operationResult.getTr().getManageOfferResult();
+				if(operationResult.getTr().getDiscriminant() == OperationType.MANAGE_SELL_OFFER) {
+					offerResult = operationResult.getTr().getManageSellOfferResult();
 				}
 			}
 			if(offerResult == null) return null;
@@ -73,7 +72,7 @@ public class TaskTransactionResponse {
 			if(offerResult.getSuccess().getOffer() == null) return null;
 			if(offerResult.getSuccess().getOffer().getOffer() == null) return null;
 
-			return offerResult.getSuccess().getOffer().getOffer().getOfferID().getUint64();
+			return offerResult.getSuccess().getOffer().getOffer().getOfferID().getInt64();
 
 		} else return null;
 	}

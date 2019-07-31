@@ -112,7 +112,7 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 		receiptObj.put("envelopeXdr", tx.getEnvelopeXdr());
 		receiptObj.put("resultMetaXdr", tx.getResultMetaXdr());
 		receiptObj.put("feePaid", tx.getFeePaid());
-		receiptObj.put("sourceAccount", tx.getSourceAccount().getAccountId());
+		receiptObj.put("sourceAccount", tx.getSourceAccount());
 		receiptObj.put("createdAt", tx.getCreatedAt());
 
 		if(tx.isSuccessful()) {

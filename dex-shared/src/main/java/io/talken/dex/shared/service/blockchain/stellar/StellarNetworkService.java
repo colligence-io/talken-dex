@@ -24,14 +24,16 @@ public class StellarNetworkService {
 
 	private static final int BASE_FEE = 100;
 
+	private Network network;
+
 	@PostConstruct
 	private void init() {
 		if(dexSettings.getBcnode().getStellar().getNetwork().equalsIgnoreCase("test")) {
 			logger.info("Using Stellar TEST Network.");
-			Network.useTestNetwork();
+			this.network = Network.TESTNET;
 		} else {
 			logger.info("Using Stellar PUBLIC Network.");
-			Network.usePublicNetwork();
+			this.network = Network.PUBLIC;
 		}
 		for(String _s : dexSettings.getBcnode().getStellar().getServerList()) {
 			logger.info("Horizon {} added.", _s);
@@ -41,6 +43,10 @@ public class StellarNetworkService {
 
 	public Server pickServer() {
 		return new Server(serverPicker.pick());
+	}
+
+	public Network getNetwork() {
+		return this.network;
 	}
 
 	public int getNetworkFee() {

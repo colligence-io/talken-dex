@@ -4,8 +4,8 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpStatusCodes;
 import io.talken.common.util.ByteArrayUtils;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.integration.RestApiResult;
 import io.talken.common.util.integration.AbstractRestApiService;
+import io.talken.common.util.integration.RestApiResult;
 import io.talken.dex.governance.GovSettings;
 import io.talken.dex.shared.exception.SigningException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -144,7 +144,7 @@ public class SignServerService extends AbstractRestApiService {
 	}
 
 	public void signStellarTransaction(Transaction tx) throws SigningException {
-		String accountId = tx.getSourceAccount().getAccountId();
+		String accountId = tx.getSourceAccount();
 
 		RestApiResult<SignServerSignResponse> signResult = requestSign("XLM", accountId, tx.hash());
 
@@ -161,7 +161,7 @@ public class SignServerService extends AbstractRestApiService {
 		try {
 			ByteArrayOutputStream publicKeyBytesStream = new ByteArrayOutputStream();
 			XdrDataOutputStream xdrOutputStream = new XdrDataOutputStream(publicKeyBytesStream);
-			PublicKey.encode(xdrOutputStream, tx.getSourceAccount().getXdrPublicKey());
+			PublicKey.encode(xdrOutputStream, KeyPair.fromAccountId(tx.getSourceAccount()).getXdrPublicKey());
 			byte[] publicKeyBytes = publicKeyBytesStream.toByteArray();
 			byte[] signatureHintBytes = Arrays.copyOfRange(publicKeyBytes, publicKeyBytes.length - 4, publicKeyBytes.length);
 			signatureHint.setSignatureHint(signatureHintBytes);
