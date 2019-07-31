@@ -63,6 +63,6 @@ talken:
       luniverse:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://10.27.27.13:18545"
-        sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
-        mtSymbol: "FT9754"
+        sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5151520500809142437"
+        mtSymbol: "TALK"
         stSymbol: "TALKP"
