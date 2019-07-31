@@ -100,7 +100,7 @@ public class CrawlCmcLatestService {
 		}
 
 		url.set("id", sj.toString());
-		url.set("convert", "BTC,ETH,XLM,USD,KRW");
+		url.set("convert", "BTC,ETH,XLM,USDT,USD,KRW");
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("X-CMC_PRO_API_KEY", govSettings.getIntegration().getCoinMarketCap().getApiKey());
