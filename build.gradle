@@ -54,7 +54,7 @@ subprojects {
     }
 
     dependencies {
-        compile('io.talken:java-common:20190807-1') { changing = true }
+        compile('io.talken:java-common:20190807-2') { changing = true }
 
         compileOnly('org.projectlombok:lombok:1.18.4')
 
@@ -76,7 +76,7 @@ subprojects {
         compile('org.springframework.boot:spring-boot-starter-data-mongodb')
         
         // stellar sdk
-        compile('com.github.stellar:java-stellar-sdk:0.6.0')
+        compile('com.github.stellar:java-stellar-sdk:0.9.0')
 
         // ethereum web3j sdk
         compile('org.web3j:core:4.3.0')
