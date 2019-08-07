@@ -30,6 +30,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -73,7 +74,7 @@ public class CrawlCmcLatestService {
 		try {
 			if(RunningProfile.isProduction()) {
 				crawlCMCLatest();
-			} else { // for saving CMC credit, run every 4 hours only
+			} else { // for saving CMC credit, run every 4 hours only when it's not production environment
 				if(counter.get() % 24 == 0) {
 					crawlCMCLatest();
 				} else {

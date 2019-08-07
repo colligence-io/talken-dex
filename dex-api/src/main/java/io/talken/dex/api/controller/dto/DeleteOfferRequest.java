@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 @Data
 public class DeleteOfferRequest {
@@ -16,5 +17,5 @@ public class DeleteOfferRequest {
 	@NotEmpty
 	private String buyAssetCode;
 	@NotNull
-	private Double sellAssetPrice;
+	private BigDecimal price;
 }

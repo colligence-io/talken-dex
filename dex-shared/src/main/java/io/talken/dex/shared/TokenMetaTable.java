@@ -1,7 +1,6 @@
 package io.talken.dex.shared;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import lombok.Data;
@@ -11,6 +10,7 @@ import org.stellar.sdk.Asset;
 import org.stellar.sdk.KeyPair;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +46,7 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private Map<RegionEnum, String> name = new HashMap<>();
 		private Map<RegionEnum, EntryInfo> entryInfo;
 		private Map<TokenMetaAuxCodeEnum, Object> aux;
-		private Map<String, Double> exchangeRate;
+		private Map<String, BigDecimal> exchangeRate;
 		private ManagedInfo managedInfo = null;
 		private Long updateTimestamp;
 
@@ -128,13 +128,13 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private Integer tradeUnitExpn;
 		private Long aggrTimestamp;
 		private Integer tradeCount;
-		private Double baseVolume;
-		private Double counterVolume;
-		private Double priceAvg;
-		private Double priceH;
-		private Double priceL;
-		private Double priceO;
-		private Double priceC;
+		private BigDecimal baseVolume;
+		private BigDecimal counterVolume;
+		private BigDecimal priceAvg;
+		private BigDecimal priceH;
+		private BigDecimal priceL;
+		private BigDecimal priceO;
+		private BigDecimal priceC;
 		private Long updateTimestamp;
 	}
 

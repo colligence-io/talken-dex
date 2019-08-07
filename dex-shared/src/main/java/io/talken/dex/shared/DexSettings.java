@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -25,12 +26,12 @@ public class DexSettings {
 	@Getter
 	@Setter
 	public static class _Fee {
-		private double offerFeeRate;
-		private double offerFeeRateCtxFactor;
+		private BigDecimal offerFeeRate;
+		private BigDecimal offerFeeRateTalkFactor;
 
 		private String deanchorFeePivotAsset;
-		private double deanchorFeeAmount;
-		private double deanchorFeeRateCtxFactor;
+		private BigDecimal deanchorFeeAmount;
+		private BigDecimal deanchorFeeRateTalkFactor;
 
 		private int refundRetryInterval;
 		private int refundMaxRetry;

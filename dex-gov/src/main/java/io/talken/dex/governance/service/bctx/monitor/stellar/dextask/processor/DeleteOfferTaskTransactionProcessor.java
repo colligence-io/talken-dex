@@ -24,7 +24,7 @@ public class DeleteOfferTaskTransactionProcessor implements TaskTransactionProce
 
 	@Override
 	public DexTaskTypeEnum getDexTaskType() {
-		return DexTaskTypeEnum.OFFER_DELETE;
+		return DexTaskTypeEnum.OFFER_DELETE_SELL;
 	}
 
 	@Override

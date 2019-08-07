@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 @Data
 public class CreateOfferRequest {
@@ -14,12 +15,12 @@ public class CreateOfferRequest {
 	@NotEmpty
 	private String buyAssetCode;
 	@NotNull
-	private Double sellAssetAmount;
+	private BigDecimal sellAssetAmount;
 	@NotNull
-	private Double sellAssetPrice;
-	private Boolean feeByCtx;
+	private BigDecimal sellAssetPrice;
+	private Boolean feeByTalk;
 
-	public Boolean getFeeByCtx() {
-		return (feeByCtx != null) ? feeByCtx : false;
+	public Boolean getFeeByTalk() {
+		return (feeByTalk != null) ? feeByTalk : false;
 	}
 }
