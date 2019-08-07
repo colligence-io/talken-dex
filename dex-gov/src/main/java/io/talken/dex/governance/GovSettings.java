@@ -44,6 +44,8 @@ public class GovSettings extends DexSettings {
 
 	private String randomStringTable;
 
+	private String rewardDistributorAddress;
+
 	private _Scheduler scheduler;
 
 	@Getter
@@ -60,6 +62,13 @@ public class GovSettings extends DexSettings {
 		private VaultSecretDataSlack slack;
 		private _CoinMarketCap coinMarketCap;
 		private _SignServer signServer;
+		private _Wallet wallet;
+
+		@Getter
+		@Setter
+		public static class _Wallet {
+			private String apiUrl;
+		}
 
 		@Getter
 		@Setter

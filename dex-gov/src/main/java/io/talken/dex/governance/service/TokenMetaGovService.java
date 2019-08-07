@@ -233,6 +233,7 @@ public class TokenMetaGovService {
 
 				if(_tm.getPlatform() != null && _tmpMap.containsKey(_tm.getPlatform())) {
 					_tm.setNativeFlag(_tmpMap.get(_tm.getPlatform()).getNativeFlag());
+					_tm.setBctxType(_tmpMap.get(_tm.getPlatform()).getBctxType());
 				}
 
 				if(_auxMap.containsKey(metaId)) {

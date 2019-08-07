@@ -1,6 +1,7 @@
 package io.talken.dex.governance.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.*;
@@ -25,6 +26,7 @@ public class TokenMeta extends io.talken.common.persistence.jooq.tables.pojos.To
 	}
 
 	private Boolean nativeFlag;
+	private BlockChainPlatformEnum bctxType;
 	private Map<RegionEnum, String> name;
 	private Map<RegionEnum, EntryInfo> entryInfo;
 	private ManagedInfo managedInfo = null;

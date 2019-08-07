@@ -15,7 +15,10 @@ spring:
       force: true
 talken:
   dex:
+    rewardDistributorAddress: "0xa4C323357C3E3d4aE874a4d6f7b81B296F887004"
     integration:
+      wallet:
+        apiUrl: http://192.168.0.33:3232/bws
       coinMarketCap:
         latestUrl: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest
     scheduler:
