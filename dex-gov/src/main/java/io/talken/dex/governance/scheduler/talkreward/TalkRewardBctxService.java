@@ -97,7 +97,7 @@ public class TalkRewardBctxService {
 								bctxRecord.setBctxType(tm.getBctxType());
 								bctxRecord.setSymbol(tm.getSymbol());
 								bctxRecord.setPlatformAux(tm.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString());
-								bctxRecord.setAddressFrom(govSettings.getRewardDistributorAddress());
+								bctxRecord.setAddressFrom(govSettings.getTalkDistributorAddress());
 								bctxRecord.setAddressTo(address.second());
 								bctxRecord.setAmount(rewardRecord.getAmount());
 								bctxRecord.setNetfee(BigDecimal.ZERO);

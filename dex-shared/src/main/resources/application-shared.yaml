@@ -17,8 +17,6 @@ talken:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://133.186.197.245:18545"
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
-        mtSymbol: "FT9754"
-        stSymbol: "TALKP"
     fee:
       offerFeeRate: 0.001
       offerFeeRateCtxFactor: 0.5
@@ -64,5 +62,3 @@ talken:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://10.27.27.13:18545"
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5151520500809142437"
-        mtSymbol: "TALK"
-        stSymbol: "TALKP"

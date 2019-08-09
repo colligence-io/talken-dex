@@ -44,7 +44,7 @@ public class GovSettings extends DexSettings {
 
 	private String randomStringTable;
 
-	private String rewardDistributorAddress;
+	private String talkDistributorAddress;
 
 	private _Scheduler scheduler;
 

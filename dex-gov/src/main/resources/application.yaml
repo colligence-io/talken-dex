@@ -15,7 +15,7 @@ spring:
       force: true
 talken:
   dex:
-    rewardDistributorAddress: "0x633249D02e5695aD2370Ea4B68574689Da84f456"
+    talkDistributorAddress: "0x633249D02e5695aD2370Ea4B68574689Da84f456"
     integration:
       wallet:
         apiUrl: http://192.168.0.33:3232/bws
@@ -65,9 +65,9 @@ vault:
   secret-key: ""
 talken:
   dex:
-    rewardDistributorAddress: "0x8526E732F405c742d4a078293DaD3a6633b57C79"
+    talkDistributorAddress: "0x8526E732F405c742d4a078293DaD3a6633b57C79"
     integration:
       wallet:
-        apiUrl: http://192.168.0.33:3232/bws
+        apiUrl: http://192.168.0.35:3232/bws
       coinMarketCap:
         latestUrl: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest

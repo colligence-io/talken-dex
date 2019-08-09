@@ -8,7 +8,6 @@ import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.governance.service.bctx.monitor.stellar.dextask.DexTaskTransactionHandler;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
-import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,9 +32,6 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 	private StellarNetworkService stellarNetworkService;
 
 	@Autowired
-	private DSLContext dslContext;
-
-	@Autowired
 	private ServiceStatusService<DexGovStatus> ssService;
 
 	private static final int TXREQUEST_LIMIT = 200;
@@ -49,7 +45,7 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 		}
 	}
 
-	@Scheduled(fixedDelay = 4000, initialDelay = 10000)
+	@Scheduled(fixedDelay = 3000, initialDelay = 5000)
 	private void checkTask() {
 		int processed = -1;
 		do {

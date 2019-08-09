@@ -65,7 +65,7 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 		return web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock().getNumber();
 	}
 
-	@Scheduled(fixedDelay = 3000)
+	@Scheduled(fixedDelay = 3000, initialDelay = 5000)
 	private void getBlocks() {
 		Web3j web3j;
 		try {

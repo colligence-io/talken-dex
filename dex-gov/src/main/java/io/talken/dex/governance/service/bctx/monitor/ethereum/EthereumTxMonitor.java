@@ -72,7 +72,7 @@ public class EthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionRece
 		return web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock().getNumber();
 	}
 
-	@Scheduled(fixedDelay = 15000)
+	@Scheduled(fixedDelay = 15000, initialDelay = 5000)
 	private void getBlocks() {
 		Web3j web3j;
 		try {

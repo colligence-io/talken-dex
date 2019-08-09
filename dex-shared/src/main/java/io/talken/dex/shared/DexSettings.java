@@ -66,7 +66,5 @@ public class DexSettings {
 		private String apiUri;
 		private String sideRpcUri;
 		private String mainRpcUri;
-		private String mtSymbol;
-		private String stSymbol;
 	}
 }
