@@ -62,7 +62,7 @@ public class TalkRewardBctxService {
 		}
 	}
 
-	private void checkRewardAndQueueBctx() throws TokenMetaNotFoundException {
+	private void checkRewardAndQueueBctx() throws TokenMetaNotFoundException, InterruptedException {
 		// ensure TALK meta is on TMS
 		TokenMeta tm = metaService.getMeta(talkSymbol);
 		// FIXME : HARD CODED, LUNIVERSE_MT ONLY FOR REWARD
@@ -85,6 +85,16 @@ public class TalkRewardBctxService {
 			BigDecimal amount = BigDecimal.ZERO;
 
 			while(rewards.hasNext()) {
+				// luniverse MainChain tx rate adjustment
+				// this is request from lambda256
+				if(count > 100) {
+					// cool down distribute after 100 txs.
+					break;
+				} else {
+					// slow down tx rate by 100ms between txs.
+					Thread.sleep(100);
+				}
+
 				UserRewardRecord rewardRecord = rewards.fetchNext();
 				try {
 					ObjectPair<Boolean, String> address = walletService.getAddress(rewardRecord.getUserId(), tm.getPlatform(), tm.getSymbol());
