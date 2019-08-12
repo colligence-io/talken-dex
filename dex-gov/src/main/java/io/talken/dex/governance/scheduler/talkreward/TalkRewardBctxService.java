@@ -16,6 +16,7 @@ import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.integration.wallet.TalkenWalletService;
 import io.talken.dex.shared.TransactionBlockExecutor;
+import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import org.jooq.Cursor;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +24,13 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.utils.Convert;
 
+import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import static io.talken.common.persistence.jooq.Tables.USER_REWARD;
 
@@ -51,15 +57,37 @@ public class TalkRewardBctxService {
 	@Autowired
 	private TalkenWalletService walletService;
 
+	@Autowired
+	private LuniverseNetworkService lukClient;
+
+	private String distributorAddress;
+
 	private static final String talkSymbol = "TALK";
+	private static final int coolDownTxNum = 100;
+	private static final BigDecimal minumumLukBalnace = new BigDecimal(200);
+
+	@PostConstruct
+	private void init() {
+		this.distributorAddress = govSettings.getTalkDistributorAddress();
+	}
 
 	@Scheduled(fixedDelay = 60000, initialDelay = 4000)
 	private void rewardToBctx() {
 		try {
-			checkRewardAndQueueBctx();
+			BigDecimal lukBalance = getDistributorLukBalance();
+			if(lukBalance.compareTo(minumumLukBalnace) >= 0) {
+				checkRewardAndQueueBctx();
+			} else {
+				alarmService.warn(logger, "TALK Distributor {} has low LUK balance ({} LUK < {} LUK). User Reward Distribution Halted.", this.distributorAddress, lukBalance.stripTrailingZeros().toPlainString(), minumumLukBalnace.stripTrailingZeros().toPlainString());
+			}
 		} catch(Exception ex) {
 			alarmService.exception(logger, ex);
 		}
+	}
+
+	private BigDecimal getDistributorLukBalance() throws IOException {
+		BigInteger balanceWei = lukClient.newMainRpcClient().ethGetBalance(this.distributorAddress, DefaultBlockParameterName.LATEST).send().getBalance();
+		return Convert.fromWei(balanceWei.toString(), Convert.Unit.ETHER);
 	}
 
 	private void checkRewardAndQueueBctx() throws TokenMetaNotFoundException, InterruptedException {
@@ -87,7 +115,7 @@ public class TalkRewardBctxService {
 			while(rewards.hasNext()) {
 				// luniverse MainChain tx rate adjustment
 				// this is request from lambda256
-				if(count > 100) {
+				if(count > coolDownTxNum) {
 					// cool down distribute after 100 txs.
 					break;
 				} else {
@@ -107,7 +135,7 @@ public class TalkRewardBctxService {
 								bctxRecord.setBctxType(tm.getBctxType());
 								bctxRecord.setSymbol(tm.getSymbol());
 								bctxRecord.setPlatformAux(tm.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString());
-								bctxRecord.setAddressFrom(govSettings.getTalkDistributorAddress());
+								bctxRecord.setAddressFrom(this.distributorAddress);
 								bctxRecord.setAddressTo(address.second());
 								bctxRecord.setAmount(rewardRecord.getAmount());
 								bctxRecord.setNetfee(BigDecimal.ZERO);
