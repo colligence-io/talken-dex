@@ -39,7 +39,6 @@ import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_DEANCHOR;
 
 
-// FIXME : disabled before applying stellar-sdk 0.9.0
 @Service
 @Scope("singleton")
 public class AnchorService {
