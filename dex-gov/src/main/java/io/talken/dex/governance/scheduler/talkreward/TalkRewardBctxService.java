@@ -1,6 +1,5 @@
 package io.talken.dex.governance.scheduler.talkreward;
 
-import io.talken.common.exception.common.RestApiErrorException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
@@ -124,44 +123,53 @@ public class TalkRewardBctxService {
 				}
 
 				UserRewardRecord rewardRecord = rewards.fetchNext();
+
+				String userWalletAddress;
+
 				try {
 					ObjectPair<Boolean, String> address = walletService.getAddress(rewardRecord.getUserId(), tm.getPlatform(), tm.getSymbol());
-
-					if(address.first().equals(true)) {
-						if(address.second() != null) {
-							TransactionBlockExecutor.of(txMgr).transactional(() -> {
-								BctxRecord bctxRecord = new BctxRecord();
-								bctxRecord.setStatus(BctxStatusEnum.QUEUED);
-								bctxRecord.setBctxType(tm.getBctxType());
-								bctxRecord.setSymbol(tm.getSymbol());
-								bctxRecord.setPlatformAux(tm.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString());
-								bctxRecord.setAddressFrom(this.distributorAddress);
-								bctxRecord.setAddressTo(address.second());
-								bctxRecord.setAmount(rewardRecord.getAmount());
-								bctxRecord.setNetfee(BigDecimal.ZERO);
-								dslContext.attach(bctxRecord);
-								bctxRecord.store();
-								rewardRecord.setBctxId(bctxRecord.getId());
-								rewardRecord.setCheckFlag(true);
-								rewardRecord.store();
-							});
-							count++;
-							amount = amount.add(rewardRecord.getAmount());
-						} else {
-							alarmService.error(logger, "Cannot find {} address for user #{}", talkSymbol, rewardRecord.getUserId());
-							rewardRecord.setErrorcode("CannotFindAddress");
-							rewardRecord.setErrormessage("Cannot find " + talkSymbol + " address from wallet-api response, userId = " + rewardRecord.getUserId());
-							rewardRecord.setCheckFlag(true);
-							rewardRecord.store();
-						}
+					if(address.first().equals(false)) {
+						// User Wallet not created
+						// Postpone reward for 12 hours.
+						rewardRecord.setScheduleTimestamp(UTCUtil.getNow().plusHours(12));
+						rewardRecord.store();
+						continue;
 					}
-				} catch(RestApiErrorException ex) {
-					alarmService.error(logger, "Reward distribute failed (Wallet-RestApiFailed) : {} {}", ex.getApiResult().getErrorCode(), ex.getApiResult().getErrorMessage());
-					logger.exception(ex);
-					rewardRecord.setErrorcode(ex.getApiResult().getErrorCode());
-					rewardRecord.setErrormessage(ex.getApiResult().getErrorMessage());
-					rewardRecord.setCheckFlag(true);
-					rewardRecord.store();
+
+					userWalletAddress = address.second();
+
+					if(userWalletAddress == null) {
+						// Luniverse address not found
+						// Postpone reward for 24 hours.
+						logger.error("User {} wallet does not containes {}(Luniverse) wallet address.");
+						rewardRecord.setScheduleTimestamp(UTCUtil.getNow().plusHours(24));
+						rewardRecord.store();
+						continue;
+					}
+				} catch(Exception ex) {
+					alarmService.exception(logger, ex);
+					continue;
+				}
+
+				try {
+					TransactionBlockExecutor.of(txMgr).transactional(() -> {
+						BctxRecord bctxRecord = new BctxRecord();
+						bctxRecord.setStatus(BctxStatusEnum.QUEUED);
+						bctxRecord.setBctxType(tm.getBctxType());
+						bctxRecord.setSymbol(tm.getSymbol());
+						bctxRecord.setPlatformAux(tm.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString());
+						bctxRecord.setAddressFrom(this.distributorAddress);
+						bctxRecord.setAddressTo(userWalletAddress);
+						bctxRecord.setAmount(rewardRecord.getAmount());
+						bctxRecord.setNetfee(BigDecimal.ZERO);
+						dslContext.attach(bctxRecord);
+						bctxRecord.store();
+						rewardRecord.setBctxId(bctxRecord.getId());
+						rewardRecord.setCheckFlag(true);
+						rewardRecord.store();
+					});
+					count++;
+					amount = amount.add(rewardRecord.getAmount());
 				} catch(Exception ex) {
 					alarmService.error(logger, "Reward distribute failed : {} {}", ex.getClass().getSimpleName(), ex.getMessage());
 					alarmService.exception(logger, ex);
