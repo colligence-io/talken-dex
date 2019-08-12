@@ -2,12 +2,14 @@ package io.talken.dex.api.controller.dto;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class DeanchorResult {
 	private String taskId;
 	private String transId;
 	private String feeAssetCode;
-	private Double feeAmount;
+	private BigDecimal feeAmount;
 	private String deanchorAssetCode;
-	private Double deanchorAmount;
+	private BigDecimal deanchorAmount;
 }

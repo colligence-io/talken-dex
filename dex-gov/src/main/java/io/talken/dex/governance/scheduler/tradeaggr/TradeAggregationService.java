@@ -22,6 +22,7 @@ import org.stellar.sdk.Server;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.TradeAggregationResponse;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -110,25 +111,25 @@ public class TradeAggregationService {
 					try {
 						int updated = dslContext.update(TOKEN_META_MANAGED_MARKETPAIR)
 								.set(TOKEN_META_MANAGED_MARKETPAIR.AGGR_TIMESTAMP, UTCUtil.ts2ldt(aggr.getTimestamp() / 1000))
-								.set(TOKEN_META_MANAGED_MARKETPAIR.BASE_VOLUME, Double.valueOf(aggr.getBaseVolume()))
-								.set(TOKEN_META_MANAGED_MARKETPAIR.COUNTER_VOLUME, Double.valueOf(aggr.getCounterVolume()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.BASE_VOLUME, new BigDecimal(aggr.getBaseVolume()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.COUNTER_VOLUME, new BigDecimal(aggr.getCounterVolume()))
 								.set(TOKEN_META_MANAGED_MARKETPAIR.TRADE_COUNT, aggr.getTradeCount())
-								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_AVG, Double.valueOf(aggr.getAvg()))
-								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_O, Double.valueOf(aggr.getOpen()))
-								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_H, Double.valueOf(aggr.getHigh()))
-								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_L, Double.valueOf(aggr.getLow()))
-								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_C, Double.valueOf(aggr.getClose()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_AVG, new BigDecimal(aggr.getAvg()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_O, new BigDecimal(aggr.getOpen()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_H, new BigDecimal(aggr.getHigh()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_L, new BigDecimal(aggr.getLow()))
+								.set(TOKEN_META_MANAGED_MARKETPAIR.PRICE_C, new BigDecimal(aggr.getClose()))
 								.where(TOKEN_META_MANAGED_MARKETPAIR.ID.eq(_mpRecord.get(TOKEN_META_MANAGED_MARKETPAIR.ID)))
 								.execute();
 
-						olhc.setBase_volume(Double.valueOf(aggr.getBaseVolume()));
-						olhc.setCounter_volume(Double.valueOf(aggr.getCounterVolume()));
+						olhc.setBase_volume(new BigDecimal(aggr.getBaseVolume()));
+						olhc.setCounter_volume(new BigDecimal(aggr.getCounterVolume()));
 						olhc.setTradeCount(aggr.getTradeCount());
-						olhc.setPrice_avg(Double.valueOf(aggr.getAvg()));
-						olhc.setPrice_h(Double.valueOf(aggr.getHigh()));
-						olhc.setPrice_l(Double.valueOf(aggr.getLow()));
-						olhc.setPrice_o(Double.valueOf(aggr.getOpen()));
-						olhc.setPrice_c(Double.valueOf(aggr.getClose()));
+						olhc.setPrice_avg(new BigDecimal(aggr.getAvg()));
+						olhc.setPrice_h(new BigDecimal(aggr.getHigh()));
+						olhc.setPrice_l(new BigDecimal(aggr.getLow()));
+						olhc.setPrice_o(new BigDecimal(aggr.getOpen()));
+						olhc.setPrice_c(new BigDecimal(aggr.getClose()));
 						olhc.setTimestamp(aggr.getTimestamp() / 1000);
 
 						if(updated > 0)

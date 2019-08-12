@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 @Data
 public class AnchorRequest {
@@ -14,7 +15,7 @@ public class AnchorRequest {
 	@NotEmpty
 	private String symbol;
 	@NotNull
-	private Double amount;
+	private BigDecimal amount;
 	@NotEmpty
 	private String from;
 

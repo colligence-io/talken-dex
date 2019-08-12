@@ -42,7 +42,7 @@ public class CreateOfferTaskTransactionProcessor implements TaskTransactionProce
 
 	@Override
 	public DexTaskTypeEnum getDexTaskType() {
-		return DexTaskTypeEnum.OFFER_CREATE;
+		return DexTaskTypeEnum.OFFER_CREATE_SELL;
 	}
 
 	@Override

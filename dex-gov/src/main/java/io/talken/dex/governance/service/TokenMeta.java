@@ -11,6 +11,7 @@ import lombok.Setter;
 import org.stellar.sdk.Asset;
 import org.stellar.sdk.KeyPair;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ public class TokenMeta extends io.talken.common.persistence.jooq.tables.pojos.To
 	private Map<RegionEnum, EntryInfo> entryInfo;
 	private ManagedInfo managedInfo = null;
 	private Map<TokenMetaAuxCodeEnum, Object> aux;
-	private Map<String, Double> exchangeRate;
+	private Map<String, BigDecimal> exchangeRate;
 
 	@Getter
 	@Setter

@@ -35,6 +35,8 @@ import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 import static io.talken.common.persistence.jooq.Tables.*;
@@ -255,7 +257,7 @@ public class TokenMetaGovService {
 
 				// build exchange rate
 				if(_erMap.containsKey(metaId)) {
-					Map<String, Double> exr = new HashMap<>();
+					Map<String, BigDecimal> exr = new HashMap<>();
 					for(TokenMetaExrate _er : _erMap.get(metaId))
 						exr.put(_er.getCountertype(), _er.getPrice());
 					_tm.setExchangeRate(exr);
@@ -432,7 +434,7 @@ public class TokenMetaGovService {
 						.addOperation(
 								new ChangeTrustOperation.Builder(
 										target.getAssetType(),
-										String.valueOf(StellarConverter.rawToActualString(Long.MAX_VALUE))
+										String.valueOf(StellarConverter.rawToActualString(BigInteger.valueOf(Long.MAX_VALUE)))
 								).build()
 						)
 						.build();

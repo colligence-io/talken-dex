@@ -4,47 +4,55 @@ import org.stellar.sdk.Asset;
 import org.stellar.sdk.AssetTypeCreditAlphaNum;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class StellarConverter {
 
-	private static final double multiplier = 10000000;
-	private static final BigDecimal multiplierBD = BigDecimal.valueOf(multiplier);
+	private static final BigDecimal multiplierBD = BigDecimal.valueOf(10000000);
 
 	private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX");
 
-	private static BigDecimal scale(BigDecimal bd) {
+	public static BigDecimal scale(BigDecimal bd) {
 		return bd.setScale(7, BigDecimal.ROUND_UP);
 	}
 
-	public static BigDecimal doubleToActual(double value) {
-		return scale(new BigDecimal(Double.toString(value)));
+	// convert
+	public static BigDecimal rawToActual(long raw) {
+		return rawToActual(BigInteger.valueOf(raw));
 	}
 
-	public static long actualToRaw(double value) {
-		return actualToRaw(doubleToActual(value));
+	public static BigDecimal rawToActual(BigInteger raw) {
+		return scale(new BigDecimal(raw)).divide(multiplierBD, BigDecimal.ROUND_UP);
 	}
 
-	public static long actualToRaw(BigDecimal value) {
-		return scale(value).multiply(multiplierBD).longValue();
+	public static BigInteger actualToRaw(BigDecimal actual) {
+		return scale(actual.multiply(multiplierBD)).toBigInteger();
 	}
 
-	public static String actualToString(double value) {
-		return actualToString(doubleToActual(value));
+	// toString
+	public static String actualToString(BigDecimal actual) {
+		return scale(actual).stripTrailingZeros().toPlainString();
 	}
 
-	public static String actualToString(BigDecimal value) {
-		return scale(value).toString();
+	public static String rawToString(BigInteger raw) {
+		return raw.toString();
 	}
 
-	public static BigDecimal rawToActual(long value) {
-		return scale(new BigDecimal(value)).divide(multiplierBD, BigDecimal.ROUND_UP);
+	// convert+toString
+	public static String actualToRawString(BigDecimal actual) {
+		return rawToString(actualToRaw(actual));
 	}
 
-	public static String rawToActualString(long value) {
-		return actualToString(rawToActual(value));
+	public static String rawToActualString(long raw) {
+		return rawToActualString(BigInteger.valueOf(raw));
 	}
+
+	public static String rawToActualString(BigInteger raw) {
+		return actualToString(rawToActual(raw));
+	}
+
 
 	public static String toAssetCode(Asset assetType) {
 		if(assetType.getType().equals("native")) {
