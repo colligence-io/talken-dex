@@ -17,8 +17,8 @@ import io.talken.common.persistence.mongodb.cmc.CMCQuoteData;
 import io.talken.common.persistence.redis.AssetExchangeRate;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
+import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.GovSettings;
-import io.talken.dex.governance.service.AdminAlarmService;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import org.jooq.DSLContext;
 import org.jooq.Result;
@@ -30,7 +30,6 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;

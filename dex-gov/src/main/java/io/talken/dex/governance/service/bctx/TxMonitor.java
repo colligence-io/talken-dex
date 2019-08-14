@@ -4,7 +4,7 @@ import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.GSONWriter;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.governance.service.AdminAlarmService;
+import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.exception.BctxException;
 import lombok.Data;
