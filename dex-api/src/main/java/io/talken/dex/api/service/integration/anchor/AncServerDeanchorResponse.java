@@ -1,7 +1,7 @@
 package io.talken.dex.api.service.integration.anchor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.talken.common.util.integration.RestApiResponseInterface;
+import io.talken.common.util.integration.rest.RestApiResponseInterface;
 import lombok.Data;
 
 @Data
@@ -12,12 +12,22 @@ public class AncServerDeanchorResponse implements RestApiResponseInterface {
 	private _Data data;
 
 	@Override
-	public boolean isSuccess() {
+	public boolean checkHttpResponse(int httpStatus) {
+		return RestApiResponseInterface.standardHttpSuccessCheck(httpStatus);
+	}
+
+	@Override
+	public boolean checkResult() {
 		return "200".equals(code);
 	}
 
 	@Override
-	public String getMessage() {
+	public String resultCode() {
+		return code;
+	}
+
+	@Override
+	public String resultMessage() {
 		return getDescription();
 	}
 

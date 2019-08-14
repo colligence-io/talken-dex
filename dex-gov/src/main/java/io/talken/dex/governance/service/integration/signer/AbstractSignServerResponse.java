@@ -1,16 +1,13 @@
-package io.talken.dex.api.service.integration.relay;
+package io.talken.dex.governance.service.integration.signer;
 
 import io.talken.common.util.integration.rest.RestApiResponseInterface;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
-public class RelayAddContentsResponse implements RestApiResponseInterface {
-	private String transId;
-	private String status;
-	private LocalDateTime regDt;
-	private LocalDateTime endDt;
+public abstract class AbstractSignServerResponse<T> implements RestApiResponseInterface {
+	private String code;
+	private String message;
+	private T data;
 
 	@Override
 	public boolean checkHttpResponse(int httpStatus) {
@@ -19,16 +16,16 @@ public class RelayAddContentsResponse implements RestApiResponseInterface {
 
 	@Override
 	public boolean checkResult() {
-		return false;
+		return "200".equals(code);
 	}
 
 	@Override
 	public String resultCode() {
-		return status;
+		return code;
 	}
 
 	@Override
 	public String resultMessage() {
-		return null;
+		return message;
 	}
 }

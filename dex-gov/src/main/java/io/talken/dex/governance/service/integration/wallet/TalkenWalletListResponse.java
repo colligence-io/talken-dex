@@ -1,6 +1,6 @@
 package io.talken.dex.governance.service.integration.wallet;
 
-import io.talken.common.util.integration.RestApiResponseInterface;
+import io.talken.common.util.integration.rest.RestApiResponseInterface;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,17 +12,22 @@ import java.util.ArrayList;
 @EqualsAndHashCode(callSuper = true)
 public class TalkenWalletListResponse extends ArrayList<TalkenWalletListResponse.Wallet> implements RestApiResponseInterface {
 	@Override
-	public boolean isSuccess() {
+	public boolean checkHttpResponse(int httpStatus) {
+		return RestApiResponseInterface.standardHttpSuccessCheck(httpStatus);
+	}
+
+	@Override
+	public boolean checkResult() {
 		return true;
 	}
 
 	@Override
-	public String getCode() {
+	public String resultCode() {
 		return "OK";
 	}
 
 	@Override
-	public String getMessage() {
+	public String resultMessage() {
 		return "OK";
 	}
 

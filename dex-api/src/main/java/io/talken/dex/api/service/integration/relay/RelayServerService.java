@@ -9,7 +9,7 @@ import com.apollographql.apollo.response.CustomTypeAdapter;
 import com.apollographql.apollo.response.CustomTypeValue;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.integration.RestApiResult;
+import io.talken.common.util.integration.IntegrationResult;
 import io.talken.dex.api.ApiSettings;
 import io.talken.dex.api.graphql.relay.RelayAddContentsMutation;
 import io.talken.dex.api.graphql.relay.type.CustomType;
@@ -59,8 +59,8 @@ public class RelayServerService {
 				.build();
 	}
 
-	public RestApiResult<RelayAddContentsResponse> requestAddContents(RelayMsgTypeEnum msgType, long userId, DexTaskId dexTaskId, RelayEncryptedContent<?> encData) {
-		CompletableFuture<RestApiResult<RelayAddContentsResponse>> completableFuture = new CompletableFuture<>();
+	public IntegrationResult<RelayAddContentsResponse> requestAddContents(RelayMsgTypeEnum msgType, long userId, DexTaskId dexTaskId, RelayEncryptedContent<?> encData) {
+		CompletableFuture<IntegrationResult<RelayAddContentsResponse>> completableFuture = new CompletableFuture<>();
 
 		HashMap<String, String> contents = new HashMap<>();
 		contents.put("taskId", dexTaskId.getId());
@@ -82,7 +82,7 @@ public class RelayServerService {
 		).enqueue(new ApolloCall.Callback<RelayAddContentsMutation.Data>() {
 			@Override
 			public void onResponse(@NotNull Response<RelayAddContentsMutation.Data> response) {
-				RestApiResult<RelayAddContentsResponse> apiResult = new RestApiResult<>("RelayAddContents");
+				IntegrationResult<RelayAddContentsResponse> apiResult = new IntegrationResult<>("RelayAddContents");
 				if(response.hasErrors()) {
 					StringBuilder sb = new StringBuilder();
 					for(Error error : response.errors()) sb.append(error.message()).append("\n");
@@ -110,19 +110,19 @@ public class RelayServerService {
 
 			@Override
 			public void onFailure(@NotNull ApolloException e) {
-				RestApiResult<RelayAddContentsResponse> apiResult = new RestApiResult<>("RelayAddContents");
+				IntegrationResult<RelayAddContentsResponse> apiResult = new IntegrationResult<>("RelayAddContents");
 				apiResult.setException(e);
 				completableFuture.complete(apiResult);
 			}
 		});
 
 
-		RestApiResult<RelayAddContentsResponse> relayAddContentsResponseAPIResult;
+		IntegrationResult<RelayAddContentsResponse> relayAddContentsResponseAPIResult;
 		try {
 			// FIXME : set timeout for get
 			relayAddContentsResponseAPIResult = completableFuture.get();
 		} catch(Exception e) {
-			relayAddContentsResponseAPIResult = new RestApiResult<>("RelayAddContents");
+			relayAddContentsResponseAPIResult = new IntegrationResult<>("RelayAddContents");
 			relayAddContentsResponseAPIResult.setException(e);
 		}
 		return relayAddContentsResponseAPIResult;

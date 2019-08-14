@@ -1,8 +1,8 @@
 package io.talken.dex.api.service.integration.anchor;
 
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.integration.AbstractRestApiService;
-import io.talken.common.util.integration.RestApiResult;
+import io.talken.common.util.integration.IntegrationResult;
+import io.talken.common.util.integration.rest.RestApiClient;
 import io.talken.dex.api.ApiSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -12,7 +12,7 @@ import javax.annotation.PostConstruct;
 
 @Service
 @Scope("singleton")
-public class AnchorServerService extends AbstractRestApiService {
+public class AnchorServerService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AnchorServerService.class);
 
 	@Autowired
@@ -27,11 +27,11 @@ public class AnchorServerService extends AbstractRestApiService {
 		deanchoringApiUrl = apiSettings.getIntegration().getAncAddress() + "/exchange/anchor/asset/deanchor";
 	}
 
-	public RestApiResult<AncServerAnchorResponse> requestAnchor(AncServerAnchorRequest request) {
-		return requestPost(anchoringApiUrl, request, AncServerAnchorResponse.class);
+	public IntegrationResult<AncServerAnchorResponse> requestAnchor(AncServerAnchorRequest request) {
+		return RestApiClient.requestPost(anchoringApiUrl, request, AncServerAnchorResponse.class);
 	}
 
-	public RestApiResult<AncServerDeanchorResponse> requestDeanchor(AncServerDeanchorRequest request) {
-		return requestPost(deanchoringApiUrl, request, AncServerDeanchorResponse.class);
+	public IntegrationResult<AncServerDeanchorResponse> requestDeanchor(AncServerDeanchorRequest request) {
+		return RestApiClient.requestPost(deanchoringApiUrl, request, AncServerDeanchorResponse.class);
 	}
 }

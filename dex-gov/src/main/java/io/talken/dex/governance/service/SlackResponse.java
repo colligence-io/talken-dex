@@ -1,27 +1,27 @@
 package io.talken.dex.governance.service;
 
-import io.talken.common.util.integration.RestApiPlainTextResponseInterface;
 
-public class SlackResponse implements RestApiPlainTextResponseInterface {
-	private String message;
+import io.talken.common.util.integration.rest.RestApiResponseInterface;
+import io.talken.common.util.integration.rest.StringRestApiResponse;
+
+public class SlackResponse extends StringRestApiResponse {
+	@Override
+	public boolean checkHttpResponse(int httpStatus) {
+		return RestApiResponseInterface.standardHttpSuccessCheck(httpStatus);
+	}
 
 	@Override
-	public boolean isSuccess() {
+	public boolean checkResult() {
 		return true;
 	}
 
 	@Override
-	public String getCode() {
+	public String resultCode() {
 		return "";
 	}
 
 	@Override
-	public String getMessage() {
-		return this.message;
-	}
-
-	@Override
-	public void setMessage(String message) {
-		this.message = message;
+	public String resultMessage() {
+		return getData();
 	}
 }

@@ -1,18 +1,12 @@
 package io.talken.dex.governance.service.integration.signer;
 
-import io.talken.common.util.integration.RestApiResponseInterface;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class SignServerIntroduceResponse implements RestApiResponseInterface {
-	private String code;
-	private String message;
+@EqualsAndHashCode(callSuper = true)
+public class SignServerIntroduceResponse extends AbstractSignServerResponse<SignServerIntroduceResponse._Data> {
 	private _Data data;
-
-	@Override
-	public boolean isSuccess() {
-		return "200".equals(code);
-	}
 
 	@Data
 	public static class _Data {

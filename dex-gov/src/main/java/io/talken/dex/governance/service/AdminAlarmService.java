@@ -2,7 +2,7 @@ package io.talken.dex.governance.service;
 
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
-import io.talken.common.util.integration.AbstractRestApiService;
+import io.talken.common.util.integration.rest.RestApiClient;
 import io.talken.common.util.integration.slack.SlackMessagePrefix;
 import io.talken.dex.governance.GovSettings;
 import org.slf4j.helpers.MessageFormatter;
@@ -17,7 +17,7 @@ import java.util.Collections;
 
 @Service
 @Scope("singleton")
-public class AdminAlarmService extends AbstractRestApiService {
+public class AdminAlarmService {
 	@Autowired
 	private GovSettings govSettings;
 
@@ -53,6 +53,6 @@ public class AdminAlarmService extends AbstractRestApiService {
 
 	private void ring(String prefix, String format, Object... args) {
 		String message = MessageFormatter.arrayFormat(format, args).getMessage();
-		requestPost(govSettings.getIntegration().getSlack().getAlarmWebHook(), Collections.singletonMap("text", prefix + " " + message), SlackResponse.class);
+		RestApiClient.requestPost(govSettings.getIntegration().getSlack().getAlarmWebHook(), Collections.singletonMap("text", prefix + " " + message), SlackResponse.class);
 	}
 }

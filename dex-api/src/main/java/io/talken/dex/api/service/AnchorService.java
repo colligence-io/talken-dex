@@ -2,7 +2,7 @@ package io.talken.dex.api.service;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.talken.common.exception.common.RestApiErrorException;
+import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
@@ -10,7 +10,7 @@ import io.talken.common.persistence.jooq.tables.records.DexTaskDeanchorRecord;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
-import io.talken.common.util.integration.RestApiResult;
+import io.talken.common.util.integration.IntegrationResult;
 import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.api.service.integration.anchor.*;
 import io.talken.dex.api.service.integration.relay.RelayAddContentsResponse;
@@ -62,7 +62,7 @@ public class AnchorService {
 	@Autowired
 	private DSLContext dslContext;
 
-	public AnchorResult anchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, AnchorRequest ancRequestBody) throws TokenMetaNotFoundException, RestApiErrorException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
+	public AnchorResult anchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, AnchorRequest ancRequestBody) throws TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
 		String assetHolderAddress = tmService.getActiveHolderAccountAddress(assetCode);
 
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
@@ -94,7 +94,7 @@ public class AnchorService {
 		req.setMemo(UTCUtil.getNow().toString());
 
 		// request anchor monitor
-		RestApiResult<AncServerAnchorResponse> anchorResult = anchorServerService.requestAnchor(req);
+		IntegrationResult<AncServerAnchorResponse> anchorResult = anchorServerService.requestAnchor(req);
 		if(!anchorResult.isSuccess()) {
 			// update task record
 			logger.error("{} failed. : {}", dexTaskId, anchorResult.toString());
@@ -104,7 +104,7 @@ public class AnchorService {
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new RestApiErrorException(anchorResult);
+			throw new IntegrationException(anchorResult);
 		}
 
 		// update task record
@@ -137,18 +137,18 @@ public class AnchorService {
 		encData.addDescription("amount", StellarConverter.rawToActualString(BigInteger.valueOf(taskRecord.getAmountraw())));
 
 		// send relay addContents request
-		RestApiResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.ANCHOR, userId, dexTaskId, encData);
+		IntegrationResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.ANCHOR, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
 
 			taskRecord.setErrorposition("request relay");
-			taskRecord.setErrorcode(String.valueOf(relayResult.getResponseCode()));
+			taskRecord.setErrorcode(relayResult.getErrorCode());
 			taskRecord.setErrormessage(relayResult.getErrorMessage());
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new RestApiErrorException(relayResult);
+			throw new IntegrationException(relayResult);
 		}
 
 		// update task record
@@ -191,7 +191,7 @@ public class AnchorService {
 		return result;
 	}
 
-	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, Boolean feeByTalk) throws TokenMetaNotFoundException, StellarException, RestApiErrorException, AssetConvertException, EffectiveAmountIsNegativeException {
+	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, Boolean feeByTalk) throws TokenMetaNotFoundException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, IntegrationException {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 
 		amount = StellarConverter.scale(amount);
@@ -302,7 +302,7 @@ public class AnchorService {
 		ancRequest.setValue(StellarConverter.rawToActual(taskRecord.getDeanchoramountraw()).doubleValue());
 		ancRequest.setMemo(UTCUtil.getNow().toString());
 
-		RestApiResult<AncServerDeanchorResponse> deanchorResult = anchorServerService.requestDeanchor(ancRequest);
+		IntegrationResult<AncServerDeanchorResponse> deanchorResult = anchorServerService.requestDeanchor(ancRequest);
 
 		if(!deanchorResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, deanchorResult);
@@ -313,7 +313,7 @@ public class AnchorService {
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new RestApiErrorException(deanchorResult);
+			throw new IntegrationException(deanchorResult);
 		}
 
 		// update task record
@@ -331,18 +331,18 @@ public class AnchorService {
 		encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
 
 		// send relay addContents request
-		RestApiResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DEANCHOR, userId, dexTaskId, encData);
+		IntegrationResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DEANCHOR, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
 
 			taskRecord.setErrorposition("request relay");
-			taskRecord.setErrorcode(String.valueOf(relayResult.getResponseCode()));
+			taskRecord.setErrorcode(relayResult.getErrorCode());
 			taskRecord.setErrormessage(relayResult.getErrorMessage());
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new RestApiErrorException(relayResult);
+			throw new IntegrationException(relayResult);
 		}
 
 		// update task record

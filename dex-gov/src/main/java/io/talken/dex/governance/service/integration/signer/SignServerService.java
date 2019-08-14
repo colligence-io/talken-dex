@@ -4,8 +4,8 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpStatusCodes;
 import io.talken.common.util.ByteArrayUtils;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.integration.AbstractRestApiService;
-import io.talken.common.util.integration.RestApiResult;
+import io.talken.common.util.integration.IntegrationResult;
+import io.talken.common.util.integration.rest.RestApiClient;
 import io.talken.dex.governance.GovSettings;
 import io.talken.dex.shared.exception.SigningException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ import java.util.*;
 
 @Service
 @Scope("singleton")
-public class SignServerService extends AbstractRestApiService {
+public class SignServerService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(SignServerService.class);
 
 	@Autowired
@@ -60,10 +60,10 @@ public class SignServerService extends AbstractRestApiService {
 			SignServerIntroduceRequest request = new SignServerIntroduceRequest();
 			request.setMyNameIs(govSettings.getIntegration().getSignServer().getAppName());
 
-			RestApiResult<SignServerIntroduceResponse> introResult = requestPost(introduceUrl, request, SignServerIntroduceResponse.class);
+			IntegrationResult<SignServerIntroduceResponse> introResult = RestApiClient.requestPost(introduceUrl, request, SignServerIntroduceResponse.class);
 
 			if(!introResult.isSuccess()) {
-				logger.error("Cannot get signServerAccess  Token : {}, {}, {}", introResult.getResponseCode(), introResult.getErrorCode(), introResult.getErrorMessage());
+				logger.error("Cannot get signServerAccess  Token : {}, {}", introResult.getErrorCode(), introResult.getErrorMessage());
 				return;
 			}
 
@@ -80,10 +80,10 @@ public class SignServerService extends AbstractRestApiService {
 			request2.setYourQuestionWas(question);
 			request2.setMyAnswerIs(Base64.getEncoder().encodeToString(sBytes));
 
-			RestApiResult<SignServerAnswerResponse> answerResult = requestPost(answerUrl, request2, SignServerAnswerResponse.class);
+			IntegrationResult<SignServerAnswerResponse> answerResult = RestApiClient.requestPost(answerUrl, request2, SignServerAnswerResponse.class);
 
 			if(!answerResult.isSuccess()) {
-				logger.error("Cannot get signServer Acces Token : {}, {}, {}", answerResult.getResponseCode(), answerResult.getErrorCode(), answerResult.getErrorMessage());
+				logger.error("Cannot get signServer Acces Token : {}, {}", answerResult.getErrorCode(), answerResult.getErrorMessage());
 				return;
 			}
 
@@ -107,14 +107,14 @@ public class SignServerService extends AbstractRestApiService {
 		}
 	}
 
-	private RestApiResult<SignServerSignResponse> requestSign(String bc, String address, byte[] message) throws SigningException {
+	private IntegrationResult<SignServerSignResponse> requestSign(String bc, String address, byte[] message) throws SigningException {
 		if(token == null) updateAccessToken();
 
-		RestApiResult<SignServerSignResponse> result = requestSign2(bc, address, message);
+		IntegrationResult<SignServerSignResponse> result = requestSign2(bc, address, message);
 
 		// case of unauthorized result, mostly case of token expiration
 		// try update access token and send request again
-		if(result.getResponseCode() == HttpStatusCodes.STATUS_CODE_UNAUTHORIZED) {
+		if(String.valueOf(HttpStatusCodes.STATUS_CODE_UNAUTHORIZED).equals(result.getErrorCode())) {
 			logger.debug("ss unauthorized, token might be expired, getting new one");
 			updateAccessToken();
 
@@ -124,7 +124,7 @@ public class SignServerService extends AbstractRestApiService {
 		return result;
 	}
 
-	private RestApiResult<SignServerSignResponse> requestSign2(String bc, String address, byte[] message) throws SigningException {
+	private IntegrationResult<SignServerSignResponse> requestSign2(String bc, String address, byte[] message) throws SigningException {
 		if(token == null) {
 			throw new SigningException(address, "Cannot request sign, access token is null");
 		}
@@ -140,13 +140,13 @@ public class SignServerService extends AbstractRestApiService {
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAuthorization("Bearer " + token);
-		return requestPost(signingUrl, headers, request, SignServerSignResponse.class);
+		return RestApiClient.requestPost(signingUrl, headers, request, SignServerSignResponse.class);
 	}
 
 	public void signStellarTransaction(Transaction tx) throws SigningException {
 		String accountId = tx.getSourceAccount();
 
-		RestApiResult<SignServerSignResponse> signResult = requestSign("XLM", accountId, tx.hash());
+		IntegrationResult<SignServerSignResponse> signResult = requestSign("XLM", accountId, tx.hash());
 
 		if(!signResult.isSuccess()) {
 			throw new SigningException(accountId, signResult.getErrorCode() + " : " + signResult.getErrorMessage());
@@ -183,7 +183,7 @@ public class SignServerService extends AbstractRestApiService {
 
 		byte[] hexMessage = Hash.sha3(encodedTx);
 
-		RestApiResult<SignServerSignResponse> signResult = requestSign("ETH", from, hexMessage);
+		IntegrationResult<SignServerSignResponse> signResult = requestSign("ETH", from, hexMessage);
 
 		byte[] sigBytes = ByteArrayUtils.fromHexString(signResult.getData().getData().getSignature());
 

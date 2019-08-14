@@ -1,12 +1,12 @@
 package io.talken.dex.governance.service.integration.wallet;
 
 import com.google.api.client.http.HttpHeaders;
-import io.talken.common.exception.common.RestApiErrorException;
+import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.persistence.jooq.tables.records.UserRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.collection.ObjectPair;
-import io.talken.common.util.integration.AbstractRestApiService;
-import io.talken.common.util.integration.RestApiResult;
+import io.talken.common.util.integration.IntegrationResult;
+import io.talken.common.util.integration.rest.RestApiClient;
 import io.talken.dex.governance.GovSettings;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ import static io.talken.common.persistence.jooq.Tables.USER;
 
 @Service
 @Scope("singleton")
-public class TalkenWalletService extends AbstractRestApiService {
+public class TalkenWalletService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TalkenWalletService.class);
 
 	@Autowired
@@ -36,7 +36,7 @@ public class TalkenWalletService extends AbstractRestApiService {
 		this.apiUrl = govSettings.getIntegration().getWallet().getApiUrl();
 	}
 
-	public ObjectPair<Boolean, String> getAddress(long userId, String type, String symbol) throws RestApiErrorException {
+	public ObjectPair<Boolean, String> getAddress(long userId, String type, String symbol) throws IntegrationException {
 		Optional<UserRecord> opt_user = dslContext.selectFrom(USER)
 				.where(USER.ID.eq(userId).and(USER.WALLET_TOKEN_ACTIVATE_FLAG.eq(true)))
 				.fetchOptional();
@@ -50,7 +50,7 @@ public class TalkenWalletService extends AbstractRestApiService {
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("x-access-token", token);
 
-		RestApiResult<TalkenWalletListResponse> wallets = requestGet(apiUrl + "/api/v1/wallet", headers, null, TalkenWalletListResponse.class);
+		IntegrationResult<TalkenWalletListResponse> wallets = RestApiClient.requestGet(apiUrl + "/api/v1/wallet", headers, null, TalkenWalletListResponse.class);
 
 		if(wallets.isSuccess()) {
 			Optional<String> address = wallets.getData().stream()
@@ -66,7 +66,7 @@ public class TalkenWalletService extends AbstractRestApiService {
 
 			return new ObjectPair<>(true, address.orElse(null));
 		} else {
-			throw new RestApiErrorException(wallets);
+			throw new IntegrationException(wallets);
 		}
 	}
 }

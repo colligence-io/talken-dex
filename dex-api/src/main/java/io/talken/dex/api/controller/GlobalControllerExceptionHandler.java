@@ -2,10 +2,10 @@ package io.talken.dex.api.controller;
 
 
 import io.talken.common.exception.TalkenException;
-import io.talken.common.exception.common.RestApiErrorException;
+import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.service.MessageService;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.integration.RestApiResult;
+import io.talken.common.util.integration.IntegrationResult;
 import io.talken.dex.shared.exception.InternalServerErrorException;
 import io.talken.dex.shared.exception.ParameterViolationException;
 import io.talken.dex.shared.exception.UnauthorizedException;
@@ -59,12 +59,12 @@ public class GlobalControllerExceptionHandler {
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	@ExceptionHandler(RestApiErrorException.class)
+	@ExceptionHandler(IntegrationException.class)
 	@ResponseBody
-	public DexResponse<RestApiResult> handleCLGException(RestApiErrorException e, Locale locale) {
+	public DexResponse<IntegrationResult> handleCLGException(IntegrationException e, Locale locale) {
 		// FIXME : e.getApiResult is too sensitive to return as result body, consider hide it
 		logger.exception(e);
-		return DexResponse.buildResponse(new DexResponseBody<>(e.getErrorCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, e.getApiResult()));
+		return DexResponse.buildResponse(new DexResponseBody<>(e.getErrorCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, e.getResult()));
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

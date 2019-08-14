@@ -1,11 +1,11 @@
 package io.talken.dex.shared.service.blockchain.ethereum;
 
 
-import io.talken.common.exception.common.RestApiErrorException;
+import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.integration.AbstractRestApiService;
-import io.talken.common.util.integration.RestApiResponseInterface;
-import io.talken.common.util.integration.RestApiResult;
+import io.talken.common.util.integration.IntegrationResult;
+import io.talken.common.util.integration.rest.RestApiClient;
+import io.talken.common.util.integration.rest.RestApiResponseInterface;
 import io.talken.dex.shared.DexSettings;
 import io.talken.dex.shared.service.blockchain.RandomServerPicker;
 import lombok.Data;
@@ -24,7 +24,7 @@ import java.math.BigInteger;
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
-public class EthereumNetworkService extends AbstractRestApiService {
+public class EthereumNetworkService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumNetworkService.class);
 
 	private final DexSettings dexSettings;
@@ -81,12 +81,12 @@ public class EthereumNetworkService extends AbstractRestApiService {
 //		return lastBlock.getGasLimit();
 	}
 
-	private GasPriceOracleResult queryGasPrice() throws RestApiErrorException {
-		RestApiResult<GasPriceOracleResult> result = requestGet(this.gasOracleApiUrl, GasPriceOracleResult.class);
+	private GasPriceOracleResult queryGasPrice() throws IntegrationException {
+		IntegrationResult<GasPriceOracleResult> result = RestApiClient.requestGet(this.gasOracleApiUrl, GasPriceOracleResult.class);
 		if(result.isSuccess()) {
 			return result.getData();
 		} else {
-			throw new RestApiErrorException(result);
+			throw new IntegrationException(result);
 		}
 	}
 
@@ -100,17 +100,22 @@ public class EthereumNetworkService extends AbstractRestApiService {
 		private BigInteger blockNum;
 
 		@Override
-		public boolean isSuccess() {
+		public boolean checkHttpResponse(int httpStatus) {
+			return RestApiResponseInterface.standardHttpSuccessCheck(httpStatus);
+		}
+
+		@Override
+		public boolean checkResult() {
 			return true;
 		}
 
 		@Override
-		public String getCode() {
+		public String resultCode() {
 			return "OK";
 		}
 
 		@Override
-		public String getMessage() {
+		public String resultMessage() {
 			return "OK";
 		}
 	}

@@ -1,14 +1,14 @@
 package io.talken.dex.api.service;
 
 
-import io.talken.common.exception.common.RestApiErrorException;
+import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskCreateofferRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskDeleteofferRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTxmonCreateofferRecord;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.integration.RestApiResult;
+import io.talken.common.util.integration.IntegrationResult;
 import io.talken.dex.api.controller.dto.CalculateFeeResult;
 import io.talken.dex.api.controller.dto.CreateOfferResult;
 import io.talken.dex.api.controller.dto.DeleteOfferResult;
@@ -60,7 +60,7 @@ public class OfferService {
 	@Autowired
 	private RelayServerService relayServerService;
 
-	public CreateOfferResult createOffer(long userId, String sourceAccountId, DexTaskTypeEnum taskType, String sellAssetCode, String buyAssetCode, BigDecimal amount, BigDecimal price, boolean feeByTalk) throws TokenMetaNotFoundException, StellarException, RestApiErrorException, AssetConvertException, EffectiveAmountIsNegativeException {
+	public CreateOfferResult createOffer(long userId, String sourceAccountId, DexTaskTypeEnum taskType, String sellAssetCode, String buyAssetCode, BigDecimal amount, BigDecimal price, boolean feeByTalk) throws TokenMetaNotFoundException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, IntegrationException {
 		// passive sell is not supported yet
 		if(!(taskType != null && (taskType.equals(DexTaskTypeEnum.OFFER_CREATE_BUY) || taskType.equals(DexTaskTypeEnum.OFFER_CREATE_SELL)))) {
 			throw new IllegalArgumentException("TaskType " + taskType + " is not supported by createOffer");
@@ -192,18 +192,18 @@ public class OfferService {
 		encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
 
 		// send relay addContents request
-		RestApiResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.CREATEOFFER, userId, dexTaskId, encData);
+		IntegrationResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.CREATEOFFER, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
 
 			taskRecord.setErrorposition("request relay");
-			taskRecord.setErrorcode(String.valueOf(relayResult.getResponseCode()));
+			taskRecord.setErrorcode(relayResult.getErrorCode());
 			taskRecord.setErrormessage(relayResult.getErrorMessage());
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new RestApiErrorException(relayResult);
+			throw new IntegrationException(relayResult);
 		}
 
 		// update task record
@@ -245,7 +245,7 @@ public class OfferService {
 		return result;
 	}
 
-	public DeleteOfferResult deleteOffer(long userId, long offerId, DexTaskTypeEnum taskType, String sourceAccountId, String sellAssetCode, String buyAssetCode, BigDecimal price) throws TokenMetaNotFoundException, StellarException, RestApiErrorException {
+	public DeleteOfferResult deleteOffer(long userId, long offerId, DexTaskTypeEnum taskType, String sourceAccountId, String sellAssetCode, String buyAssetCode, BigDecimal price) throws TokenMetaNotFoundException, StellarException, IntegrationException {
 		if(!(taskType != null && (taskType.equals(DexTaskTypeEnum.OFFER_DELETE_BUY) || taskType.equals(DexTaskTypeEnum.OFFER_DELETE_SELL)))) {
 			throw new IllegalArgumentException("TaskType " + taskType + " is not supported by deleteOffer");
 		}
@@ -356,18 +356,18 @@ public class OfferService {
 		encData.addDescription("price", taskRecord.getPrice().stripTrailingZeros().toPlainString());
 
 		// send relay addContents request
-		RestApiResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DELETEOFFER, userId, dexTaskId, encData);
+		IntegrationResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DELETEOFFER, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {}", dexTaskId, relayResult);
 
 			taskRecord.setErrorposition("request relay");
-			taskRecord.setErrorcode(String.valueOf(relayResult.getResponseCode()));
+			taskRecord.setErrorcode(relayResult.getErrorCode());
 			taskRecord.setErrormessage(relayResult.getErrorMessage());
 			taskRecord.setSuccessFlag(false);
 			taskRecord.update();
 
-			throw new RestApiErrorException(relayResult);
+			throw new IntegrationException(relayResult);
 		}
 
 		// update task record
