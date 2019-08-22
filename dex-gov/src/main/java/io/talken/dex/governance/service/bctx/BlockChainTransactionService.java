@@ -103,6 +103,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 					logRecord.setErrormessage("TxSender " + bctxRecord.getBctxType() + " not found");
 				}
 			} catch(Exception ex) {
+				logger.exception(ex);
 				logRecord.setStatus(BctxStatusEnum.FAILED);
 				logRecord.setErrorcode(ex.getClass().getSimpleName());
 				logRecord.setErrormessage(ex.getMessage());
