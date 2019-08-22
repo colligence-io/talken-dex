@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+import org.stellar.sdk.xdr.OperationResult;
+import org.stellar.sdk.xdr.OperationType;
 
 @Component
 @Scope("singleton")
@@ -23,12 +25,11 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 
 	@Override
 	public DexSwapStatusEnum getStartStatus() {
-		// TODO : should be ANCHOR_ANCSVR_CONFIRMED
-		return DexSwapStatusEnum.ANCHOR_TX_CATCH;
+		return DexSwapStatusEnum.PATHPAYMENT_QUEUED;
 	}
 
 	@Override
-	public boolean proceed(DexTaskSwapRecord record) {
+	public void proceed(DexTaskSwapRecord record) {
 
 		// generate dexTaskId
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.SWAP_PATHPAYMENT);
@@ -41,11 +42,9 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 		Transaction tx;
 		try {
 			// prepare accounts
-			KeyPair swapper = KeyPair.fromAccountId(record.getSwapperaddr());
 			KeyPair channel = getChannel();
 
 			// load up-to-date information
-			AccountResponse swapperAccount = server.accounts().account(swapper.getAccountId());
 			AccountResponse channelAccount = server.accounts().account(channel.getAccountId());
 
 			// get assetType
@@ -60,11 +59,11 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 							new PathPaymentOperation.Builder(
 									sourceAssetType,
 									StellarConverter.rawToActualString(record.getSourceamountraw()),
-									swapperAccount.getAccountId(),
+									record.getSwapperaddr(),
 									targetAssetType,
 									StellarConverter.rawToActualString(record.getTargetamountraw())
 							)
-									.setSourceAccount(swapperAccount.getAccountId())
+									.setSourceAccount(record.getSwapperaddr())
 									.build()
 					);
 
@@ -74,14 +73,14 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 			String txHash = ByteArrayUtil.toHexString(tx.hash());
 
 			// sign with swapper via signServer
-			logger.debug("Request sign for {} {}", swapper.getAccountId(), txHash);
-			signServerService.signStellarTransaction(tx, swapperAccount.getAccountId());
+			logger.debug("Request sign for {} {}", record.getSwapperaddr(), txHash);
+			signServerService.signStellarTransaction(tx, record.getSwapperaddr());
 
 			// sign with channel
 			tx.sign(channel);
 		} catch(Exception ex) {
 			updateRecordException(record, DexSwapStatusEnum.PATHPAYMENT_FAILED, "build tx", ex);
-			return false;
+			return;
 		}
 
 		// update tx info before submit
@@ -103,18 +102,34 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 			if(txResponse.getExtras() != null)
 				record.setPpTxResultextra(GSONWriter.toJsonStringSafe(txResponse.getExtras()));
 
-			if(txResponse.isSuccess()) {
-				record.setStatus(DexSwapStatusEnum.PATHPAYMENT_SENT);
-				record.update();
-				return true;
-			} else {
+			if(!txResponse.isSuccess()) {
 				ObjectPair<String, String> resultCodes = StellarConverter.getResultCodesFromExtra(txResponse);
 				updateRecordError(record, DexSwapStatusEnum.PATHPAYMENT_FAILED, "submit tx", resultCodes.first(), resultCodes.second());
-				return false;
+				return;
 			}
+
+			Long spentRaw = null;
+			try {
+				for(OperationResult operationResult : txResponse.getDecodedTransactionResult().get().getResult().getResults()) {
+					if(operationResult.getTr().getDiscriminant() == OperationType.PATH_PAYMENT) {
+						spentRaw = operationResult.getTr().getPathPaymentResult().getSuccess().getOffers()[0].getAmountBought().getInt64();
+					}
+				}
+			} catch(Exception ex) {
+				updateRecordException(record, DexSwapStatusEnum.PATHPAYMENT_FAILED, "extract spent amount", ex);
+				return;
+			}
+
+			if(spentRaw == null) {
+				updateRecordError(record, DexSwapStatusEnum.PATHPAYMENT_FAILED, "extract spent amount", "not found", "Cannot find path payment result");
+				return;
+			}
+
+			record.setPpSpentamountraw(spentRaw);
+			record.setStatus(DexSwapStatusEnum.PATHPAYMENT_SENT);
+			record.update();
 		} catch(Exception ex) {
 			updateRecordException(record, DexSwapStatusEnum.PATHPAYMENT_FAILED, "submit tx", ex);
-			return false;
 		}
 	}
 }

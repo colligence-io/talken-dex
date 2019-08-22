@@ -1,23 +1,140 @@
 package io.talken.dex.governance.scheduler.swap.worker;
 
+import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.persistence.enums.DexSwapStatusEnum;
+import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskSwapRecord;
+import io.talken.common.util.GSONWriter;
+import io.talken.common.util.UTCUtil;
+import io.talken.common.util.collection.ObjectPair;
+import io.talken.common.util.integration.IntegrationResult;
 import io.talken.dex.governance.scheduler.swap.SwapTaskWorker;
+import io.talken.dex.shared.DexTaskId;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
+import io.talken.dex.shared.service.integration.anchor.AncServerDeanchorRequest;
+import io.talken.dex.shared.service.integration.anchor.AncServerDeanchorResponse;
+import io.talken.dex.shared.service.integration.anchor.AnchorServerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.stellar.sdk.*;
+import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 @Component
 @Scope("singleton")
 @RequiredArgsConstructor
 public class SwapRefundWorker extends SwapTaskWorker {
+	private final AnchorServerService anchorServerService;
+
 	@Override
 	public DexSwapStatusEnum getStartStatus() {
-		return DexSwapStatusEnum.PATHPAYMENT_FAILED;
+		return DexSwapStatusEnum.REFUND_DEANCHOR_QUEUED;
 	}
 
 	@Override
-	public boolean proceed(DexTaskSwapRecord record) {
-		return true;
+	public void proceed(DexTaskSwapRecord record) {
+		// generate dexTaskId
+		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.SWAP_REFUND);
+		record.setDeancTaskid(dexTaskId.getId());
+
+		// pick horizon server
+		Server server = stellarNetworkService.pickServer();
+
+		String assetBaseAddr;
+
+		// build tx
+		Transaction tx;
+		try {
+			// prepare accounts
+			KeyPair channel = getChannel();
+
+			// load up-to-date information
+			AccountResponse channelAccount = server.accounts().account(channel.getAccountId());
+
+			// get assetType
+			Asset assetType = tmService.getManaged(record.getSourceassetcode()).getAssetType();
+			assetBaseAddr = tmService.getManaged(record.getSourceassetcode()).getBaseaddress();
+
+
+			Transaction.Builder txBuilder = new Transaction.Builder(channelAccount, stellarNetworkService.getNetwork())
+					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+					.setOperationFee(stellarNetworkService.getNetworkFee())
+					.addMemo(Memo.text(dexTaskId.getId()))
+					.addOperation(
+							new PaymentOperation.Builder(
+									assetBaseAddr,
+									assetType,
+									StellarConverter.rawToActualString(record.getSourceamountraw())
+							)
+									.setSourceAccount(record.getSwapperaddr())
+									.build()
+					);
+
+			// build tx
+			tx = txBuilder.build();
+
+			String txHash = ByteArrayUtil.toHexString(tx.hash());
+
+			// sign with swapper via signServer
+			logger.debug("Request sign for {} {}", record.getSwapperaddr(), txHash);
+			signServerService.signStellarTransaction(tx, record.getSwapperaddr());
+
+			// sign with channel
+			tx.sign(channel);
+		} catch(Exception ex) {
+			updateRecordException(record, DexSwapStatusEnum.REFUND_DEANCHOR_FAILED, "build tx", ex);
+			return;
+		}
+
+		// request deanchor monitor
+		AncServerDeanchorRequest deanchor_request = new AncServerDeanchorRequest();
+		deanchor_request.setTaskId(dexTaskId.getId());
+		deanchor_request.setUid(String.valueOf(record.getUserId()));
+		deanchor_request.setSymbol(record.getSourceassetcode());
+		deanchor_request.setHash(ByteArrayUtil.toHexString(tx.hash()));
+		deanchor_request.setFrom(record.getSwapperaddr());
+		deanchor_request.setTo(assetBaseAddr);
+		deanchor_request.setAddress(record.getPrivatesourceaddr());
+		deanchor_request.setValue(StellarConverter.rawToActual(record.getSourceamountraw()).doubleValue());
+		deanchor_request.setMemo(UTCUtil.getNow().toString());
+
+		IntegrationResult<AncServerDeanchorResponse> deanchorResult = anchorServerService.requestDeanchor(deanchor_request);
+
+		if(!deanchorResult.isSuccess()) {
+			updateRecordError(record, DexSwapStatusEnum.REFUND_DEANCHOR_FAILED, "request deanchor", deanchorResult.getErrorCode(), deanchorResult.getErrorMessage());
+			return;
+		}
+
+		// update tx info before submit
+		record.setRefundFlag(false);
+		record.setStatus(DexSwapStatusEnum.REFUND_DEANCHOR_REQUESTED);
+		record.setDeancTaskid(dexTaskId.getId());
+		record.setDeancTxSeq(tx.getSequenceNumber());
+		record.setDeancTxHash(ByteArrayUtil.toHexString(tx.hash()));
+		record.setDeancTxEnvelopexdr(tx.toEnvelopeXdrBase64());
+		record.setDeancIndex(deanchorResult.getData().getData().getIndex());
+		record.update();
+
+		// FIXME : split into another worker?
+		try {
+			logger.debug("Sending TX {} to stellar network.", record.getPpTxHash());
+			SubmitTransactionResponse txResponse = server.submitTransaction(tx);
+
+			record.setPpTxResultxdr(txResponse.getResultXdr().get());
+			if(txResponse.getExtras() != null)
+				record.setPpTxResultextra(GSONWriter.toJsonStringSafe(txResponse.getExtras()));
+
+			if(!txResponse.isSuccess()) {
+				ObjectPair<String, String> resultCodes = StellarConverter.getResultCodesFromExtra(txResponse);
+				updateRecordError(record, DexSwapStatusEnum.REFUND_DEANCHOR_FAILED, "submit tx", resultCodes.first(), resultCodes.second());
+				return;
+			}
+
+			record.setStatus(DexSwapStatusEnum.REFUND_DEANCHOR_SENT);
+			record.update();
+		} catch(Exception ex) {
+			updateRecordException(record, DexSwapStatusEnum.REFUND_DEANCHOR_FAILED, "submit tx", ex);
+		}
 	}
 }

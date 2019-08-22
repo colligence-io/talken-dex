@@ -13,12 +13,11 @@ import org.springframework.stereotype.Component;
 public class SwapFeeCollectWorker extends SwapTaskWorker {
 	@Override
 	public DexSwapStatusEnum getStartStatus() {
-		// TODO : should be DEANCHOR_ANCSVR_CONFIRMED
-		return DexSwapStatusEnum.DEANCHOR_TX_CATCH;
+		return DexSwapStatusEnum.FEECOLLECT_QUEUED;
 	}
 
 	@Override
-	public boolean proceed(DexTaskSwapRecord record) {
-		return true;
+	public void proceed(DexTaskSwapRecord record) {
+
 	}
 }

@@ -85,7 +85,15 @@ public class SwapService {
 			// rebuild swappath exception to source->target, so user cannot notice pivot path
 			throw new SwapPathNotAvailableException(request.getSourceAssetCode(), request.getTargetAssetCode(), request.getSourceAmount());
 		}
-		if(reqTargetAmount.compareTo(prediction.getPrediction()) > 0) {
+
+		// if prediction is more than requested, this means sourceAsset will be remain more than expected. => more PROFIT expected
+		if(prediction.getPrediction().compareTo(reqTargetAmount) > 0) {
+			// do nothing
+		}
+		// if prediction is less than requested, this means sourceAsset will be remain less than expected. => less PROFIT expected
+		else if(prediction.getPrediction().compareTo(reqTargetAmount) < 0) {
+			// TODO : decide we take disadvantage of less profit, or just reject swap request
+			// FIXME : WE WILL NOT TAKE LESS PROFIT
 			throw new SwapPredictionThresholdException(request.getSourceAssetCode(), request.getTargetAssetCode(), reqTargetAmount, prediction.getPrediction());
 		}
 
@@ -106,7 +114,7 @@ public class SwapService {
 		taskRecord.setTradeaddr(request.getTradeAddr());
 		taskRecord.setHolderaddr(holderAddr);
 		taskRecord.setSwapperaddr(swapperAddr);
-		taskRecord.setPredictamountraw(StellarConverter.actualToRaw(prediction.getAmount()).longValueExact());
+		taskRecord.setPredicttargetamountraw(StellarConverter.actualToRaw(prediction.getAmount()).longValueExact());
 
 		// build anchor request
 		AncServerAnchorRequest anchor_request = new AncServerAnchorRequest();

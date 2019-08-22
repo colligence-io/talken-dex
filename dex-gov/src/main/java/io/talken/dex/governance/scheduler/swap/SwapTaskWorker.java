@@ -82,10 +82,12 @@ public abstract class SwapTaskWorker implements Runnable {
 					if(record.getStatus().equals(getStartStatus())) {
 						logger.debug("Swap task {}(#{}) = {} : process started", record.getTaskid(), record.getId(), record.getStatus());
 						try {
-							if(proceed(record)) {
-								logger.info("Swap task {}(#{}) = {} : process finished successfully", record.getTaskid(), record.getId(), record.getStatus());
-							} else { // proceed false
+							proceed(record);
+							if(record.getSuccessFlag() != null && !record.getSuccessFlag()) {
 								adminAlarmService.error(logger, "Swap task {}(#{}) = {} : process failed", record.getTaskid(), record.getId(), record.getStatus());
+							}
+							else {
+								logger.debug("Swap task {}(#{}) = {} : process finished successfully", record.getTaskid(), record.getId(), record.getStatus());
 							}
 						} catch(Exception ex) {
 							adminAlarmService.exception(logger, ex, "Swap task {}(#{}) = {} : unhandled exception catched", record.getTaskid(), record.getId(), record.getStatus());
@@ -131,5 +133,5 @@ public abstract class SwapTaskWorker implements Runnable {
 		record.update();
 	}
 
-	public abstract boolean proceed(DexTaskSwapRecord record) throws Exception;
+	public abstract void proceed(DexTaskSwapRecord record) throws Exception;
 }
