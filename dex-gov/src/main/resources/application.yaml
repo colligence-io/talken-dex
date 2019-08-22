@@ -16,13 +16,26 @@ spring:
 talken:
   dex:
     talkDistributorAddress: "0x633249D02e5695aD2370Ea4B68574689Da84f456"
-    integration:
-      wallet:
-        apiUrl: http://192.168.0.33:3232/bws
-      coinMarketCap:
-        latestUrl: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest
     scheduler:
       pool-size: 4
+      max-pool-size: 16
+      queue-capacity: 64
+    task:
+      swap:
+        workerChannel:
+          PathPayment:
+            publicKey: GADDZIHCLP45NVT3QN2JMMLPNKYRM2EWVPNPBMOIIMIUA2VOZCANFGXP
+            secretKey: SCXHZZZPUWNC7AYXVJRJVGKYLMRMLCDSKIJK67J4EAC6LNZDMWMUR4IB
+          Deanchor:
+            publicKey: GAIMU4NBHKD3F3FXGQCPMMKP7ZRNDVOKJQYDHVX3R6Y4GVD7DXYLZCWD
+            secretKey: SAOGUJ3PI64XBYAXBESAP6XCC3BT6XCOLJL3TM2EQAXIVP4X4CI5OAQ6
+          FeeCollect:
+            publicKey: GDPTY5R5ACTNOTXT5GGU76J6PSVAADHL54PZDCSSIHWUJLPHETDA6QJS
+            secretKey: SA5EKYBX4APVLX7JR34RHHTZM2VNKJ4JFVX4NSGVPBHVLWU7SQXUTKFV
+          Refund:
+            publicKey: GAEDA7A5LN6AOZZTPTG66UOJQ4BLAUDRZ7IYIUDZTG3NE5KSYTBAWG2U
+            secretKey: SD6E6B5RTXITG6GUSAIIWYRVFFARCHRZZFDZRIAFRVNTW6J7FEHIY7DA
+
 
 ###############################################################################
 # LOCAL Profile                                                               #
@@ -66,8 +79,3 @@ vault:
 talken:
   dex:
     talkDistributorAddress: "0x8526E732F405c742d4a078293DaD3a6633b57C79"
-    integration:
-      wallet:
-        apiUrl: http://10.15.144.52:3232/bws
-      coinMarketCap:
-        latestUrl: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest

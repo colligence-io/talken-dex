@@ -1,6 +1,8 @@
-package io.talken.dex.api.service.integration.anchor;
+package io.talken.dex.shared.service.integration.anchor;
 
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 public class AncServerAnchorRequest {
@@ -11,5 +13,5 @@ public class AncServerAnchorRequest {
 	private String to;
 	private String stellar;
 	private String memo;
-	private Float value;
+	private BigDecimal value;
 }

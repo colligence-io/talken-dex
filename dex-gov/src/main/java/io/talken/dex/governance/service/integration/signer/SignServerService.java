@@ -144,8 +144,10 @@ public class SignServerService {
 	}
 
 	public void signStellarTransaction(Transaction tx) throws SigningException {
-		String accountId = tx.getSourceAccount();
+		signStellarTransaction(tx, tx.getSourceAccount());
+	}
 
+	public void signStellarTransaction(Transaction tx, String accountId) throws SigningException {
 		IntegrationResult<SignServerSignResponse> signResult = requestSign("XLM", accountId, tx.hash());
 
 		if(!signResult.isSuccess()) {
@@ -161,7 +163,7 @@ public class SignServerService {
 		try {
 			ByteArrayOutputStream publicKeyBytesStream = new ByteArrayOutputStream();
 			XdrDataOutputStream xdrOutputStream = new XdrDataOutputStream(publicKeyBytesStream);
-			PublicKey.encode(xdrOutputStream, KeyPair.fromAccountId(tx.getSourceAccount()).getXdrPublicKey());
+			PublicKey.encode(xdrOutputStream, KeyPair.fromAccountId(accountId).getXdrPublicKey());
 			byte[] publicKeyBytes = publicKeyBytesStream.toByteArray();
 			byte[] signatureHintBytes = Arrays.copyOfRange(publicKeyBytes, publicKeyBytes.length - 4, publicKeyBytes.length);
 			signatureHint.setSignatureHint(signatureHintBytes);

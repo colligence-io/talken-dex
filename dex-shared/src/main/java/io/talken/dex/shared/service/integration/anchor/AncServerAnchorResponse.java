@@ -1,4 +1,4 @@
-package io.talken.dex.api.service.integration.anchor;
+package io.talken.dex.shared.service.integration.anchor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.talken.common.util.integration.rest.RestApiResponseInterface;
@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @JsonIgnoreProperties("message")
-public class AncServerDeanchorResponse implements RestApiResponseInterface {
+public class AncServerAnchorResponse implements RestApiResponseInterface {
 	private String code;
 	private String description;
 	private _Data data;
@@ -34,5 +34,6 @@ public class AncServerDeanchorResponse implements RestApiResponseInterface {
 	@Data
 	public static class _Data {
 		private Integer index;
+		private String address;
 	}
 }

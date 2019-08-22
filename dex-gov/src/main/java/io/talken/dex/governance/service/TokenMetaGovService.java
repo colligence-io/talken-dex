@@ -16,6 +16,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.DoubleKeyObject;
 import io.talken.common.util.collection.DoubleKeyTable;
+import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.collection.SingleKeyTable;
 import io.talken.dex.governance.service.integration.signer.SignServerService;
 import io.talken.dex.shared.TokenMetaTable;
@@ -162,6 +163,7 @@ public class TokenMetaGovService {
 				_miData.setBaseaddress(_miData.getBaseaddress());
 				_miData.setOfferfeeholderaddress(_miData.getOfferfeeholderaddress().trim());
 				_miData.setDeancfeeholderaddress(_miData.getDeancfeeholderaddress().trim());
+				_miData.setSwapfeeholderaddress(_miData.getSwapfeeholderaddress().trim());
 
 				_tmMiMap.put(_tmi.getTmId(), _miData);
 			}
@@ -282,6 +284,7 @@ public class TokenMetaGovService {
 				mi.setAssetBase(KeyPair.fromAccountId(mi.getBaseaddress()));
 				mi.setDeanchorFeeHolder(KeyPair.fromAccountId(mi.getDeancfeeholderaddress()));
 				mi.setOfferFeeHolder(KeyPair.fromAccountId(mi.getOfferfeeholderaddress()));
+				mi.setSwapFeeHolder(KeyPair.fromAccountId(mi.getSwapfeeholderaddress()));
 
 				mi.setMarketPair(new HashMap<>());
 				if(_tmMpMap.containsKey(_tmd.getId())) {
@@ -293,11 +296,7 @@ public class TokenMetaGovService {
 
 			if(!verifyManaged(newMiTable)) {
 				logger.error("Cannot verify token meta data");
-
-				// TODO : this is commented out for partial integration with signServer
-				// after all accounts integrated with signServer, this must be enabled instead of just logging
-
-				//throw new TokenMetaLoadException("Cannot verify token meta data");
+				throw new TokenMetaLoadException("Cannot verify token meta data");
 			}
 
 			tmIdMap = newTmIdMap;
@@ -354,6 +353,7 @@ public class TokenMetaGovService {
 				mi.setBaseAddress(_mi.getBaseaddress());
 				mi.setOfferFeeHolderAddress(_mi.getOfferfeeholderaddress());
 				mi.setDeancFeeHolderAddress(_mi.getDeancfeeholderaddress());
+				mi.setSwapFeeHolderAddress(_mi.getSwapfeeholderaddress());
 				if(_mi.getUpdateTimestamp() == null)
 					mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getCreateTimestamp()));
 				else
@@ -408,6 +408,7 @@ public class TokenMetaGovService {
 			if(!checkTrust(_tm.getManagedInfo().getAssetBase(), _tm.getManagedInfo())) trustFailed = true;
 			if(!checkTrust(_tm.getManagedInfo().getOfferFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
 			if(!checkTrust(_tm.getManagedInfo().getDeanchorFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
+			if(!checkTrust(_tm.getManagedInfo().getSwapFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
 		}
 		return !trustFailed;
 	}
@@ -447,10 +448,8 @@ public class TokenMetaGovService {
 					logger.info("Trustline made on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
 					trusted = true;
 				} else {
-					SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
-					StringJoiner sj = new StringJoiner(",");
-					if(resultCodes.getOperationsResultCodes() != null) resultCodes.getOperationsResultCodes().forEach(sj::add);
-					logger.error("Cannot make trustline on {} for {} / {} : {} - {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId(), resultCodes.getTransactionResultCode(), sj.toString());
+					ObjectPair<String, String> resultCodesFromExtra = StellarConverter.getResultCodesFromExtra(txResponse);
+					logger.error("Cannot make trustline on {} for {} / {} : {} - {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId(), resultCodesFromExtra.first(), resultCodesFromExtra.second());
 				}
 			}
 		} catch(ErrorResponse er) {

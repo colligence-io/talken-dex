@@ -7,10 +7,10 @@ import javax.validation.constraints.NotEmpty;
 @Data
 public class TxListRequest {
 	@NotEmpty
-	String sourceAccount;
-	String taskId;
-	String txHash;
-	Long offerId;
-	String sellAssetCode;
-	String buyAssetCode;
+	private String sourceAccount;
+	private String taskId;
+	private String txHash;
+	private Long offerId;
+	private String sellAssetCode;
+	private String buyAssetCode;
 }

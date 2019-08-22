@@ -17,14 +17,29 @@ talken:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://133.186.197.245:18545"
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
-    fee:
-      offerFeeRate: 0.001
-      offerFeeRateTalkFactor: 0.5
-      deanchorFeePivotAsset: "BTC"
-      deanchorFeeAmount: 0.0001
-      deanchorFeeRateTalkFactor: 0.5
-      refundRetryInterval: 600
-      refundMaxRetry: 5
+    task:
+      createOffer:
+        feeRate: 0.001
+        feeRateTalkFactor: 0.5
+      deanchor:
+        feePivotAsset: "BTC"
+        feeAmount: 0.0001
+        feeRateTalkFactor: 0.5
+      swap:
+        asset:
+          TALK:
+            feeRate: 0.05
+            feeMinimum: 10
+            feeMaximum: 100
+    integration:
+      relay:
+        apiUrl: http://192.168.0.33:3888/graphql
+      wallet:
+        apiUrl: http://192.168.0.33:3232/bws
+      anchor:
+        apiUrl: http://192.168.0.35:3480
+      coinMarketCap:
+        latestUrl: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest
 
 ################################################################################
 ## LOCAL Profile                                                               #
@@ -62,3 +77,12 @@ talken:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://10.27.27.13:18545"
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5151520500809142437"
+    integration:
+      relay:
+        apiUrl: http://192.168.0.36:3888/graphql
+      wallet:
+        apiUrl: http://10.15.144.52:3232/bws
+      anchor:
+        apiUrl: http://192.168.0.49:3480
+      coinMarketCap:
+        latestUrl: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest

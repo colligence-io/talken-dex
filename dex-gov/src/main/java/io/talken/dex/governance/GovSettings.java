@@ -13,6 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.Map;
 
 @Component
 @ConfigurationProperties("talken.dex")
@@ -29,17 +30,17 @@ public class GovSettings extends DexSettings {
 		randomStringTable = secret.getTaskIdSeed();
 		DexTaskId.init(randomStringTable);
 
-		integration.signServer = new _Integration._SignServer();
-		integration.signServer.addr = secret.getSignServerAddr();
-		integration.signServer.appName = secret.getSignServerAppName();
-		integration.signServer.appKey = secret.getSignServerAppKey();
+		getIntegration().setSignServer(new _Integration._SignServer());
+		getIntegration().getSignServer().setAddr(secret.getSignServerAddr());
+		getIntegration().getSignServer().setAppName(secret.getSignServerAppName());
+		getIntegration().getSignServer().setAppKey(secret.getSignServerAppKey());
 
 		//slack
-		integration.slack = secretReader.readSecret("slack", VaultSecretDataSlack.class);
+		getIntegration().setSlack(secretReader.readSecret("slack", VaultSecretDataSlack.class));
 
+		// coinmarketcap
 		VaultSecretDataCoinMarketCap cmc_secret = secretReader.readSecret("coinmarketcap", VaultSecretDataCoinMarketCap.class);
-
-		integration.coinMarketCap.apiKey = cmc_secret.getApiKey();
+		getIntegration().getCoinMarketCap().setApiKey(cmc_secret.getApiKey());
 	}
 
 	private String randomStringTable;
@@ -52,37 +53,28 @@ public class GovSettings extends DexSettings {
 	@Setter
 	public static class _Scheduler {
 		private int poolSize;
+		private int maxPoolSize;
+		private int queueCapacity;
 	}
 
-	private _Integration integration;
+	private _Task task;
 
 	@Getter
 	@Setter
-	public static class _Integration {
-		private VaultSecretDataSlack slack;
-		private _CoinMarketCap coinMarketCap;
-		private _SignServer signServer;
-		private _Wallet wallet;
+	public static class _Task extends DexSettings._Task {
+		private _Swap swap;
 
 		@Getter
 		@Setter
-		public static class _Wallet {
-			private String apiUrl;
-		}
+		public static class _Swap extends DexSettings._Task._Swap {
+			private Map<String, _Channel> workerChannel;
 
-		@Getter
-		@Setter
-		public static class _SignServer {
-			private String addr;
-			private String appName;
-			private String appKey;
-		}
-
-		@Getter
-		@Setter
-		public static class _CoinMarketCap {
-			private String apiKey;
-			private String latestUrl;
+			@Getter
+			@Setter
+			public static class _Channel {
+				private String publicKey;
+				private String secretKey;
+			}
 		}
 	}
 }
