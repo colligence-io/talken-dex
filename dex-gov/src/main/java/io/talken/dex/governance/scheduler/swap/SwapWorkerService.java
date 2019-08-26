@@ -57,9 +57,8 @@ public class SwapWorkerService implements ApplicationContextAware {
 	private void init() throws IOException {
 		Map<String, SwapTaskWorker> ascBeans = applicationContext.getBeansOfType(SwapTaskWorker.class);
 		for(Map.Entry<String, SwapTaskWorker> entry : ascBeans.entrySet()) {
-			String _name = entry.getKey();
 			SwapTaskWorker _asc = entry.getValue();
-			String workerName = _asc.getClass().getSimpleName().replaceAll("^Swap", "").replaceAll("Worker$", "");
+			String workerName = _asc.getName();
 			_asc.setChannel(getChannelKeyPair(workerName));
 			workers.put(_asc.getStartStatus(), _asc);
 			taskExecutor.execute(_asc);
@@ -69,8 +68,7 @@ public class SwapWorkerService implements ApplicationContextAware {
 
 	private KeyPair getChannelKeyPair(String workerName) throws IOException {
 		GovSettings._Task._Swap._Channel channel = govSettings.getTask().getSwap().getWorkerChannel().get(workerName);
-		if(channel == null)
-			throw new IllegalArgumentException("Stellar Channel for " + workerName + " is not configured.");
+		if(channel == null) return null;
 		KeyPair chkp = KeyPair.fromSecretSeed(channel.getSecretKey());
 		if(!chkp.getAccountId().equals(channel.getPublicKey()))
 			throw new IllegalArgumentException("Stellar Channel for " + workerName + " is not match with given secretKey.");

@@ -5,8 +5,10 @@ import io.talken.common.persistence.enums.DexSwapStatusEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskSwapRecord;
 import io.talken.common.util.GSONWriter;
+import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.governance.scheduler.swap.SwapTaskWorker;
+import io.talken.dex.governance.scheduler.swap.WorkerProcessResult;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import lombok.RequiredArgsConstructor;
@@ -18,10 +20,22 @@ import org.stellar.sdk.responses.SubmitTransactionResponse;
 import org.stellar.sdk.xdr.OperationResult;
 import org.stellar.sdk.xdr.OperationType;
 
+import java.io.IOException;
+import java.time.Duration;
+
 @Component
 @Scope("singleton")
 @RequiredArgsConstructor
 public class SwapPathPaymentWorker extends SwapTaskWorker {
+	@Override
+	protected int getRetryCount() {
+		return 5;
+	}
+
+	@Override
+	protected Duration getRetryInterval() {
+		return Duration.ofMinutes(1);
+	}
 
 	@Override
 	public DexSwapStatusEnum getStartStatus() {
@@ -29,7 +43,7 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 	}
 
 	@Override
-	public void proceed(DexTaskSwapRecord record) {
+	public WorkerProcessResult proceed(DexTaskSwapRecord record) {
 
 		// generate dexTaskId
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.SWAP_PATHPAYMENT);
@@ -79,8 +93,8 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 			// sign with channel
 			tx.sign(channel);
 		} catch(Exception ex) {
-			updateRecordException(record, DexSwapStatusEnum.PATHPAYMENT_FAILED, "build tx", ex);
-			return;
+			retryOrFail(record);
+			return new WorkerProcessResult.Builder(this, record).exception("build tx", ex);
 		}
 
 		// update tx info before submit
@@ -90,46 +104,66 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 		record.setPpTxEnvelopexdr(tx.toEnvelopeXdrBase64());
 		record.update();
 
+		SubmitTransactionResponse txResponse;
 		try {
 			logger.debug("Sending TX {} to stellar network.", record.getPpTxHash());
-			SubmitTransactionResponse txResponse = server.submitTransaction(tx);
-
-			// TODO : retry if path not found...
-			// op_too_few_offers -> retry
-			// op_underfunded -> ??????????
-
-			record.setPpTxResultxdr(txResponse.getResultXdr().get());
-			if(txResponse.getExtras() != null)
-				record.setPpTxResultextra(GSONWriter.toJsonStringSafe(txResponse.getExtras()));
-
-			if(!txResponse.isSuccess()) {
-				ObjectPair<String, String> resultCodes = StellarConverter.getResultCodesFromExtra(txResponse);
-				updateRecordError(record, DexSwapStatusEnum.PATHPAYMENT_FAILED, "submit tx", resultCodes.first(), resultCodes.second());
-				return;
-			}
-
-			Long spentRaw = null;
-			try {
-				for(OperationResult operationResult : txResponse.getDecodedTransactionResult().get().getResult().getResults()) {
-					if(operationResult.getTr().getDiscriminant() == OperationType.PATH_PAYMENT) {
-						spentRaw = operationResult.getTr().getPathPaymentResult().getSuccess().getOffers()[0].getAmountBought().getInt64();
-					}
-				}
-			} catch(Exception ex) {
-				updateRecordException(record, DexSwapStatusEnum.PATHPAYMENT_FAILED, "extract spent amount", ex);
-				return;
-			}
-
-			if(spentRaw == null) {
-				updateRecordError(record, DexSwapStatusEnum.PATHPAYMENT_FAILED, "extract spent amount", "not found", "Cannot find path payment result");
-				return;
-			}
-
-			record.setPpSpentamountraw(spentRaw);
-			record.setStatus(DexSwapStatusEnum.PATHPAYMENT_SENT);
-			record.update();
-		} catch(Exception ex) {
-			updateRecordException(record, DexSwapStatusEnum.PATHPAYMENT_FAILED, "submit tx", ex);
+			txResponse = server.submitTransaction(tx);
+		} catch(IOException ex) {
+			retryOrFail(record);
+			return new WorkerProcessResult.Builder(this, record).exception("submit tx", ex);
 		}
+
+		// TODO : retry if path not found...
+		// op_too_few_offers -> retry
+		// op_underfunded -> ??????????
+
+		record.setPpTxResultxdr(txResponse.getResultXdr().get());
+		if(txResponse.getExtras() != null)
+			record.setPpTxResultextra(GSONWriter.toJsonStringSafe(txResponse.getExtras()));
+
+		if(!txResponse.isSuccess()) {
+			retryOrFail(record);
+			ObjectPair<String, String> resultCodes = StellarConverter.getResultCodesFromExtra(txResponse);
+			return new WorkerProcessResult.Builder(this, record).error("submit tx", resultCodes.first(), resultCodes.second());
+		}
+
+		Long spentRaw = null;
+		try {
+			for(OperationResult operationResult : txResponse.getDecodedTransactionResult().get().getResult().getResults()) {
+				if(operationResult.getTr().getDiscriminant() == OperationType.PATH_PAYMENT) {
+					spentRaw = operationResult.getTr().getPathPaymentResult().getSuccess().getOffers()[0].getAmountBought().getInt64();
+				}
+			}
+		} catch(Exception ex) {
+			// DO NOT RETRY
+			record.setStatus(DexSwapStatusEnum.TASK_HALTED);
+			record.update();
+			return new WorkerProcessResult.Builder(this, record).exception("extract spent amount", ex);
+		}
+
+		if(spentRaw == null) {
+			// DO NOT RETRY
+			record.setStatus(DexSwapStatusEnum.TASK_HALTED);
+			record.update();
+			return new WorkerProcessResult.Builder(this, record).error("extract spent amount", "inplementation", "Cannot find path payment result");
+		}
+
+		record.setPpSpentamountraw(spentRaw);
+		record.setStatus(DexSwapStatusEnum.PATHPAYMENT_SENT);
+		record.update();
+
+		return new WorkerProcessResult.Builder(this, record).success();
+	}
+
+	private void retryOrFail(DexTaskSwapRecord record) {
+		if(record.getPpRetryCount() < getRetryCount()) {
+			record.setStatus(DexSwapStatusEnum.PATHPAYMENT_QUEUED);
+			record.setPpRetryCount(record.getPpRetryCount() + 1);
+			record.setScheduleTimestamp(UTCUtil.getNow().plus(getRetryInterval()));
+		} else {
+			record.setStatus(DexSwapStatusEnum.PATHPAYMENT_FAILED);
+			record.setFinishFlag(true);
+		}
+		record.update();
 	}
 }

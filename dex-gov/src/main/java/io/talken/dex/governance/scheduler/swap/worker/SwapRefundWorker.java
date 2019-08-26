@@ -9,6 +9,7 @@ import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.dex.governance.scheduler.swap.SwapTaskWorker;
+import io.talken.dex.governance.scheduler.swap.WorkerProcessResult;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.integration.anchor.AncServerDeanchorRequest;
@@ -21,6 +22,9 @@ import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
+import java.io.IOException;
+import java.time.Duration;
+
 @Component
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -28,12 +32,22 @@ public class SwapRefundWorker extends SwapTaskWorker {
 	private final AnchorServerService anchorServerService;
 
 	@Override
+	protected int getRetryCount() {
+		return 5;
+	}
+
+	@Override
+	protected Duration getRetryInterval() {
+		return Duration.ofMinutes(1);
+	}
+
+	@Override
 	public DexSwapStatusEnum getStartStatus() {
 		return DexSwapStatusEnum.REFUND_DEANCHOR_QUEUED;
 	}
 
 	@Override
-	public void proceed(DexTaskSwapRecord record) {
+	public WorkerProcessResult proceed(DexTaskSwapRecord record) {
 		// generate dexTaskId
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.SWAP_REFUND);
 		record.setDeancTaskid(dexTaskId.getId());
@@ -83,8 +97,8 @@ public class SwapRefundWorker extends SwapTaskWorker {
 			// sign with channel
 			tx.sign(channel);
 		} catch(Exception ex) {
-			updateRecordException(record, DexSwapStatusEnum.REFUND_DEANCHOR_FAILED, "build tx", ex);
-			return;
+			retryOrFail(record);
+			return new WorkerProcessResult.Builder(this, record).exception("build tx", ex);
 		}
 
 		// request deanchor monitor
@@ -102,12 +116,12 @@ public class SwapRefundWorker extends SwapTaskWorker {
 		IntegrationResult<AncServerDeanchorResponse> deanchorResult = anchorServerService.requestDeanchor(deanchor_request);
 
 		if(!deanchorResult.isSuccess()) {
-			updateRecordError(record, DexSwapStatusEnum.REFUND_DEANCHOR_FAILED, "request deanchor", deanchorResult.getErrorCode(), deanchorResult.getErrorMessage());
-			return;
+			retryOrFail(record);
+			return new WorkerProcessResult.Builder(this, record).error("request deanchor", deanchorResult.getErrorCode(), deanchorResult.getErrorMessage());
 		}
 
 		// update tx info before submit
-		record.setRefundFlag(false);
+		record.setRefundFlag(true);
 		record.setStatus(DexSwapStatusEnum.REFUND_DEANCHOR_REQUESTED);
 		record.setDeancTaskid(dexTaskId.getId());
 		record.setDeancTxSeq(tx.getSequenceNumber());
@@ -116,25 +130,40 @@ public class SwapRefundWorker extends SwapTaskWorker {
 		record.setDeancIndex(deanchorResult.getData().getData().getIndex());
 		record.update();
 
-		// FIXME : split into another worker?
+		SubmitTransactionResponse txResponse;
 		try {
-			logger.debug("Sending TX {} to stellar network.", record.getPpTxHash());
-			SubmitTransactionResponse txResponse = server.submitTransaction(tx);
-
-			record.setPpTxResultxdr(txResponse.getResultXdr().get());
-			if(txResponse.getExtras() != null)
-				record.setPpTxResultextra(GSONWriter.toJsonStringSafe(txResponse.getExtras()));
-
-			if(!txResponse.isSuccess()) {
-				ObjectPair<String, String> resultCodes = StellarConverter.getResultCodesFromExtra(txResponse);
-				updateRecordError(record, DexSwapStatusEnum.REFUND_DEANCHOR_FAILED, "submit tx", resultCodes.first(), resultCodes.second());
-				return;
-			}
-
-			record.setStatus(DexSwapStatusEnum.REFUND_DEANCHOR_SENT);
-			record.update();
-		} catch(Exception ex) {
-			updateRecordException(record, DexSwapStatusEnum.REFUND_DEANCHOR_FAILED, "submit tx", ex);
+			logger.debug("Sending TX {} to stellar network.", record.getDeancTxHash());
+			txResponse = server.submitTransaction(tx);
+		} catch(IOException ex) {
+			retryOrFail(record);
+			return new WorkerProcessResult.Builder(this, record).exception("submit tx", ex);
 		}
+
+		record.setDeancTxResultxdr(txResponse.getResultXdr().get());
+		if(txResponse.getExtras() != null)
+			record.setDeancTxResultextra(GSONWriter.toJsonStringSafe(txResponse.getExtras()));
+
+		if(!txResponse.isSuccess()) {
+			retryOrFail(record);
+			ObjectPair<String, String> resultCodes = StellarConverter.getResultCodesFromExtra(txResponse);
+			return new WorkerProcessResult.Builder(this, record).error("tx response", resultCodes.first(), resultCodes.second());
+		}
+
+		record.setStatus(DexSwapStatusEnum.REFUND_DEANCHOR_SENT);
+		record.update();
+
+		return new WorkerProcessResult.Builder(this, record).success();
+	}
+
+	private void retryOrFail(DexTaskSwapRecord record) {
+		if(record.getDeancRetryCount() < getRetryCount()) {
+			record.setStatus(DexSwapStatusEnum.REFUND_DEANCHOR_QUEUED);
+			record.setDeancRetryCount(record.getDeancRetryCount() + 1);
+			record.setScheduleTimestamp(UTCUtil.getNow().plus(getRetryInterval()));
+		} else {
+			record.setStatus(DexSwapStatusEnum.REFUND_DEANCHOR_FAILED);
+			record.setFinishFlag(true);
+		}
+		record.update();
 	}
 }
