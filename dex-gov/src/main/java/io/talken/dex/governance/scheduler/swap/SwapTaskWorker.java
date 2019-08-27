@@ -10,18 +10,19 @@ import io.talken.dex.governance.service.integration.signer.SignServerService;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.stellar.sdk.KeyPair;
 
 import java.time.Duration;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_SWAP;
 
-public abstract class SwapTaskWorker implements Runnable {
+public abstract class SwapTaskWorker {
 	protected final PrefixedLogger logger;
 
-	private BlockingQueue<Long> queue;
+	private Queue<Long> queue;
 
 	@Autowired
 	protected DSLContext dslContext;
@@ -40,13 +41,11 @@ public abstract class SwapTaskWorker implements Runnable {
 
 	private KeyPair channel;
 
-	private Long currentTask = null;
-
 	private final String workerName;
 
 	protected SwapTaskWorker() {
 		this.logger = PrefixedLogger.getLogger(this.getClass());
-		this.queue = new LinkedBlockingQueue<>();
+		this.queue = new LinkedList<>();
 		this.workerName = getClass().getSimpleName().replaceAll("^Swap", "").replaceAll("Worker$", "");
 	}
 
@@ -70,11 +69,9 @@ public abstract class SwapTaskWorker implements Runnable {
 	protected abstract Duration getRetryInterval();
 
 	public boolean queue(DexTaskSwapRecord record) {
-		// BlockingQueue.offer will return false if enqueue failed
 		if(!queue.contains(record.getId())) {
-			if(currentTask != null && currentTask.equals(record.getId())) return true;
 			if(queue.offer(record.getId())) {
-				logger.debug("Swap task {}(#{}) = {} : queued", record.getTaskid(), record.getId(), record.getStatus());
+				logger.info("Swap task {}(#{}) = {} : queued (qs = {})", record.getTaskid(), record.getId(), record.getStatus(), queue.size());
 				return true;
 			} else {
 				return false;
@@ -84,45 +81,45 @@ public abstract class SwapTaskWorker implements Runnable {
 		}
 	}
 
-	@Override
-	public void run() {
-		while(!Thread.interrupted()) {
-			try {
-				// BlockingQueue.take will wait until queued element is available
-				currentTask = queue.take();
+	@Scheduled(fixedDelay = 10)
+	private void checkQueueAndProceed() {
+		while(!Thread.interrupted() && queue.size() > 0) {
+			// peek queue
+			Long currentTask = queue.peek();
 
-				DexTaskSwapRecord record = dslContext.selectFrom(DEX_TASK_SWAP).where(DEX_TASK_SWAP.ID.eq(currentTask)).fetchOne();
-				if(record != null) {
-					if(record.getStatus().equals(getStartStatus())) {
-						logger.debug("Swap task {}(#{}) = {} : process started", record.getTaskid(), record.getId(), record.getStatus());
-						try {
-							WorkerProcessResult pResult = proceed(record);
-							if(pResult.isSuccess()) {
-								logger.debug("Swap task {}(#{}) = {} : process finished successfully", record.getTaskid(), record.getId(), record.getStatus());
+			DexTaskSwapRecord record = dslContext.selectFrom(DEX_TASK_SWAP).where(DEX_TASK_SWAP.ID.eq(currentTask)).fetchOne();
+			if(record != null) {
+				if(record.getStatus().equals(getStartStatus())) {
+					DexSwapStatusEnum statusFrom = record.getStatus();
+					logger.trace("Swap task {}(#{}) = {} : started", record.getTaskid(), record.getId(), statusFrom);
+					try {
+						WorkerProcessResult pResult = proceed(record);
+						if(pResult.isSuccess()) {
+							logger.debug("Swap task {}(#{}) = {} -> {} : success", record.getTaskid(), record.getId(), statusFrom, record.getStatus());
+						} else {
+							addProcessLog(pResult);
+							if(record.getScheduleTimestamp() != null) {
+								logger.error("Swap task {}(#{}) = {} -> {} : failover at {}", record.getTaskid(), record.getId(), statusFrom, record.getStatus(), record.getScheduleTimestamp());
 							} else {
-								addProcessLog(pResult);
-								logger.error("Swap task {}(#{}) = {} : process failed", record.getTaskid(), record.getId(), record.getStatus());
+								logger.error("Swap task {}(#{}) = {} -> {} : fail", record.getTaskid(), record.getId(), statusFrom, record.getStatus());
 							}
-						} catch(Exception ex) {
-							// HALT Task
-							record.setStatus(DexSwapStatusEnum.TASK_HALTED);
-							record.setFinishFlag(true);
-							record.update();
-							addProcessLog(new WorkerProcessResult.Builder(this, record).exception("Unhandled", ex));
-							adminAlarmService.exception(logger, ex, "Swap task {}(#{}) = {} : unhandled exception catched", record.getTaskid(), record.getId(), record.getStatus());
-						} finally {
-							// clear current status
-							currentTask = null;
 						}
-					} else { // record.status != getStartStatus
-						adminAlarmService.error(logger, "Swap task {}(#{}) is in {} status, expected {}", record.getTaskid(), record.getId(), record.getStatus(), getStartStatus());
+					} catch(Exception ex) {
+						// HALT Task
+						record.setStatus(DexSwapStatusEnum.TASK_HALTED);
+						record.setFinishFlag(true);
+						record.update();
+						addProcessLog(new WorkerProcessResult.Builder(this, record).exception("Unhandled", ex));
+						adminAlarmService.exception(logger, ex, "Swap task {}(#{}) = {} : unhandled exception catched", record.getTaskid(), record.getId(), record.getStatus());
+					} finally {
+						// dequeue current
+						queue.poll();
 					}
-				} else { // record == null
-					adminAlarmService.error(logger, "Swap task #{} not found");
+				} else { // record.status != getStartStatus
+					adminAlarmService.error(logger, "Swap task {}(#{}) is in {} status, expected {}", record.getTaskid(), record.getId(), record.getStatus(), getStartStatus());
 				}
-
-			} catch(InterruptedException ex) {
-				logger.warn("{} interrupted.", this.getClass().getSimpleName());
+			} else { // record == null
+				adminAlarmService.error(logger, "Swap task #{} not found");
 			}
 		}
 	}

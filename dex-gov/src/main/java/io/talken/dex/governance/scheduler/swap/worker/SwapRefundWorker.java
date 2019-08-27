@@ -162,6 +162,7 @@ public class SwapRefundWorker extends SwapTaskWorker {
 			record.setScheduleTimestamp(UTCUtil.getNow().plus(getRetryInterval()));
 		} else {
 			record.setStatus(DexSwapStatusEnum.REFUND_DEANCHOR_FAILED);
+			record.setScheduleTimestamp(null);
 			record.setFinishFlag(true);
 		}
 		record.update();

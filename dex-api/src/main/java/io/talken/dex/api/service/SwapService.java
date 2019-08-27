@@ -136,9 +136,6 @@ public class SwapService {
 		// insert task record
 		taskRecord.setStatus(DexSwapStatusEnum.ANCHOR_REQUESTED);
 		taskRecord.setAncIndex(anchorResult.getData().getData().getIndex());
-		dslContext.attach(taskRecord);
-		taskRecord.store();
-		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
 		// build relay contents
 		RelayEncryptedContent<RelayTransferDTO> encData;
@@ -175,14 +172,6 @@ public class SwapService {
 
 		} catch(JsonProcessingException | GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
-
-			taskRecord.setErrorposition("encrypt relay data");
-			taskRecord.setErrorcode(e.getClass().getSimpleName());
-			taskRecord.setErrormessage(e.getMessage());
-			taskRecord.setFinishFlag(true);
-			taskRecord.setSuccessFlag(false);
-			taskRecord.update();
-
 			throw new InternalServerErrorException(e);
 		}
 
@@ -191,25 +180,17 @@ public class SwapService {
 
 		if(!relayResult.isSuccess()) {
 			logger.error("{} failed. {} {}", dexTaskId, relayResult.getErrorCode(), relayResult.getErrorMessage());
-
-			taskRecord.setErrorposition("request relay");
-			taskRecord.setErrorcode(relayResult.getErrorCode());
-			taskRecord.setErrormessage(relayResult.getErrorMessage());
-			taskRecord.setFinishFlag(true);
-			taskRecord.setSuccessFlag(false);
-			taskRecord.update();
-
 			throw new IntegrationException(relayResult);
 		}
 
-		// update task record
+		// insert task record
 		taskRecord.setRlyDexkey(encData.getKey());
 		taskRecord.setRlyTransid(relayResult.getData().getTransId());
 		taskRecord.setRlyRegdt(relayResult.getData().getRegDt());
 		taskRecord.setRlyEnddt(relayResult.getData().getEndDt());
-		taskRecord.update();
-
-		logger.debug("{} complete.", dexTaskId);
+		dslContext.attach(taskRecord);
+		taskRecord.store();
+		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
 		SwapResult result = new SwapResult();
 		result.setTaskId(dexTaskId.getId());

@@ -161,6 +161,7 @@ public class SwapDeanchorWorker extends SwapTaskWorker {
 			record.setScheduleTimestamp(UTCUtil.getNow().plus(getRetryInterval()));
 		} else {
 			record.setStatus(DexSwapStatusEnum.DEANCHOR_FAILED);
+			record.setScheduleTimestamp(null);
 			record.setFinishFlag(true);
 		}
 		record.update();

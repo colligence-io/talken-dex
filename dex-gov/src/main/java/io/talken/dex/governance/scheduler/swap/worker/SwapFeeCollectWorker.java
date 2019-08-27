@@ -137,6 +137,7 @@ public class SwapFeeCollectWorker extends SwapTaskWorker {
 			record.setScheduleTimestamp(UTCUtil.getNow().plus(getRetryInterval()));
 		} else {
 			record.setStatus(DexSwapStatusEnum.FEECOLLECT_FAILED);
+			record.setScheduleTimestamp(null);
 			record.setFinishFlag(true);
 		}
 		record.update();

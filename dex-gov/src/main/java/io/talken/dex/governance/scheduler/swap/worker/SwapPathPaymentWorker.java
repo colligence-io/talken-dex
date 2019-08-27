@@ -162,7 +162,7 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 			record.setScheduleTimestamp(UTCUtil.getNow().plus(getRetryInterval()));
 		} else {
 			record.setStatus(DexSwapStatusEnum.PATHPAYMENT_FAILED);
-			record.setFinishFlag(true);
+			record.setScheduleTimestamp(null);
 		}
 		record.update();
 	}

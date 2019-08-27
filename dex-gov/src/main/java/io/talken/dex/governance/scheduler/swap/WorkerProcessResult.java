@@ -1,6 +1,7 @@
 package io.talken.dex.governance.scheduler.swap;
 
 import com.google.common.base.Throwables;
+import io.talken.common.persistence.jooq.tables.pojos.DexTaskSwap;
 import io.talken.common.persistence.jooq.tables.records.DexTaskSwapLogRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskSwapRecord;
 import io.talken.common.util.GSONWriter;
@@ -8,8 +9,8 @@ import lombok.Getter;
 
 @Getter
 public class WorkerProcessResult {
-	private DexTaskSwapRecord taskRecord;
-	private Class<? extends SwapTaskWorker> worker;
+	private DexTaskSwap taskRecord;
+	private String workerName;
 	private boolean isSuccess;
 	private String errorPosition;
 	private String errorCode;
@@ -19,12 +20,12 @@ public class WorkerProcessResult {
 	public DexTaskSwapLogRecord newLogRecord() {
 		DexTaskSwapLogRecord log = new DexTaskSwapLogRecord();
 		log.setSwapId(this.taskRecord.getId());
-		log.setTaskSnapshot(GSONWriter.toJsonString(taskRecord));
+		log.setTaskSnapshot(GSONWriter.toJsonStringSafe(taskRecord));
 		log.setSuccessFlag(isSuccess);
 		if(!this.isSuccess) {
-			log.setErrorposition(this.worker.getName() + ":" + this.errorPosition);
+			log.setErrorposition(this.workerName + ":" + this.errorPosition);
 			log.setErrorcode(this.errorCode);
-			log.setErrorposition(this.errorMessage);
+			log.setErrormessage(this.errorMessage);
 			if(exception != null) {
 				log.setStacktrace(Throwables.getStackTraceAsString(exception));
 			}
@@ -37,8 +38,8 @@ public class WorkerProcessResult {
 
 		public Builder(SwapTaskWorker worker, DexTaskSwapRecord taskRecord) {
 			this.result = new WorkerProcessResult();
-			this.result.worker = worker.getClass();
-			this.result.taskRecord = taskRecord;
+			this.result.workerName = worker.getName();
+			this.result.taskRecord = taskRecord.into(DexTaskSwap.class);
 		}
 
 		public WorkerProcessResult success() {

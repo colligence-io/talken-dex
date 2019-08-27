@@ -42,8 +42,6 @@ public class SwapFeeCollectTaskTransactionProcessor implements TaskTransactionPr
 
 			// update task as signed tx catched
 			taskRecord.setStatus(DexSwapStatusEnum.FEECOLLECT_TX_CATCH);
-			taskRecord.setFinishFlag(true);
-			taskRecord.setSuccessFlag(true);
 			taskRecord.update();
 		} catch(TaskTransactionProcessError error) {
 			return TaskTransactionProcessResult.error(error);

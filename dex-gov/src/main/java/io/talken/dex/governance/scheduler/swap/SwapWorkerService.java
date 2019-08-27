@@ -3,6 +3,7 @@ package io.talken.dex.governance.scheduler.swap;
 import io.talken.common.persistence.enums.DexSwapStatusEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskSwapRecord;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.GovSettings;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
@@ -39,9 +40,6 @@ public class SwapWorkerService implements ApplicationContextAware {
 	private final GovSettings govSettings;
 	private final DSLContext dslContext;
 	private final AdminAlarmService adminAlarmService;
-	@Qualifier("taskExecutor")
-	private final TaskExecutor taskExecutor;
-
 
 	private ApplicationContext applicationContext;
 
@@ -61,7 +59,6 @@ public class SwapWorkerService implements ApplicationContextAware {
 			String workerName = _asc.getName();
 			_asc.setChannel(getChannelKeyPair(workerName));
 			workers.put(_asc.getStartStatus(), _asc);
-			taskExecutor.execute(_asc);
 			logger.info("SwapTaskWorker for [{}] started.", _asc.getStartStatus());
 		}
 	}
@@ -79,7 +76,13 @@ public class SwapWorkerService implements ApplicationContextAware {
 
 	@Scheduled(fixedDelay = 1000, initialDelay = 5000)
 	private void checkTask() {
-		Result<DexTaskSwapRecord> tasks = dslContext.selectFrom(DEX_TASK_SWAP).where(DEX_TASK_SWAP.FINISH_FLAG.eq(false)).fetch();
+		Result<DexTaskSwapRecord> tasks = dslContext
+				.selectFrom(DEX_TASK_SWAP)
+				.where(
+						DEX_TASK_SWAP.FINISH_FLAG.eq(false)
+								.and(DEX_TASK_SWAP.SCHEDULE_TIMESTAMP.isNull().or(DEX_TASK_SWAP.SCHEDULE_TIMESTAMP.lt(UTCUtil.getNow())))
+				)
+				.fetch();
 
 		for(DexTaskSwapRecord task : tasks) {
 			SwapTaskWorker worker = workers.get(task.getStatus());
