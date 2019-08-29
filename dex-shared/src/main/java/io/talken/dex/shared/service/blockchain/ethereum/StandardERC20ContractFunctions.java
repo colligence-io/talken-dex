@@ -96,15 +96,15 @@ public abstract class StandardERC20ContractFunctions {
 
 			if(receipt.getLogs() != null && receipt.getLogs().size() > 0) {
 				for(Log log : receipt.getLogs()) {
-					if(log.getTopics() != null && log.getTopics().size() == 3 && log.getTopics().get(0).equals(encodedTransferEventSignature)) {
+					if(log.getTopics() != null && log.getTopics().contains(encodedTransferEventSignature)) {
 						try {
-							List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getNonIndexedParameters());
-							if(values != null && values.size() > 0 && values.get(0) instanceof Uint256) {
+							List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getParameters());
+							if(values != null && values.size() == 3) {
 								rtn.add(
 										new TransferEvent(
-												new Address(log.getTopics().get(1)).toString(),
-												new Address(log.getTopics().get(2)).toString(),
-												((Uint256) values.get(0)).getValue()
+												((Address) values.get(0)).toString(),
+												((Address) values.get(1)).toString(),
+												((Uint256) values.get(2)).getValue()
 										)
 								);
 							}
