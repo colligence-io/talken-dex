@@ -105,7 +105,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 			} catch(Exception ex) {
 				logger.exception(ex);
 				logRecord.setStatus(BctxStatusEnum.FAILED);
-				logRecord.setErrorcode(ex.getClass().getSimpleName());
+				logRecord.setErrorcode("Exception");
 				logRecord.setErrormessage(ex.getMessage());
 			}
 
