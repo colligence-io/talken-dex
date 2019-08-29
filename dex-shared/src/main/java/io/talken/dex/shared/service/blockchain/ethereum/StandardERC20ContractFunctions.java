@@ -1,7 +1,6 @@
 package io.talken.dex.shared.service.blockchain.ethereum;
 
 import io.talken.common.util.PrefixedLogger;
-import lombok.Data;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
@@ -91,8 +90,8 @@ public abstract class StandardERC20ContractFunctions {
 		private static final Event transferEvent = StandardERC20ContractFunctions.transferEvent();
 		private static final String encodedTransferEventSignature = EventEncoder.encode(transferEvent);
 
-		public static List<TransferEvent> getTransferEvents(TransactionReceipt receipt) {
-			List<TransferEvent> rtn = new ArrayList<>();
+		public static List<EthereumTxReceipt.EthereumTransferEventData> getTransferEvents(TransactionReceipt receipt) {
+			List<EthereumTxReceipt.EthereumTransferEventData> rtn = new ArrayList<>();
 
 			if(receipt.getLogs() != null && receipt.getLogs().size() > 0) {
 				for(Log log : receipt.getLogs()) {
@@ -100,13 +99,12 @@ public abstract class StandardERC20ContractFunctions {
 						try {
 							List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getParameters());
 							if(values != null && values.size() == 3) {
-								rtn.add(
-										new TransferEvent(
-												((Address) values.get(0)).toString(),
-												((Address) values.get(1)).toString(),
-												((Uint256) values.get(2)).getValue()
-										)
-								);
+								EthereumTxReceipt.EthereumTransferEventData ted = new EthereumTxReceipt.EthereumTransferEventData();
+								ted.setContract(receipt.getTo());
+								ted.setFrom(((Address) values.get(0)).toString());
+								ted.setTo(((Address) values.get(1)).toString());
+								ted.setValue(((Uint256) values.get(2)).getValue());
+								rtn.add(ted);
 							}
 						} catch(Exception ex) {
 							logger.exception(ex, "Cannot decode ABI from txReceipt");
@@ -116,19 +114,6 @@ public abstract class StandardERC20ContractFunctions {
 			}
 
 			return rtn;
-		}
-	}
-
-	@Data
-	public static class TransferEvent {
-		String from;
-		String to;
-		BigInteger amount;
-
-		private TransferEvent(String from, String to, BigInteger amount) {
-			this.from = from;
-			this.to = to;
-			this.amount = amount;
 		}
 	}
 

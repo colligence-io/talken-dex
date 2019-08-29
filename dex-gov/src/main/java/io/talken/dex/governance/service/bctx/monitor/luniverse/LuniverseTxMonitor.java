@@ -6,10 +6,13 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
+import io.talken.dex.shared.service.blockchain.ethereum.EthereumTxReceipt;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
@@ -39,6 +42,8 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 	private ServiceStatusService<DexGovStatus> ssService;
 
 	private static final int MAXIMUM_LOOP = 1000; // get 100 blocks per loop, for reduce crawl load.
+	private static final String COLLECTION_NAME = "luniverse_txReceipt";
+
 
 	@PostConstruct
 	private void init() {
@@ -46,7 +51,11 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 			ssService.status().getTxMonitor().getLuniverse().setLastBlock(null);
 			ssService.save();
 
-			mongoTemplate.dropCollection(LuniverseTxReceiptDocument.class);
+			mongoTemplate.dropCollection(COLLECTION_NAME);
+			mongoTemplate.createCollection(COLLECTION_NAME);
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("transfers.contract", Sort.Direction.ASC));
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("transfers.from", Sort.Direction.ASC));
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("transfers.to", Sort.Direction.ASC));
 		}
 	}
 
@@ -100,7 +109,7 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 
 						callBlockHandlerStack(block);
 
-						List<LuniverseTxReceiptDocument> txReceiptDocuments = new ArrayList<>();
+						List<EthereumTxReceipt> txReceiptDocuments = new ArrayList<>();
 
 						if(block.getTransactions().size() > 0) {
 							for(EthBlock.TransactionResult tx : block.getTransactions()) {
@@ -117,7 +126,7 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 									Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(transaction.getHash()).send().getTransactionReceipt();
 									if(opt_receipt.isPresent()) {
 										callTxHandlerStack(opt_receipt.get());
-										txReceiptDocuments.add(LuniverseTxReceiptDocument.from(transaction, opt_receipt.get()));
+										txReceiptDocuments.add(EthereumTxReceipt.from(transaction, opt_receipt.get()));
 									} else {
 										logger.error("Cannot get tx receipt from network, cancel monitoring");
 										break;
@@ -133,8 +142,9 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 						ssService.status().getTxMonitor().getLuniverse().setLastBlockTimestamp(UTCUtil.ts2ldt(block.getTimestamp().longValue()));
 						ssService.save();
 
-						for(LuniverseTxReceiptDocument txrDoc : txReceiptDocuments) {
-							mongoTemplate.save(txrDoc);
+						for(EthereumTxReceipt txrDoc : txReceiptDocuments) {
+							logger.logObjectAsJSON(txrDoc);
+							mongoTemplate.save(txrDoc, COLLECTION_NAME);
 						}
 
 						cursor = block.getNumber();
