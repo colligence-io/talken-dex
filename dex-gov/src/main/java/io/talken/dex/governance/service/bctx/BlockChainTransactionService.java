@@ -3,7 +3,6 @@ package io.talken.dex.governance.service.bctx;
 
 import com.google.common.base.Throwables;
 import io.talken.common.exception.TalkenException;
-import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
