@@ -10,7 +10,6 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.common.util.integration.rest.RestApiClient;
-import io.talken.common.util.integration.rest.StringRestApiResponse;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.GovSettings;
 import org.jooq.DSLContext;
@@ -58,7 +57,7 @@ public class TalkenWalletService {
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("x-access-token", token);
 
-		IntegrationResult<StringRestApiResponse> wallets = RestApiClient.requestGet(apiUrl + "/api/v1/wallet", headers, null, StringRestApiResponse.class);
+		IntegrationResult<TalkenWalletRawResponse> wallets = RestApiClient.requestGet(apiUrl + "/api/v1/wallet", headers, null, TalkenWalletRawResponse.class);
 
 		if(wallets.isSuccess()) {
 			String jsonString = wallets.getData().getData();
