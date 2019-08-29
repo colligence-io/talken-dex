@@ -180,7 +180,9 @@ public class TalkRewardBctxService {
 				}
 			}
 
-			alarmService.info(logger, "{} ({} {}) reward distribution tx queued", count, amount.stripTrailingZeros().toPlainString(), talkSymbol);
+			if(count > 0) {
+				alarmService.info(logger, "{} ({} {}) reward distribution tx queued", count, amount.stripTrailingZeros().toPlainString(), talkSymbol);
+			}
 		}
 	}
 }
