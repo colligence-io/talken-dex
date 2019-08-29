@@ -53,6 +53,7 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 
 			mongoTemplate.dropCollection(COLLECTION_NAME);
 			mongoTemplate.createCollection(COLLECTION_NAME);
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("blockNumber", Sort.Direction.DESC));
 			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("transfers.contract", Sort.Direction.ASC));
 			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("transfers.from", Sort.Direction.ASC));
 			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("transfers.to", Sort.Direction.ASC));

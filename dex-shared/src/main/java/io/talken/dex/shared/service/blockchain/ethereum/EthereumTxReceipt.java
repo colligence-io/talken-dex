@@ -13,7 +13,7 @@ import java.util.List;
 public class EthereumTxReceipt {
 	@Id
 	private String id;
-
+	private BigInteger blockNumber;
 	private Transaction tx;
 	private TransactionReceipt receipt;
 	private List<EthereumTransferEventData> transfers;
@@ -21,6 +21,7 @@ public class EthereumTxReceipt {
 	public static EthereumTxReceipt from(Transaction tx, TransactionReceipt receipt) {
 		EthereumTxReceipt rtn = new EthereumTxReceipt();
 		rtn.id = tx.getHash();
+		rtn.blockNumber = tx.getBlockNumber();
 		rtn.tx = tx;
 		rtn.receipt = receipt;
 		rtn.transfers = new ArrayList<>();
