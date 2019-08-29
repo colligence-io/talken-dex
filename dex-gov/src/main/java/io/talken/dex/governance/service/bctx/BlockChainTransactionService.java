@@ -1,6 +1,9 @@
 package io.talken.dex.governance.service.bctx;
 
 
+import com.google.common.base.Throwables;
+import io.talken.common.exception.TalkenException;
+import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
@@ -102,11 +105,21 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 					logRecord.setErrorcode("NoTxSender");
 					logRecord.setErrormessage("TxSender " + bctxRecord.getBctxType() + " not found");
 				}
+			} catch(TalkenException ex) {
+				logRecord.setStatus(BctxStatusEnum.FAILED);
+				logRecord.setErrorcode(ex.getClass().getSimpleName());
+				logRecord.setErrormessage(ex.getMessage());
 			} catch(Exception ex) {
 				logger.exception(ex);
 				logRecord.setStatus(BctxStatusEnum.FAILED);
 				logRecord.setErrorcode("Exception");
-				logRecord.setErrormessage(ex.getMessage());
+				StringBuilder sb = new StringBuilder(ex.getClass().getSimpleName()).append(" : ").append(ex.getMessage()).append("\nStacktrace :\n");
+				try {
+					sb.append(Throwables.getStackTraceAsString(ex));
+				} catch(Exception ex2) {
+					logger.exception(ex2);
+				}
+				logRecord.setErrormessage(sb.toString());
 			}
 
 			try {
