@@ -143,7 +143,6 @@ public class LuniverseTxMonitor extends TxMonitor<EthBlock.Block, TransactionRec
 						ssService.save();
 
 						for(EthereumTxReceipt txrDoc : txReceiptDocuments) {
-							logger.logObjectAsJSON(txrDoc);
 							mongoTemplate.save(txrDoc, COLLECTION_NAME);
 						}
 
