@@ -3,7 +3,6 @@ package io.talken.dex.governance.service.integration.signer;
 import com.google.api.client.http.HttpHeaders;
 import io.talken.common.util.ByteArrayUtils;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.common.util.integration.rest.RestApiClient;
 import io.talken.common.util.integration.slack.AdminAlarmService;
@@ -47,27 +46,27 @@ public class SignServerService {
 	private static String introduceUrl;
 	private static String answerUrl;
 
-	// token update before expires, at maximum
-	private static final int TOKEN_UPDATE_BEFORE_EXPIRES_MAX = 120;
+	private SignServerAccessToken accessToken = new SignServerAccessToken();
 
-	private static String token;
-	private static long tokenExpires = 0;
-	private static long updateBefore = 0;
-	private static Map<String, String> answers = new HashMap<>();
+	private final static Object updateLock = new Object();
 
 	@PostConstruct
 	private void init() {
 		signingUrl = govSettings.getIntegration().getSignServer().getAddr() + "/sign";
 		introduceUrl = govSettings.getIntegration().getSignServer().getAddr() + "/introduce";
 		answerUrl = govSettings.getIntegration().getSignServer().getAddr() + "/answer";
-		updateAccessToken();
+		if(!updateAccessToken()) {
+			throw new IllegalStateException("Cannot get signServer access token");
+		}
 	}
 
 	@Scheduled(fixedDelay = 1000, initialDelay = 3000)
 	private void checkAccessToken() {
-		if(tokenExpires == 0 || tokenExpires - updateBefore < UTCUtil.getNowTimestamp_s()) {
-			if(!updateAccessToken()) {
-				adminAlarmService.error(logger, "Cannot Update SignServer Token");
+		synchronized(updateLock) {
+			if(!accessToken.isValid() || accessToken.needsUpdate()) {
+				if(!updateAccessToken()) {
+					adminAlarmService.error(logger, "Cannot Update SignServer Token");
+				}
 			}
 		}
 	}
@@ -113,40 +112,36 @@ public class SignServerService {
 				newAnswers.put(_kv.getKey(), Base64.getEncoder().encodeToString(kanswer));
 			}
 
-			token = answerResult.getData().getData().getWelcomePresent();
-			tokenExpires = answerResult.getData().getData().getExpires();
-			updateBefore = Math.min((tokenExpires - UTCUtil.getNowTimestamp_s()) * 80 / 100, TOKEN_UPDATE_BEFORE_EXPIRES_MAX);
-			answers = newAnswers;
+			SignServerAccessToken newToken = new SignServerAccessToken();
+			newToken.setToken(answerResult.getData().getData().getWelcomePresent());
+			newToken.setTokenExpires(answerResult.getData().getData().getExpires());
+			newToken.setAnswers(newAnswers);
+			this.accessToken = newToken;
 
-			logger.info("Received new signServer Access Token, expires in {} secs, will update in {} secs", tokenExpires - UTCUtil.getNowTimestamp_s(), tokenExpires - UTCUtil.getNowTimestamp_s() - updateBefore);
+			logger.info("Received new signServer Access Token, expires in {} secs, will update in {} secs", newToken.getRemainedTTL(), newToken.getRemainedTBU());
 			return true;
 		} catch(Exception e) {
-			token = null;
-			tokenExpires = 0;
-			answers = new HashMap<>();
+			this.accessToken = new SignServerAccessToken();
 			logger.exception(e);
 			return false;
 		}
 	}
 
 	private IntegrationResult<SignServerSignResponse> requestSign(String bc, String address, byte[] message) throws SigningException {
-		if(token == null) {
-			if(!updateAccessToken()) {
+		synchronized(updateLock) {
+			if(this.accessToken == null) {
 				throw new SigningException(address, "Cannot request sign, access token is not valid");
 			}
 		}
-
-		if(!answers.containsKey(bc + ":" + address))
-			throw new SigningException(address, "Cannot find ssk");
 
 		SignServerSignRequest request = new SignServerSignRequest();
 		request.setAddress(address);
 		request.setType(bc);
 		request.setData(ByteArrayUtils.toHexString(message));
-		request.setAnswer(answers.get(bc + ":" + address));
+		request.setAnswer(this.accessToken.getAnswers().get(bc + ":" + address));
 
 		HttpHeaders headers = new HttpHeaders();
-		headers.setAuthorization("Bearer " + token);
+		headers.setAuthorization("Bearer " + this.accessToken.getToken());
 		return RestApiClient.requestPost(signingUrl, headers, request, SignServerSignResponse.class);
 	}
 
