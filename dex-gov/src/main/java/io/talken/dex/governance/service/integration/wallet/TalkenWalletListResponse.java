@@ -11,9 +11,6 @@ import java.util.ArrayList;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class TalkenWalletListResponse extends ArrayList<TalkenWalletListResponse.Wallet> implements RestApiResponseInterface {
-	private String code;
-	private String message;
-
 	@Override
 	public boolean checkHttpResponse(int httpStatus) {
 		return RestApiResponseInterface.standardHttpSuccessCheck(httpStatus);
@@ -26,12 +23,12 @@ public class TalkenWalletListResponse extends ArrayList<TalkenWalletListResponse
 
 	@Override
 	public String resultCode() {
-		return code;
+		return "OK";
 	}
 
 	@Override
 	public String resultMessage() {
-		return message;
+		return "OK";
 	}
 
 	@Data

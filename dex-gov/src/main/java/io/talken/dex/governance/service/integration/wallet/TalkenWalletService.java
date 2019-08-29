@@ -1,12 +1,17 @@
 package io.talken.dex.governance.service.integration.wallet;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.http.HttpHeaders;
+import com.google.gson.JsonParser;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.persistence.jooq.tables.records.UserRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.common.util.integration.rest.RestApiClient;
+import io.talken.common.util.integration.rest.StringRestApiResponse;
+import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.GovSettings;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +30,9 @@ public class TalkenWalletService {
 
 	@Autowired
 	private GovSettings govSettings;
+
+	@Autowired
+	private AdminAlarmService adminAlarmService;
 
 	@Autowired
 	private DSLContext dslContext;
@@ -50,21 +58,39 @@ public class TalkenWalletService {
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("x-access-token", token);
 
-		IntegrationResult<TalkenWalletListResponse> wallets = RestApiClient.requestGet(apiUrl + "/api/v1/wallet", headers, null, TalkenWalletListResponse.class);
+		IntegrationResult<StringRestApiResponse> wallets = RestApiClient.requestGet(apiUrl + "/api/v1/wallet", headers, null, StringRestApiResponse.class);
 
 		if(wallets.isSuccess()) {
-			Optional<String> address = wallets.getData().stream()
-					.filter((_w) -> {
-						return _w.getType() != null && _w.getType().equalsIgnoreCase(type);
-					})
-					.filter((_w) -> {
-						return _w.getSymbol() != null && _w.getSymbol().equalsIgnoreCase(symbol);
-					})
-					.map(_w -> { return _w.getAddress();})
-					.filter(_a -> _a != null)
-					.findAny();
+			String jsonString = wallets.getData().getData();
 
-			return new ObjectPair<>(true, address.orElse(null));
+			if(new JsonParser().parse(jsonString).isJsonArray()) {
+				try {
+					ObjectMapper mapper = new ObjectMapper();
+					mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+					TalkenWalletListResponse walletsData = mapper.readValue(jsonString, TalkenWalletListResponse.class);
+
+					Optional<String> address = walletsData.stream()
+							.filter((_w) -> {
+								return _w.getType() != null && _w.getType().equalsIgnoreCase(type);
+							})
+							.filter((_w) -> {
+								return _w.getSymbol() != null && _w.getSymbol().equalsIgnoreCase(symbol);
+							})
+							.map(_w -> { return _w.getAddress();})
+							.filter(_a -> _a != null)
+							.findAny();
+
+					return new ObjectPair<>(true, address.orElse(null));
+				} catch(Exception ex) {
+					// FIXME : failed parse json, assume it's error
+					adminAlarmService.exception(logger, ex);
+					return new ObjectPair<>(false, null);
+				}
+
+			} else {
+				// FIXME : not jsonarray, assume it's error
+				return new ObjectPair<>(false, null);
+			}
 		} else {
 			throw new IntegrationException(wallets);
 		}
