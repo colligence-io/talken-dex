@@ -114,7 +114,7 @@ public class TalkRewardBctxService {
 			while(rewards.hasNext()) {
 				// luniverse MainChain tx rate adjustment
 				// this is request from lambda256
-				if(count > coolDownTxNum) {
+				if(count >= coolDownTxNum) {
 					// cool down distribute after 100 txs.
 					break;
 				} else {
