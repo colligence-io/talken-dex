@@ -61,10 +61,10 @@ public abstract class AbstractStellarTxSender extends TxSender {
 
 		log.setRequest(JSONWriter.toJsonString(stellarRawTxInfo));
 
-		logger.debug("Request sign for {} {}", source.getAccountId(), stellarRawTxInfo.getHash());
+		logger.info("[BCTX#{}] Request sign for {} {}", bctx.getId(), source.getAccountId(), stellarRawTxInfo.getHash());
 		signServer().signStellarTransaction(tx);
 
-		logger.debug("Sending TX to stellar network.");
+		logger.info("[BCTX#{}] Sending TX to stellar network.", bctx.getId());
 		SubmitTransactionResponse txResponse = server.submitTransaction(tx);
 
 		Map<String, Object> resObj = new HashMap<>();

@@ -90,10 +90,10 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
 		log.setRequest(JSONWriter.toJsonString(rawTx));
 
-		logger.debug("Request sign for {} bctx#{}", bctx.getAddressFrom(), bctx.getId());
+		logger.info("[BCTX#{}] Request sign for {} bctx#{}", bctx.getId(), bctx.getAddressFrom());
 		byte[] txSigned = signServer().signEthereumTransaction(rawTx, bctx.getAddressFrom());
 
-		logger.debug("Sending TX to ethereum network.");
+		logger.info("[BCTX#{}] Sending TX to ethereum network.", bctx.getId());
 		EthSendTransaction ethSendTx = web3j.ethSendRawTransaction(Numeric.toHexString(txSigned)).send();
 
 		log.setResponse(JSONWriter.toJsonString(ethSendTx));
