@@ -1,15 +1,17 @@
 package io.talken.dex.governance.service.integration.signer;
 
 import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpStatusCodes;
 import io.talken.common.util.ByteArrayUtils;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.common.util.integration.rest.RestApiClient;
+import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.GovSettings;
 import io.talken.dex.shared.exception.SigningException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.Transaction;
@@ -38,12 +40,19 @@ public class SignServerService {
 	@Autowired
 	private GovSettings govSettings;
 
+	@Autowired
+	private AdminAlarmService adminAlarmService;
+
 	private static String signingUrl;
 	private static String introduceUrl;
 	private static String answerUrl;
 
-	private static String token;
+	// token update before expires, at maximum
+	private static final int TOKEN_UPDATE_BEFORE_EXPIRES_MAX = 120;
 
+	private static String token;
+	private static long tokenExpires = 0;
+	private static long updateBefore = 0;
 	private static Map<String, String> answers = new HashMap<>();
 
 	@PostConstruct
@@ -54,7 +63,16 @@ public class SignServerService {
 		updateAccessToken();
 	}
 
-	private synchronized void updateAccessToken() {
+	@Scheduled(fixedDelay = 1000, initialDelay = 3000)
+	private void checkAccessToken() {
+		if(tokenExpires == 0 || tokenExpires - updateBefore < UTCUtil.getNowTimestamp_s()) {
+			if(!updateAccessToken()) {
+				adminAlarmService.error(logger, "Cannot Update SignServer Token");
+			}
+		}
+	}
+
+	private synchronized boolean updateAccessToken() {
 		try {
 			String privateKey = govSettings.getIntegration().getSignServer().getAppKey();
 			SignServerIntroduceRequest request = new SignServerIntroduceRequest();
@@ -64,7 +82,7 @@ public class SignServerService {
 
 			if(!introResult.isSuccess()) {
 				logger.error("Cannot get signServerAccess  Token : {}, {}", introResult.getErrorCode(), introResult.getErrorMessage());
-				return;
+				return false;
 			}
 
 			String question = introResult.getData().getData().getQuestion();
@@ -84,7 +102,7 @@ public class SignServerService {
 
 			if(!answerResult.isSuccess()) {
 				logger.error("Cannot get signServer Acces Token : {}, {}", answerResult.getErrorCode(), answerResult.getErrorMessage());
-				return;
+				return false;
 			}
 
 			Map<String, String> newAnswers = new HashMap<>();
@@ -95,38 +113,27 @@ public class SignServerService {
 				newAnswers.put(_kv.getKey(), Base64.getEncoder().encodeToString(kanswer));
 			}
 
-			logger.info("Received new signServer Access Token");
-
 			token = answerResult.getData().getData().getWelcomePresent();
+			tokenExpires = answerResult.getData().getData().getExpires();
+			updateBefore = Math.min((tokenExpires - UTCUtil.getNowTimestamp_s()) * 80 / 100, TOKEN_UPDATE_BEFORE_EXPIRES_MAX);
 			answers = newAnswers;
 
+			logger.info("Received new signServer Access Token, expires in {} secs, will update in {} secs", tokenExpires - UTCUtil.getNowTimestamp_s(), tokenExpires - UTCUtil.getNowTimestamp_s() - updateBefore);
+			return true;
 		} catch(Exception e) {
 			token = null;
+			tokenExpires = 0;
 			answers = new HashMap<>();
 			logger.exception(e);
+			return false;
 		}
 	}
 
 	private IntegrationResult<SignServerSignResponse> requestSign(String bc, String address, byte[] message) throws SigningException {
-		if(token == null) updateAccessToken();
-
-		IntegrationResult<SignServerSignResponse> result = requestSign2(bc, address, message);
-
-		// case of unauthorized result, mostly case of token expiration
-		// try update access token and send request again
-		if(String.valueOf(HttpStatusCodes.STATUS_CODE_UNAUTHORIZED).equals(result.getErrorCode())) {
-			logger.debug("ss unauthorized, token might be expired, getting new one");
-			updateAccessToken();
-
-			result = requestSign2(bc, address, message);
-		}
-
-		return result;
-	}
-
-	private IntegrationResult<SignServerSignResponse> requestSign2(String bc, String address, byte[] message) throws SigningException {
 		if(token == null) {
-			throw new SigningException(address, "Cannot request sign, access token is null");
+			if(!updateAccessToken()) {
+				throw new SigningException(address, "Cannot request sign, access token is not valid");
+			}
 		}
 
 		if(!answers.containsKey(bc + ":" + address))
@@ -144,8 +151,10 @@ public class SignServerService {
 	}
 
 	public void signStellarTransaction(Transaction tx) throws SigningException {
-		String accountId = tx.getSourceAccount();
+		signStellarTransaction(tx, tx.getSourceAccount());
+	}
 
+	public void signStellarTransaction(Transaction tx, String accountId) throws SigningException {
 		IntegrationResult<SignServerSignResponse> signResult = requestSign("XLM", accountId, tx.hash());
 
 		if(!signResult.isSuccess()) {
@@ -161,7 +170,7 @@ public class SignServerService {
 		try {
 			ByteArrayOutputStream publicKeyBytesStream = new ByteArrayOutputStream();
 			XdrDataOutputStream xdrOutputStream = new XdrDataOutputStream(publicKeyBytesStream);
-			PublicKey.encode(xdrOutputStream, KeyPair.fromAccountId(tx.getSourceAccount()).getXdrPublicKey());
+			PublicKey.encode(xdrOutputStream, KeyPair.fromAccountId(accountId).getXdrPublicKey());
 			byte[] publicKeyBytes = publicKeyBytesStream.toByteArray();
 			byte[] signatureHintBytes = Arrays.copyOfRange(publicKeyBytes, publicKeyBytes.length - 4, publicKeyBytes.length);
 			signatureHint.setSignatureHint(signatureHintBytes);
@@ -184,6 +193,10 @@ public class SignServerService {
 		byte[] hexMessage = Hash.sha3(encodedTx);
 
 		IntegrationResult<SignServerSignResponse> signResult = requestSign("ETH", from, hexMessage);
+
+		if(!signResult.isSuccess()) {
+			throw new SigningException(from, signResult.getErrorCode() + " : " + signResult.getErrorMessage());
+		}
 
 		byte[] sigBytes = ByteArrayUtils.fromHexString(signResult.getData().getData().getSignature());
 
