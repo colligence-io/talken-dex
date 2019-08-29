@@ -4,7 +4,6 @@ package io.talken.dex.governance.service.bctx;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
-import io.talken.common.persistence.jooq.tables.pojos.BctxLog;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.collection.SingleKeyObject;
 import io.talken.dex.governance.service.TokenMeta;
@@ -46,7 +45,7 @@ public abstract class TxSender implements SingleKeyObject<BlockChainPlatformEnum
 		} catch(BctxException ex) {
 			throw ex;
 		} catch(Exception ex) {
-			throw new BctxException(ex.getClass().getSimpleName(), ex.getMessage());
+			throw new BctxException(ex, ex.getClass().getSimpleName(), ex.getMessage());
 		}
 	}
 
