@@ -195,15 +195,16 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 							txr.setTo(((Address) values.get(1)).toString());
 							txr.setValue(((Uint256) values.get(2)).getValue().toString());
 							txr.setInput("deprecated"); // like etherscan
-
-							Erc20ContractInfoService.Erc20ContractInfo erc20ContractInfo = erc20ContractInfoService.getErc20ContractInfo(web3j, txr.getContractAddress());
-							txr.setTokenName(erc20ContractInfo.getName());
-							txr.setTokenSymbol(erc20ContractInfo.getSymbol());
-							txr.setTokenDecimal(erc20ContractInfo.getDecimals().toString());
-
+							Erc20ContractInfoService.Erc20ContractInfo erc20ContractInfo = erc20ContractInfoService.getErc20ContractInfo(web3j, receipt.getTo());
+							if(erc20ContractInfo != null) {
+								txr.setTokenName(erc20ContractInfo.getName());
+								txr.setTokenSymbol(erc20ContractInfo.getSymbol());
+								txr.setTokenDecimal(erc20ContractInfo.getDecimals().toString());
+							} else {
+								logger.warn("Cannot get ERC20 contract info for {}, txReceipt is will not stored properly", receipt.getTo());
+							}
 							rtn.add(txr);
 						}
-
 					}
 
 				} catch(Exception ex) {
