@@ -80,7 +80,7 @@ public class LuniverseTxMonitor extends AbstractEthereumTxMonitor {
 		return true; // COLLECT ALL TRANSACTIONS
 	}
 
-	@Scheduled(fixedDelay = 15000, initialDelay = 5000)
+	@Scheduled(fixedDelay = 3000, initialDelay = 5000)
 	private void getBlocks() {
 		Web3j web3j;
 		try {

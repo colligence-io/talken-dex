@@ -35,7 +35,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 	@Autowired
 	private Erc20ContractInfoService erc20ContractInfoService;
 
-	private static final int MAXIMUM_LOOP = 100; // get 100 blocks per loop, for reduce crawl load.
+	private static final int MAXIMUM_LOOP = 1000; // get 1000 blocks per loop, for reduce crawl load.
 	private final String networkName;
 
 	public AbstractEthereumTxMonitor(PrefixedLogger logger, String networkName) {
