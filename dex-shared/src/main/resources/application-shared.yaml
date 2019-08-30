@@ -25,7 +25,9 @@ talken:
       deanchorFeeRateTalkFactor: 0.5
       refundRetryInterval: 600
       refundMaxRetry: 5
-
+spring:
+  cache:
+    type: redis
 ################################################################################
 ## LOCAL Profile                                                               #
 ################################################################################

@@ -1,4 +1,4 @@
-package io.talken.dex.api.config;
+package io.talken.dex.shared.config;
 
 import io.talken.common.persistence.vault.VaultSecretReader;
 import io.talken.common.persistence.vault.data.VaultSecretDataRedis;

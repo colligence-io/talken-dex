@@ -80,6 +80,7 @@ subprojects {
 
         // ethereum web3j sdk
         compile('org.web3j:core:4.3.0')
+        compile('org.web3j:contracts:4.3.0')
 
         // devtools
         runtime('org.springframework.boot:spring-boot-devtools')

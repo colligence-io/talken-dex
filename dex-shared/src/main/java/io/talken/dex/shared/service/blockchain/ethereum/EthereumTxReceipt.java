@@ -1,7 +1,15 @@
 package io.talken.dex.shared.service.blockchain.ethereum;
 
+import io.talken.common.util.PrefixedLogger;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.web3j.abi.EventEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Event;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
@@ -26,7 +34,7 @@ public class EthereumTxReceipt {
 		rtn.receipt = receipt;
 		rtn.transfers = new ArrayList<>();
 		if(receipt.isStatusOK()) {
-			rtn.transfers.addAll(StandardERC20ContractFunctions.Decoder.getTransferEvents(receipt));
+			rtn.transfers.addAll(Decoder.getTransferEvents(receipt));
 
 			if(tx.getValue().compareTo(BigInteger.ZERO) != 0) {
 				EthereumTransferEventData ted = new EthereumTransferEventData();
@@ -39,6 +47,39 @@ public class EthereumTxReceipt {
 		return rtn;
 	}
 
+
+	public static class Decoder {
+		private static final PrefixedLogger logger = PrefixedLogger.getLogger(Decoder.class);
+
+		private static final Event transferEvent = StandardERC20ContractFunctions.transferEvent();
+		private static final String encodedTransferEventSignature = EventEncoder.encode(transferEvent);
+
+		public static List<EthereumTxReceipt.EthereumTransferEventData> getTransferEvents(TransactionReceipt receipt) {
+			List<EthereumTxReceipt.EthereumTransferEventData> rtn = new ArrayList<>();
+
+			if(receipt.getLogs() != null && receipt.getLogs().size() > 0) {
+				for(Log log : receipt.getLogs()) {
+					if(log.getTopics() != null && log.getTopics().contains(encodedTransferEventSignature)) {
+						try {
+							List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getParameters());
+							if(values != null && values.size() == 3) {
+								EthereumTxReceipt.EthereumTransferEventData ted = new EthereumTxReceipt.EthereumTransferEventData();
+								ted.setContract(receipt.getTo());
+								ted.setFrom(((Address) values.get(0)).toString());
+								ted.setTo(((Address) values.get(1)).toString());
+								ted.setValue(((Uint256) values.get(2)).getValue());
+								rtn.add(ted);
+							}
+						} catch(Exception ex) {
+							logger.exception(ex, "Cannot decode ABI from txReceipt");
+						}
+					}
+				}
+			}
+
+			return rtn;
+		}
+	}
 
 	@Data
 	public static class EthereumTransferEventData {

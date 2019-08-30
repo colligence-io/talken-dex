@@ -1,4 +1,4 @@
-package io.talken.dex.governance.config;
+package io.talken.dex.shared.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 import io.talken.common.persistence.vault.VaultSecretReader;

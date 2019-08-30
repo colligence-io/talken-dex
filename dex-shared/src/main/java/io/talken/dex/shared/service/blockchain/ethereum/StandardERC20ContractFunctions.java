@@ -1,29 +1,37 @@
 package io.talken.dex.shared.service.blockchain.ethereum;
 
-import io.talken.common.util.PrefixedLogger;
-import org.web3j.abi.EventEncoder;
-import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint256;
-import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.request.Transaction;
-import org.web3j.protocol.core.methods.response.EthCall;
-import org.web3j.protocol.core.methods.response.Log;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.utils.Convert;
+import org.web3j.abi.datatypes.generated.Uint8;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 
 public abstract class StandardERC20ContractFunctions {
+	public static Function name() {
+		return new Function(
+				"name",
+				Collections.emptyList(),
+				Collections.singletonList(new TypeReference<Utf8String>() {}));
+	}
+
+	public static Function symbol() {
+		return new Function(
+				"symbol",
+				Collections.emptyList(),
+				Collections.singletonList(new TypeReference<Utf8String>() {}));
+	}
+
+	public static Function decimals() {
+		return new Function(
+				"decimals",
+				Collections.emptyList(),
+				Collections.singletonList(new TypeReference<Uint8>() {}));
+	}
+
 	public static Function totalSupply() {
 		return new Function(
 				"totalSupply",
@@ -82,58 +90,5 @@ public abstract class StandardERC20ContractFunctions {
 						new TypeReference<Address>(true) {},
 						new TypeReference<Address>(true) {},
 						new TypeReference<Uint256>() {}));
-	}
-
-	public static class Decoder {
-		private static final PrefixedLogger logger = PrefixedLogger.getLogger(Decoder.class);
-
-		private static final Event transferEvent = StandardERC20ContractFunctions.transferEvent();
-		private static final String encodedTransferEventSignature = EventEncoder.encode(transferEvent);
-
-		public static List<EthereumTxReceipt.EthereumTransferEventData> getTransferEvents(TransactionReceipt receipt) {
-			List<EthereumTxReceipt.EthereumTransferEventData> rtn = new ArrayList<>();
-
-			if(receipt.getLogs() != null && receipt.getLogs().size() > 0) {
-				for(Log log : receipt.getLogs()) {
-					if(log.getTopics() != null && log.getTopics().contains(encodedTransferEventSignature)) {
-						try {
-							List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getParameters());
-							if(values != null && values.size() == 3) {
-								EthereumTxReceipt.EthereumTransferEventData ted = new EthereumTxReceipt.EthereumTransferEventData();
-								ted.setContract(receipt.getTo());
-								ted.setFrom(((Address) values.get(0)).toString());
-								ted.setTo(((Address) values.get(1)).toString());
-								ted.setValue(((Uint256) values.get(2)).getValue());
-								rtn.add(ted);
-							}
-						} catch(Exception ex) {
-							logger.exception(ex, "Cannot decode ABI from txReceipt");
-						}
-					}
-				}
-			}
-
-			return rtn;
-		}
-	}
-
-	public static BigDecimal getErc20BalanceOf(Web3j web3j, String contractAddress, String owner) throws Exception {
-		Function function = balanceOf(owner);
-
-		EthCall response = web3j.ethCall(
-				Transaction.createEthCallTransaction(
-						owner,
-						contractAddress,
-						FunctionEncoder.encode(function)
-				),
-				DefaultBlockParameterName.LATEST
-		).sendAsync().get();
-
-		List<Type> decoded = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
-
-		if(decoded.size() > 0)
-			return Convert.fromWei(decoded.get(0).getValue().toString(), Convert.Unit.ETHER);
-		else
-			return BigDecimal.ZERO;
 	}
 }
