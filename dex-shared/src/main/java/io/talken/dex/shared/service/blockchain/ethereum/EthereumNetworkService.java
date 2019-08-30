@@ -35,8 +35,6 @@ public class EthereumNetworkService {
 
 	private GasPriceOracleResult gasOracleResult = null;
 
-	private final Erc20ContractInfoService infoService;
-
 	@PostConstruct
 	private void init() {
 		if(dexSettings.getBcnode().getEthereum().getNetwork().equalsIgnoreCase("test")) {
@@ -50,15 +48,6 @@ public class EthereumNetworkService {
 		}
 		this.gasOracleApiUrl = dexSettings.getBcnode().getEthereum().getGasOracleUrl();
 		updateGasPrice();
-
-		try {
-			logger.logObjectAsJSON(infoService.getErc20ContractInfo(newClient(), "0x3D2A552fF721c7d2C84bad05Ba5481A90482d128"));
-			logger.logObjectAsJSON(infoService.getErc20ContractInfo(newClient(), "0x3D2A552fF721c7d2C84bad05Ba5481A90482d128"));
-			logger.logObjectAsJSON(infoService.getErc20ContractInfo(newClient(), "0x3D2A552fF721c7d2C84bad05Ba5481A90482d128"));
-
-		} catch(Exception ex) {
-			logger.exception(ex);
-		}
 	}
 
 	public Web3j newClient() {

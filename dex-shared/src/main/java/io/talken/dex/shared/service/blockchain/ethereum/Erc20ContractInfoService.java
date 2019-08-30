@@ -25,9 +25,8 @@ import java.util.List;
 public class Erc20ContractInfoService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumNetworkService.class);
 
-	@Cacheable(value = CacheConfig.CacheNames.ETH_ERC20_CONTRACT_INFO, key = "#{contractAddress}")
+	@Cacheable(value = CacheConfig.CacheNames.ETH_ERC20_CONTRACT_INFO, key = "#contractAddress")
 	public Erc20ContractInfo getErc20ContractInfo(Web3j web3j, String contractAddress) throws Exception {
-		logger.info("cache not hit");
 		Erc20ContractInfo rtn = new Erc20ContractInfo();
 		rtn.setName(getName(web3j, contractAddress));
 		rtn.setSymbol(getSymbol(web3j, contractAddress));

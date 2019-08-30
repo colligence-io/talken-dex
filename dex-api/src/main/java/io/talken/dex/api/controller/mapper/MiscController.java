@@ -14,10 +14,8 @@ import io.talken.dex.api.service.bc.LuniverseInfoService;
 import io.talken.dex.shared.exception.AssetConvertException;
 import io.talken.dex.shared.exception.DexException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -75,4 +73,16 @@ public class MiscController {
 	public DexResponse<LuniverseGasPriceResult> luniverseGasPrice() throws DexException {
 		return DexResponse.buildResponse(luniverseInfoService.getGasPriceAndLimit());
 	}
+
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_LUNIVERSE_TXLIST, method = RequestMethod.GET)
+	public DexResponse<LuniverseTxListResult> luniverseTxList(@RequestParam("address") String address, @RequestParam("contractaddress") String contractaddress, @RequestParam("sort") String sort, @RequestParam("page") Integer page, @RequestParam("offset") Integer offset) throws DexException {
+		Sort.Direction direction;
+		if(sort == null || !sort.equalsIgnoreCase("asc")) direction = Sort.Direction.DESC;
+		else direction = Sort.Direction.ASC;
+		if(page == null) page = 1;
+		if(offset == null) offset = 10;
+
+		return DexResponse.buildResponse(luniverseInfoService.getTxList(address, contractaddress, direction, page, offset));
+	}
 }
+
