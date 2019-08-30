@@ -11,7 +11,6 @@ import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.common.util.integration.rest.RestApiClient;
 import io.talken.common.util.integration.slack.AdminAlarmService;
-import io.talken.dex.governance.GovSettings;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,9 +20,6 @@ import static io.talken.common.persistence.jooq.Tables.USER;
 
 public class TalkenWalletService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TalkenWalletService.class);
-
-	@Autowired
-	private GovSettings govSettings;
 
 	@Autowired
 	private AdminAlarmService adminAlarmService;

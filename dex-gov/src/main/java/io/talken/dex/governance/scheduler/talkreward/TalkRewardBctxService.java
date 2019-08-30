@@ -129,6 +129,7 @@ public class TalkRewardBctxService {
 				try {
 					ObjectPair<Boolean, String> address = walletService.getAddress(rewardRecord.getUserId(), tm.getPlatform(), tm.getSymbol());
 					if(address.first().equals(false)) {
+						logger.debug("User {} does not have valid wallet, postpone reward action for 12 hours", rewardRecord.getUserId());
 						// User Wallet not created
 						// Postpone reward for 12 hours.
 						rewardRecord.setScheduleTimestamp(UTCUtil.getNow().plusHours(12));
@@ -141,7 +142,7 @@ public class TalkRewardBctxService {
 					if(userWalletAddress == null) {
 						// Luniverse address not found
 						// Postpone reward for 24 hours.
-						logger.error("User {} wallet does not containes {}(Luniverse) wallet address.");
+						logger.error("User {} wallet does not containes {}(Luniverse) wallet address.", rewardRecord.getUserId(), tm.getSymbol());
 						rewardRecord.setScheduleTimestamp(UTCUtil.getNow().plusHours(24));
 						rewardRecord.store();
 						continue;
