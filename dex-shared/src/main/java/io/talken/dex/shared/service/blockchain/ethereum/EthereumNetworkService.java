@@ -75,7 +75,7 @@ public class EthereumNetworkService {
 
 	public BigInteger getGasLimit(Web3j web3j) {
 		// TODO : calculate or get proper value
-		return new BigInteger("250000");
+		return new BigInteger("200000");
 
 //		EthBlock.Block lastBlock = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock();
 //		return lastBlock.getGasLimit();

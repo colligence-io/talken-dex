@@ -1,28 +1,28 @@
 package io.talken.dex.api.service;
 
 
+import ch.qos.logback.core.encoder.ByteArrayUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskDeanchorRecord;
-import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.dex.api.controller.dto.*;
-import io.talken.dex.api.service.integration.anchor.*;
 import io.talken.dex.api.service.integration.relay.RelayAddContentsResponse;
 import io.talken.dex.api.service.integration.relay.RelayEncryptedContent;
 import io.talken.dex.api.service.integration.relay.RelayMsgTypeEnum;
 import io.talken.dex.api.service.integration.relay.RelayServerService;
+import io.talken.dex.api.service.integration.relay.dto.RelayStellarRawTxDTO;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.exception.*;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
-import io.talken.dex.shared.service.blockchain.stellar.StellarRawTxInfo;
 import io.talken.dex.shared.service.blockchain.stellar.StellarSignVerifier;
+import io.talken.dex.shared.service.integration.anchor.*;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -30,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -64,6 +63,7 @@ public class AnchorService {
 
 	public AnchorResult anchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, AnchorRequest ancRequestBody) throws TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
 		String assetHolderAddress = tmService.getActiveHolderAccountAddress(assetCode);
+		ancRequestBody.setTo(assetHolderAddress);
 
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
 
@@ -78,49 +78,42 @@ public class AnchorService {
 		taskRecord.setAssetcode(assetCode);
 		taskRecord.setAmountraw(StellarConverter.actualToRaw(amount).longValueExact());
 
-		dslContext.attach(taskRecord);
-		taskRecord.store();
-
-		logger.info("{} generated. userId = {}", dexTaskId, userId);
-
-		AncServerAnchorRequest req = new AncServerAnchorRequest();
-		req.setTaskId(dexTaskId.getId());
-		req.setUid(String.valueOf(userId));
-		req.setFrom(privateWalletAddress);
-		req.setTo(assetHolderAddress);
-		req.setStellar(tradeWalletAddress);
-		req.setSymbol(assetCode);
-		req.setValue(amount.floatValue());
-		req.setMemo(UTCUtil.getNow().toString());
+		AncServerAnchorRequest anchor_request = new AncServerAnchorRequest();
+		anchor_request.setTaskId(dexTaskId.getId());
+		anchor_request.setUid(String.valueOf(userId));
+		anchor_request.setFrom(privateWalletAddress);
+		anchor_request.setTo(assetHolderAddress);
+		anchor_request.setStellar(tradeWalletAddress);
+		anchor_request.setSymbol(assetCode);
+		anchor_request.setValue(amount);
+		anchor_request.setMemo(UTCUtil.getNow().toString());
 
 		// request anchor monitor
-		IntegrationResult<AncServerAnchorResponse> anchorResult = anchorServerService.requestAnchor(req);
+		IntegrationResult<AncServerAnchorResponse> anchorResult = anchorServerService.requestAnchor(anchor_request);
 		if(!anchorResult.isSuccess()) {
-			// update task record
-			logger.error("{} failed. : {}", dexTaskId, anchorResult.toString());
-			taskRecord.setErrorposition("request anchor");
-			taskRecord.setErrorcode(anchorResult.getErrorCode());
-			taskRecord.setErrormessage(JSONWriter.toJsonStringSafe(anchorResult.getData()));
-			taskRecord.setSuccessFlag(false);
-			taskRecord.update();
-
 			throw new IntegrationException(anchorResult);
 		}
 
-		// update task record
+		// insert task record
 		taskRecord.setAncIndex(anchorResult.getData().getData().getIndex());
-		taskRecord.update();
-
+		dslContext.attach(taskRecord);
+		taskRecord.store();
+		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
 		// build relay contents
-		ancRequestBody.setTo(assetHolderAddress);
 		RelayEncryptedContent<AnchorRequest> encData;
 		try {
 			encData = new RelayEncryptedContent<>(ancRequestBody);
+			// set trans description
+			encData.addDescription("privateWalletAddress", taskRecord.getPrivateaddr());
+			encData.addDescription("tradeWalletAddress", taskRecord.getTradeaddr());
+			encData.addDescription("assetHolderAddress", taskRecord.getHolderaddr());
+			encData.addDescription("assetCode", taskRecord.getAssetcode());
+			encData.addDescription("amount", StellarConverter.rawToActualString(BigInteger.valueOf(taskRecord.getAmountraw())));
 		} catch(JsonProcessingException | GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
 
-			taskRecord.setErrorposition("encrypt data");
+			taskRecord.setErrorposition("encrypt relay data");
 			taskRecord.setErrorcode(e.getClass().getSimpleName());
 			taskRecord.setErrormessage(e.getMessage());
 			taskRecord.setSuccessFlag(false);
@@ -129,18 +122,11 @@ public class AnchorService {
 			throw new InternalServerErrorException(e);
 		}
 
-		// set trans description
-		encData.addDescription("privateWalletAddress", taskRecord.getPrivateaddr());
-		encData.addDescription("tradeWalletAddress", taskRecord.getTradeaddr());
-		encData.addDescription("assetHolderAddress", taskRecord.getHolderaddr());
-		encData.addDescription("assetCode", taskRecord.getAssetcode());
-		encData.addDescription("amount", StellarConverter.rawToActualString(BigInteger.valueOf(taskRecord.getAmountraw())));
-
 		// send relay addContents request
 		IntegrationResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.ANCHOR, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
-			logger.error("{} failed. {}", dexTaskId, relayResult);
+			logger.error("{} failed. {} {}", dexTaskId, relayResult.getErrorCode(), relayResult.getErrorMessage());
 
 			taskRecord.setErrorposition("request relay");
 			taskRecord.setErrorcode(relayResult.getErrorCode());
@@ -160,7 +146,6 @@ public class AnchorService {
 		taskRecord.update();
 
 		logger.debug("{} complete.", dexTaskId);
-
 
 		AnchorResult result = new AnchorResult();
 		result.setTaskId(dexTaskId.getId());
@@ -191,7 +176,7 @@ public class AnchorService {
 		return result;
 	}
 
-	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, Boolean feeByTalk) throws TokenMetaNotFoundException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, IntegrationException {
+	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, Boolean feeByTalk) throws TokenMetaNotFoundException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, IntegrationException, InternalServerErrorException {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 
 		amount = StellarConverter.scale(amount);
@@ -207,29 +192,11 @@ public class AnchorService {
 		taskRecord.setAmountraw(StellarConverter.actualToRaw(amount).longValueExact());
 		taskRecord.setFeebyctx(feeByTalk);
 
-		dslContext.attach(taskRecord);
-		taskRecord.store();
-
-		logger.info("{} generated. userId = {}", dexTaskId, userId);
-
 		// calculate fee
-		CalculateFeeResult feeResult;
-		try {
-			feeResult = feeCalculationService.calculateDeanchorFee(assetCode, amount, feeByTalk);
-		} catch(Exception ex) {
-			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
+		CalculateFeeResult feeResult = feeCalculationService.calculateDeanchorFee(assetCode, amount, feeByTalk);
 
-			taskRecord.setErrorposition("calculate fee");
-			taskRecord.setErrorcode(ex.getClass().getSimpleName());
-			taskRecord.setErrormessage(ex.getMessage());
-			taskRecord.setSuccessFlag(false);
-			taskRecord.update();
-
-			throw ex;
-		}
-
-		// build encData for deanchor request
-		RelayEncryptedContent<StellarRawTxInfo> encData;
+		// build raw tx
+		Transaction rawTx;
 		try {
 			// pick horizon server
 			Server server = stellarNetworkService.pickServer();
@@ -263,78 +230,75 @@ public class AnchorService {
 							.build()
 			);
 
-			// build tx
-			StellarRawTxInfo stellarRawTxInfo = StellarRawTxInfo.build(txBuilder.build());
-
-			encData = new RelayEncryptedContent<>(stellarRawTxInfo);
+			rawTx = txBuilder.build();
 
 			taskRecord.setBaseaccount(baseAccount.getAccountId());
 			taskRecord.setDeanchoramountraw(feeResult.getSellAmountRaw().longValueExact());
 			taskRecord.setFeeamountraw(feeResult.getFeeAmountRaw().longValueExact());
 			taskRecord.setFeeassettype(StellarConverter.toAssetCode(feeResult.getFeeAssetType()));
 			taskRecord.setFeecollectaccount(feeResult.getFeeHolderAccountAddress());
-			taskRecord.setTxSeq(stellarRawTxInfo.getSequence());
-			taskRecord.setTxHash(stellarRawTxInfo.getHash());
-			taskRecord.setTxXdr(stellarRawTxInfo.getEnvelopeXdr());
-			taskRecord.update();
-
-		} catch(GeneralSecurityException | IOException | RuntimeException ex) {
+			taskRecord.setTxSeq(rawTx.getSequenceNumber());
+			taskRecord.setTxHash(ByteArrayUtil.toHexString(rawTx.hash()));
+			taskRecord.setTxXdr(rawTx.toEnvelopeXdrBase64());
+		} catch(Exception ex) {
 			logger.error("{} failed. : {} {}", dexTaskId, ex.getClass().getSimpleName(), ex.getMessage());
-
-			taskRecord.setErrorposition("build txData");
-			taskRecord.setErrorcode(ex.getClass().getSimpleName());
-			taskRecord.setErrormessage(ex.getMessage());
-			taskRecord.setSuccessFlag(false);
-			taskRecord.update();
-
 			throw new StellarException(ex);
 		}
 
 		// request deanchor monitor
-		AncServerDeanchorRequest ancRequest = new AncServerDeanchorRequest();
-		ancRequest.setTaskId(dexTaskId.getId());
-		ancRequest.setUid(String.valueOf(userId));
-		ancRequest.setSymbol(taskRecord.getAssetcode());
-		ancRequest.setHash(taskRecord.getTxHash());
-		ancRequest.setFrom(taskRecord.getTradeaddr());
-		ancRequest.setTo(taskRecord.getBaseaccount());
-		ancRequest.setAddress(taskRecord.getPrivateaddr());
-		ancRequest.setValue(StellarConverter.rawToActual(taskRecord.getDeanchoramountraw()).doubleValue());
-		ancRequest.setMemo(UTCUtil.getNow().toString());
+		AncServerDeanchorRequest deanchor_request = new AncServerDeanchorRequest();
+		deanchor_request.setTaskId(dexTaskId.getId());
+		deanchor_request.setUid(String.valueOf(userId));
+		deanchor_request.setSymbol(taskRecord.getAssetcode());
+		deanchor_request.setHash(taskRecord.getTxHash());
+		deanchor_request.setFrom(taskRecord.getTradeaddr());
+		deanchor_request.setTo(taskRecord.getBaseaccount());
+		deanchor_request.setAddress(taskRecord.getPrivateaddr());
+		deanchor_request.setValue(StellarConverter.rawToActual(taskRecord.getDeanchoramountraw()).doubleValue());
+		deanchor_request.setMemo(UTCUtil.getNow().toString());
 
-		IntegrationResult<AncServerDeanchorResponse> deanchorResult = anchorServerService.requestDeanchor(ancRequest);
+		IntegrationResult<AncServerDeanchorResponse> deanchorResult = anchorServerService.requestDeanchor(deanchor_request);
 
 		if(!deanchorResult.isSuccess()) {
-			logger.error("{} failed. {}", dexTaskId, deanchorResult);
-
-			taskRecord.setErrorposition("request deanchor");
-			taskRecord.setErrorcode(deanchorResult.getErrorCode());
-			taskRecord.setErrormessage(deanchorResult.getErrorMessage());
-			taskRecord.setSuccessFlag(false);
-			taskRecord.update();
-
 			throw new IntegrationException(deanchorResult);
 		}
 
-		// update task record
+		// insert task record
 		taskRecord.setAncIndex(deanchorResult.getData().getData().getIndex());
-		taskRecord.update();
+		dslContext.attach(taskRecord);
+		taskRecord.store();
+		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
 
-		// set trans description
-		encData.addDescription("privateWalletAddress", taskRecord.getPrivateaddr());
-		encData.addDescription("tradeWalletAddress", taskRecord.getTradeaddr());
-		encData.addDescription("baseAccountAddress", taskRecord.getBaseaccount());
-		encData.addDescription("assetCode", taskRecord.getAssetcode());
-		encData.addDescription("amount", StellarConverter.rawToActualString(taskRecord.getAmountraw()));
-		encData.addDescription("feeAssetCode", taskRecord.getFeeassettype());
-		encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
+		// build relay contents
+		RelayEncryptedContent<RelayStellarRawTxDTO> encData;
+		try {
+			encData = new RelayEncryptedContent<>(new RelayStellarRawTxDTO(rawTx));
+			// set trans description
+			encData.addDescription("privateWalletAddress", taskRecord.getPrivateaddr());
+			encData.addDescription("tradeWalletAddress", taskRecord.getTradeaddr());
+			encData.addDescription("baseAccountAddress", taskRecord.getBaseaccount());
+			encData.addDescription("assetCode", taskRecord.getAssetcode());
+			encData.addDescription("amount", StellarConverter.rawToActualString(taskRecord.getAmountraw()));
+			encData.addDescription("feeAssetCode", taskRecord.getFeeassettype());
+			encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
+		} catch(JsonProcessingException | GeneralSecurityException e) {
+			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
+
+			taskRecord.setErrorposition("encrypt relay data");
+			taskRecord.setErrorcode(e.getClass().getSimpleName());
+			taskRecord.setErrormessage(e.getMessage());
+			taskRecord.setSuccessFlag(false);
+			taskRecord.update();
+
+			throw new InternalServerErrorException(e);
+		}
 
 		// send relay addContents request
 		IntegrationResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.DEANCHOR, userId, dexTaskId, encData);
 
 		if(!relayResult.isSuccess()) {
-			logger.error("{} failed. {}", dexTaskId, relayResult);
+			logger.error("{} failed. {} {}", dexTaskId, relayResult.getErrorCode(), relayResult.getErrorMessage());
 
 			taskRecord.setErrorposition("request relay");
 			taskRecord.setErrorcode(relayResult.getErrorCode());

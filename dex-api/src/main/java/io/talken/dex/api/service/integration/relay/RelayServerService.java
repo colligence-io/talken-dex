@@ -53,7 +53,7 @@ public class RelayServerService {
 	@PostConstruct
 	private void init() {
 		apolloClient = ApolloClient.builder()
-				.serverUrl(apiSettings.getIntegration().getRlyAddress())
+				.serverUrl(apiSettings.getIntegration().getRelay().getApiUrl())
 				.okHttpClient(okHttpClient)
 				.addCustomTypeAdapter(CustomType.DATE, customTypeAdapter)
 				.build();

@@ -4,7 +4,8 @@ public enum RelayMsgTypeEnum {
 	ANCHOR("2003"),
 	DEANCHOR("2004"),
 	CREATEOFFER("2005"),
-	DELETEOFFER("2006");
+	DELETEOFFER("2006"),
+	SWAP("2007");
 
 	private final String msgType;
 

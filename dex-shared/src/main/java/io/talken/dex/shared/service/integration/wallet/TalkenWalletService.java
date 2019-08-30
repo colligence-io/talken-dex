@@ -1,4 +1,4 @@
-package io.talken.dex.governance.service.integration.wallet;
+package io.talken.dex.shared.service.integration.wallet;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,16 +14,11 @@ import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.GovSettings;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.USER;
 
-@Service
-@Scope("singleton")
 public class TalkenWalletService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TalkenWalletService.class);
 
@@ -36,11 +31,10 @@ public class TalkenWalletService {
 	@Autowired
 	private DSLContext dslContext;
 
-	private String apiUrl;
+	private final String apiUrl;
 
-	@PostConstruct
-	private void init() {
-		this.apiUrl = govSettings.getIntegration().getWallet().getApiUrl();
+	public TalkenWalletService(String apiUrl) {
+		this.apiUrl = apiUrl;
 	}
 
 	public ObjectPair<Boolean, String> getAddress(long userId, String type, String symbol) throws IntegrationException {

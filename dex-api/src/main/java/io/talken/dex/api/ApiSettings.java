@@ -43,14 +43,4 @@ public class ApiSettings extends DexSettings {
 		private String jwtSecret;
 		private int jwtExpiration;
 	}
-
-	private _Integration integration;
-
-	@Getter
-	@Setter
-	public static class _Integration {
-		private String rlyAddress;
-		private String wltAddress;
-		private String ancAddress;
-	}
 }

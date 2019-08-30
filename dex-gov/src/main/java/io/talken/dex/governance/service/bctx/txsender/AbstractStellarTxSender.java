@@ -1,24 +1,20 @@
 package io.talken.dex.governance.service.bctx.txsender;
 
-import io.talken.common.persistence.enums.BctxStatusEnum;
+import ch.qos.logback.core.encoder.ByteArrayUtil;
+import com.google.gson.JsonObject;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
-import io.talken.common.persistence.jooq.tables.pojos.BctxLog;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
-import io.talken.common.util.JSONWriter;
+import io.talken.common.util.GSONWriter;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.governance.service.bctx.TxSender;
-import io.talken.dex.shared.service.blockchain.stellar.StellarRawTxInfo;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.StringJoiner;
 
 public abstract class AbstractStellarTxSender extends TxSender {
 	private final PrefixedLogger logger;
@@ -54,37 +50,32 @@ public abstract class AbstractStellarTxSender extends TxSender {
 
 		if(bctx.getTxAux() != null) txBuilder.addMemo(Memo.text(bctx.getTxAux()));
 
+		// build tx
 		Transaction tx = txBuilder.build();
 
-		// build tx
-		StellarRawTxInfo stellarRawTxInfo = StellarRawTxInfo.build(tx);
+		String txHash = ByteArrayUtil.toHexString(tx.hash());
 
-		log.setRequest(JSONWriter.toJsonString(stellarRawTxInfo));
+		JsonObject requestInfo = new JsonObject();
+		requestInfo.addProperty("sequence", tx.getSequenceNumber());
+		requestInfo.addProperty("hash", txHash);
+		requestInfo.addProperty("envelopeXdr", tx.toEnvelopeXdrBase64());
 
-		logger.info("[BCTX#{}] Request sign for {} {}", bctx.getId(), source.getAccountId(), stellarRawTxInfo.getHash());
+		log.setRequest(GSONWriter.toJsonString(requestInfo));
+
+		logger.info("[BCTX#{}] Request sign for {} {}", bctx.getId(), source.getAccountId(), txHash);
 		signServer().signStellarTransaction(tx);
 
 		logger.info("[BCTX#{}] Sending TX to stellar network.", bctx.getId());
 		SubmitTransactionResponse txResponse = server.submitTransaction(tx);
 
-		Map<String, Object> resObj = new HashMap<>();
-		resObj.put("hash", txResponse.getHash());
-		resObj.put("ledger", txResponse.getLedger());
-		resObj.put("envelope_xdr", txResponse.getEnvelopeXdr());
-		resObj.put("result_xdr", txResponse.getResultXdr());
-		resObj.put("extras", txResponse.getExtras());
-
 		if(txResponse.isSuccess()) {
 			log.setBcRefId(txResponse.getHash());
-			log.setResponse(JSONWriter.toJsonString(resObj));
+			log.setResponse(GSONWriter.toJsonString(txResponse));
 			return true;
 		} else {
-			SubmitTransactionResponse.Extras.ResultCodes resultCodes = txResponse.getExtras().getResultCodes();
-			StringJoiner sj = new StringJoiner(",");
-			if(resultCodes.getOperationsResultCodes() != null) resultCodes.getOperationsResultCodes().forEach(sj::add);
-
-			log.setErrorcode(resultCodes.getTransactionResultCode());
-			log.setErrormessage(sj.toString());
+			ObjectPair<String, String> resultCodes = StellarConverter.getResultCodesFromExtra(txResponse);
+			log.setErrorcode(resultCodes.first());
+			log.setErrormessage(resultCodes.second());
 			return false;
 		}
 	}

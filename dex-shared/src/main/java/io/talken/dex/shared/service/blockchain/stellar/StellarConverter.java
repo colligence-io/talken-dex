@@ -1,10 +1,13 @@
 package io.talken.dex.shared.service.blockchain.stellar;
 
+import io.talken.common.util.collection.ObjectPair;
 import org.stellar.sdk.Asset;
 import org.stellar.sdk.AssetTypeCreditAlphaNum;
+import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -15,7 +18,7 @@ public class StellarConverter {
 	private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX");
 
 	public static BigDecimal scale(BigDecimal bd) {
-		return bd.setScale(7, BigDecimal.ROUND_UP);
+		return bd.setScale(7, RoundingMode.FLOOR);
 	}
 
 	// convert
@@ -24,7 +27,7 @@ public class StellarConverter {
 	}
 
 	public static BigDecimal rawToActual(BigInteger raw) {
-		return scale(new BigDecimal(raw)).divide(multiplierBD, BigDecimal.ROUND_UP);
+		return scale(new BigDecimal(raw)).divide(multiplierBD, RoundingMode.FLOOR);
 	}
 
 	public static BigInteger actualToRaw(BigDecimal actual) {
@@ -68,5 +71,11 @@ public class StellarConverter {
 
 	public static LocalDateTime toLocalDateTime(String timeString) {
 		return LocalDateTime.parse(timeString, dtf);
+	}
+
+	public static ObjectPair<String, String> getResultCodesFromExtra(SubmitTransactionResponse txResponse) {
+		if(txResponse.getExtras() == null || txResponse.getExtras().getResultCodes() == null)
+			return new ObjectPair<>("", "");
+		return new ObjectPair<>(txResponse.getExtras().getResultCodes().getTransactionResultCode(), String.join(",", txResponse.getExtras().getResultCodes().getOperationsResultCodes()));
 	}
 }
