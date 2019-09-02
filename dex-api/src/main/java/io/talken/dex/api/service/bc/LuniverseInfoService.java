@@ -1,6 +1,5 @@
 package io.talken.dex.api.service.bc;
 
-import io.talken.common.util.PostLaunchExecutor;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.dto.LuniverseGasPriceResult;
 import io.talken.dex.api.controller.dto.LuniverseTxListResult;
@@ -34,14 +33,6 @@ public class LuniverseInfoService {
 	@PostConstruct
 	private void init() throws Exception {
 		this.rpcClient = luniverseNetworkService.newMainRpcClient();
-
-		PostLaunchExecutor.addTask(() -> {
-			try {
-				logger.logObjectAsJSON(getTxList("0x8526e732f405c742d4a078293dad3a6633b57c79", null, Sort.Direction.DESC, 1, 10));
-			} catch(Exception ex) {
-				logger.exception(ex);
-			}
-		});
 	}
 
 	public LuniverseGasPriceResult getGasPriceAndLimit() throws InternalServerErrorException {
