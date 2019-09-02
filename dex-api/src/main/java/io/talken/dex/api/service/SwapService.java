@@ -3,12 +3,9 @@ package io.talken.dex.api.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
-import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.DexSwapStatusEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
-import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskSwapRecord;
-import io.talken.common.util.PostLaunchExecutor;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.IntegrationResult;
@@ -19,7 +16,6 @@ import io.talken.dex.api.service.integration.relay.RelayMsgTypeEnum;
 import io.talken.dex.api.service.integration.relay.RelayServerService;
 import io.talken.dex.api.service.integration.relay.dto.RelayTransferDTO;
 import io.talken.dex.shared.DexTaskId;
-import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.*;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarSignVerifier;
@@ -31,10 +27,8 @@ import org.jooq.DSLContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
-import java.util.Map;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_SWAP;
 
@@ -54,21 +48,9 @@ public class SwapService {
 
 	private static final String pivotAssetCode = "USDT";
 
-	@PostConstruct
-	private void test() {
-		PostLaunchExecutor.addTask(() -> {
-			try {
-				getSwapResultPrediction("TALK", BigDecimal.valueOf(200), "ETH");
-			} catch(Exception ex) {
-				logger.exception(ex);
-			}
-		});
-	}
-
 	public SwapResult swap(long userId, SwapRequest request) throws SwapPredictionThresholdException, SwapServiceNotAvailableException, SwapPathNotAvailableException, TokenMetaNotFoundException, SwapUnderMinimumAmountException, StellarException, IntegrationException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, InternalServerErrorException {
-		// get meta data for source
-		BlockChainPlatformEnum sourceBctxPlatform = tmService.getTokenBctxPlatform(request.getSourceAssetCode());
-		TokenMetaTable.Meta tokenMeta = tmService.getTokenMeta(request.getSourceAssetCode());
+		// prepare relay dto (also check tokenmeta and platform meta)
+		RelayTransferDTO relayTransferDTO = relayServerService.createTransferDTObase(request.getSourceAssetCode());
 
 		// scale input
 		BigDecimal maxSourceAmount = StellarConverter.scale(request.getSourceAmount());
@@ -140,24 +122,13 @@ public class SwapService {
 		// build relay contents
 		RelayEncryptedContent<RelayTransferDTO> encData;
 		try {
-			RelayTransferDTO encDto = new RelayTransferDTO();
-			encDto.setPlatform(sourceBctxPlatform);
-			encDto.setWalletType(sourceBctxPlatform.getWalletType());
-			encDto.setSignType(sourceBctxPlatform.getWalletType().getSignType());
-			encDto.setSymbol(request.getSourceAssetCode());
-			if(tokenMeta.getAux() != null) {
-				for(Map.Entry<TokenMetaAuxCodeEnum, Object> auxEntry : tokenMeta.getAux().entrySet()) {
-					if(auxEntry.getKey().equals(TokenMetaAuxCodeEnum.TOKEN_CARD_THEME_COLOR))
-						encDto.getAux().put(auxEntry.getKey().name(), auxEntry.getValue());
-				}
-			}
-			encDto.setFrom(request.getPrivateSourceAddr());
-			encDto.setTo(holderAddr);
-			encDto.setAmount(maxSourceAmount);
-			encDto.setNetfee(request.getNetworkFee());
-			encDto.setMemo(dexTaskId.getId());
+			relayTransferDTO.setFrom(request.getPrivateSourceAddr());
+			relayTransferDTO.setTo(holderAddr);
+			relayTransferDTO.setAmount(maxSourceAmount);
+			relayTransferDTO.setNetfee(request.getNetworkFee());
+			relayTransferDTO.setMemo(dexTaskId.getId());
 
-			encData = new RelayEncryptedContent<>(encDto);
+			encData = new RelayEncryptedContent<>(relayTransferDTO);
 			// set trans description
 			encData.addDescription("privateSourceWalletAddress", request.getPrivateSourceAddr());
 			encData.addDescription("privateTargetWalletAddress", request.getPrivateTargetAddr());
