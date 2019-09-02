@@ -54,7 +54,7 @@ public class LuniverseInfoService {
 			else contractaddress = contractaddress.toLowerCase();
 		}
 
-		address = address.toUpperCase();
+		address = address.toLowerCase();
 
 		Criteria ct =
 				new Criteria().andOperator(
