@@ -49,6 +49,13 @@ public class LuniverseInfoService {
 	public LuniverseTxListResult getTxList(String address, String contractaddress, Sort.Direction direction, int page, int offset) {
 		LuniverseTxListResult rtn = new LuniverseTxListResult();
 
+		if(contractaddress != null) {
+			if(contractaddress.isEmpty()) contractaddress = null;
+			else contractaddress = contractaddress.toLowerCase();
+		}
+
+		address = address.toUpperCase();
+
 		Criteria ct =
 				new Criteria().andOperator(
 						Criteria.where("contractAddress").is(contractaddress),
