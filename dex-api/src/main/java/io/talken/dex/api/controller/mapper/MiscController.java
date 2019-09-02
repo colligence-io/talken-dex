@@ -75,7 +75,18 @@ public class MiscController {
 	}
 
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_LUNIVERSE_TXLIST, method = RequestMethod.GET)
-	public DexResponse<LuniverseTxListResult> luniverseTxList(@RequestParam("address") String address, @RequestParam("contractaddress") String contractaddress, @RequestParam("sort") String sort, @RequestParam("page") Integer page, @RequestParam("offset") Integer offset) throws DexException {
+	public DexResponse<LuniverseTxListResult> luniverseTxList(
+			@RequestParam("address")
+					String address,
+			@RequestParam(value = "contractaddress", required = false)
+					String contractaddress,
+			@RequestParam(value = "sort", defaultValue = "desc")
+					String sort,
+			@RequestParam(value = "page", defaultValue = "1")
+					Integer page,
+			@RequestParam(value = "offset", defaultValue = "10")
+					Integer offset
+	) throws DexException {
 		Sort.Direction direction;
 		if(sort == null || !sort.equalsIgnoreCase("asc")) direction = Sort.Direction.DESC;
 		else direction = Sort.Direction.ASC;
