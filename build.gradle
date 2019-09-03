@@ -54,12 +54,9 @@ subprojects {
     }
 
     dependencies {
-        compile('io.talken:java-common:20190830-1') { changing = true }
+        compile('io.talken:java-common:20190903-1') { changing = true }
 
         compileOnly('org.projectlombok:lombok:1.18.4')
-
-        // Spring cache
-        compile('org.springframework.boot:spring-boot-starter-cache')
 
         // Spring Data
         compile('org.springframework.boot:spring-boot-starter-jdbc')
@@ -68,13 +65,15 @@ subprojects {
         // configuration processor
         compile('org.springframework.boot:spring-boot-configuration-processor')
 
+        // Spring cache
+        compile('org.springframework.boot:spring-boot-starter-cache')
+
         // Redis
         compile('org.springframework.boot:spring-boot-starter-data-redis')
-        compile('redis.clients:jedis')
 
         // MongoDB
         compile('org.springframework.boot:spring-boot-starter-data-mongodb')
-        
+
         // stellar sdk
         compile('com.github.stellar:java-stellar-sdk:0.9.0')
 

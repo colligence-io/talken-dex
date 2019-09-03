@@ -1,4 +1,4 @@
-package io.talken.dex.governance.service.integration.wallet;
+package io.talken.dex.shared.service.integration.wallet;
 
 import io.talken.common.util.integration.rest.RestApiResponseInterface;
 import lombok.Data;

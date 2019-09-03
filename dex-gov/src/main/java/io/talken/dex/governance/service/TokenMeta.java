@@ -56,6 +56,7 @@ public class TokenMeta extends io.talken.common.persistence.jooq.tables.pojos.To
 		private KeyPair assetBase;
 		private KeyPair offerFeeHolder;
 		private KeyPair deanchorFeeHolder;
+		private KeyPair swapFeeHolder;
 
 		private Map<String, MarketPairInfo> marketPair;
 		private List<HolderAccountInfo> assetHolderAccounts;

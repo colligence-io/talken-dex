@@ -46,10 +46,7 @@ public abstract class TxMonitor<TB, TT> {
 	protected void callBlockHandlerStack(TB block) throws BctxException {
 		for(BlockHandler<TB> blockHandler : blockHandlers) {
 			try {
-				if(!blockHandler.handle(block)) {
-					alarmService.error(logger, "block handler {} failed.", blockHandler.getClass().getName());
-					throw new BctxException("BlockHandlerFailed", "BlockHandler failed : " + blockHandler.getClass().getName());
-				}
+				blockHandler.handle(block);
 			} catch(Exception ex) {
 				alarmService.exception(logger, ex);
 				throw new BctxException(ex, ex.getClass().getSimpleName(), ex.getMessage());
@@ -61,10 +58,7 @@ public abstract class TxMonitor<TB, TT> {
 		updateBctxReceiptInfo(tx);
 		for(TransactionHandler<TT> txHandler : txHandlers) {
 			try {
-				if(!txHandler.handle(tx)) {
-					alarmService.error(logger, "tx handler {} failed.", txHandler.getClass().getName());
-					throw new BctxException("TxHandlerFailed", "TxHandler failed : " + txHandler.getClass().getName());
-				}
+				txHandler.handle(tx);
 			} catch(Exception ex) {
 				alarmService.exception(logger, ex);
 				throw new BctxException(ex, ex.getClass().getSimpleName(), ex.getMessage());
@@ -99,11 +93,11 @@ public abstract class TxMonitor<TB, TT> {
 	}
 
 	public interface BlockHandler<TB> {
-		boolean handle(TB block) throws Exception;
+		void handle(TB block) throws Exception;
 	}
 
 	public interface TransactionHandler<TT> {
-		boolean handle(TT transaction) throws Exception;
+		void handle(TT transaction) throws Exception;
 	}
 
 	@Data

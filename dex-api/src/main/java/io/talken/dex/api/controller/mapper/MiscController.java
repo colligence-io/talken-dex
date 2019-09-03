@@ -1,5 +1,6 @@
 package io.talken.dex.api.controller.mapper;
 
+import io.talken.common.exception.TalkenException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.config.auth.AuthInfo;
@@ -11,6 +12,8 @@ import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.api.service.AssetConvertService;
 import io.talken.dex.api.service.TaskTransactionListService;
 import io.talken.dex.api.service.bc.LuniverseInfoService;
+import io.talken.dex.api.service.integration.relay.RelayServerService;
+import io.talken.dex.api.service.integration.relay.dto.RelayTransferDTO;
 import io.talken.dex.shared.exception.AssetConvertException;
 import io.talken.dex.shared.exception.DexException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +38,9 @@ public class MiscController {
 
 	@Autowired
 	private TaskTransactionListService txListService;
+
+	@Autowired
+	private RelayServerService relayServerService;
 
 	@RequestMapping(value = RequestMappings.CONVERT_ASSET, method = RequestMethod.POST)
 	public DexResponse<BigDecimal> convert(@RequestBody AssetConvertRequest postBody) throws DexException {
@@ -94,6 +100,11 @@ public class MiscController {
 		if(offset == null) offset = 10;
 
 		return DexResponse.buildResponse(luniverseInfoService.getTxList(address, contractaddress, direction, page, offset));
+	}
+
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_TRANSFER_BCINFO, method = RequestMethod.GET)
+	public DexResponse<RelayTransferDTO> transferBlockchainInfo(@RequestParam("symbol") String symbol) throws TalkenException {
+		return DexResponse.buildResponse(relayServerService.createTransferDTObase(symbol));
 	}
 }
 

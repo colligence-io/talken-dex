@@ -80,6 +80,7 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private String baseAddress;
 		private String offerFeeHolderAddress;
 		private String deancFeeHolderAddress;
+		private String swapFeeHolderAddress;
 		private Map<String, MarketPairInfo> marketPair = null;
 		private List<HolderAccountInfo> assetHolderAccounts = null;
 		private Long updateTimestamp;
@@ -113,6 +114,7 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 			assetBase = KeyPair.fromAccountId(mi.baseAddress);
 			offerFeeHolder = KeyPair.fromAccountId(mi.offerFeeHolderAddress);
 			deanchorFeeHolder = KeyPair.fromAccountId(mi.deancFeeHolderAddress);
+			swapFeeHolder = KeyPair.fromAccountId(mi.swapFeeHolderAddress);
 		}
 
 		private Asset assetType;
@@ -120,6 +122,7 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private KeyPair assetBase;
 		private KeyPair offerFeeHolder;
 		private KeyPair deanchorFeeHolder;
+		private KeyPair swapFeeHolder;
 	}
 
 	@Data

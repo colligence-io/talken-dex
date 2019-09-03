@@ -3,9 +3,11 @@ package io.talken.dex.api.service;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
+import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.ActiveAssetHolderAccountNotFoundException;
+import io.talken.dex.shared.exception.BlockChainPlatformNotSupportedException;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -75,6 +77,18 @@ public class TokenMetaService {
 		return tmTable.get(symbol.toUpperCase());
 	}
 
+	public BlockChainPlatformEnum getTokenBctxPlatform(String symbol) throws TokenMetaNotFoundException, BlockChainPlatformNotSupportedException {
+		String platform_name = getTokenMeta(symbol).getPlatform();
+
+		if(platform_name == null) throw new BlockChainPlatformNotSupportedException(symbol);
+
+		try {
+			return BlockChainPlatformEnum.valueOf(platform_name);
+		} catch(IllegalArgumentException ex) {
+			throw new BlockChainPlatformNotSupportedException(symbol);
+		}
+	}
+
 	public TokenMetaTable getTokenMetaList() {
 		return tmTable;
 	}
@@ -102,6 +116,10 @@ public class TokenMetaService {
 
 	public KeyPair getDeanchorFeeHolderAccount(String code) throws TokenMetaNotFoundException {
 		return getPack(code).getCache().getDeanchorFeeHolder();
+	}
+
+	public KeyPair getSwapFeeHolderAccount(String code) throws TokenMetaNotFoundException {
+		return getPack(code).getCache().getSwapFeeHolder();
 	}
 
 	public KeyPair getBaseAccount(String code) throws TokenMetaNotFoundException {

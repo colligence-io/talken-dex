@@ -58,7 +58,7 @@ public class DexTaskId {
 		long genTime = System.currentTimeMillis();
 
 		StringBuilder sb = new StringBuilder("TALKEN");
-		sb.append(type.getIndex());
+		sb.append(type.getCode());
 
 		for(int i = 0; i < 7; i++)
 			sb.append(sc[random.nextInt(sc.length)]);

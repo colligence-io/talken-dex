@@ -24,6 +24,9 @@ public class RequestMappings {
 	public static final String DELETE_OFFER = OFFER + "/deleteOffer";
 	public static final String DELETE_OFFER_DEXKEY = DELETE_OFFER + DEXKEY_SUFFIX;
 
+	public static final String SWAP = DEX + "/swap";
+	public static final String SWAP_PREDICT = SWAP + "/predict";
+
 	public static final String TXLIST = DEX + "/txList";
 
 	private static final String TMS = ROOT + "/tms";
@@ -39,4 +42,5 @@ public class RequestMappings {
 	private static final String BLOCK_CHAIN_LUNIVERSE = BLOCK_CHAIN + "/luniverse";
 	public static final String BLOCK_CHAIN_LUNIVERSE_GASPRICE = BLOCK_CHAIN_LUNIVERSE + "/gasPrice";
 	public static final String BLOCK_CHAIN_LUNIVERSE_TXLIST = BLOCK_CHAIN_LUNIVERSE + "/txList";
+	public static final String BLOCK_CHAIN_TRANSFER_BCINFO = BLOCK_CHAIN + "/transferBase";
 }

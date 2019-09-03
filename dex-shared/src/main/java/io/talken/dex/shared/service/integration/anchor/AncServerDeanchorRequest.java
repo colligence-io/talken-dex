@@ -1,4 +1,4 @@
-package io.talken.dex.api.service.integration.anchor;
+package io.talken.dex.shared.service.integration.anchor;
 
 import lombok.Data;
 

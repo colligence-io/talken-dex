@@ -59,82 +59,79 @@ public class DexTaskTransactionHandler implements ApplicationContextAware, TxMon
 	}
 
 	@Override
-	public boolean handle(TransactionResponse tx) throws Exception {
+	public void handle(TransactionResponse tx) throws Exception {
+
+		Memo memo = tx.getMemo();
+		if(!(memo instanceof MemoText)) return;
+
+		String memoText = ((MemoText) memo).getText();
+
+		if(!memoText.startsWith("TALKEN")) return;
+
+
+		DexTaskId dexTaskId;
 		try {
-			Memo memo = tx.getMemo();
-			if(memo instanceof MemoText) {
-				String memoText = ((MemoText) memo).getText();
-				if(memoText.startsWith("TALKEN")) {
-					DexTxmonRecord txmRecord = new DexTxmonRecord();
-					txmRecord.setTxid(tx.getHash());
-					txmRecord.setTxhash(tx.getHash());
-					txmRecord.setLedger(tx.getLedger());
-					txmRecord.setCreatedat(StellarConverter.toLocalDateTime(tx.getCreatedAt()));
-					txmRecord.setSourceaccount(tx.getSourceAccount());
-					txmRecord.setEnvelopexdr(tx.getEnvelopeXdr());
-					txmRecord.setResultxdr(tx.getResultXdr());
-					txmRecord.setResultmetaxdr(tx.getResultMetaXdr());
-					txmRecord.setFeepaid(tx.getFeePaid());
-					dslContext.attach(txmRecord);
-					txmRecord.store();
-
-					try {
-						DexTaskId dexTaskId = DexTaskId.decode_taskId(memoText);
-
-						txmRecord.setMemotaskid(dexTaskId.getId());
-						txmRecord.setTasktype(dexTaskId.getType());
-
-
-						// FIXME : check before applying stellar-sdk 0.9.0
-						TaskTransactionResponse txResponse = new TaskTransactionResponse(dexTaskId, tx);
-						txmRecord.setOfferidfromresult(txResponse.getOfferIdFromResult());
-
-						// run processor
-						if(processors.containsKey(dexTaskId.getType())) {
-
-							TaskTransactionProcessResult result;
-							try {
-								logger.info("{} ({}) found. start processing.", dexTaskId, txResponse.getTxHash());
-								result = processors.get(dexTaskId.getType()).process(txmRecord.getId(), txResponse);
-							} catch(Exception ex) {
-								result = TaskTransactionProcessResult.error("Unknown", ex);
-							}
-
-							if(result.isSuccess()) {
-								txmRecord.setProcessSuccessFlag(true);
-							} else {
-								logger.error("{} transaction {} result process error : {} {}", dexTaskId, tx.getHash(), result.getError().getCode(), result.getError().getMessage());
-
-								// log exception
-								if(result.getError().getCause() != null)
-									logger.exception(result.getError().getCause());
-
-								txmRecord.setProcessSuccessFlag(false);
-								txmRecord.setErrorcode(result.getError().getCode());
-								txmRecord.setErrormessage(result.getError().getMessage());
-							}
-						} else {
-							logger.debug("No txSender for {} registered", dexTaskId);
-						}
-					} catch(TaskIntegrityCheckFailedException e) {
-						logger.error("Invalid DexTaskId [{}] detected : txHash = {}", memoText, tx.getHash());
-						txmRecord.setProcessSuccessFlag(false);
-						txmRecord.setErrorcode("InvalidTaskID");
-						txmRecord.setErrormessage(memoText + " is a invalid taskid. integrity check failed.");
-					} catch(Exception ex) {
-						logger.exception(ex);
-						txmRecord.setProcessSuccessFlag(false);
-						txmRecord.setErrorcode(ex.getClass().getSimpleName());
-						txmRecord.setErrormessage(ex.getMessage());
-					}
-
-					txmRecord.update();
-				}
-			}
-			return true;
-		} catch(Exception ex) {
-			logger.exception(ex, "Unidentified exception occured.");
-			return false;
+			dexTaskId = DexTaskId.decode_taskId(memoText);
+		} catch(TaskIntegrityCheckFailedException e) {
+			logger.warn("Invalid DexTaskId [{}] detected : txHash = {}", memoText, tx.getHash());
+			return;
 		}
+
+		DexTxmonRecord txmRecord = new DexTxmonRecord();
+		txmRecord.setTxid(tx.getHash());
+		txmRecord.setMemotaskid(dexTaskId.getId());
+		txmRecord.setTasktype(dexTaskId.getType());
+		txmRecord.setTxhash(tx.getHash());
+		txmRecord.setLedger(tx.getLedger());
+		txmRecord.setCreatedat(StellarConverter.toLocalDateTime(tx.getCreatedAt()));
+		txmRecord.setSourceaccount(tx.getSourceAccount());
+		txmRecord.setEnvelopexdr(tx.getEnvelopeXdr());
+		txmRecord.setResultxdr(tx.getResultXdr());
+		txmRecord.setResultmetaxdr(tx.getResultMetaXdr());
+		txmRecord.setFeepaid(tx.getFeePaid());
+		dslContext.attach(txmRecord);
+		txmRecord.store();
+
+		try {
+			// FIXME : check before applying stellar-sdk 0.9.0
+			TaskTransactionResponse txResponse = new TaskTransactionResponse(dexTaskId, tx);
+			txmRecord.setOfferidfromresult(txResponse.getOfferIdFromResult());
+
+			// run processor
+			if(processors.containsKey(dexTaskId.getType())) {
+				TaskTransactionProcessResult result;
+				try {
+					logger.info("{} ({}) found. start processing.", dexTaskId, txResponse.getTxHash());
+					result = processors.get(dexTaskId.getType()).process(txmRecord.getId(), txResponse);
+				} catch(Exception ex) {
+					result = TaskTransactionProcessResult.error("Unknown", ex);
+				}
+
+				if(result.isSuccess()) {
+					txmRecord.setProcessSuccessFlag(true);
+				} else {
+					logger.error("{} transaction {} result process error : {} {}", dexTaskId, tx.getHash(), result.getError().getCode(), result.getError().getMessage());
+
+					// log exception
+					if(result.getError().getCause() != null)
+						logger.exception(result.getError().getCause());
+
+					txmRecord.setProcessSuccessFlag(false);
+					txmRecord.setErrorcode(result.getError().getCode());
+					txmRecord.setErrormessage(result.getError().getMessage());
+				}
+
+				txmRecord.update();
+			} else {
+				logger.verbose("No TaskTransactionProcessor for {} registered", dexTaskId.getType());
+			}
+		} catch(Exception ex) {
+			logger.exception(ex);
+			txmRecord.setProcessSuccessFlag(false);
+			txmRecord.setErrorcode(ex.getClass().getSimpleName());
+			txmRecord.setErrormessage(ex.getMessage());
+		}
+
+		txmRecord.update();
 	}
 }
