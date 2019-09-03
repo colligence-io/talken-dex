@@ -10,7 +10,6 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.common.util.integration.rest.RestApiClient;
-import io.talken.common.util.integration.slack.AdminAlarmService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,9 +19,6 @@ import static io.talken.common.persistence.jooq.Tables.USER;
 
 public class TalkenWalletService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TalkenWalletService.class);
-
-	@Autowired
-	private AdminAlarmService adminAlarmService;
 
 	@Autowired
 	private DSLContext dslContext;
@@ -72,7 +68,7 @@ public class TalkenWalletService {
 					return new ObjectPair<>(true, address.orElse(null));
 				} catch(Exception ex) {
 					// FIXME : failed parse json, assume it's error
-					adminAlarmService.exception(logger, ex);
+					logger.exception(ex);
 					return new ObjectPair<>(false, null);
 				}
 
