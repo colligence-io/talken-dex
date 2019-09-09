@@ -17,6 +17,7 @@ import io.talken.dex.api.service.integration.relay.RelayEncryptedContent;
 import io.talken.dex.api.service.integration.relay.RelayMsgTypeEnum;
 import io.talken.dex.api.service.integration.relay.RelayServerService;
 import io.talken.dex.api.service.integration.relay.dto.RelayStellarRawTxDTO;
+import io.talken.dex.api.service.integration.relay.dto.RelayTransferDTO;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.exception.*;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
@@ -33,6 +34,7 @@ import org.stellar.sdk.responses.AccountResponse;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_DEANCHOR;
@@ -61,7 +63,7 @@ public class AnchorService {
 	@Autowired
 	private DSLContext dslContext;
 
-	public AnchorResult anchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, AnchorRequest ancRequestBody) throws TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
+	public AnchorResult anchor_old(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, AnchorRequestOld ancRequestBody) throws TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
 		String assetHolderAddress = tmService.getActiveHolderAccountAddress(assetCode);
 		ancRequestBody.setTo(assetHolderAddress);
 
@@ -101,7 +103,7 @@ public class AnchorService {
 		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
 		// build relay contents
-		RelayEncryptedContent<AnchorRequest> encData;
+		RelayEncryptedContent<AnchorRequestOld> encData;
 		try {
 			encData = new RelayEncryptedContent<>(ancRequestBody);
 			// set trans description
@@ -156,7 +158,114 @@ public class AnchorService {
 		return result;
 	}
 
-	public DexKeyResult anchorDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
+	public AnchorResult anchor(long userId, AnchorRequest request) throws TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException, BlockChainPlatformNotSupportedException {
+		final BigDecimal amount = StellarConverter.scale(request.getAmount());
+		final BigDecimal networkFee = request.getNetworkFee().stripTrailingZeros();
+
+		String assetHolderAddress = tmService.getActiveHolderAccountAddress(request.getAssetCode());
+
+		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
+
+		// create task record
+		DexTaskAnchorRecord taskRecord = new DexTaskAnchorRecord();
+		taskRecord.setTaskid(dexTaskId.getId());
+		taskRecord.setUserId(userId);
+
+		taskRecord.setPrivateaddr(request.getPrivateWalletAddress());
+		taskRecord.setTradeaddr(request.getTradeWalletAddress());
+		taskRecord.setHolderaddr(assetHolderAddress);
+		taskRecord.setAssetcode(request.getAssetCode());
+		taskRecord.setAmountraw(StellarConverter.actualToRaw(amount).longValueExact());
+
+		AncServerAnchorRequest anchor_request = new AncServerAnchorRequest();
+		anchor_request.setTaskId(dexTaskId.getId());
+		anchor_request.setUid(String.valueOf(userId));
+		anchor_request.setFrom(request.getPrivateWalletAddress());
+		anchor_request.setTo(assetHolderAddress);
+		anchor_request.setStellar(request.getTradeWalletAddress());
+		anchor_request.setSymbol(request.getAssetCode());
+		anchor_request.setValue(amount);
+		anchor_request.setMemo(UTCUtil.getNow().toString());
+
+		// request anchor monitor
+		IntegrationResult<AncServerAnchorResponse> anchorResult = anchorServerService.requestAnchor(anchor_request);
+		if(!anchorResult.isSuccess()) {
+			throw new IntegrationException(anchorResult);
+		}
+
+		// insert task record
+		taskRecord.setAncIndex(anchorResult.getData().getData().getIndex());
+		dslContext.attach(taskRecord);
+		taskRecord.store();
+		logger.info("{} generated. userId = {}", dexTaskId, userId);
+
+		// prepare relay dto (also check tokenmeta and platform meta)
+		RelayTransferDTO relayTransferDTO = relayServerService.createTransferDTObase(request.getAssetCode());
+		// build relay contents
+		RelayEncryptedContent<RelayTransferDTO> encData;
+		try {
+			relayTransferDTO.setFrom(request.getPrivateWalletAddress());
+			relayTransferDTO.setTo(assetHolderAddress);
+			relayTransferDTO.setAmount(amount);
+			relayTransferDTO.setNetfee(networkFee);
+			relayTransferDTO.setMemo(dexTaskId.getId());
+
+			encData = new RelayEncryptedContent<>(relayTransferDTO);
+			// set trans description
+			encData.addDescription("privateWalletAddress", taskRecord.getPrivateaddr());
+			encData.addDescription("tradeWalletAddress", taskRecord.getTradeaddr());
+			encData.addDescription("assetHolderAddress", taskRecord.getHolderaddr());
+			encData.addDescription("assetCode", taskRecord.getAssetcode());
+			encData.addDescription("networkFee", networkFee.toPlainString());
+			encData.addDescription("amount", StellarConverter.rawToActualString(BigInteger.valueOf(taskRecord.getAmountraw())));
+		} catch(JsonProcessingException | GeneralSecurityException e) {
+			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
+
+			taskRecord.setErrorposition("encrypt relay data");
+			taskRecord.setErrorcode(e.getClass().getSimpleName());
+			taskRecord.setErrormessage(e.getMessage());
+			taskRecord.setSuccessFlag(false);
+			taskRecord.update();
+
+			throw new InternalServerErrorException(e);
+		}
+
+		// send relay addContents request
+		IntegrationResult<RelayAddContentsResponse> relayResult = relayServerService.requestAddContents(RelayMsgTypeEnum.ANCHOR, userId, dexTaskId, encData);
+
+		if(!relayResult.isSuccess()) {
+			logger.error("{} failed. {} {}", dexTaskId, relayResult.getErrorCode(), relayResult.getErrorMessage());
+
+			taskRecord.setErrorposition("request relay");
+			taskRecord.setErrorcode(relayResult.getErrorCode());
+			taskRecord.setErrormessage(relayResult.getErrorMessage());
+			taskRecord.setSuccessFlag(false);
+			taskRecord.update();
+
+			throw new IntegrationException(relayResult);
+		}
+
+		// update task record
+		taskRecord.setRlyDexkey(encData.getKey());
+		taskRecord.setRlyTransid(relayResult.getData().getTransId());
+		taskRecord.setRlyRegdt(relayResult.getData().getRegDt());
+		taskRecord.setRlyEnddt(relayResult.getData().getEndDt());
+		taskRecord.setSuccessFlag(true);
+		taskRecord.update();
+
+		logger.debug("{} complete.", dexTaskId);
+
+		AnchorResult result = new AnchorResult();
+		result.setTaskId(dexTaskId.getId());
+		result.setHolderAccountAddress(assetHolderAddress);
+		result.setTransId(taskRecord.getRlyTransid());
+		result.setAssetCode(taskRecord.getAssetcode());
+		result.setAmount(StellarConverter.rawToActual(taskRecord.getAmountraw()));
+		return result;
+	}
+
+	public DexKeyResult anchorDexKey(Long userId, DexKeyRequest request) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
+		final String taskId = request.getTaskId();
 		DexTaskId dexTaskId = DexTaskId.decode_taskId(taskId);
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.ANCHOR))
 			throw new TaskNotFoundException(taskId);
@@ -166,34 +275,35 @@ public class AnchorService {
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
 
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);
-		if(!taskRecord.getRlyTransid().equals(transId)) throw new TaskIntegrityCheckFailedException(taskId);
+		if(!taskRecord.getRlyTransid().equals(request.getTransId())) throw new TaskIntegrityCheckFailedException(taskId);
 
-		if(!StellarSignVerifier.verifySignBase64(taskRecord.getTradeaddr(), transId, signature))
-			throw new SignatureVerificationFailedException(transId, signature);
+		if(!StellarSignVerifier.verifySignBase64(taskRecord.getTradeaddr(), request.getTransId(), request.getSignature()))
+			throw new SignatureVerificationFailedException(request.getTransId(), request.getSignature());
 
 		DexKeyResult result = new DexKeyResult();
 		result.setDexKey(taskRecord.getRlyDexkey());
 		return result;
 	}
 
-	public DeanchorResult deanchor(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, Boolean feeByTalk) throws TokenMetaNotFoundException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, IntegrationException, InternalServerErrorException {
-		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
+	public DeanchorResult deanchor(long userId, DeanchorRequest request) throws TokenMetaNotFoundException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, IntegrationException, InternalServerErrorException {
+		final BigDecimal amount = StellarConverter.scale(request.getAmount());
+		final boolean feeByTalk = Optional.ofNullable(request.getFeeByTalk()).orElse(false);
 
-		amount = StellarConverter.scale(amount);
+		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 
 		// create task record
 		DexTaskDeanchorRecord taskRecord = new DexTaskDeanchorRecord();
 		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
 
-		taskRecord.setPrivateaddr(privateWalletAddress);
-		taskRecord.setTradeaddr(tradeWalletAddress);
-		taskRecord.setAssetcode(assetCode);
+		taskRecord.setPrivateaddr(request.getPrivateWalletAddress());
+		taskRecord.setTradeaddr(request.getTradeWalletAddress());
+		taskRecord.setAssetcode(request.getAssetCode());
 		taskRecord.setAmountraw(StellarConverter.actualToRaw(amount).longValueExact());
 		taskRecord.setFeebyctx(feeByTalk);
 
 		// calculate fee
-		CalculateFeeResult feeResult = feeCalculationService.calculateDeanchorFee(assetCode, amount, feeByTalk);
+		CalculateFeeResult feeResult = feeCalculationService.calculateDeanchorFee(request.getAssetCode(), amount, feeByTalk);
 
 		// build raw tx
 		Transaction rawTx;
@@ -202,12 +312,12 @@ public class AnchorService {
 			Server server = stellarNetworkService.pickServer();
 
 			// prepare accounts
-			KeyPair source = KeyPair.fromAccountId(tradeWalletAddress);
+			KeyPair source = KeyPair.fromAccountId(request.getTradeWalletAddress());
 
 			// load up-to-date information on source account.
 			AccountResponse sourceAccount = server.accounts().account(source.getAccountId());
 
-			KeyPair baseAccount = tmService.getBaseAccount(assetCode);
+			KeyPair baseAccount = tmService.getBaseAccount(request.getAssetCode());
 
 			Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount, stellarNetworkService.getNetwork())
 					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
@@ -329,7 +439,9 @@ public class AnchorService {
 		return result;
 	}
 
-	public DexKeyResult deanchorDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
+	public DexKeyResult deanchorDexKey(Long userId, DexKeyRequest request) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
+		final String taskId = request.getTaskId();
+
 		DexTaskId dexTaskId = DexTaskId.decode_taskId(taskId);
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.DEANCHOR))
 			throw new TaskNotFoundException(taskId);
@@ -339,10 +451,10 @@ public class AnchorService {
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
 
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);
-		if(!taskRecord.getRlyTransid().equals(transId)) throw new TaskIntegrityCheckFailedException(taskId);
+		if(!taskRecord.getRlyTransid().equals(request.getTransId())) throw new TaskIntegrityCheckFailedException(taskId);
 
-		if(!StellarSignVerifier.verifySignBase64(taskRecord.getTradeaddr(), transId, signature))
-			throw new SignatureVerificationFailedException(transId, signature);
+		if(!StellarSignVerifier.verifySignBase64(taskRecord.getTradeaddr(), request.getTransId(), request.getSignature()))
+			throw new SignatureVerificationFailedException(request.getTransId(), request.getSignature());
 
 		DexKeyResult result = new DexKeyResult();
 		result.setDexKey(taskRecord.getRlyDexkey());

@@ -28,21 +28,21 @@ public class SwapController {
 
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.SWAP_PREDICT, method = RequestMethod.POST)
-	public DexResponse<SwapPredictionResult> anchor(@RequestBody SwapRequest postBody) throws TalkenException {
+	public DexResponse<SwapPredictionResult> predict(@RequestBody SwapRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(swapService.getSwapResultPrediction(postBody.getSourceAssetCode(), postBody.getSourceAmount(), postBody.getTargetAssetCode()));
 	}
 
 	@AuthRequired
-	@RequestMapping(value = RequestMappings.SWAP, method = RequestMethod.POST)
-	public DexResponse<SwapResult> anchorDexKey(@RequestBody SwapRequest postBody) throws TalkenException {
+	@RequestMapping(value = RequestMappings.SWAP_TASK, method = RequestMethod.POST)
+	public DexResponse<SwapResult> swap(@RequestBody SwapRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(swapService.swap(authInfo.getUserId(), postBody));
 	}
 
-	@RequestMapping(value = RequestMappings.SWAP_DEXKEY, method = RequestMethod.POST)
-	public DexResponse<DexKeyResult> deanchorDexKey(@RequestBody DexKeyRequest postBody) throws TalkenException {
+	@RequestMapping(value = RequestMappings.SWAP_TASK_DEXKEY, method = RequestMethod.POST)
+	public DexResponse<DexKeyResult> swapDexKey(@RequestBody DexKeyRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(swapService.swapDexKey(postBody.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
+		return DexResponse.buildResponse(swapService.swapDexKey(postBody.getUserId(), postBody));
 	}
 }

@@ -175,7 +175,9 @@ public class SwapService {
 		return result;
 	}
 
-	public DexKeyResult swapDexKey(Long userId, String taskId, String transId, String signature) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
+	public DexKeyResult swapDexKey(Long userId, DexKeyRequest request) throws TaskIntegrityCheckFailedException, TaskNotFoundException, SignatureVerificationFailedException {
+		final String taskId = request.getTaskId();
+
 		DexTaskId dexTaskId = DexTaskId.decode_taskId(taskId);
 		if(!dexTaskId.getType().equals(DexTaskTypeEnum.SWAP_ANCHOR))
 			throw new TaskNotFoundException(taskId);
@@ -185,10 +187,10 @@ public class SwapService {
 				.fetchOptional().orElseThrow(() -> new TaskNotFoundException(taskId));
 
 		if(!taskRecord.getUserId().equals(userId)) throw new TaskIntegrityCheckFailedException(taskId);
-		if(!taskRecord.getRlyTransid().equals(transId)) throw new TaskIntegrityCheckFailedException(taskId);
+		if(!taskRecord.getRlyTransid().equals(request.getTransId())) throw new TaskIntegrityCheckFailedException(taskId);
 
-		if(!StellarSignVerifier.verifySignBase64(taskRecord.getTradeaddr(), transId, signature))
-			throw new SignatureVerificationFailedException(transId, signature);
+		if(!StellarSignVerifier.verifySignBase64(taskRecord.getTradeaddr(), request.getTransId(), request.getSignature()))
+			throw new SignatureVerificationFailedException(request.getTransId(), request.getSignature());
 
 		DexKeyResult result = new DexKeyResult();
 		result.setDexKey(taskRecord.getRlyDexkey());

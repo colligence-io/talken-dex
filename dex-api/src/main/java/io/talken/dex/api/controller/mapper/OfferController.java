@@ -28,26 +28,26 @@ public class OfferController {
 	private AuthInfo authInfo;
 
 //	@AuthRequired
-//	@RequestMapping(value = RequestMappings.CREATE_OFFER, method = RequestMethod.POST)
+//	@RequestMapping(value = RequestMappings.CREATE_OFFER_TASK, method = RequestMethod.POST)
 //	public DexResponse<CreateOfferResult> createOffer(@RequestBody CreateOfferRequest postBody) throws TalkenException {
 //		DTOValidator.validate(postBody);
 //		return DexResponse.buildResponse(offerService.createOffer(authInfo.getUserId(), postBody.getTradeWalletAddress(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
 //	}
 //
-//	@RequestMapping(value = RequestMappings.CREATE_OFFER_DEXKEY, method = RequestMethod.POST)
+//	@RequestMapping(value = RequestMappings.CREATE_OFFER_TASK_DEXKEY, method = RequestMethod.POST)
 //	public DexResponse<DexKeyResult> createOfferDexKey(@RequestBody DexKeyRequest postBody) throws TalkenException {
 //		DTOValidator.validate(postBody);
 //		return DexResponse.buildResponse(offerService.createOfferDexKey(postBody.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
 //	}
 //
 //	@AuthRequired
-//	@RequestMapping(value = RequestMappings.DELETE_OFFER, method = RequestMethod.POST)
+//	@RequestMapping(value = RequestMappings.DELETE_OFFER_TASK, method = RequestMethod.POST)
 //	public DexResponse<DeleteOfferResult> deleteOffer(@RequestBody DeleteOfferRequest postBody) throws TalkenException {
 //		DTOValidator.validate(postBody);
 //		return DexResponse.buildResponse(offerService.deleteOffer(authInfo.getUserId(), postBody.getOfferId(), postBody.getTradeWalletAddress(), postBody.getSellAssetCode(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice()));
 //	}
 //
-//	@RequestMapping(value = RequestMappings.DELETE_OFFER_DEXKEY, method = RequestMethod.POST)
+//	@RequestMapping(value = RequestMappings.DELETE_OFFER_TASK_DEXKEY, method = RequestMethod.POST)
 //	public DexResponse<DexKeyResult> deleteOfferDexKey(@RequestBody DexKeyRequest postBody) throws TalkenException {
 //		DTOValidator.validate(postBody);
 //		return DexResponse.buildResponse(offerService.deleteOfferDexKey(postBody.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));

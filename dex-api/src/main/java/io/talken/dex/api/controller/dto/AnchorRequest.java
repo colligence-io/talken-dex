@@ -9,26 +9,13 @@ import java.math.BigDecimal;
 @Data
 public class AnchorRequest {
 	@NotEmpty
-	private String type;
+	private String privateWalletAddress;
 	@NotEmpty
-	private String coin;
+	private String tradeWalletAddress;
 	@NotEmpty
-	private String symbol;
+	private String assetCode;
 	@NotNull
 	private BigDecimal amount;
-	@NotEmpty
-	private String from;
-
-	private String to;
-	@NotEmpty
-	private String stellar;
-
-	private _Asset asset;
-	private String contract;
-
-	@Data
-	public static class _Asset {
-		private String issuer;
-		private String code;
-	}
+	@NotNull
+	private BigDecimal networkFee;
 }
