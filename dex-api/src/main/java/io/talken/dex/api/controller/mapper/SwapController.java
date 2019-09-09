@@ -40,7 +40,7 @@ public class SwapController {
 		return DexResponse.buildResponse(swapService.swap(authInfo.getUserId(), postBody));
 	}
 
-	@RequestMapping(value = RequestMappings.DEANCHOR_TASK_DEXKEY, method = RequestMethod.POST)
+	@RequestMapping(value = RequestMappings.SWAP_DEXKEY, method = RequestMethod.POST)
 	public DexResponse<DexKeyResult> deanchorDexKey(@RequestBody DexKeyRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(swapService.swapDexKey(postBody.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));

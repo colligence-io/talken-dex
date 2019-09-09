@@ -25,6 +25,7 @@ public class RequestMappings {
 	public static final String DELETE_OFFER_DEXKEY = DELETE_OFFER + DEXKEY_SUFFIX;
 
 	public static final String SWAP = DEX + "/swap";
+	public static final String SWAP_DEXKEY = SWAP + DEXKEY_SUFFIX;
 	public static final String SWAP_PREDICT = SWAP + "/predict";
 
 	public static final String TXLIST = DEX + "/txList";
