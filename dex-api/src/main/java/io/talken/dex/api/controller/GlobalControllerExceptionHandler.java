@@ -54,8 +54,7 @@ public class GlobalControllerExceptionHandler {
 	@ExceptionHandler(UnauthorizedException.class)
 	@ResponseBody
 	public DexResponse<Void> handleRuntimeException(UnauthorizedException e, Locale locale) {
-		logger.exception(e);
-		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.UNAUTHORIZED.value(), ms.getMessage(locale, e), HttpStatus.UNAUTHORIZED, null));
+		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(), HttpStatus.UNAUTHORIZED, null));
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
