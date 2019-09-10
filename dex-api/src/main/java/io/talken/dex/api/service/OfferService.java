@@ -2,7 +2,6 @@ package io.talken.dex.api.service;
 
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
@@ -166,7 +165,7 @@ public class OfferService {
 			encData.addDescription("buyAmount", StellarConverter.rawToActualString(taskRecord.getBuyamountraw()));
 			encData.addDescription("feeAssetCode", taskRecord.getFeeassetcode());
 			encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
-		} catch(JsonProcessingException | GeneralSecurityException e) {
+		} catch(GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
 			throw new InternalServerErrorException(e);
 		}
@@ -324,7 +323,7 @@ public class OfferService {
 			encData.addDescription("sellAssetCode", taskRecord.getSellassetcode());
 			encData.addDescription("buyAssetCode", taskRecord.getBuyassetcode());
 			encData.addDescription("price", taskRecord.getPrice().stripTrailingZeros().toPlainString());
-		} catch(JsonProcessingException | GeneralSecurityException e) {
+		} catch(GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
 			throw new InternalServerErrorException(e);
 		}

@@ -2,12 +2,12 @@ package io.talken.dex.api.service;
 
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskDeanchorRecord;
+import io.talken.common.util.GSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.IntegrationResult;
@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -62,6 +63,17 @@ public class AnchorService {
 
 	@Autowired
 	private DSLContext dslContext;
+
+	@PostConstruct
+	private void test() {
+		try {
+			AnchorRequestOld aa = new AnchorRequestOld();
+			aa.setTransactionFee(new BigDecimal("0.00001"));
+			logger.info(GSONWriter.toJsonString(aa));
+		} catch(Exception ex) {
+			logger.exception(ex);
+		}
+	}
 
 	public AnchorResult anchor_old(long userId, AnchorRequestOld request) throws TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
 		final String privateWalletAddress = request.getFrom();
@@ -119,7 +131,7 @@ public class AnchorService {
 			encData.addDescription("assetCode", taskRecord.getAssetcode());
 			encData.addDescription("amount", StellarConverter.rawToActualString(BigInteger.valueOf(taskRecord.getAmountraw())));
 			encData.addDescription("networkFee", taskRecord.getNetworkfee().stripTrailingZeros().toPlainString());
-		} catch(JsonProcessingException | GeneralSecurityException e) {
+		} catch(GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
 
 			taskRecord.setErrorposition("encrypt relay data");
@@ -225,7 +237,7 @@ public class AnchorService {
 			encData.addDescription("assetCode", taskRecord.getAssetcode());
 			encData.addDescription("amount", StellarConverter.rawToActualString(BigInteger.valueOf(taskRecord.getAmountraw())));
 			encData.addDescription("networkFee", taskRecord.getNetworkfee().stripTrailingZeros().toPlainString());
-		} catch(JsonProcessingException | GeneralSecurityException e) {
+		} catch(GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
 
 			taskRecord.setErrorposition("encrypt relay data");
@@ -401,7 +413,7 @@ public class AnchorService {
 			encData.addDescription("feeAssetCode", taskRecord.getFeeassettype());
 			encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
 			encData.addDescription("networkFee", taskRecord.getNetworkfee().stripTrailingZeros().toPlainString());
-		} catch(JsonProcessingException | GeneralSecurityException e) {
+		} catch(GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
 
 			taskRecord.setErrorposition("encrypt relay data");

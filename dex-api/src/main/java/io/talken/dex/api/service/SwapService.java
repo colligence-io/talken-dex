@@ -1,6 +1,5 @@
 package io.talken.dex.api.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.DexSwapStatusEnum;
@@ -141,7 +140,7 @@ public class SwapService {
 			encData.addDescription("assetHolderAddress", holderAddr);
 			encData.addDescription("swapperAddress", swapperAddr);
 
-		} catch(JsonProcessingException | GeneralSecurityException e) {
+		} catch(GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
 			throw new InternalServerErrorException(e);
 		}

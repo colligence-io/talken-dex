@@ -1,9 +1,8 @@
 package io.talken.dex.api.service.integration.relay;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.talken.common.util.AES256Util;
-import io.talken.common.util.JSONWriter;
+import io.talken.common.util.GSONWriter;
 import io.talken.common.util.RandomStringGenerator;
 
 import javax.crypto.KeyGenerator;
@@ -18,13 +17,13 @@ public class RelayEncryptedContent<T> {
 	private String encrypted;
 	private Map<String, String> description;
 
-	public RelayEncryptedContent(T data) throws JsonProcessingException, GeneralSecurityException {
+	public RelayEncryptedContent(T data) throws GeneralSecurityException {
 		this.data = data;
 		this.description = new HashMap<>();
 		encrypt();
 	}
 
-	private void encrypt() throws JsonProcessingException, GeneralSecurityException {
+	private void encrypt() throws GeneralSecurityException {
 		try {
 			KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 			keyGen.init(256);
@@ -33,7 +32,7 @@ public class RelayEncryptedContent<T> {
 			key = RandomStringGenerator.generate(16);
 		}
 
-		encrypted = new AES256Util(key).encrypt(JSONWriter.toJsonString(data));
+		encrypted = new AES256Util(key).encrypt(GSONWriter.toJsonString(data));
 	}
 
 	public T getData() {
