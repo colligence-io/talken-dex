@@ -17,6 +17,8 @@ public class DeanchorRequest {
 	@NotNull
 	private BigDecimal amount;
 	private Boolean feeByTalk;
+	@NotNull
+	private BigDecimal networkFee;
 
 	public Boolean getFeeByTalk() {
 		return (feeByTalk != null) ? feeByTalk : false;

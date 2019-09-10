@@ -34,7 +34,7 @@ public class AnchorController {
 	@RequestMapping(value = RequestMappings.ANCHOR_TASK, method = RequestMethod.POST)
 	public DexResponse<AnchorResult> anchor_old(@RequestBody AnchorRequestOld postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(anchorService.anchor_old(authInfo.getUserId(), postBody.getFrom(), postBody.getStellar(), postBody.getSymbol(), postBody.getAmount(), postBody));
+		return DexResponse.buildResponse(anchorService.anchor_old(authInfo.getUserId(), postBody));
 	}
 
 	//	@AuthRequired

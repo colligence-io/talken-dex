@@ -63,9 +63,14 @@ public class AnchorService {
 	@Autowired
 	private DSLContext dslContext;
 
-	public AnchorResult anchor_old(long userId, String privateWalletAddress, String tradeWalletAddress, String assetCode, BigDecimal amount, AnchorRequestOld ancRequestBody) throws TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
+	public AnchorResult anchor_old(long userId, AnchorRequestOld request) throws TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException {
+		final String privateWalletAddress = request.getFrom();
+		final String tradeWalletAddress = request.getStellar();
+		final String assetCode = request.getSymbol();
+		final BigDecimal amount = request.getAmount();
+
 		String assetHolderAddress = tmService.getActiveHolderAccountAddress(assetCode);
-		ancRequestBody.setTo(assetHolderAddress);
+		request.setTo(assetHolderAddress);
 
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
 
@@ -79,6 +84,7 @@ public class AnchorService {
 		taskRecord.setHolderaddr(assetHolderAddress);
 		taskRecord.setAssetcode(assetCode);
 		taskRecord.setAmountraw(StellarConverter.actualToRaw(amount).longValueExact());
+		taskRecord.setNetworkfee(request.getTransactionFee());
 
 		AncServerAnchorRequest anchor_request = new AncServerAnchorRequest();
 		anchor_request.setTaskId(dexTaskId.getId());
@@ -105,13 +111,14 @@ public class AnchorService {
 		// build relay contents
 		RelayEncryptedContent<AnchorRequestOld> encData;
 		try {
-			encData = new RelayEncryptedContent<>(ancRequestBody);
+			encData = new RelayEncryptedContent<>(request);
 			// set trans description
 			encData.addDescription("privateWalletAddress", taskRecord.getPrivateaddr());
 			encData.addDescription("tradeWalletAddress", taskRecord.getTradeaddr());
 			encData.addDescription("assetHolderAddress", taskRecord.getHolderaddr());
 			encData.addDescription("assetCode", taskRecord.getAssetcode());
 			encData.addDescription("amount", StellarConverter.rawToActualString(BigInteger.valueOf(taskRecord.getAmountraw())));
+			encData.addDescription("networkFee", taskRecord.getNetworkfee().stripTrailingZeros().toPlainString());
 		} catch(JsonProcessingException | GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
 
@@ -160,7 +167,6 @@ public class AnchorService {
 
 	public AnchorResult anchor(long userId, AnchorRequest request) throws TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException, InternalServerErrorException, BlockChainPlatformNotSupportedException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
-		final BigDecimal networkFee = request.getNetworkFee().stripTrailingZeros();
 
 		String assetHolderAddress = tmService.getActiveHolderAccountAddress(request.getAssetCode());
 
@@ -176,6 +182,7 @@ public class AnchorService {
 		taskRecord.setHolderaddr(assetHolderAddress);
 		taskRecord.setAssetcode(request.getAssetCode());
 		taskRecord.setAmountraw(StellarConverter.actualToRaw(amount).longValueExact());
+		taskRecord.setNetworkfee(request.getNetworkFee());
 
 		AncServerAnchorRequest anchor_request = new AncServerAnchorRequest();
 		anchor_request.setTaskId(dexTaskId.getId());
@@ -207,7 +214,7 @@ public class AnchorService {
 			relayTransferDTO.setFrom(request.getPrivateWalletAddress());
 			relayTransferDTO.setTo(assetHolderAddress);
 			relayTransferDTO.setAmount(amount);
-			relayTransferDTO.setNetfee(networkFee);
+			relayTransferDTO.setNetfee(request.getNetworkFee());
 			relayTransferDTO.setMemo(dexTaskId.getId());
 
 			encData = new RelayEncryptedContent<>(relayTransferDTO);
@@ -216,8 +223,8 @@ public class AnchorService {
 			encData.addDescription("tradeWalletAddress", taskRecord.getTradeaddr());
 			encData.addDescription("assetHolderAddress", taskRecord.getHolderaddr());
 			encData.addDescription("assetCode", taskRecord.getAssetcode());
-			encData.addDescription("networkFee", networkFee.toPlainString());
 			encData.addDescription("amount", StellarConverter.rawToActualString(BigInteger.valueOf(taskRecord.getAmountraw())));
+			encData.addDescription("networkFee", taskRecord.getNetworkfee().stripTrailingZeros().toPlainString());
 		} catch(JsonProcessingException | GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
 
@@ -300,6 +307,7 @@ public class AnchorService {
 		taskRecord.setTradeaddr(request.getTradeWalletAddress());
 		taskRecord.setAssetcode(request.getAssetCode());
 		taskRecord.setAmountraw(StellarConverter.actualToRaw(amount).longValueExact());
+		taskRecord.setNetworkfee(request.getNetworkFee());
 		taskRecord.setFeebyctx(feeByTalk);
 
 		// calculate fee
@@ -321,7 +329,7 @@ public class AnchorService {
 
 			Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount, stellarNetworkService.getNetwork())
 					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-					.setOperationFee(stellarNetworkService.getNetworkFee())
+					.setOperationFee(StellarConverter.actualToRaw(request.getNetworkFee()).intValueExact())
 					.addMemo(Memo.text(dexTaskId.getId()));
 
 			// build fee operation
@@ -392,6 +400,7 @@ public class AnchorService {
 			encData.addDescription("amount", StellarConverter.rawToActualString(taskRecord.getAmountraw()));
 			encData.addDescription("feeAssetCode", taskRecord.getFeeassettype());
 			encData.addDescription("feeAmount", StellarConverter.rawToActualString(taskRecord.getFeeamountraw()));
+			encData.addDescription("networkFee", taskRecord.getNetworkfee().stripTrailingZeros().toPlainString());
 		} catch(JsonProcessingException | GeneralSecurityException e) {
 			logger.error("{} failed. {} {}", dexTaskId, e.getClass().getSimpleName(), e.getMessage());
 

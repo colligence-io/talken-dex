@@ -26,6 +26,9 @@ public class AnchorRequestOld {
 	private _Asset asset;
 	private String contract;
 
+	@NotNull
+	private BigDecimal transactionFee;
+
 	@Data
 	public static class _Asset {
 		private String issuer;
