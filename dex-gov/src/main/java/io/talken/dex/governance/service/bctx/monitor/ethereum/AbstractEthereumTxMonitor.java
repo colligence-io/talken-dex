@@ -180,7 +180,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 								txr.setTokenSymbol(erc20ContractInfo.getSymbol());
 								txr.setTokenDecimal(erc20ContractInfo.getDecimals().toString());
 							} else {
-								logger.warn("Cannot get ERC20 contract info for {}, txReceipt is will not stored properly", receipt.getTo());
+								logger.debug("Cannot get ERC20 contract info for {}, txReceipt is will not stored properly", receipt.getTo());
 							}
 							rtn.add(txr);
 						}
@@ -203,7 +203,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 								txr.setTokenSymbol(erc20ContractInfo.getSymbol());
 								txr.setTokenDecimal(erc20ContractInfo.getDecimals().toString());
 							} else {
-								logger.warn("Cannot get ERC20 contract info for {}, txReceipt is will not stored properly", receipt.getTo());
+								logger.debug("Cannot get ERC20 contract info for {}, txReceipt is will not stored properly", receipt.getTo());
 							}
 							rtn.add(txr);
 						}
