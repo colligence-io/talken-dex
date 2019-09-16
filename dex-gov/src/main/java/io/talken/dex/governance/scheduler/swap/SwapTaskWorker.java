@@ -11,7 +11,6 @@ import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.stellar.sdk.KeyPair;
 
 import java.time.Duration;
 import java.util.LinkedList;
@@ -39,8 +38,6 @@ public abstract class SwapTaskWorker {
 	@Autowired
 	protected TokenMetaGovService tmService;
 
-	private KeyPair channel;
-
 	private final String workerName;
 
 	protected SwapTaskWorker() {
@@ -51,15 +48,6 @@ public abstract class SwapTaskWorker {
 
 	public final String getName() {
 		return this.workerName;
-	}
-
-	protected KeyPair getChannel() {
-		if(this.channel != null) return channel;
-		throw new IllegalArgumentException("Stellar Channel for " + this.workerName + " is not configured.");
-	}
-
-	public void setChannel(KeyPair channel) {
-		this.channel = channel;
 	}
 
 	public abstract DexSwapStatusEnum getStartStatus();

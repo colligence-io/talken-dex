@@ -13,7 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.Map;
 
 @Component
 @ConfigurationProperties("talken.dex")
@@ -55,26 +54,5 @@ public class GovSettings extends DexSettings {
 		private int poolSize;
 		private int maxPoolSize;
 		private int queueCapacity;
-	}
-
-	private _Task task;
-
-	@Getter
-	@Setter
-	public static class _Task extends DexSettings._Task {
-		private _Swap swap;
-
-		@Getter
-		@Setter
-		public static class _Swap extends DexSettings._Task._Swap {
-			private Map<String, _Channel> workerChannel;
-
-			@Getter
-			@Setter
-			public static class _Channel {
-				private String publicKey;
-				private String secretKey;
-			}
-		}
 	}
 }

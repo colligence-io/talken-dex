@@ -10,6 +10,7 @@ import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.dex.governance.scheduler.swap.SwapTaskWorker;
 import io.talken.dex.governance.scheduler.swap.WorkerProcessResult;
+import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.integration.anchor.AncServerDeanchorRequest;
@@ -18,8 +19,10 @@ import io.talken.dex.shared.service.integration.anchor.AnchorServerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.stellar.sdk.*;
-import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.Memo;
+import org.stellar.sdk.PaymentOperation;
+import org.stellar.sdk.Server;
+import org.stellar.sdk.Transaction;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
@@ -55,51 +58,90 @@ public class SwapRefundWorker extends SwapTaskWorker {
 		// pick horizon server
 		Server server = stellarNetworkService.pickServer();
 
-		String assetBaseAddr;
 
-		// build tx
+		TokenMeta.ManagedInfo sourceMeta;
+		try {
+			sourceMeta = tmService.getManaged(record.getSourceassetcode());
+		} catch(Exception ex) {
+			retryOrFail(record);
+			return new WorkerProcessResult.Builder(this, record).exception("get meta", ex);
+		}
+
+		// build tx with channel
 		Transaction tx;
 		try {
-			// prepare accounts
-			KeyPair channel = getChannel();
+			tx = stellarNetworkService.buildTxWithChannel(server, (txBuilder) -> {
+				Transaction _tx = txBuilder
+						.setOperationFee(stellarNetworkService.getNetworkFee())
+						.addMemo(Memo.text(dexTaskId.getId()))
+						.addOperation(
+								new PaymentOperation.Builder(
+										sourceMeta.getBaseaddress(),
+										sourceMeta.getAssetType(),
+										StellarConverter.rawToActualString(record.getSourceamountraw())
+								)
+										.setSourceAccount(record.getSwapperaddr())
+										.build()
+						).build();
 
-			// load up-to-date information
-			AccountResponse channelAccount = server.accounts().account(channel.getAccountId());
+				String txHash = ByteArrayUtil.toHexString(_tx.hash());
 
-			// get assetType
-			Asset assetType = tmService.getManaged(record.getSourceassetcode()).getAssetType();
-			assetBaseAddr = tmService.getManaged(record.getSourceassetcode()).getBaseaddress();
+				// sign with swapper via signServer
+				logger.debug("Request sign for {} {}", record.getSwapperaddr(), txHash);
+				signServerService.signStellarTransaction(_tx, record.getSwapperaddr());
 
-
-			Transaction.Builder txBuilder = new Transaction.Builder(channelAccount, stellarNetworkService.getNetwork())
-					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-					.setOperationFee(stellarNetworkService.getNetworkFee())
-					.addMemo(Memo.text(dexTaskId.getId()))
-					.addOperation(
-							new PaymentOperation.Builder(
-									assetBaseAddr,
-									assetType,
-									StellarConverter.rawToActualString(record.getSourceamountraw())
-							)
-									.setSourceAccount(record.getSwapperaddr())
-									.build()
-					);
-
-			// build tx
-			tx = txBuilder.build();
-
-			String txHash = ByteArrayUtil.toHexString(tx.hash());
-
-			// sign with swapper via signServer
-			logger.debug("Request sign for {} {}", record.getSwapperaddr(), txHash);
-			signServerService.signStellarTransaction(tx, record.getSwapperaddr());
-
-			// sign with channel
-			tx.sign(channel);
+				return _tx;
+			});
 		} catch(Exception ex) {
 			retryOrFail(record);
 			return new WorkerProcessResult.Builder(this, record).exception("build tx", ex);
 		}
+
+
+//
+//		// build tx
+//		Transaction tx;
+//		try {
+//			// prepare accounts
+//			KeyPair channel = getChannel();
+//
+//			// load up-to-date information
+//			AccountResponse channelAccount = server.accounts().account(channel.getAccountId());
+//
+//			// get assetType
+//			Asset assetType = tmService.getManaged(record.getSourceassetcode()).getAssetType();
+//			assetBaseAddr = tmService.getManaged(record.getSourceassetcode()).getBaseaddress();
+//
+//
+//			Transaction.Builder txBuilder = new Transaction.Builder(channelAccount, stellarNetworkService.getNetwork())
+//					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+//					.setOperationFee(stellarNetworkService.getNetworkFee())
+//					.addMemo(Memo.text(dexTaskId.getId()))
+//					.addOperation(
+//							new PaymentOperation.Builder(
+//									assetBaseAddr,
+//									assetType,
+//									StellarConverter.rawToActualString(record.getSourceamountraw())
+//							)
+//									.setSourceAccount(record.getSwapperaddr())
+//									.build()
+//					);
+//
+//			// build tx
+//			tx = txBuilder.build();
+//
+//			String txHash = ByteArrayUtil.toHexString(tx.hash());
+//
+//			// sign with swapper via signServer
+//			logger.debug("Request sign for {} {}", record.getSwapperaddr(), txHash);
+//			signServerService.signStellarTransaction(tx, record.getSwapperaddr());
+//
+//			// sign with channel
+//			tx.sign(channel);
+//		} catch(Exception ex) {
+//			retryOrFail(record);
+//			return new WorkerProcessResult.Builder(this, record).exception("build tx", ex);
+//		}
 
 		// request deanchor monitor
 		AncServerDeanchorRequest deanchor_request = new AncServerDeanchorRequest();
@@ -108,7 +150,7 @@ public class SwapRefundWorker extends SwapTaskWorker {
 		deanchor_request.setSymbol(record.getSourceassetcode());
 		deanchor_request.setHash(ByteArrayUtil.toHexString(tx.hash()));
 		deanchor_request.setFrom(record.getSwapperaddr());
-		deanchor_request.setTo(assetBaseAddr);
+		deanchor_request.setTo(sourceMeta.getBaseaddress());
 		deanchor_request.setAddress(record.getPrivatesourceaddr());
 		deanchor_request.setValue(StellarConverter.rawToActual(record.getSourceamountraw()).doubleValue());
 		deanchor_request.setMemo(UTCUtil.getNow().toString());

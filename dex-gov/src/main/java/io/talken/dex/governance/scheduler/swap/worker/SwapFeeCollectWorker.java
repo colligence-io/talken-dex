@@ -9,13 +9,16 @@ import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.governance.scheduler.swap.SwapTaskWorker;
 import io.talken.dex.governance.scheduler.swap.WorkerProcessResult;
+import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.stellar.sdk.*;
-import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.Memo;
+import org.stellar.sdk.PaymentOperation;
+import org.stellar.sdk.Server;
+import org.stellar.sdk.Transaction;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
@@ -50,17 +53,18 @@ public class SwapFeeCollectWorker extends SwapTaskWorker {
 		// pick horizon server
 		Server server = stellarNetworkService.pickServer();
 
-		// build tx
+		TokenMeta.ManagedInfo sourceMeta;
+		try {
+			sourceMeta = tmService.getManaged(record.getSourceassetcode());
+		} catch(Exception ex) {
+			retryOrFail(record);
+			return new WorkerProcessResult.Builder(this, record).exception("get meta", ex);
+		}
+
+		// build tx with channel
 		Transaction tx;
 		try {
-			// prepare accounts
-			KeyPair channel = getChannel();
 
-			// load up-to-date information
-			AccountResponse channelAccount = server.accounts().account(channel.getAccountId());
-
-			// get assetType
-			Asset sourceAssetType = tmService.getManaged(record.getSourceassetcode()).getAssetType();
 			Long amount = record.getSourceamountraw() - record.getPpSpentamountraw();
 			if(amount <= 0) { // nothing to collect, finish
 				record.setStatus(DexSwapStatusEnum.TASK_FINISHED);
@@ -68,35 +72,80 @@ public class SwapFeeCollectWorker extends SwapTaskWorker {
 				return new WorkerProcessResult.Builder(this, record).success();
 			}
 
-			Transaction.Builder txBuilder = new Transaction.Builder(channelAccount, stellarNetworkService.getNetwork())
-					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-					.setOperationFee(stellarNetworkService.getNetworkFee())
-					.addMemo(Memo.text(dexTaskId.getId()))
-					.addOperation(
-							new PaymentOperation.Builder(
-									record.getFcFeecollectaccount(),
-									sourceAssetType,
-									StellarConverter.rawToActualString(amount)
-							)
-									.setSourceAccount(record.getSwapperaddr())
-									.build()
-					);
+			tx = stellarNetworkService.buildTxWithChannel(server, (txBuilder) -> {
+				Transaction _tx = txBuilder
+						.setOperationFee(stellarNetworkService.getNetworkFee())
+						.addMemo(Memo.text(dexTaskId.getId()))
+						.addOperation(
+								new PaymentOperation.Builder(
+										record.getFcFeecollectaccount(),
+										sourceMeta.getAssetType(),
+										StellarConverter.rawToActualString(amount)
+								)
+										.setSourceAccount(record.getSwapperaddr())
+										.build()
+						).build();
 
-			// build tx
-			tx = txBuilder.build();
 
-			String txHash = ByteArrayUtil.toHexString(tx.hash());
+				String txHash = ByteArrayUtil.toHexString(_tx.hash());
 
-			// sign with swapper via signServer
-			logger.debug("Request sign for {} {}", record.getSwapperaddr(), txHash);
-			signServerService.signStellarTransaction(tx, record.getSwapperaddr());
-
-			// sign with channel
-			tx.sign(channel);
+				// sign with swapper via signServer
+				logger.debug("Request sign for {} {}", record.getSwapperaddr(), txHash);
+				signServerService.signStellarTransaction(_tx, record.getSwapperaddr());
+				return _tx;
+			});
 		} catch(Exception ex) {
 			retryOrFail(record);
 			return new WorkerProcessResult.Builder(this, record).exception("build tx", ex);
 		}
+//
+//		// build tx
+//		Transaction tx;
+//		try {
+//			// prepare accounts
+//			KeyPair channel = getChannel();
+//
+//			// load up-to-date information
+//			AccountResponse channelAccount = server.accounts().account(channel.getAccountId());
+//
+//			// get assetType
+//			Asset sourceAssetType = tmService.getManaged(record.getSourceassetcode()).getAssetType();
+//			Long amount = record.getSourceamountraw() - record.getPpSpentamountraw();
+//			if(amount <= 0) { // nothing to collect, finish
+//				record.setStatus(DexSwapStatusEnum.TASK_FINISHED);
+//				record.update();
+//				return new WorkerProcessResult.Builder(this, record).success();
+//			}
+//
+//			Transaction.Builder txBuilder = new Transaction.Builder(channelAccount, stellarNetworkService.getNetwork())
+//					.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+//					.setOperationFee(stellarNetworkService.getNetworkFee())
+//					.addMemo(Memo.text(dexTaskId.getId()))
+//					.addOperation(
+//							new PaymentOperation.Builder(
+//									record.getFcFeecollectaccount(),
+//									sourceAssetType,
+//									StellarConverter.rawToActualString(amount)
+//							)
+//									.setSourceAccount(record.getSwapperaddr())
+//									.build()
+//					);
+//
+//			// build tx
+//			tx = txBuilder.build();
+//
+//			String txHash = ByteArrayUtil.toHexString(tx.hash());
+//
+//			// sign with swapper via signServer
+//			logger.debug("Request sign for {} {}", record.getSwapperaddr(), txHash);
+//			signServerService.signStellarTransaction(tx, record.getSwapperaddr());
+//
+//			// sign with channel
+//			tx.sign(channel);
+//		} catch(Exception ex) {
+//			retryOrFail(record);
+//			return new WorkerProcessResult.Builder(this, record).exception("build tx", ex);
+//		}
 
 		// update tx info before submit
 		record.setFcTaskid(dexTaskId.getId());

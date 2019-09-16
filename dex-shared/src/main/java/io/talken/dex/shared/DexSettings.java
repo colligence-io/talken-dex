@@ -67,7 +67,7 @@ public class DexSettings {
 	@Getter
 	@Setter
 	public static class _BCNodes {
-		private NodeServerList stellar;
+		private _Stellar stellar;
 		private _Ethereum ethereum;
 		private _Luniverse luniverse;
 	}
@@ -77,6 +77,19 @@ public class DexSettings {
 	public static class NodeServerList {
 		private String network;
 		private List<String> serverList;
+	}
+
+	@Getter
+	@Setter
+	public static class _Stellar extends NodeServerList {
+		private List<_Channel> channels;
+
+		@Getter
+		@Setter
+		public static class _Channel {
+			private String publicKey;
+			private String secretKey;
+		}
 	}
 
 	@Getter
