@@ -99,7 +99,7 @@ public class StellarNetworkService {
 		Transaction buildTxAndSign(Transaction.Builder builder) throws Exception;
 	}
 
-	private StellarChannel pickChannel() throws IOException {
+	private StellarChannel pickChannel() {
 		synchronized(channels) {
 			Collections.sort(channels);
 			long until = System.currentTimeMillis() + PICK_CHANNEL_TMIEOUT;
