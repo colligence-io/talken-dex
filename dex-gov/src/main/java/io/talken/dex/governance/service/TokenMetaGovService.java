@@ -158,12 +158,15 @@ public class TokenMetaGovService {
 			Map<Long, TokenMeta.ManagedInfo> _tmMiMap = new HashMap<>();
 			for(TokenMetaManagedRecord _tmi : dslContext.selectFrom(TOKEN_META_MANAGED).fetch()) {
 
+				// trim data for sure
 				TokenMeta.ManagedInfo _miData = _tmi.into(TokenMeta.ManagedInfo.class);
 				_miData.setIssueraddress(_miData.getIssueraddress().trim());
-				_miData.setBaseaddress(_miData.getBaseaddress());
+				_miData.setBaseaddress(_miData.getBaseaddress().trim());
 				_miData.setOfferfeeholderaddress(_miData.getOfferfeeholderaddress().trim());
 				_miData.setDeancfeeholderaddress(_miData.getDeancfeeholderaddress().trim());
 				_miData.setSwapfeeholderaddress(_miData.getSwapfeeholderaddress().trim());
+				if(_miData.getDistributoraddress() != null)
+					_miData.setDistributoraddress(_miData.getDistributoraddress().trim());
 
 				_tmMiMap.put(_tmi.getTmId(), _miData);
 			}
@@ -285,6 +288,7 @@ public class TokenMetaGovService {
 				mi.setDeanchorFeeHolder(KeyPair.fromAccountId(mi.getDeancfeeholderaddress()));
 				mi.setOfferFeeHolder(KeyPair.fromAccountId(mi.getOfferfeeholderaddress()));
 				mi.setSwapFeeHolder(KeyPair.fromAccountId(mi.getSwapfeeholderaddress()));
+				mi.setDistributoraddress(mi.getDistributoraddress());
 
 				mi.setMarketPair(new HashMap<>());
 				if(_tmMpMap.containsKey(_tmd.getId())) {
@@ -354,6 +358,7 @@ public class TokenMetaGovService {
 				mi.setOfferFeeHolderAddress(_mi.getOfferfeeholderaddress());
 				mi.setDeancFeeHolderAddress(_mi.getDeancfeeholderaddress());
 				mi.setSwapFeeHolderAddress(_mi.getSwapfeeholderaddress());
+				mi.setDistributorAddress(_mi.getDistributoraddress());
 				if(_mi.getUpdateTimestamp() == null)
 					mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getCreateTimestamp()));
 				else
@@ -484,21 +489,14 @@ public class TokenMetaGovService {
 		).orElseThrow(() -> new TokenMetaNotFoundException(assetCode));
 	}
 
+	public Collection<TokenMeta> getManagedCollection() {
+		return miTable.select();
+	}
+
 	public TokenMeta getTokenMetaById(Long tm_id) throws TokenMetaNotFoundException {
 		return Optional.ofNullable(tmIdMap.get(tm_id)).orElseThrow(() -> new TokenMetaNotFoundException(Long.toString(tm_id)));
 	}
-//
-//	public KeyPair getOfferFeeHolderAccount(String code) throws TokenMetaNotFoundException {
-//		return getManaged(code).getOfferFeeHolder();
-//	}
-//
-//	public KeyPair getDeanchorFeeHolderAccount(String code) throws TokenMetaNotFoundException {
-//		return getManaged(code).getDeanchorFeeHolder();
-//	}
-//
-//	public KeyPair getBaseAccount(String code) throws TokenMetaNotFoundException {
-//		return getManaged(code).getAssetBase();
-//	}
+
 //
 //	public String getActiveHolderAccountAddress(String code) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException {
 //		Optional<TokenMeta.HolderAccountInfo> opt_aha = getManaged(code).getAssetHolderAccounts().stream()

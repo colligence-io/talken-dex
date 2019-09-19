@@ -81,6 +81,7 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private String offerFeeHolderAddress;
 		private String deancFeeHolderAddress;
 		private String swapFeeHolderAddress;
+		private String distributorAddress;
 		private Map<String, MarketPairInfo> marketPair = null;
 		private List<HolderAccountInfo> assetHolderAccounts = null;
 		private Long updateTimestamp;

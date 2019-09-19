@@ -88,9 +88,29 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 			rawTx = RawTransaction.createEtherTransaction(nonce, gasPrice, gasLimit, bctx.getAddressTo(), amount);
 		}
 
+
+		if(contractAddr != null) {
+			rawTx = RawTransaction.createTransaction(
+					nonce,
+					gasPrice,
+					gasLimit,
+					contractAddr,
+					FunctionEncoder.encode(StandardERC20ContractFunctions.transfer(bctx.getAddressTo(), amount))
+			);
+
+		} else {
+			rawTx = RawTransaction.createEtherTransaction(
+					nonce,
+					gasPrice,
+					gasLimit,
+					bctx.getAddressTo(),
+					amount
+			);
+		}
+
 		log.setRequest(JSONWriter.toJsonString(rawTx));
 
-		logger.info("[BCTX#{}] Request sign for {} bctx#{}", bctx.getId(), bctx.getAddressFrom());
+		logger.info("[BCTX#{}] Request sign for {}", bctx.getId(), bctx.getAddressFrom());
 		byte[] txSigned = signServer().signEthereumTransaction(rawTx, bctx.getAddressFrom());
 
 		logger.info("[BCTX#{}] Sending TX to ethereum network.", bctx.getId());
