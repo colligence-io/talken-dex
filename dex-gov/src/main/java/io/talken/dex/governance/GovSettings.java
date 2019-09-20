@@ -26,9 +26,7 @@ public class GovSettings extends DexSettings {
 	private void readVaultSecret() {
 		// dex settings
 		VaultSecretDataDexSettings secret = secretReader.readSecret("dexSettings", VaultSecretDataDexSettings.class);
-		randomStringTable = secret.getTaskIdSeed();
-		DexTaskId.init(randomStringTable);
-
+		DexTaskId.init(secret.getTaskIdSeed());
 		getIntegration().setSignServer(new _Integration._SignServer());
 		getIntegration().getSignServer().setAddr(secret.getSignServerAddr());
 		getIntegration().getSignServer().setAppName(secret.getSignServerAppName());
@@ -41,10 +39,6 @@ public class GovSettings extends DexSettings {
 		VaultSecretDataCoinMarketCap cmc_secret = secretReader.readSecret("coinmarketcap", VaultSecretDataCoinMarketCap.class);
 		getIntegration().getCoinMarketCap().setApiKey(cmc_secret.getApiKey());
 	}
-
-	private String randomStringTable;
-
-	private String talkDistributorAddress;
 
 	private _Scheduler scheduler;
 

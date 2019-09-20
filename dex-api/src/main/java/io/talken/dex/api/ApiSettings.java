@@ -24,15 +24,12 @@ public class ApiSettings extends DexSettings {
 	@PostConstruct
 	private void readVaultSecret() {
 		VaultSecretDataDexSettings secret = secretReader.readSecret("dexSettings", VaultSecretDataDexSettings.class);
-		randomStringTable = secret.getTaskIdSeed();
-		DexTaskId.init(randomStringTable);
+		DexTaskId.init(secret.getTaskIdSeed());
 
 		VaultSecretDataWebJwt secret2 = secretReader.readSecret("web-jwt", VaultSecretDataWebJwt.class);
 		accessToken.jwtSecret = secret2.getSecret();
 		accessToken.jwtExpiration = secret2.getExpiration();
 	}
-
-	private String randomStringTable;
 
 	private _AccessToken accessToken;
 

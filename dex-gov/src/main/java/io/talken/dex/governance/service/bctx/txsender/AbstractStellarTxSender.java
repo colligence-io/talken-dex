@@ -13,6 +13,7 @@ import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.stellar.sdk.*;
+import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
@@ -39,13 +40,33 @@ public abstract class AbstractStellarTxSender extends TxSender {
 
 		KeyPair destination = KeyPair.fromAccountId(bctx.getAddressTo());
 
+		boolean destinationExists = false;
+
+		try {
+			AccountResponse destinationAccount = server.accounts().account(destination.getAccountId());
+			destinationExists = true;
+		} catch(ErrorResponse er) {
+			if(er.getCode() != 404) {
+				throw er;
+			}
+		}
+
+		Operation operation;
+		if(destinationExists) {
+			operation = new PaymentOperation
+					.Builder(destination.getAccountId(), asset, StellarConverter.actualToString(bctx.getAmount()))
+					.build();
+		} else {
+			operation = new CreateAccountOperation
+					.Builder(destination.getAccountId(), StellarConverter.actualToString(bctx.getAmount()))
+					.build();
+		}
+
 		Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount, stellarNetworkService.getNetwork())
 				.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
 				.setOperationFee(stellarNetworkService.getNetworkFee())
 				.addOperation(
-						new PaymentOperation
-								.Builder(destination.getAccountId(), asset, StellarConverter.actualToString(bctx.getAmount()))
-								.build()
+						operation
 				);
 
 		if(bctx.getTxAux() != null) txBuilder.addMemo(Memo.text(bctx.getTxAux()));
