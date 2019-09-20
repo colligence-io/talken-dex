@@ -18,7 +18,7 @@ import io.talken.common.util.collection.DoubleKeyObject;
 import io.talken.common.util.collection.DoubleKeyTable;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.collection.SingleKeyTable;
-import io.talken.dex.governance.service.integration.signer.SignServerService;
+import io.talken.dex.shared.service.integration.signer.SignServerService;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;

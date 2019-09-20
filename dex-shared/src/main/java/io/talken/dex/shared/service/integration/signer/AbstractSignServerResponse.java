@@ -1,4 +1,4 @@
-package io.talken.dex.governance.service.integration.signer;
+package io.talken.dex.shared.service.integration.signer;
 
 import io.talken.common.util.integration.rest.RestApiResponseInterface;
 import lombok.Data;

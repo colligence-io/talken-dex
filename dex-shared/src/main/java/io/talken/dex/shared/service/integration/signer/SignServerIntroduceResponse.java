@@ -1,4 +1,4 @@
-package io.talken.dex.governance.service.integration.signer;
+package io.talken.dex.shared.service.integration.signer;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

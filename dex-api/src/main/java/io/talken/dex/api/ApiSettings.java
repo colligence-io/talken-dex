@@ -1,10 +1,8 @@
 package io.talken.dex.api;
 
 import io.talken.common.persistence.vault.VaultSecretReader;
-import io.talken.common.persistence.vault.data.VaultSecretDataDexSettings;
 import io.talken.common.persistence.vault.data.VaultSecretDataWebJwt;
 import io.talken.dex.shared.DexSettings;
-import io.talken.dex.shared.DexTaskId;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +21,6 @@ public class ApiSettings extends DexSettings {
 
 	@PostConstruct
 	private void readVaultSecret() {
-		VaultSecretDataDexSettings secret = secretReader.readSecret("dexSettings", VaultSecretDataDexSettings.class);
-		DexTaskId.init(secret.getTaskIdSeed());
-
 		VaultSecretDataWebJwt secret2 = secretReader.readSecret("web-jwt", VaultSecretDataWebJwt.class);
 		accessToken.jwtSecret = secret2.getSecret();
 		accessToken.jwtExpiration = secret2.getExpiration();

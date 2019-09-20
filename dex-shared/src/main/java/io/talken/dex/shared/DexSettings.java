@@ -1,6 +1,7 @@
 package io.talken.dex.shared;
 
 import io.talken.common.persistence.vault.VaultSecretReader;
+import io.talken.common.persistence.vault.data.VaultSecretDataDexSettings;
 import io.talken.common.persistence.vault.data.VaultSecretDataLuniverse;
 import io.talken.common.persistence.vault.data.VaultSecretDataSlack;
 import lombok.Data;
@@ -20,6 +21,17 @@ public class DexSettings {
 
 	@PostConstruct
 	private void readVaultSecret() {
+		// dex settings
+		VaultSecretDataDexSettings secret = secretReader.readSecret("dexSettings", VaultSecretDataDexSettings.class);
+		DexTaskId.init(secret.getTaskIdSeed());
+		getIntegration().setSignServer(new _Integration._SignServer());
+		getIntegration().getSignServer().setAddr(secret.getSignServerAddr());
+		getIntegration().getSignServer().setAppName(secret.getSignServerAppName());
+		getIntegration().getSignServer().setAppKey(secret.getSignServerAppKey());
+
+		//slack
+		getIntegration().setSlack(secretReader.readSecret("slack", VaultSecretDataSlack.class));
+
 		this.getBcnode().getLuniverse().secret = secretReader.readSecret("luniverse", VaultSecretDataLuniverse.class);
 	}
 

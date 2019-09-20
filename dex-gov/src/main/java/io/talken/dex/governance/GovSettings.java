@@ -2,10 +2,8 @@ package io.talken.dex.governance;
 
 import io.talken.common.persistence.vault.VaultSecretReader;
 import io.talken.common.persistence.vault.data.VaultSecretDataCoinMarketCap;
-import io.talken.common.persistence.vault.data.VaultSecretDataDexSettings;
 import io.talken.common.persistence.vault.data.VaultSecretDataSlack;
 import io.talken.dex.shared.DexSettings;
-import io.talken.dex.shared.DexTaskId;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,17 +22,6 @@ public class GovSettings extends DexSettings {
 
 	@PostConstruct
 	private void readVaultSecret() {
-		// dex settings
-		VaultSecretDataDexSettings secret = secretReader.readSecret("dexSettings", VaultSecretDataDexSettings.class);
-		DexTaskId.init(secret.getTaskIdSeed());
-		getIntegration().setSignServer(new _Integration._SignServer());
-		getIntegration().getSignServer().setAddr(secret.getSignServerAddr());
-		getIntegration().getSignServer().setAppName(secret.getSignServerAppName());
-		getIntegration().getSignServer().setAppKey(secret.getSignServerAppKey());
-
-		//slack
-		getIntegration().setSlack(secretReader.readSecret("slack", VaultSecretDataSlack.class));
-
 		// coinmarketcap
 		VaultSecretDataCoinMarketCap cmc_secret = secretReader.readSecret("coinmarketcap", VaultSecretDataCoinMarketCap.class);
 		getIntegration().getCoinMarketCap().setApiKey(cmc_secret.getApiKey());

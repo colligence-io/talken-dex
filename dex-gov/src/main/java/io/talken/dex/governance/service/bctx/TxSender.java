@@ -7,7 +7,7 @@ import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.collection.SingleKeyObject;
 import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.TokenMetaGovService;
-import io.talken.dex.governance.service.integration.signer.SignServerService;
+import io.talken.dex.shared.service.integration.signer.SignServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class TxSender implements SingleKeyObject<BlockChainPlatformEnum> {

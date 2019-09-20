@@ -1,4 +1,4 @@
-package io.talken.dex.governance.service.integration.signer;
+package io.talken.dex.shared.service.integration.signer;
 
 import com.google.api.client.http.HttpHeaders;
 import io.talken.common.util.ByteArrayUtils;
@@ -6,12 +6,9 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.common.util.integration.rest.RestApiClient;
 import io.talken.common.util.integration.slack.AdminAlarmService;
-import io.talken.dex.governance.GovSettings;
 import io.talken.dex.shared.exception.SigningException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.Transaction;
 import org.stellar.sdk.xdr.DecoratedSignature;
@@ -26,35 +23,33 @@ import org.web3j.rlp.RlpType;
 import org.web3j.utils.Bytes;
 import org.web3j.utils.Numeric;
 
-import javax.annotation.PostConstruct;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 
-@Service
-@Scope("singleton")
 public class SignServerService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(SignServerService.class);
 
 	@Autowired
-	private GovSettings govSettings;
-
-	@Autowired
 	private AdminAlarmService adminAlarmService;
 
-	private static String signingUrl;
-	private static String introduceUrl;
-	private static String answerUrl;
+	private String signingUrl;
+	private String introduceUrl;
+	private String answerUrl;
+	private KeyPair appKey;
+	private String appName;
 
 	private SignServerAccessToken accessToken = new SignServerAccessToken();
 
 	private final static Object updateLock = new Object();
 
-	@PostConstruct
-	private void init() {
-		signingUrl = govSettings.getIntegration().getSignServer().getAddr() + "/sign";
-		introduceUrl = govSettings.getIntegration().getSignServer().getAddr() + "/introduce";
-		answerUrl = govSettings.getIntegration().getSignServer().getAddr() + "/answer";
+	public SignServerService(String serverAddr, String appName, String appKey) {
+		this.signingUrl = serverAddr + "/sign";
+		this.introduceUrl = serverAddr + "/introduce";
+		this.answerUrl = serverAddr + "/answer";
+		this.appKey = KeyPair.fromSecretSeed(appKey);
+		this.appName = appName;
+
 		if(!updateAccessToken()) {
 			throw new IllegalStateException("Cannot get signServer access token");
 		}
@@ -73,11 +68,10 @@ public class SignServerService {
 
 	private synchronized boolean updateAccessToken() {
 		try {
-			String privateKey = govSettings.getIntegration().getSignServer().getAppKey();
 			SignServerIntroduceRequest request = new SignServerIntroduceRequest();
-			request.setMyNameIs(govSettings.getIntegration().getSignServer().getAppName());
+			request.setMyNameIs(this.appName);
 
-			IntegrationResult<SignServerIntroduceResponse> introResult = RestApiClient.requestPost(introduceUrl, request, SignServerIntroduceResponse.class);
+			IntegrationResult<SignServerIntroduceResponse> introResult = RestApiClient.requestPost(this.introduceUrl, request, SignServerIntroduceResponse.class);
 
 			if(!introResult.isSuccess()) {
 				logger.error("Cannot get signServerAccess  Token : {}, {}", introResult.getErrorCode(), introResult.getErrorMessage());
@@ -87,17 +81,14 @@ public class SignServerService {
 			String question = introResult.getData().getData().getQuestion();
 
 			byte[] qBytes = Base64.getDecoder().decode(question);
-
-			KeyPair keyPair = KeyPair.fromSecretSeed(privateKey);
-
-			byte[] sBytes = keyPair.sign(qBytes);
+			byte[] sBytes = this.appKey.sign(qBytes);
 
 			SignServerAnswerRequest request2 = new SignServerAnswerRequest();
-			request2.setMyNameIs(govSettings.getIntegration().getSignServer().getAppName());
+			request2.setMyNameIs(this.appName);
 			request2.setYourQuestionWas(question);
 			request2.setMyAnswerIs(Base64.getEncoder().encodeToString(sBytes));
 
-			IntegrationResult<SignServerAnswerResponse> answerResult = RestApiClient.requestPost(answerUrl, request2, SignServerAnswerResponse.class);
+			IntegrationResult<SignServerAnswerResponse> answerResult = RestApiClient.requestPost(this.answerUrl, request2, SignServerAnswerResponse.class);
 
 			if(!answerResult.isSuccess()) {
 				logger.error("Cannot get signServer Acces Token : {}, {}", answerResult.getErrorCode(), answerResult.getErrorMessage());
@@ -107,7 +98,7 @@ public class SignServerService {
 			Map<String, String> newAnswers = new HashMap<>();
 			for(Map.Entry<String, String> _kv : answerResult.getData().getData().getWelcomePackage().entrySet()) {
 				byte[] kquestion = Base64.getDecoder().decode(_kv.getValue());
-				byte[] kanswer = keyPair.sign(kquestion);
+				byte[] kanswer = this.appKey.sign(kquestion);
 
 				newAnswers.put(_kv.getKey(), Base64.getEncoder().encodeToString(kanswer));
 			}
@@ -142,7 +133,7 @@ public class SignServerService {
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAuthorization("Bearer " + this.accessToken.getToken());
-		return RestApiClient.requestPost(signingUrl, headers, request, SignServerSignResponse.class);
+		return RestApiClient.requestPost(this.signingUrl, headers, request, SignServerSignResponse.class);
 	}
 
 	public void signStellarTransaction(Transaction tx) throws SigningException {

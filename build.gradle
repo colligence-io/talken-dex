@@ -54,7 +54,7 @@ subprojects {
     }
 
     dependencies {
-        compile('io.talken:java-common:20190917-1') { changing = true }
+        compile('io.talken:java-common:20190917-2') { changing = true }
 
         compileOnly('org.projectlombok:lombok:1.18.4')
 
