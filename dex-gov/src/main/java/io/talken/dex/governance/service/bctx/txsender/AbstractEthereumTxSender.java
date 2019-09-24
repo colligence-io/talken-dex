@@ -13,7 +13,6 @@ import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
 import io.talken.dex.shared.service.blockchain.ethereum.StandardERC20ContractFunctions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.datatypes.Function;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -77,17 +76,6 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		}
 
 		RawTransaction rawTx;
-
-		if(contractAddr != null) {
-			Function function = StandardERC20ContractFunctions.transfer(bctx.getAddressTo(), amount);
-
-			String encodedFunction = FunctionEncoder.encode(function);
-
-			rawTx = RawTransaction.createTransaction(nonce, gasPrice, gasLimit, contractAddr, encodedFunction);
-		} else {
-			rawTx = RawTransaction.createEtherTransaction(nonce, gasPrice, gasLimit, bctx.getAddressTo(), amount);
-		}
-
 
 		if(contractAddr != null) {
 			rawTx = RawTransaction.createTransaction(
