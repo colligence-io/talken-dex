@@ -103,7 +103,7 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 		byte[] txSigned = signServer().signEthereumTransaction(rawTx, bctx.getAddressFrom());
 
 		logger.info("[BCTX#{}] Sending TX to luniverse network.", bctx.getId());
-		EthSendTransaction ethSendTx = web3j.ethSendRawTransaction(Numeric.toHexString(txSigned)).send();
+		EthSendTransaction ethSendTx = web3j.ethSendRawTransaction(Numeric.toHexString(txSigned)).sendAsync().get();
 
 		log.setResponse(JSONWriter.toJsonString(ethSendTx));
 
