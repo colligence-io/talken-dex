@@ -148,9 +148,9 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 		common_txr.setTimeStamp(block.getTimestamp());
 		common_txr.setNonce(tx.getNonce().toString());
-		common_txr.setHash(receipt.getTransactionHash());
-		common_txr.setBlockNumber(receipt.getBlockNumber().toString());
-		common_txr.setBlockHash(receipt.getBlockHash());
+		common_txr.setHash(tx.getHash());
+		common_txr.setBlockNumber(block.getNumber().toString());
+		common_txr.setBlockHash(block.getHash());
 		common_txr.setIsError(receipt.isStatusOK() ? "0" : "1");
 		common_txr.setTxreceipt_status((receipt.getStatus() != null) ? Numeric.decodeQuantity(receipt.getStatus()).toString() : "");
 		common_txr.setTransactionIndex(receipt.getTransactionIndex().toString());

@@ -17,6 +17,7 @@ import org.web3j.crypto.RawTransaction;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Response;
+import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
@@ -66,8 +67,6 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
 		BigInteger gasPrice = ethereumNetworkService.getGasPrice(web3j);
 
-		BigInteger gasLimit = ethereumNetworkService.getGasLimit(web3j);
-
 		BigInteger amount;
 		if(decimals != null) {
 			amount = bctx.getAmount().multiply(BigDecimal.TEN.pow(decimals)).toBigInteger();
@@ -75,22 +74,39 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 			amount = Convert.toWei(bctx.getAmount(), Convert.Unit.ETHER).toBigInteger();
 		}
 
+		BigInteger gasLimit = BigInteger.valueOf(21000); // 21000 for native ethereum gasLimit
 		RawTransaction rawTx;
 
 		if(contractAddr != null) {
+			String encodedFunction = FunctionEncoder.encode(StandardERC20ContractFunctions.transfer(bctx.getAddressTo(), amount));
+
+			// estimate gasLimit with given transaction
+			Transaction est_tx = Transaction.createFunctionCallTransaction(
+					bctx.getAddressFrom(),
+					nonce,
+					gasPrice,
+					BigInteger.ZERO,
+					contractAddr,
+					encodedFunction
+			);
+
+			BigInteger estAmountUsed = web3j.ethEstimateGas(est_tx).sendAsync().get().getAmountUsed();
+
+			gasLimit = estAmountUsed.multiply(BigInteger.valueOf(12)).divide(BigInteger.TEN); // use 120% of estimated gaslimit
+
 			rawTx = RawTransaction.createTransaction(
 					nonce,
 					gasPrice,
-					gasLimit,
+					gasLimit, // use estimated gaslimit
 					contractAddr,
-					FunctionEncoder.encode(StandardERC20ContractFunctions.transfer(bctx.getAddressTo(), amount))
+					encodedFunction
 			);
 
 		} else {
 			rawTx = RawTransaction.createEtherTransaction(
 					nonce,
 					gasPrice,
-					gasLimit,
+					gasLimit,  // use 21000 fixed gaslimit for ethereum
 					bctx.getAddressTo(),
 					amount
 			);
@@ -101,7 +117,7 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		logger.info("[BCTX#{}] Request sign for {}", bctx.getId(), bctx.getAddressFrom());
 		byte[] txSigned = signServer().signEthereumTransaction(rawTx, bctx.getAddressFrom());
 
-		logger.info("[BCTX#{}] Sending TX to ethereum network.", bctx.getId());
+		logger.info("[BCTX#{}] Sending TX to ethereum network. gas = {} gwei * {}", bctx.getId(), Convert.fromWei(gasPrice.toString(), Convert.Unit.GWEI), gasLimit);
 		EthSendTransaction ethSendTx = web3j.ethSendRawTransaction(Numeric.toHexString(txSigned)).send();
 
 		log.setResponse(JSONWriter.toJsonString(ethSendTx));
