@@ -2,20 +2,25 @@ package io.talken.dex.api.controller.mapper;
 
 import io.talken.common.exception.TalkenException;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.api.config.auth.AuthInfo;
+import io.talken.dex.api.config.auth.AuthRequired;
+import io.talken.dex.api.controller.DTOValidator;
 import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
+import io.talken.dex.api.controller.dto.Erc20BalanceRequest;
+import io.talken.dex.api.controller.dto.EthBalanceRequest;
 import io.talken.dex.api.controller.dto.LuniverseGasPriceResult;
 import io.talken.dex.api.controller.dto.LuniverseTxListResult;
+import io.talken.dex.api.service.bc.EthereumInfoService;
 import io.talken.dex.api.service.bc.LuniverseInfoService;
 import io.talken.dex.api.service.integration.relay.RelayServerService;
 import io.talken.dex.api.service.integration.relay.dto.RelayTransferDTO;
 import io.talken.dex.shared.exception.DexException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigInteger;
 
 @RestController
 public class BlockChainInfoService {
@@ -25,7 +30,13 @@ public class BlockChainInfoService {
 	private LuniverseInfoService luniverseInfoService;
 
 	@Autowired
+	private EthereumInfoService ethereumInfoService;
+
+	@Autowired
 	private RelayServerService relayServerService;
+
+	@Autowired
+	private AuthInfo authInfo;
 
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_LUNIVERSE_GASPRICE, method = RequestMethod.GET)
 	public DexResponse<LuniverseGasPriceResult> luniverseGasPrice() throws DexException {
@@ -58,5 +69,18 @@ public class BlockChainInfoService {
 	public DexResponse<RelayTransferDTO> transferBlockchainInfo(@RequestParam("symbol") String symbol) throws TalkenException {
 		return DexResponse.buildResponse(relayServerService.createTransferDTObase(symbol));
 	}
-}
 
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GETETHBALANCE, method = RequestMethod.POST)
+	public DexResponse<BigInteger> getEthBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(ethereumInfoService.getEthBalance(postBody.getAddress()));
+	}
+
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GETERC20BALANCE, method = RequestMethod.POST)
+	public DexResponse<BigInteger> getErc20Balance(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(ethereumInfoService.getErc20Balance(postBody.getContract(), postBody.getAddress()));
+	}
+}
