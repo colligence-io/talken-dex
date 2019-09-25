@@ -31,6 +31,8 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 	@Autowired
 	private EthereumNetworkService ethereumNetworkService;
 
+	private static final BigInteger DEFAULT_ERC20_GASLIMIT = BigInteger.valueOf(100000L);
+
 	public AbstractEthereumTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
 		super(platform);
 		this.logger = logger;
@@ -90,9 +92,14 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 					encodedFunction
 			);
 
-			BigInteger estAmountUsed = web3j.ethEstimateGas(est_tx).sendAsync().get().getAmountUsed();
+			try {
+				BigInteger estAmountUsed = web3j.ethEstimateGas(est_tx).sendAsync().get().getAmountUsed();
 
-			gasLimit = estAmountUsed.multiply(BigInteger.valueOf(12)).divide(BigInteger.TEN); // use 120% of estimated gaslimit
+				gasLimit = estAmountUsed.multiply(BigInteger.valueOf(12)).divide(BigInteger.TEN); // use 120% of estimated gaslimit
+			} catch(Exception ex) {
+				gasLimit = DEFAULT_ERC20_GASLIMIT;
+				logger.warn("Cannot estimate ethereum tx gasLimit [{}], use default {}", ex.getClass().getSimpleName(), gasLimit);
+			}
 
 			rawTx = RawTransaction.createTransaction(
 					nonce,

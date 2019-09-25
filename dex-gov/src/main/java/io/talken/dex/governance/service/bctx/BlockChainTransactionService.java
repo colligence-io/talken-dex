@@ -123,7 +123,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 
 			try {
 				if(logRecord.getStatus().equals(BctxStatusEnum.SENT)) {
-					logger.info("[BCTX#{}] BcTx Successfully sent", bctxRecord.getId());
+					logger.info("[BCTX#{}] BcTx Successfully sent, bcRef = {}", bctxRecord.getId(), logRecord.getBcRefId());
 					bctxRecord.setStatus(BctxStatusEnum.SENT);
 					bctxRecord.setBcRefId(logRecord.getBcRefId());
 				} else {
