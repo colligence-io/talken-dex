@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
@@ -59,10 +59,10 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 	}
 
 	protected boolean sendEthereumTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
-		Web3j web3j = ethereumNetworkService.newClient();
+		Web3jService web3jService = ethereumNetworkService.newWeb3jService();
+		Web3j web3j = Web3j.build(web3jService);
 
-		BigInteger nonce = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.PENDING).sendAsync().get().getTransactionCount();
-
+		BigInteger nonce = ethereumNetworkService.getNonce(web3jService, bctx.getAddressFrom());
 		BigInteger gasPrice = ethereumNetworkService.getGasPrice(web3j);
 
 		BigInteger amount;

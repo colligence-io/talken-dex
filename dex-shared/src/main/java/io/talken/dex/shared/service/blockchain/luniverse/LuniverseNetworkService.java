@@ -28,16 +28,12 @@ public class LuniverseNetworkService {
 
 	@PostConstruct
 	private void init() {
-		logger.info("Using Luniverse SERVICE Network.");
-
 		DexSettings._Luniverse settings = dexSettings.getBcnode().getLuniverse();
-
 		String apiUri = settings.getApiUri();
 		this.mainRpcUri = settings.getMainRpcUri();
 		this.sideRpcUri = settings.getSideRpcUri();
-
-		logger.info("Luniverse API endpoint {} added.", apiUri);
 		this.client = new LuniverseApiClient(apiUri, settings.getSecret().getApiKey());
+		logger.info("Using Luniverse SERVICE Network : {}", apiUri);
 	}
 
 	public LuniverseApiClient getClient() {

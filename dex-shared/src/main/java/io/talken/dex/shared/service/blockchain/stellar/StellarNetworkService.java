@@ -3,7 +3,6 @@ package io.talken.dex.shared.service.blockchain.stellar;
 
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.DexSettings;
-import io.talken.dex.shared.service.blockchain.RandomServerPicker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -35,7 +34,7 @@ public class StellarNetworkService {
 
 	private final DexSettings dexSettings;
 
-	private final RandomServerPicker serverPicker = new RandomServerPicker();
+	private String serverUri;
 
 	private static final int BASE_FEE = 100;
 
@@ -47,17 +46,9 @@ public class StellarNetworkService {
 
 	@PostConstruct
 	private void init() throws IOException {
-		if(dexSettings.getBcnode().getStellar().getNetwork().equalsIgnoreCase("test")) {
-			logger.info("Using Stellar TEST Network.");
-			this.network = Network.TESTNET;
-		} else {
-			logger.info("Using Stellar PUBLIC Network.");
-			this.network = Network.PUBLIC;
-		}
-		for(String _s : dexSettings.getBcnode().getStellar().getServerList()) {
-			logger.info("Horizon {} added.", _s);
-			serverPicker.add(_s);
-		}
+		this.network = dexSettings.getBcnode().getStellar().getNetwork().equalsIgnoreCase("test") ? Network.TESTNET : Network.PUBLIC;
+		this.serverUri = dexSettings.getBcnode().getStellar().getRpcUri();
+		logger.info("Using Stellar {} Network : {}", this.network, this.serverUri);
 		for(DexSettings._Stellar._Channel _ch : dexSettings.getBcnode().getStellar().getChannels()) {
 			KeyPair chkp = KeyPair.fromSecretSeed(_ch.getSecretKey());
 			if(!chkp.getAccountId().equals(_ch.getPublicKey()))
@@ -71,7 +62,7 @@ public class StellarNetworkService {
 	}
 
 	public Server pickServer() {
-		return new Server(serverPicker.pick());
+		return new Server(this.serverUri);
 	}
 
 	public Network getNetwork() {

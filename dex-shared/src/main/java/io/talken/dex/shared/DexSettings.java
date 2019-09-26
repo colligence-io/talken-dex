@@ -88,9 +88,8 @@ public class DexSettings {
 	@Setter
 	public static class _Stellar {
 		private String network;
-		private List<String> serverList;
+		private String rpcUri;
 		private List<_Channel> channels;
-		private BigDecimal distributionMinNativeBalance;
 
 		@Getter
 		@Setter
@@ -104,9 +103,8 @@ public class DexSettings {
 	@Setter
 	public static class _Ethereum {
 		private String network;
-		private List<String> serverList;
+		private String rpcUri;
 		private String gasOracleUrl;
-		private BigDecimal distributionMinNativeBalance;
 	}
 
 	@Getter
@@ -116,7 +114,6 @@ public class DexSettings {
 		private String apiUri;
 		private String sideRpcUri;
 		private String mainRpcUri;
-		private BigDecimal distributionMinNativeBalance;
 	}
 
 	private _Integration integration;
