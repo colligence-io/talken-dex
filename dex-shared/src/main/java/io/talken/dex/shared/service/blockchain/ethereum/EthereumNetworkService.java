@@ -16,7 +16,6 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Request;
-import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
 
 import javax.annotation.PostConstruct;
@@ -56,7 +55,7 @@ public class EthereumNetworkService {
 	}
 
 	public Web3jService newWeb3jService() {
-		return new HttpService(this.serverUri);
+		return new Web3jHttpService(this.serverUri);
 	}
 
 	@Scheduled(fixedDelay = 15000)
