@@ -1,5 +1,6 @@
 package io.talken.dex.governance.scheduler.talkreward;
 
+import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
@@ -118,7 +119,15 @@ public class UserRewardBctxService {
 					rewardRecord.store();
 					continue;
 				}
+			} catch(IntegrationException ex) {
+				try {
+					logger.warn("Cannot get user wallet : {} {}", ex.getResult().getErrorCode(), ex.getResult().getErrorMessage());
+				} catch(Exception ex2) {
+					logger.exception(ex2);
+				}
+				continue;
 			} catch(Exception ex) {
+
 				alarmService.exception(logger, ex);
 				continue;
 			}

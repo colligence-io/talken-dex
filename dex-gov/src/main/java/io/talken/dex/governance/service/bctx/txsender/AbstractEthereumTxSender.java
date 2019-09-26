@@ -61,11 +61,7 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 	protected boolean sendEthereumTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
 		Web3j web3j = ethereumNetworkService.newClient();
 
-		BigInteger nonce = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.LATEST).send().getTransactionCount();
-		BigInteger nonce_p = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.PENDING).send().getTransactionCount();
-		if(nonce_p != null && (nonce_p.compareTo(nonce) > 0)) {
-			nonce = nonce_p;
-		}
+		BigInteger nonce = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.PENDING).sendAsync().get().getTransactionCount();
 
 		BigInteger gasPrice = ethereumNetworkService.getGasPrice(web3j);
 
