@@ -75,8 +75,7 @@ public class TalkenWalletService {
 			} else {
 				try {
 					TalkenWalletResponse walletResponse = new Gson().fromJson(jsonString, TalkenWalletResponse.class);
-
-					if(walletResponse == null || walletResponse.getCode().equals("WALLET_NOT_FOUND")) {
+					if(walletResponse == null || !walletResponse.getCode().equals("WALLET_NOT_FOUND")) {
 						logger.warn("Cannot process wallet response : {}", jsonString);
 					}
 				} catch(Exception ex) {
