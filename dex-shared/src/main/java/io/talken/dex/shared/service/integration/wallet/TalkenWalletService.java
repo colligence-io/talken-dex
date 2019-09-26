@@ -1,8 +1,8 @@
 package io.talken.dex.shared.service.integration.wallet;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.http.HttpHeaders;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.persistence.jooq.tables.records.UserRecord;
@@ -48,11 +48,11 @@ public class TalkenWalletService {
 		if(wallets.isSuccess()) {
 			String jsonString = wallets.getData().getData();
 
-			if(new JsonParser().parse(jsonString).isJsonArray()) {
+			JsonElement jsonElement = new JsonParser().parse(jsonString);
+
+			if(jsonElement.isJsonArray()) {
 				try {
-					ObjectMapper mapper = new ObjectMapper();
-					mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-					TalkenWalletListResponse walletsData = mapper.readValue(jsonString, TalkenWalletListResponse.class);
+					TalkenWalletListResponse walletsData = new Gson().fromJson(jsonString, TalkenWalletListResponse.class);
 
 					Optional<String> address = walletsData.stream()
 							.filter((_w) -> {
@@ -73,7 +73,15 @@ public class TalkenWalletService {
 				}
 
 			} else {
-				// FIXME : not jsonarray, assume it's error
+				try {
+					TalkenWalletResponse walletResponse = new Gson().fromJson(jsonString, TalkenWalletResponse.class);
+
+					if(walletResponse == null || walletResponse.getCode().equals("WALLET_NOT_FOUND")) {
+						logger.warn("Cannot process wallet response : {}", jsonString);
+					}
+				} catch(Exception ex) {
+					logger.exception(ex);
+				}
 				return new ObjectPair<>(false, null);
 			}
 		} else {

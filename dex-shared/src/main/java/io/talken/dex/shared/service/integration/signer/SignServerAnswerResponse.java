@@ -8,8 +8,6 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class SignServerAnswerResponse extends AbstractSignServerResponse<SignServerAnswerResponse._Data> {
-	private _Data data;
-
 	@Data
 	public static class _Data {
 		private String welcomePresent;
