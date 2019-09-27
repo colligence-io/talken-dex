@@ -24,6 +24,8 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class AbstractEthereumTxSender extends TxSender {
 	private final PrefixedLogger logger;
@@ -32,6 +34,8 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 	private EthereumNetworkService ethereumNetworkService;
 
 	private static final BigInteger DEFAULT_ERC20_GASLIMIT = BigInteger.valueOf(100000L);
+
+	private static Map<String, BigInteger> nonceCheck = new HashMap<>();
 
 	public AbstractEthereumTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
 		super(platform);
@@ -62,7 +66,22 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		Web3jService web3jService = ethereumNetworkService.newWeb3jService();
 		Web3j web3j = Web3j.build(web3jService);
 
-		BigInteger nonce = ethereumNetworkService.getNonce(web3jService, bctx.getAddressFrom());
+		final String from = bctx.getAddressFrom();
+
+		BigInteger nonce = ethereumNetworkService.getNonce(web3jService, from);
+
+		// to avoid parity-ethereum nextNonce race bug : https://github.com/paritytech/parity-ethereum/issues/10897
+		if(nonceCheck.containsKey(from)) {
+			// getNonce again (with 1 sec sleep) if new nonce is not greater than last successful nonce
+			for(int nonceRetry = 0; nonceRetry < 5; nonceRetry++) { // retry 5 times interval 1 sec, or just go for it (will ends up with failed transaction anyway)
+				if(nonce.compareTo(nonceCheck.get(from)) > 0) break; // nonce seems ok
+
+				logger.warn("parity_nextNonce race condition detected : {} (retry = {})", from, nonceRetry);
+				Thread.sleep(1000);
+				nonce = ethereumNetworkService.getNonce(web3jService, from);
+			}
+		}
+
 		BigInteger gasPrice = ethereumNetworkService.getGasPrice(web3j);
 
 		BigInteger amount;
@@ -80,7 +99,7 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
 			// estimate gasLimit with given transaction
 			Transaction est_tx = Transaction.createFunctionCallTransaction(
-					bctx.getAddressFrom(),
+					from,
 					nonce,
 					gasPrice,
 					BigInteger.ZERO,
@@ -117,8 +136,8 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
 		log.setRequest(JSONWriter.toJsonString(rawTx));
 
-		logger.info("[BCTX#{}] Request sign for {}", bctx.getId(), bctx.getAddressFrom());
-		byte[] txSigned = signServer().signEthereumTransaction(rawTx, bctx.getAddressFrom());
+		logger.info("[BCTX#{}] Request sign for {}", bctx.getId(), from);
+		byte[] txSigned = signServer().signEthereumTransaction(rawTx, from);
 
 		logger.info("[BCTX#{}] Sending TX to ethereum network. gas = {} gwei * {}", bctx.getId(), Convert.fromWei(gasPrice.toString(), Convert.Unit.GWEI), gasLimit);
 		EthSendTransaction ethSendTx = web3j.ethSendRawTransaction(Numeric.toHexString(txSigned)).sendAsync().get();
@@ -129,6 +148,9 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		String txHash = ethSendTx.getTransactionHash();
 
 		if(error == null) {
+			// store last successful nonce
+			nonceCheck.put(from, nonce);
+
 			log.setBcRefId(txHash);
 			log.setResponse(ethSendTx.getRawResponse());
 			return true;
