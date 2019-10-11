@@ -20,7 +20,7 @@ subprojects {
     targetCompatibility = 1.8
 
     group = "io.talken"
-    version = "1.2.0"
+    version = "1.2.1"
 
     bootJar {
         baseName = "talken-" + project.name
