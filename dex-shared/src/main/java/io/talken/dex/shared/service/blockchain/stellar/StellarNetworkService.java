@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.Network;
 import org.stellar.sdk.Server;
-import org.stellar.sdk.Transaction;
 import org.stellar.sdk.responses.AccountResponse;
 
 import javax.annotation.PostConstruct;
@@ -73,31 +72,18 @@ public class StellarNetworkService {
 		return BASE_FEE;
 	}
 
-	public Transaction buildTxWithChannel(Server server, StellarTxBuilderBlock block) throws Exception {
-		StellarChannel channel = null;
-		try {
-			channel = pickChannel();
-			AccountResponse channelAccount = server.accounts().account(channel.getAccountId());
-			Transaction tx = block.buildTxAndSign(new Transaction.Builder(channelAccount, getNetwork()).setTimeout(30));
-			if(tx != null) tx.sign(channel.getKeyPair());
-			return tx;
-		} finally {
-			releaseChannel(channel);
-		}
+	public StellarChannelTransaction.Builder newChannelTxBuilder() {
+		return new StellarChannelTransaction.Builder(this);
 	}
 
-	public static interface StellarTxBuilderBlock {
-		Transaction buildTxAndSign(Transaction.Builder builder) throws Exception;
-	}
-
-	private StellarChannel pickChannel() {
+	public StellarChannel pickChannel() {
 		synchronized(channels) {
 			Collections.sort(channels);
 			long until = System.currentTimeMillis() + PICK_CHANNEL_TMIEOUT;
 			while(System.currentTimeMillis() < until) {
 				for(StellarChannel channel : channels) {
 					// set redis as channel is picked, and set expiration as 31 seconds
-					Boolean set = redisTemplate.opsForValue().setIfAbsent(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channel.getAccountId(), "1", Duration.ofSeconds(31));
+					Boolean set = redisTemplate.opsForValue().setIfAbsent(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channel.getAccountId(), "1", Duration.ofSeconds(StellarChannelTransaction.TIMEOUT + 1));
 					if(set != null && set) {
 						logger.debug("Channel pick : {}", channel.getAccountId());
 						return channel;
@@ -113,7 +99,7 @@ public class StellarNetworkService {
 		return null;
 	}
 
-	private void releaseChannel(StellarChannel channelAccount) {
+	public void releaseChannel(StellarChannel channelAccount) {
 		if(channelAccount != null) {
 			redisTemplate.delete(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channelAccount.getAccountId());
 			logger.debug("Channel release : {}", channelAccount.getAccountId());
