@@ -35,6 +35,14 @@ public class DexSettings {
 		this.getBcnode().getLuniverse().secret = secretReader.readSecret("luniverse", VaultSecretDataLuniverse.class);
 	}
 
+	private _TradeWallet tradeWallet;
+
+	@Getter
+	@Setter
+	public static class _TradeWallet {
+		private String creatorAddress;
+	}
+
 	private _Task task;
 
 	@Getter

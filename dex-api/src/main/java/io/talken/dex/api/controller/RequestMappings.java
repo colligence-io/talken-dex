@@ -7,6 +7,10 @@ public class RequestMappings {
 
 	private static final String DEXKEY_SUFFIX = "/dexKey";
 
+	// TradeWalletService
+	private static final String TRADE_WALLET = DEX + "/tw";
+
+	public static final String TRADE_WALLET_ENSURE = TRADE_WALLET + "/ensure";
 
 	// AnchorService
 	private static final String ANCHOR = DEX + "/anchor";

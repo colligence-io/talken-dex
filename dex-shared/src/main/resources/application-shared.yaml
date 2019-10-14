@@ -6,6 +6,8 @@ spring:
     type: redis
 talken:
   dex:
+    tradeWallet:
+      creatorAddress: "GCLTGOKYK7WHPCP6R43FXZZZ7HHUAZJCOQ7H4K6NTQYEUMODYHOLN4XA"
     bcnode:
       stellar:
         network: test
@@ -73,6 +75,8 @@ spring:
   profiles: production
 talken:
   dex:
+    tradeWallet:
+      creatorAddress: "GCLTGOKYK7WHPCP6R43FXZZZ7HHUAZJCOQ7H4K6NTQYEUMODYHOLN4XA"
     bcnode:
       stellar:
         network: main

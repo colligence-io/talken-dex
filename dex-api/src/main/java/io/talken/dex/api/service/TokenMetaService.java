@@ -15,6 +15,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.Asset;
+import org.stellar.sdk.AssetTypeCreditAlphaNum;
 import org.stellar.sdk.KeyPair;
 
 import javax.annotation.PostConstruct;
@@ -95,6 +96,16 @@ public class TokenMetaService {
 
 	public TokenMetaTable getManagedInfoList() {
 		return miTable;
+	}
+
+	public boolean isManagedAsset(Asset asset) {
+		if(!(asset instanceof AssetTypeCreditAlphaNum)) return false;
+
+		return miTable.values().stream()
+				.anyMatch((_m) ->
+						_m.getManagedInfo().getIssuerAddress().equalsIgnoreCase(((AssetTypeCreditAlphaNum) asset).getIssuer())
+								&& _m.getManagedInfo().getAssetCode().equalsIgnoreCase(((AssetTypeCreditAlphaNum) asset).getCode())
+				);
 	}
 
 	private TokenMetaTable.ManagedInfo getPack(String assetCode) throws TokenMetaNotFoundException {
