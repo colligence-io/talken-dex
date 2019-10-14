@@ -101,8 +101,9 @@ public class StellarNetworkService {
 
 	public void releaseChannel(StellarChannel channelAccount) {
 		if(channelAccount != null) {
-			redisTemplate.delete(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channelAccount.getAccountId());
-			logger.debug("Channel release : {}", channelAccount.getAccountId());
+			Boolean released = redisTemplate.delete(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channelAccount.getAccountId());
+			if(released != null && released)
+				logger.debug("Channel release : {}", channelAccount.getAccountId());
 		}
 	}
 }

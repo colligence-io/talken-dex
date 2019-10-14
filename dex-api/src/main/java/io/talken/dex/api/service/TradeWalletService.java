@@ -119,8 +119,6 @@ public class TradeWalletService {
 		rtn.setAccountId(twkp.getAccountId());
 		rtn.setStatus(TradeWalletStatus.GENERATED);
 
-		logger.info(new String(twkp.getSecretSeed()));
-
 		AccountResponse accountResponse;
 
 		// check wallet balance
@@ -153,6 +151,7 @@ public class TradeWalletService {
 						)
 						.addSigner(new StellarSignerTSS(signServerService, creatorAddress)).build()
 		) {
+			logger.info("Create user({}) tradewallet {} on stellar network.", user.getId(), twkp.getAccountId());
 			txResponse = sctx.submit();
 		} catch(IOException e) {
 			throw new TradeWalletCreateFailedException(e, "IO Error");
