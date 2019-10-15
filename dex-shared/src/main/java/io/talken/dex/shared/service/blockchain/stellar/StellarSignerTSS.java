@@ -2,6 +2,7 @@ package io.talken.dex.shared.service.blockchain.stellar;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.collection.SingleKeyObject;
 import io.talken.dex.shared.exception.SigningException;
 import io.talken.dex.shared.service.integration.signer.SignServerService;
 import org.stellar.sdk.Transaction;
@@ -15,6 +16,11 @@ public class StellarSignerTSS implements StellarSigner {
 	public StellarSignerTSS(SignServerService tss, String accountId) {
 		this.tss = tss;
 		this.accountId = accountId;
+	}
+
+	@Override
+	public String __getSKey__() {
+		return "TSS:" + this.accountId;
 	}
 
 	@Override

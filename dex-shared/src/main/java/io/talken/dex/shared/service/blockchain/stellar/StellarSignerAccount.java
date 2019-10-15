@@ -12,6 +12,11 @@ public class StellarSignerAccount implements StellarSigner {
 	}
 
 	@Override
+	public String __getSKey__() {
+		return "KP:" + kp.getAccountId();
+	}
+
+	@Override
 	public void sign(Transaction tx) throws SigningException {
 		if(kp == null) throw new SigningException("Null", "Key is null");
 		if(tx == null) throw new SigningException(kp.getAccountId(), "Tx is null");

@@ -18,11 +18,12 @@ import io.talken.common.util.collection.DoubleKeyObject;
 import io.talken.common.util.collection.DoubleKeyTable;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.collection.SingleKeyTable;
-import io.talken.dex.shared.service.integration.signer.SignServerService;
+import io.talken.dex.shared.TokenMetaServiceInterface;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
+import io.talken.dex.shared.service.integration.signer.SignServerService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
@@ -45,7 +46,7 @@ import static io.talken.common.persistence.jooq.Tables.*;
 @Service
 @Scope("singleton")
 @DependsOn("dbmigration")
-public class TokenMetaGovService {
+public class TokenMetaGovService implements TokenMetaServiceInterface {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaGovService.class);
 
 	@Autowired
@@ -487,6 +488,11 @@ public class TokenMetaGovService {
 		return Optional.ofNullable(
 				miTable.select(assetCode).getManagedInfo()
 		).orElseThrow(() -> new TokenMetaNotFoundException(assetCode));
+	}
+
+	@Override
+	public Asset getAssetType(String assetCode) throws TokenMetaNotFoundException {
+		return getManaged(assetCode).getAssetType();
 	}
 
 	public Collection<TokenMeta> getManagedCollection() {

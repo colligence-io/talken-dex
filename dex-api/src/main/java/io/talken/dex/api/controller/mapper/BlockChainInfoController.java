@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigInteger;
 
 @RestController
-public class BlockChainInfoService {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(BlockChainInfoService.class);
+public class BlockChainInfoController {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(BlockChainInfoController.class);
 
 	@Autowired
 	private LuniverseInfoService luniverseInfoService;

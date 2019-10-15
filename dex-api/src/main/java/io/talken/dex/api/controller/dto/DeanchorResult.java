@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 @Data
 public class DeanchorResult {
 	private String taskId;
-	private String transId;
 	private String feeAssetCode;
 	private BigDecimal feeAmount;
 	private String deanchorAssetCode;

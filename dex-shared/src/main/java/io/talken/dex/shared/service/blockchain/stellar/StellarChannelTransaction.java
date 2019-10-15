@@ -2,6 +2,7 @@ package io.talken.dex.shared.service.blockchain.stellar;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.collection.SingleKeyTable;
 import io.talken.dex.shared.exception.SigningException;
 import org.stellar.sdk.Memo;
 import org.stellar.sdk.Operation;
@@ -59,7 +60,7 @@ public class StellarChannelTransaction implements Closeable {
 		private StellarNetworkService stellarNetworkService;
 		private String memo = null;
 		private List<Operation> operations = new ArrayList<>();
-		private List<StellarSigner> signers = new ArrayList<>();
+		private SingleKeyTable<String, StellarSigner> signers = new SingleKeyTable<>();
 
 		public Builder(StellarNetworkService stellarNetworkService) {
 			this.stellarNetworkService = stellarNetworkService;
@@ -76,7 +77,7 @@ public class StellarChannelTransaction implements Closeable {
 		}
 
 		public Builder addSigner(StellarSigner signer) {
-			this.signers.add(signer);
+			this.signers.insert(signer);
 			return this;
 		}
 
@@ -108,7 +109,7 @@ public class StellarChannelTransaction implements Closeable {
 				Transaction tx = txBuilder.build();
 
 				// sign tx
-				for(StellarSigner signer : this.signers)
+				for(StellarSigner signer : this.signers.select())
 					signer.sign(tx);
 
 				// sign tx with channel
@@ -120,6 +121,12 @@ public class StellarChannelTransaction implements Closeable {
 			} catch(Exception ex) {
 				stellarNetworkService.releaseChannel(sctx.channel);
 				throw ex;
+			}
+		}
+
+		public SubmitTransactionResponse buildAndSubmit() throws IOException, SigningException {
+			try(StellarChannelTransaction sctx = build()) {
+				return sctx.submit();
 			}
 		}
 	}

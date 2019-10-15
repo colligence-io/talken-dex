@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.shared.TokenMetaServiceInterface;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.ActiveAssetHolderAccountNotFoundException;
 import io.talken.dex.shared.exception.BlockChainPlatformNotSupportedException;
@@ -23,7 +24,7 @@ import java.util.Optional;
 
 @Service
 @Scope("singleton")
-public class TokenMetaService {
+public class TokenMetaService implements TokenMetaServiceInterface {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaService.class);
 
 	@Autowired
@@ -117,6 +118,7 @@ public class TokenMetaService {
 				.orElseThrow(() -> new TokenMetaNotFoundException(assetCode));
 	}
 
+	@Override
 	public Asset getAssetType(String code) throws TokenMetaNotFoundException {
 		return getPack(code).getCache().getAssetType();
 	}

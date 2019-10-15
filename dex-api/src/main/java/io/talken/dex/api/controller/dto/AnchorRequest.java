@@ -11,8 +11,6 @@ public class AnchorRequest {
 	@NotEmpty
 	private String privateWalletAddress;
 	@NotEmpty
-	private String tradeWalletAddress;
-	@NotEmpty
 	private String assetCode;
 	@NotNull
 	private BigDecimal amount;

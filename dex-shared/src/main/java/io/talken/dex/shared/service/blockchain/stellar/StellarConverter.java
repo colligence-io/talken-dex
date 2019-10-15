@@ -76,6 +76,10 @@ public class StellarConverter {
 	public static ObjectPair<String, String> getResultCodesFromExtra(SubmitTransactionResponse txResponse) {
 		if(txResponse.getExtras() == null || txResponse.getExtras().getResultCodes() == null)
 			return new ObjectPair<>("", "");
-		return new ObjectPair<>(txResponse.getExtras().getResultCodes().getTransactionResultCode(), String.join(",", txResponse.getExtras().getResultCodes().getOperationsResultCodes()));
+
+		final String errorCode = txResponse.getExtras().getResultCodes().getTransactionResultCode();
+		final String errorMessage = (txResponse.getExtras().getResultCodes().getOperationsResultCodes() != null) ? String.join(",", txResponse.getExtras().getResultCodes().getOperationsResultCodes()) : "";
+
+		return new ObjectPair<>(errorCode, errorMessage);
 	}
 }

@@ -7,20 +7,15 @@ public class RequestMappings {
 
 	private static final String DEXKEY_SUFFIX = "/dexKey";
 
-	// TradeWalletService
+	// WalletService
+	private static final String PRIVATE_WALLET = DEX + "/pw";
+	public static final String PRIVATE_WALLET_WITHDRAW_BASE = PRIVATE_WALLET + "/withdraw_base";
+	public static final String PRIVATE_WALLET_ANCHOR_TASK = PRIVATE_WALLET + "/anchor";
+
 	private static final String TRADE_WALLET = DEX + "/tw";
-
-	public static final String TRADE_WALLET_ENSURE = TRADE_WALLET + "/ensure";
-
-	// AnchorService
-	private static final String ANCHOR = DEX + "/anchor";
-
-	public static final String ANCHOR_TASK = ANCHOR + "/anchor";
-	public static final String ANCHOR_TASK_DEXKEY = ANCHOR_TASK + DEXKEY_SUFFIX;
-
-	public static final String DEANCHOR_TASK = ANCHOR + "/deanchor";
-	public static final String DEANCHOR_TASK_DEXKEY = DEANCHOR_TASK + DEXKEY_SUFFIX;
-	public static final String DEANCHOR_FEE = DEANCHOR_TASK + "/fee";
+	public static final String TRADE_WALLET_BALANCE = TRADE_WALLET + "/balance";
+	public static final String TRADE_WALLET_DEANCHOR_TASK = TRADE_WALLET + "/deanchor";
+	public static final String TRADE_WALLET_DEANCHOR_FEE = TRADE_WALLET_DEANCHOR_TASK + "/fee";
 
 	// OfferService
 	private static final String OFFER = DEX + "/offer";
