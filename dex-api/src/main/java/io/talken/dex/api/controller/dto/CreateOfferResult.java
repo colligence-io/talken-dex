@@ -19,6 +19,10 @@ public class CreateOfferResult {
 	@JsonIgnore
 	private CalculateFeeResult feeResult;
 
+	private Long offerId;
+	private BigDecimal madeAmount;
+	private Boolean postTxStatus;
+
 	public String getSellAssetCode() {return getFeeResult().getSellAssetCode();}
 
 	public String getBuyAssetCode() {return getFeeResult().getBuyAssetCode();}

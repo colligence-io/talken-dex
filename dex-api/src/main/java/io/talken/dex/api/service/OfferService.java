@@ -3,17 +3,22 @@ package io.talken.dex.api.service;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.exception.TalkenException;
+import io.talken.common.exception.common.GeneralException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.DexTaskRecord;
+import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.User;
+import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskCreateofferRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskDeleteofferRecord;
-import io.talken.common.persistence.jooq.tables.records.DexTxmonCreateofferRecord;
+import io.talken.common.persistence.jooq.tables.records.DexTaskRefundcreateofferfeeRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.shared.DexTaskId;
+import io.talken.dex.shared.TokenMetaTable;
+import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.exception.*;
 import io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
@@ -24,19 +29,23 @@ import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.context.annotation.Scope;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.Asset;
 import org.stellar.sdk.ManageBuyOfferOperation;
 import org.stellar.sdk.ManageSellOfferOperation;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+import org.stellar.sdk.xdr.OfferEntry;
+import org.stellar.sdk.xdr.OperationResult;
+import org.stellar.sdk.xdr.TransactionResult;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Optional;
 
-import static io.talken.common.persistence.jooq.Tables.DEX_TXMON_CREATEOFFER;
+import static io.talken.common.persistence.jooq.Tables.DEX_TASK_CREATEOFFER;
 
 @Service
 @Scope("singleton")
@@ -50,6 +59,7 @@ public class OfferService {
 	private final TradeWalletService twService;
 	private final TokenMetaService tmService;
 	private final DSLContext dslContext;
+	private final DataSourceTransactionManager txMgr;
 
 	public CreateOfferResult createSellOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException {
 		return createOffer(user, DexTaskTypeEnum.OFFER_CREATE_SELL, request);
@@ -186,6 +196,7 @@ public class OfferService {
 
 
 		position = "build_sctx";
+		SubmitTransactionResponse txResponse;
 		// put tx info and submit tx
 		try(StellarChannelTransaction sctx = sctxBuilder.build()) {
 			taskRecord.setTxSeq(sctx.getTx().getSequenceNumber());
@@ -194,7 +205,7 @@ public class OfferService {
 			taskRecord.store();
 
 			position = "submit_sctx";
-			SubmitTransactionResponse txResponse = sctx.submit();
+			txResponse = sctx.submit();
 
 			if(!txResponse.isSuccess()) {
 				throw StellarException.from(txResponse);
@@ -208,6 +219,83 @@ public class OfferService {
 			throw ex;
 		}
 
+		position = "process_result";
+		boolean postTxStatus;
+		try {
+			TransactionResult transactionResult = txResponse.getDecodedTransactionResult().get();
+			// extract offerEntry from result
+			OfferEntry offerEntry = null;
+			for(OperationResult operationResult : transactionResult.getResult().getResults()) {
+				switch(operationResult.getTr().getDiscriminant()) {
+					case MANAGE_SELL_OFFER:
+						offerEntry = operationResult.getTr().getManageSellOfferResult().getSuccess().getOffer().getOffer();
+						break;
+					case MANAGE_BUY_OFFER:
+						offerEntry = operationResult.getTr().getManageSellOfferResult().getSuccess().getOffer().getOffer();
+						break;
+				}
+				if(offerEntry != null) break;
+			}
+
+			if(offerEntry != null) { // offer made (otherwise all request is claimed)
+				final long offerId = offerEntry.getOfferID().getInt64();
+				final long madeSellAmount = offerEntry.getAmount().getInt64();
+
+				// update taskLog
+				taskRecord.setOfferid(offerId);
+				taskRecord.setMadeamountraw(madeSellAmount);
+				taskRecord.store();
+
+				if(feeResult.getFeeAmountRaw().compareTo(BigInteger.ZERO) > 0) {
+					// feeResult.getSellAmountRaw() : madeSellAmount = feeResult.getFeeAmountRaw() : refundAmount
+					// ma * fa = sa * ra
+					// ra = (ma * fa) / sa
+
+					BigInteger refundAmountRaw = feeResult.getFeeAmountRaw().multiply(BigInteger.valueOf(madeSellAmount)).divide(feeResult.getSellAmountRaw());
+
+					// if refundAmount is bigger than zero, insert new refund task
+					if(refundAmountRaw.compareTo(BigInteger.ZERO) > 0) {
+						DexTaskRefundcreateofferfeeRecord refundRecord = new DexTaskRefundcreateofferfeeRecord();
+						DexTaskId refundTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.OFFER_REFUNDFEE);
+						refundRecord.setTaskid(refundTaskId.getId());
+						refundRecord.setTaskidCrof(dexTaskId.getId());
+						refundRecord.setUserId(userId);
+						refundRecord.setFeecollectaccount(taskRecord.getFeecollectaccount());
+						refundRecord.setRefundassetcode(taskRecord.getFeeassetcode());
+						refundRecord.setRefundamountraw(refundAmountRaw.longValueExact());
+						refundRecord.setRefundaccount(taskRecord.getSourceaccount());
+						dslContext.attach(refundRecord);
+
+						BctxRecord bctxRecord = new BctxRecord();
+						bctxRecord.setBctxType(BlockChainPlatformEnum.STELLAR_TOKEN);
+						TokenMetaTable.Meta tokenMeta = tmService.getTokenMeta(taskRecord.getFeeassetcode());
+						bctxRecord.setSymbol(tokenMeta.getManagedInfo().getAssetCode());
+						bctxRecord.setPlatformAux(tokenMeta.getManagedInfo().getIssuerAddress());
+						bctxRecord.setAddressFrom(taskRecord.getFeecollectaccount());
+						bctxRecord.setAddressTo(taskRecord.getSourceaccount());
+						bctxRecord.setAmount(StellarConverter.rawToActual(refundAmountRaw));
+						bctxRecord.setNetfee(BigDecimal.ZERO);
+						bctxRecord.setTxAux(refundTaskId.getId());
+						dslContext.attach(bctxRecord);
+
+						TransactionBlockExecutor.of(txMgr).transactional(() -> {
+							bctxRecord.store();
+							refundRecord.setBctxId(bctxRecord.getId());
+							refundRecord.store();
+						});
+					}
+				}
+			}
+			postTxStatus = true;
+		} catch(Exception ex) {
+			TalkenException tex;
+			if(ex instanceof TalkenException) tex = (TalkenException) ex;
+			else tex = new GeneralException(ex);
+			DexTaskRecord.writeError(taskRecord, position, tex);
+			// and do not throw exception, leave cleaning mess with C/S, user will get success result
+			postTxStatus = false;
+		}
+
 		logger.info("{} complete. userId = {}", dexTaskId, userId);
 
 		CreateOfferResult result = new CreateOfferResult();
@@ -218,6 +306,11 @@ public class OfferService {
 		result.setAmount(amount);
 		result.setPrice(price);
 		result.setFeeResult(feeResult);
+		if(taskRecord.getOfferid() != null)
+			result.setOfferId(taskRecord.getOfferid());
+		if(taskRecord.getMadeamountraw() != null)
+			result.setMadeAmount(StellarConverter.rawToActual(taskRecord.getMadeamountraw()));
+		result.setPostTxStatus(postTxStatus);
 		return result;
 	}
 
@@ -253,13 +346,12 @@ public class OfferService {
 		taskRecord.store();
 		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
-
-		Optional<DexTxmonCreateofferRecord> opt_dexCreateOfferResultRecord = dslContext.selectFrom(DEX_TXMON_CREATEOFFER)
-				.where(DEX_TXMON_CREATEOFFER.OFFERID.eq(offerId))
+		Optional<DexTaskCreateofferRecord> opt_dexCreateOfferResultRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER)
+				.where(DEX_TASK_CREATEOFFER.OFFERID.eq(offerId))
 				.fetchOptional();
 
 		if(opt_dexCreateOfferResultRecord.isPresent()) {
-			taskRecord.setCreateofferTaskid(opt_dexCreateOfferResultRecord.get().getTaskidCrof());
+			taskRecord.setCreateofferTaskid(opt_dexCreateOfferResultRecord.get().getTaskid());
 		} else {
 			// TODO : determine what to do, force proceed? or drop
 			logger.warn("Create offer result for {} not found, this may cause unexpected refund result.");
