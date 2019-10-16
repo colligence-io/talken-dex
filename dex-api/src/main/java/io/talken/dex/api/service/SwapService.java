@@ -4,6 +4,7 @@ import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.DexSwapStatusEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
+import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.DexTaskSwapRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
@@ -47,7 +48,10 @@ public class SwapService {
 
 	private static final String pivotAssetCode = "USDT";
 
-	public SwapResult swap(long userId, SwapRequest request) throws SwapPredictionThresholdException, SwapServiceNotAvailableException, SwapPathNotAvailableException, TokenMetaNotFoundException, SwapUnderMinimumAmountException, StellarException, IntegrationException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, InternalServerErrorException {
+	public SwapResult swap(User user, SwapRequest request) throws SwapPredictionThresholdException, SwapServiceNotAvailableException, SwapPathNotAvailableException, TokenMetaNotFoundException, SwapUnderMinimumAmountException, StellarException, IntegrationException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, InternalServerErrorException {
+		final long userId = user.getId();
+
+
 		// prepare relay dto (also check tokenmeta and platform meta)
 		RelayTransferDTO relayTransferDTO = relayServerService.createTransferDTObase(request.getSourceAssetCode());
 

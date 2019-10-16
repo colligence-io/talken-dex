@@ -7,7 +7,9 @@ import io.talken.dex.api.config.auth.AuthRequired;
 import io.talken.dex.api.controller.DTOValidator;
 import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
-import io.talken.dex.api.controller.dto.*;
+import io.talken.dex.api.controller.dto.SwapPredictionResult;
+import io.talken.dex.api.controller.dto.SwapRequest;
+import io.talken.dex.api.controller.dto.SwapResult;
 import io.talken.dex.api.service.SwapService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,12 +39,6 @@ public class SwapController {
 	@RequestMapping(value = RequestMappings.SWAP_TASK, method = RequestMethod.POST)
 	public DexResponse<SwapResult> swap(@RequestBody SwapRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(swapService.swap(authInfo.getUserId(), postBody));
-	}
-
-	@RequestMapping(value = RequestMappings.SWAP_TASK_DEXKEY, method = RequestMethod.POST)
-	public DexResponse<DexKeyResult> swapDexKey(@RequestBody DexKeyRequest postBody) throws TalkenException {
-		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(swapService.swapDexKey(postBody.getUserId(), postBody));
+		return DexResponse.buildResponse(swapService.swap(authInfo.getUser(), postBody));
 	}
 }
