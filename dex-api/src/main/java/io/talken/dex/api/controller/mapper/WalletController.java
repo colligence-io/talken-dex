@@ -56,13 +56,13 @@ public class WalletController {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(anchorService.anchor(authInfo.getUser(), postBody));
 	}
-//
-//	@AuthRequired
-//	@RequestMapping(value = RequestMappings.TRADE_WALLET_DEANCHOR_TASK, method = RequestMethod.POST)
-//	public DexResponse<DeanchorResult> deanchor(@RequestBody DeanchorRequest postBody) throws TalkenException {
-//		DTOValidator.validate(postBody);
-//		return DexResponse.buildResponse(anchorService.deanchor(authInfo.getUser(), postBody));
-//	}
+
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.TRADE_WALLET_DEANCHOR_TASK, method = RequestMethod.POST)
+	public DexResponse<DeanchorResult> deanchor(@RequestBody DeanchorRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(anchorService.deanchor(authInfo.getUser(), postBody));
+	}
 
 	@RequestMapping(value = RequestMappings.TRADE_WALLET_DEANCHOR_FEE, method = RequestMethod.POST)
 	public DexResponse<CalculateFeeResult> deanchorFee(@RequestBody DeanchorRequest postBody) throws TalkenException {

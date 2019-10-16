@@ -83,12 +83,20 @@ public class TradeWalletService {
 		return masterKey.sign(uid.getBytes(StandardCharsets.UTF_8));
 	}
 
-	public String generateSecret(String individualKey) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, WalletException, BadPaddingException, InvalidAlgorithmParameterException {
+	private String generateSecret(String individualKey) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, WalletException, BadPaddingException, InvalidAlgorithmParameterException {
 		return TradeWallet.generate(getKeyBase(individualKey));
 	}
 
-	public KeyPair decryptSecret(String individualKey, String secret) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+	private KeyPair decryptSecret(String individualKey, String secret) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
 		return TradeWallet.toKeyPair(getKeyBase(individualKey), secret);
+	}
+
+	public KeyPair extractKeyPair(TradeWalletInfo tradeWallet) throws SigningException {
+		try {
+			return decryptSecret(tradeWallet.getUid(), tradeWallet.getSecret());
+		} catch(Exception ex) {
+			throw new SigningException(ex, tradeWallet.getAccountId(), "Signing Crypto Error");
+		}
 	}
 
 	public BigDecimal getNativeBalance(AccountResponse ar) {
