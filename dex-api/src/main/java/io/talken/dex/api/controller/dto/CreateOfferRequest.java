@@ -9,15 +9,13 @@ import java.math.BigDecimal;
 @Data
 public class CreateOfferRequest {
 	@NotEmpty
-	private String tradeWalletAddress;
-	@NotEmpty
 	private String sellAssetCode;
 	@NotEmpty
 	private String buyAssetCode;
 	@NotNull
-	private BigDecimal sellAssetAmount;
+	private BigDecimal amount;
 	@NotNull
-	private BigDecimal sellAssetPrice;
+	private BigDecimal price;
 	private Boolean feeByTalk;
 
 	public Boolean getFeeByTalk() {

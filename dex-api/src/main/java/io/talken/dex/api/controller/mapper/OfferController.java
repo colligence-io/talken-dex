@@ -8,6 +8,7 @@ import io.talken.dex.api.controller.DTOValidator;
 import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
 import io.talken.dex.api.controller.dto.*;
+import io.talken.dex.api.service.FeeCalculationService;
 import io.talken.dex.api.service.OfferService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-
-// FIXME : disabled before applying stellar-sdk 0.9.0
 @RestController
 public class OfferController {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(OfferController.class);
@@ -25,31 +24,50 @@ public class OfferController {
 	private OfferService offerService;
 
 	@Autowired
+	private FeeCalculationService feeCalculationService;
+
+	@Autowired
 	private AuthInfo authInfo;
 
-//	@AuthRequired
-//	@RequestMapping(value = RequestMappings.CREATE_OFFER_TASK, method = RequestMethod.POST)
-//	public DexResponse<CreateOfferResult> createOffer(@RequestBody CreateOfferRequest postBody) throws TalkenException {
-//		DTOValidator.validate(postBody);
-//		return DexResponse.buildResponse(offerService.createOffer(authInfo.getUserId(), postBody.getTradeWalletAddress(), postBody.getSellAssetCode(), postBody.getSellAssetAmount(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice(), postBody.getFeeByCtx()));
-//	}
-//
-//	@RequestMapping(value = RequestMappings.CREATE_OFFER_TASK_DEXKEY, method = RequestMethod.POST)
-//	public DexResponse<DexKeyResult> createOfferDexKey(@RequestBody DexKeyRequest postBody) throws TalkenException {
-//		DTOValidator.validate(postBody);
-//		return DexResponse.buildResponse(offerService.createOfferDexKey(postBody.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
-//	}
-//
-//	@AuthRequired
-//	@RequestMapping(value = RequestMappings.DELETE_OFFER_TASK, method = RequestMethod.POST)
-//	public DexResponse<DeleteOfferResult> deleteOffer(@RequestBody DeleteOfferRequest postBody) throws TalkenException {
-//		DTOValidator.validate(postBody);
-//		return DexResponse.buildResponse(offerService.deleteOffer(authInfo.getUserId(), postBody.getOfferId(), postBody.getTradeWalletAddress(), postBody.getSellAssetCode(), postBody.getBuyAssetCode(), postBody.getSellAssetPrice()));
-//	}
-//
-//	@RequestMapping(value = RequestMappings.DELETE_OFFER_TASK_DEXKEY, method = RequestMethod.POST)
-//	public DexResponse<DexKeyResult> deleteOfferDexKey(@RequestBody DexKeyRequest postBody) throws TalkenException {
-//		DTOValidator.validate(postBody);
-//		return DexResponse.buildResponse(offerService.deleteOfferDexKey(postBody.getUserId(), postBody.getTaskId(), postBody.getTransId(), postBody.getSignature()));
-//	}
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.OFFER_SELL_CREATE_TASK, method = RequestMethod.POST)
+	public DexResponse<CreateOfferResult> createSellOffer(@RequestBody CreateOfferRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(offerService.createSellOffer(authInfo.getUser(), postBody));
+	}
+
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.OFFER_BUY_CREATE_TASK, method = RequestMethod.POST)
+	public DexResponse<CalculateFeeResult> calculateSellOfferFee(@RequestBody CreateOfferRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(feeCalculationService.calculateOfferFee(true, postBody.getSellAssetCode(), postBody.getBuyAssetCode(), postBody.getAmount(), postBody.getPrice(), postBody.getFeeByTalk()));
+	}
+
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.OFFER_SELL_DELETE_TASK, method = RequestMethod.POST)
+	public DexResponse<DeleteOfferResult> deleteSellOffer(@RequestBody DeleteOfferRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(offerService.deleteSellOffer(authInfo.getUser(), postBody));
+	}
+
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.OFFER_BUY_CREATE_TASK, method = RequestMethod.POST)
+	public DexResponse<CreateOfferResult> createBuyOffer(@RequestBody CreateOfferRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(offerService.createBuyOffer(authInfo.getUser(), postBody));
+	}
+
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.OFFER_BUY_CREATE_TASK, method = RequestMethod.POST)
+	public DexResponse<CalculateFeeResult> calculateBuyOfferFee(@RequestBody CreateOfferRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(feeCalculationService.calculateOfferFee(false, postBody.getSellAssetCode(), postBody.getBuyAssetCode(), postBody.getAmount(), postBody.getPrice(), postBody.getFeeByTalk()));
+	}
+
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.OFFER_BUY_DELETE_TASK, method = RequestMethod.POST)
+	public DexResponse<DeleteOfferResult> deleteBuyOffer(@RequestBody DeleteOfferRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(offerService.deleteBuyOffer(authInfo.getUser(), postBody));
+	}
 }

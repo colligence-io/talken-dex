@@ -8,9 +8,10 @@ import java.math.BigDecimal;
 @Data
 public class DeleteOfferResult {
 	private String taskId;
-	private String transId;
 	private DexTaskTypeEnum taskType;
+
 	private Long offerId;
+
 	private String sellAssetCode;
 	private String buyAssetCode;
 	private BigDecimal price;

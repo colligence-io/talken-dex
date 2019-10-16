@@ -11,8 +11,6 @@ public class DeleteOfferRequest {
 	@NotNull
 	private Long offerId;
 	@NotEmpty
-	private String tradeWalletAddress;
-	@NotEmpty
 	private String sellAssetCode;
 	@NotEmpty
 	private String buyAssetCode;

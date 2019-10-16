@@ -4,6 +4,7 @@ import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.UserTradeWalletRecord;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.shared.DexSettings;
 import io.talken.dex.shared.TokenMetaServiceInterface;
 import io.talken.dex.shared.exception.SigningException;
@@ -231,10 +232,10 @@ public class TradeWalletService {
 	 * @param tradeWallet
 	 * @param plusOneEntry set true if one more entry is required (e.g before making offer entry)
 	 * @param assetCodes   asset codes to check trustline
-	 * @return true if adjust operation added
+	 * @return (tx modified, rebalace amount)
 	 * @throws TokenMetaNotFoundException
 	 */
-	public boolean addNativeBalancingOperation(StellarChannelTransaction.Builder sctxBuilder, TradeWalletInfo tradeWallet, boolean plusOneEntry, String... assetCodes) throws TokenMetaNotFoundException, TradeWalletRebalanceException {
+	public ObjectPair<Boolean, BigDecimal> addNativeBalancingOperation(StellarChannelTransaction.Builder sctxBuilder, TradeWalletInfo tradeWallet, boolean plusOneEntry, String... assetCodes) throws TokenMetaNotFoundException, TradeWalletRebalanceException {
 		boolean added = false;
 
 		BigDecimal nativeBalance = getNativeBalance(tradeWallet.getAccountResponse());
@@ -275,8 +276,9 @@ public class TradeWalletService {
 			}
 		}
 
+		BigDecimal refillAmount = BigDecimal.ZERO;
 		if(nativeBalance.compareTo(requiredBalance) <= 0) {
-			BigDecimal refillAmount = requiredBalance.subtract(nativeBalance).add(txFeeBufferAmount);
+			refillAmount = requiredBalance.subtract(nativeBalance).add(txFeeBufferAmount);
 
 			sctxBuilder
 					.addOperation(
@@ -290,6 +292,6 @@ public class TradeWalletService {
 			added = true;
 		}
 
-		return added;
+		return new ObjectPair<>(added, refillAmount);
 	}
 }

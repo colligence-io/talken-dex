@@ -5,8 +5,6 @@ public class RequestMappings {
 
 	private static final String DEX = ROOT + "/dex";
 
-	private static final String DEXKEY_SUFFIX = "/dexKey";
-
 	// WalletService
 	private static final String PRIVATE_WALLET = DEX + "/pw";
 	public static final String PRIVATE_WALLET_WITHDRAW_BASE = PRIVATE_WALLET + "/withdraw_base";
@@ -23,22 +21,17 @@ public class RequestMappings {
 	public static final String OFFER_SELL = OFFER + "/sell";
 	public static final String OFFER_SELL_FEE = OFFER_SELL + "/fee";
 	public static final String OFFER_SELL_CREATE_TASK = OFFER_SELL + "/create";
-	public static final String OFFER_SELL_CREATE_TASK_DEXKEY = OFFER_SELL_CREATE_TASK + DEXKEY_SUFFIX;
 	public static final String OFFER_SELL_DELETE_TASK = OFFER_SELL + "/delete";
-	public static final String OFFER_SELL_DELETE_TASK_DEXKEY = OFFER_SELL_DELETE_TASK + DEXKEY_SUFFIX;
 
 	public static final String OFFER_BUY = OFFER + "/buy";
 	public static final String OFFER_BUY_FEE = OFFER_BUY + "/fee";
 	public static final String OFFER_BUY_CREATE_TASK = OFFER_BUY + "/create";
-	public static final String OFFER_BUY_CREATE_TASK_DEXKEY = OFFER_BUY_CREATE_TASK + DEXKEY_SUFFIX;
 	public static final String OFFER_BUY_DELETE_TASK = OFFER_BUY + "/delete";
-	public static final String OFFER_BUY_DELETE_TASK_DEXKEY = OFFER_BUY_DELETE_TASK + DEXKEY_SUFFIX;
 
 	// Swap Service
 	private static final String SWAP = DEX + "/swap";
 	public static final String SWAP_PREDICT = SWAP + "/predict";
 	public static final String SWAP_TASK = SWAP + "/swap";
-	public static final String SWAP_TASK_DEXKEY = SWAP_TASK + DEXKEY_SUFFIX;
 
 	// MiscService
 	public static final String TXLIST = DEX + "/txList";

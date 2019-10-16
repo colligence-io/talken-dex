@@ -86,7 +86,8 @@ public class AnchorService {
 		position = "rebalance";
 		StellarChannelTransaction.Builder sctxBuilder = stellarNetworkService.newChannelTxBuilder();
 		try {
-			if(twService.addNativeBalancingOperation(sctxBuilder, tradeWallet, false, request.getAssetCode())) {
+			ObjectPair<Boolean, BigDecimal> rebalanced = twService.addNativeBalancingOperation(sctxBuilder, tradeWallet, false, request.getAssetCode());
+			if(rebalanced.first()) {
 				try {
 					logger.debug("Rebalance trade wallet {} (#{}) for anchor task.", tradeWallet.getAccountId(), userId);
 					SubmitTransactionResponse rebalanceResponse = sctxBuilder.buildAndSubmit();
@@ -95,6 +96,10 @@ public class AnchorService {
 						logger.error("Cannot rebalance trade wallet {} {} : {} {}", user.getId(), tradeWallet.getAccountId(), errorInfo.first(), errorInfo.second());
 						throw new TradeWalletRebalanceException(errorInfo.first());
 					}
+
+					taskRecord.setRebalanceamount(rebalanced.second());
+					taskRecord.setRebalancetxhash(rebalanceResponse.getHash());
+					taskRecord.store();
 				} catch(IOException e) {
 					throw new StellarException(e);
 				}
@@ -204,6 +209,7 @@ public class AnchorService {
 
 			// build deanchor operation
 			sctxBuilder
+					.setMemo(dexTaskId.getId())
 					.addOperation(
 							new PaymentOperation
 									.Builder(

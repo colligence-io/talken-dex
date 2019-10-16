@@ -9,10 +9,10 @@ import java.math.BigDecimal;
 @Data
 public class CreateOfferResult {
 	private String taskId;
-	private String transId;
-
 	private DexTaskTypeEnum taskType;
 
+	private String sellAssetCode;
+	private String buyAssetCode;
 	private BigDecimal amount;
 	private BigDecimal price;
 
