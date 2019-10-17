@@ -64,8 +64,8 @@ public class TradeWalletService {
 	private static final BigDecimal reservePerEntry = BigDecimal.valueOf(0.5);
 	private static final BigDecimal startingBalance = minimumBalance.add(reserveBufferAmount).add(txFeeBufferAmount);
 
-	private static int confirmInterval = 4000;
-	private static int confirmMaxRetry = 5;
+	private static final int confirmInterval = 4000;
+	private static final int confirmMaxRetry = 5;
 
 	private KeyPair masterKey;
 
@@ -160,69 +160,99 @@ public class TradeWalletService {
 		rtn.setAccountId(accountId);
 		rtn.setSecret(walletString);
 
-
-		boolean activationRequested = false;
-
-		for(int i = 0; i < confirmMaxRetry; i++) {
-			// check stellar account balance
-			AccountResponse accountResponse = null;
-			try {
-				accountResponse = stellarNetworkService.pickServer().accounts().account(accountId);
-			} catch(IOException ex) {
-				logger.exception(ex);
-				throw new TradeWalletCreateFailedException(ex, "IO Error");
-			} catch(ErrorResponse error) {
-				if(error.getCode() != 404) {
-					logger.exception(error);
-					throw new TradeWalletCreateFailedException(error, error.getBody());
-				}
-			}
-
-			if(accountResponse != null) {
-				rtn.setConfirmed(true);
-				rtn.setAccountResponse(accountResponse);
+		if(twRecord.getActivationconfirmed()) {
+			AccountResponse ar = getAccountInfoFromStellar(accountId);
+			if(ar == null) throw new TradeWalletCreateFailedException("Cannot load trade wallet.");
+			rtn.setConfirmed(true);
+			rtn.setAccountResponse(ar);
+			return rtn;
+		} else { // not confirmed yet
+			if(!ensure) { // don't have to ensure
+				rtn.setConfirmed(false);
 				return rtn;
-			}
+			} else {  // ensure is on!, create/confirm stellar network account
+				// if not activated, do activate
+				if(twRecord.getActivationtxhash() == null || twRecord.getActivationtxhash().isEmpty()) {
+					// only ErrorResponse 404 can reach here
+					// so wallet is not activated yet. (not created on stellar network)
+					// submit create wallet tx if not activated
+					SubmitTransactionResponse txResponse;
+					try {
+						logger.info("Create tradewallet {} for user #{} on stellar network.", accountId, user.getId());
+						txResponse = stellarNetworkService
+								.newChannelTxBuilder()
+								.addOperation(
+										new CreateAccountOperation
+												.Builder(accountId, startingBalance.stripTrailingZeros().toPlainString())
+												.setSourceAccount(creatorAddress)
+												.build()
+								)
+								.addSigner(new StellarSignerTSS(signServerService, creatorAddress))
+								.buildAndSubmit();
+					} catch(IOException e) {
+						throw new TradeWalletCreateFailedException(e, "IO Error");
+					} catch(SigningException e) {
+						throw new TradeWalletCreateFailedException(e, "TSS Error");
+					}
 
-			if(!activationRequested) {
-				// only ErrorResponse 404 can reach here
-				// so wallet is not activated yet. (not created on stellar network)
-				// submit create wallet tx if not activated
-				SubmitTransactionResponse txResponse;
-				try {
-					logger.info("Create tradewallet {} for user #{} on stellar network.", accountId, user.getId());
-					txResponse = stellarNetworkService
-							.newChannelTxBuilder()
-							.addOperation(
-									new CreateAccountOperation
-											.Builder(accountId, startingBalance.stripTrailingZeros().toPlainString())
-											.setSourceAccount(creatorAddress)
-											.build()
-							)
-							.addSigner(new StellarSignerTSS(signServerService, creatorAddress))
-							.buildAndSubmit();
-				} catch(IOException e) {
-					throw new TradeWalletCreateFailedException(e, "IO Error");
-				} catch(SigningException e) {
-					throw new TradeWalletCreateFailedException(e, "TSS Error");
+					if(!txResponse.isSuccess()) {
+						throw new TradeWalletCreateFailedException(txResponse.getExtras().getResultCodes().getTransactionResultCode());
+					} else {
+						twRecord.setActivationtxhash(txResponse.getHash());
+						twRecord.store();
+					}
 				}
 
-				if(!txResponse.isSuccess())
-					throw new TradeWalletCreateFailedException(txResponse.getExtras().getResultCodes().getTransactionResultCode());
+				// activation transaction is sent successfully
+				// do confirmation
+				for(int i = 0; i < confirmMaxRetry; i++) {
+					// check stellar account balance
+					AccountResponse accountResponse = getAccountInfoFromStellar(accountId);
 
-				activationRequested = true;
-			}
+					if(accountResponse != null) {
+						twRecord.setActivationconfirmed(true);
+						twRecord.store();
 
-			// wait for next check
-			try {
-				// FIXME : this can be serious bottle-neck point when called from single thread process
-				Thread.sleep(confirmInterval);
-			} catch(InterruptedException iex) {
-				throw new TradeWalletCreateFailedException(iex, "Interrupted");
+						rtn.setConfirmed(true);
+						rtn.setAccountResponse(accountResponse);
+						return rtn;
+					}
+
+					// wait for next check
+					try {
+						// FIXME : this can be serious bottle-neck point when called from single thread process
+						Thread.sleep(confirmInterval);
+					} catch(InterruptedException iex) {
+						throw new TradeWalletCreateFailedException(iex, "Interrupted");
+					}
+				}
+
+				// if cannot confirm, throw exception
+				throw new TradeWalletCreateFailedException("Cannot confirm trade wallet from stellar network");
 			}
 		}
+	}
 
-		throw new TradeWalletCreateFailedException("Cannot confirm trade wallet");
+	private AccountResponse getAccountInfoFromStellar(String accountId) throws TradeWalletCreateFailedException {
+		// check stellar account balance
+		AccountResponse accountResponse = null;
+		try {
+			accountResponse = stellarNetworkService.pickServer().accounts().account(accountId);
+		} catch(ErrorResponse error) {
+			if(error.getCode() != 404) { // only error 404 can pass this block, otherwise throw
+				logger.exception(error);
+				throw new TradeWalletCreateFailedException(error, error.getBody());
+			}
+		} catch(IOException ex) {
+			logger.exception(ex);
+			throw new TradeWalletCreateFailedException(ex, "IO Error");
+		} catch(Exception ex) {
+			logger.exception(ex);
+			throw new TradeWalletCreateFailedException(ex, "Unknown Error");
+		}
+
+		// 404 or OK can reach here
+		return accountResponse;
 	}
 
 	/**
