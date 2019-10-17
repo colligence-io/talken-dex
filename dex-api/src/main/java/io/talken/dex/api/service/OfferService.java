@@ -356,7 +356,7 @@ public class OfferService {
 			taskRecord.setCreateofferTaskid(opt_dexCreateOfferResultRecord.get().getTaskid());
 		} else {
 			// TODO : determine what to do, force proceed? or drop
-			logger.warn("Create offer result for {} not found, this may cause unexpected refund result.");
+			logger.warn("Create offer task for offer {} not found.", offerId);
 		}
 
 		position = "build_tx";
