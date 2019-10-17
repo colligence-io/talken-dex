@@ -220,7 +220,6 @@ public class OfferService {
 		}
 
 		position = "process_result";
-		boolean postTxStatus;
 		try {
 			TransactionResult transactionResult = txResponse.getDecodedTransactionResult().get();
 			// extract offerEntry from result
@@ -286,14 +285,17 @@ public class OfferService {
 					}
 				}
 			}
-			postTxStatus = true;
+			taskRecord.setPosttxFlag(true);
+			taskRecord.store();
 		} catch(Exception ex) {
 			TalkenException tex;
 			if(ex instanceof TalkenException) tex = (TalkenException) ex;
 			else tex = new GeneralException(ex);
 			DexTaskRecord.writeError(taskRecord, position, tex);
 			// and do not throw exception, leave cleaning mess with C/S, user will get success result
-			postTxStatus = false;
+			taskRecord.setPosttxFlag(false);
+			taskRecord.store();
+			logger.error("Post process for CreateOffer#{} is failed : {} {}", taskRecord.getId(), taskRecord.getErrorcode(), taskRecord.getErrormessage());
 		}
 
 		logger.info("{} complete. userId = {}", dexTaskId, userId);
@@ -310,7 +312,7 @@ public class OfferService {
 			result.setOfferId(taskRecord.getOfferid());
 		if(taskRecord.getMadeamountraw() != null)
 			result.setMadeAmount(StellarConverter.rawToActual(taskRecord.getMadeamountraw()));
-		result.setPostTxStatus(postTxStatus);
+		result.setPostTxStatus(taskRecord.getPosttxFlag());
 		return result;
 	}
 
