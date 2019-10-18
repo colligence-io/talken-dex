@@ -39,19 +39,19 @@ public class TaskTransactionListService {
 			condition = condition.and(DEX_TXMON.MEMOTASKID.eq(postBody.getTaskId()));
 		if(postBody.getTxHash() != null)
 			condition = condition.and(DEX_TXMON.TXHASH.eq(postBody.getTxHash()));
-
-		// join select step if request contains search condition for asset code
-		if((postBody.getBuyAssetCode() != null && !postBody.getBuyAssetCode().isEmpty()) ||
-				(postBody.getSellAssetCode() != null && !postBody.getSellAssetCode().isEmpty())) {
-
-			from = from.leftJoin(DEX_TXMON_CREATEOFFER).on(DEX_TXMON_CREATEOFFER.TXM_ID.eq(DEX_TXMON.ID))
-					.leftJoin(DEX_TASK_CREATEOFFER).on(DEX_TASK_CREATEOFFER.TASKID.eq(DEX_TXMON_CREATEOFFER.TASKID_CROF));
-
-			if(postBody.getBuyAssetCode() != null && !postBody.getBuyAssetCode().isEmpty())
-				condition = condition.and(DEX_TASK_CREATEOFFER.BUYASSETCODE.eq(postBody.getBuyAssetCode()));
-			if(postBody.getSellAssetCode() != null && !postBody.getSellAssetCode().isEmpty())
-				condition = condition.and(DEX_TASK_CREATEOFFER.SELLASSETCODE.eq(postBody.getSellAssetCode()));
-		}
+//		TODO : fix this in 1.3.0
+//		// join select step if request contains search condition for asset code
+//		if((postBody.getBuyAssetCode() != null && !postBody.getBuyAssetCode().isEmpty()) ||
+//				(postBody.getSellAssetCode() != null && !postBody.getSellAssetCode().isEmpty())) {
+//
+//			from = from.leftJoin(DEX_TXMON_CREATEOFFER).on(DEX_TXMON_CREATEOFFER.TXM_ID.eq(DEX_TXMON.ID))
+//					.leftJoin(DEX_TASK_CREATEOFFER).on(DEX_TASK_CREATEOFFER.TASKID.eq(DEX_TXMON_CREATEOFFER.TASKID_CROF));
+//
+//			if(postBody.getBuyAssetCode() != null && !postBody.getBuyAssetCode().isEmpty())
+//				condition = condition.and(DEX_TASK_CREATEOFFER.BUYASSETCODE.eq(postBody.getBuyAssetCode()));
+//			if(postBody.getSellAssetCode() != null && !postBody.getSellAssetCode().isEmpty())
+//				condition = condition.and(DEX_TASK_CREATEOFFER.SELLASSETCODE.eq(postBody.getSellAssetCode()));
+//		}
 
 		Result<Record> txList = from.where(condition)
 				.orderBy(DEX_TXMON.CREATEDAT.desc())
