@@ -160,7 +160,7 @@ public class TradeWalletService {
 		rtn.setAccountId(accountId);
 		rtn.setSecret(walletString);
 
-		if(twRecord.getActivationconfirmed()) {
+		if(twRecord.getActivationconfirmed() != null && twRecord.getActivationconfirmed()) {
 			AccountResponse ar = getAccountInfoFromStellar(accountId);
 			if(ar == null) throw new TradeWalletCreateFailedException("Cannot load trade wallet.");
 			rtn.setConfirmed(true);
