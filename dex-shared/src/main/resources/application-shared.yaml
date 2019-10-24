@@ -76,7 +76,7 @@ spring:
 talken:
   dex:
     tradeWallet:
-      creatorAddress: "GCLTGOKYK7WHPCP6R43FXZZZ7HHUAZJCOQ7H4K6NTQYEUMODYHOLN4XA"
+      creatorAddress: "GB2XPIIEXXNXAOUN6SYVKUSEHEDOGHLLXDMQ43KKSVJUKLJO3PWL643F"
     bcnode:
       stellar:
         network: main
