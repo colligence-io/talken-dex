@@ -196,7 +196,8 @@ public class TradeWalletService {
 					}
 
 					if(!txResponse.isSuccess()) {
-						throw new TradeWalletCreateFailedException(txResponse.getExtras().getResultCodes().getTransactionResultCode());
+						ObjectPair<String, String> errorInfo = StellarConverter.getResultCodesFromExtra(txResponse);
+						throw new TradeWalletCreateFailedException(errorInfo.first() + " : " + errorInfo.second());
 					} else {
 						twRecord.setActivationtxhash(txResponse.getHash());
 						twRecord.store();
