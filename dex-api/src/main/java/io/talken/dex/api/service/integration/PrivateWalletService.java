@@ -39,7 +39,7 @@ public class PrivateWalletService {
 		dto.setSymbol(assetCode);
 		if(tokenMeta.getAux() != null) {
 			for(Map.Entry<TokenMetaAuxCodeEnum, Object> auxEntry : tokenMeta.getAux().entrySet()) {
-				if(auxEntry.getKey().equals(TokenMetaAuxCodeEnum.TOKEN_CARD_THEME_COLOR))
+				if(!auxEntry.getKey().equals(TokenMetaAuxCodeEnum.TOKEN_CARD_THEME_COLOR))
 					dto.getAux().put(auxEntry.getKey().name(), auxEntry.getValue());
 			}
 		}
