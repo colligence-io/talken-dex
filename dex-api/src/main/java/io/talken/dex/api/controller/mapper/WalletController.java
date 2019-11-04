@@ -40,7 +40,7 @@ public class WalletController {
 
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.TRADE_WALLET_BALANCE, method = RequestMethod.GET)
-	public DexResponse<TradeWalletResult> ensureTradeWallet() throws TalkenException {
+	public DexResponse<TradeWalletResult> getTradeWallet() throws TalkenException {
 		return DexResponse.buildResponse(walletService.getTradeWalletBalances(authInfo.getUser()));
 	}
 

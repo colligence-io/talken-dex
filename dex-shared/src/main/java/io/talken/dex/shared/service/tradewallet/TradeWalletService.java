@@ -1,5 +1,6 @@
 package io.talken.dex.shared.service.tradewallet;
 
+import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.UserTradeWalletRecord;
@@ -160,78 +161,102 @@ public class TradeWalletService {
 		rtn.setAccountId(accountId);
 		rtn.setSecret(walletString);
 
-		if(twRecord.getActivationconfirmed() != null && twRecord.getActivationconfirmed()) {
-			AccountResponse ar = getAccountInfoFromStellar(accountId);
-			if(ar == null) throw new TradeWalletCreateFailedException("Cannot load trade wallet.");
+		// activationconfirmed status
+		// null -> not confirmed, not requested
+		// false -> not confirmed, but requested
+		// true -> confirmed
+
+
+		// return null for not activated wallet to avoid meaningless stellar call
+		if(!ensure && twRecord.getActivationconfirmed() == null) {
+			rtn.setConfirmed(false);
+			rtn.setAccountResponse(null);
+			return rtn;
+		}
+
+		AccountResponse ar = getAccountInfoFromStellar(accountId);
+		if(ar != null) {
+			if(!twRecord.getActivationconfirmed()) { // set confirmed as true if accountResponse is OK and DB status is false
+				twRecord.setActivationconfirmed(true);
+				twRecord.store();
+			}
 			rtn.setConfirmed(true);
 			rtn.setAccountResponse(ar);
 			return rtn;
-		} else { // not confirmed yet
-			if(!ensure) { // don't have to ensure
-				rtn.setConfirmed(false);
-				return rtn;
-			} else {  // ensure is on!, create/confirm stellar network account
-				// if not activated, do activate
-				if(twRecord.getActivationtxhash() == null || twRecord.getActivationtxhash().isEmpty()) {
-					// only ErrorResponse 404 can reach here
-					// so wallet is not activated yet. (not created on stellar network)
-					// submit create wallet tx if not activated
-					SubmitTransactionResponse txResponse;
-					try {
-						logger.info("Create tradewallet {} for user #{} on stellar network.", accountId, user.getId());
-						txResponse = stellarNetworkService
-								.newChannelTxBuilder()
-								.addOperation(
-										new CreateAccountOperation
-												.Builder(accountId, startingBalance.stripTrailingZeros().toPlainString())
-												.setSourceAccount(creatorAddress)
-												.build()
-								)
-								.addSigner(new StellarSignerTSS(signServerService, creatorAddress))
-								.buildAndSubmit();
-					} catch(IOException e) {
-						throw new TradeWalletCreateFailedException(e, "IO Error");
-					} catch(SigningException e) {
-						throw new TradeWalletCreateFailedException(e, "TSS Error");
-					}
+		}
 
-					if(!txResponse.isSuccess()) {
-						ObjectPair<String, String> errorInfo = StellarConverter.getResultCodesFromExtra(txResponse);
-						throw new TradeWalletCreateFailedException(errorInfo.first() + " : " + errorInfo.second());
-					} else {
-						twRecord.setActivationtxhash(txResponse.getHash());
-						twRecord.store();
-					}
+		// ar == null
+		if(!ensure) {
+			rtn.setConfirmed(false);
+			rtn.setAccountResponse(null);
+			return rtn;
+		}
+
+		// FROM NOW ON
+		// accountResponse is null && ensure is on
+
+		// refresh twRecord for sure
+		twRecord.refresh();
+
+		// if activation is not initiated, send activation tx
+		if(twRecord.getActivationconfirmed() == null) {
+			// submit create wallet tx if not activated
+			logger.info("Create tradewallet {} for user #{} on stellar network.", accountId, user.getId());
+			StellarChannelTransaction.Builder sctxBuilder = stellarNetworkService
+					.newChannelTxBuilder()
+					.addOperation(
+							new CreateAccountOperation
+									.Builder(accountId, startingBalance.stripTrailingZeros().toPlainString())
+									.setSourceAccount(creatorAddress)
+									.build()
+					)
+					.addSigner(new StellarSignerTSS(signServerService, creatorAddress));
+
+			SubmitTransactionResponse txResponse;
+			try(StellarChannelTransaction sctx = sctxBuilder.build()) {
+				twRecord.setActivationtxhash(ByteArrayUtil.toHexString(sctx.getTx().hash()));
+				twRecord.setActivationconfirmed(false);
+				twRecord.store();
+				txResponse = sctx.submit();
+
+				if(!txResponse.isSuccess()) {
+					ObjectPair<String, String> errorInfo = StellarConverter.getResultCodesFromExtra(txResponse);
+					throw new TradeWalletCreateFailedException(errorInfo.first() + " : " + errorInfo.second());
 				}
-
-				// activation transaction is sent successfully
-				// do confirmation
-				for(int i = 0; i < confirmMaxRetry; i++) {
-					// check stellar account balance
-					AccountResponse accountResponse = getAccountInfoFromStellar(accountId);
-
-					if(accountResponse != null) {
-						twRecord.setActivationconfirmed(true);
-						twRecord.store();
-
-						rtn.setConfirmed(true);
-						rtn.setAccountResponse(accountResponse);
-						return rtn;
-					}
-
-					// wait for next check
-					try {
-						// FIXME : this can be serious bottle-neck point when called from single thread process
-						Thread.sleep(confirmInterval);
-					} catch(InterruptedException iex) {
-						throw new TradeWalletCreateFailedException(iex, "Interrupted");
-					}
-				}
-
-				// if cannot confirm, throw exception
-				throw new TradeWalletCreateFailedException("Cannot confirm trade wallet from stellar network");
+			} catch(IOException e) {
+				throw new TradeWalletCreateFailedException(e, "IO Error");
+			} catch(SigningException e) {
+				throw new TradeWalletCreateFailedException(e, "TSS Error");
 			}
 		}
+
+		// activation transaction is sent successfully
+		// do confirmation
+		for(int i = 0; i < confirmMaxRetry; i++) {
+			// check stellar account balance
+			AccountResponse accountResponse = getAccountInfoFromStellar(accountId);
+
+			if(accountResponse != null) {
+				twRecord.setActivationconfirmed(true);
+				twRecord.store();
+
+				rtn.setConfirmed(true);
+				rtn.setAccountResponse(accountResponse);
+				return rtn;
+			}
+
+			// wait for next check
+			try {
+				// FIXME : this can be serious bottle-neck point when called from single thread process
+				logger.debug("Wait for tradeWallet confirmation {} {} ... {}", user.getId(), accountId, i);
+				Thread.sleep(confirmInterval);
+			} catch(InterruptedException iex) {
+				throw new TradeWalletCreateFailedException(iex, "Interrupted");
+			}
+		}
+
+		// if cannot confirm, throw exception
+		throw new TradeWalletCreateFailedException("Cannot confirm trade wallet from stellar network");
 	}
 
 	private AccountResponse getAccountInfoFromStellar(String accountId) throws TradeWalletCreateFailedException {
