@@ -196,7 +196,7 @@ public class TradeWalletService {
 		// accountResponse is null && ensure is on
 
 		// refresh twRecord for sure
-		twRecord.refresh();
+		//twRecord.refresh();
 
 		// if activation is not initiated, send activation tx
 		if(twRecord.getActivationconfirmed() == null) {
