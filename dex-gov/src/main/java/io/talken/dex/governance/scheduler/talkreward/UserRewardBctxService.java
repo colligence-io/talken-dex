@@ -86,6 +86,12 @@ public class UserRewardBctxService {
 		while(rewards.hasNext()) {
 			UserRewardRecord rewardRecord = rewards.fetchNext();
 
+			// check private/trade wallet type
+			if (!rewardRecord.getPrivateWalletFlag()) {
+				// TODO: reward(airdrop) to trade wallet
+				continue;
+			}
+
 			final String assetCode = rewardRecord.getAssetcode();
 			TokenMeta meta = metaService.getMeta(assetCode);
 
