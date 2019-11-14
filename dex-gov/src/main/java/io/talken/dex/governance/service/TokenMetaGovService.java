@@ -35,6 +35,7 @@ import org.stellar.sdk.*;
 import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+import org.stellar.sdk.xdr.AssetType;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -284,7 +285,7 @@ public class TokenMetaGovService implements TokenMetaServiceInterface {
 				mi.setAssetHolderAccounts(_tmHaMap.get(_tmd.getId()));
 				mi.setAssetCode(_tmd.getSymbol());
 				mi.setAssetIssuer(KeyPair.fromAccountId(mi.getIssueraddress()));
-				mi.setAssetType(new AssetTypeCreditAlphaNum4(_tmd.getSymbol(), mi.getAssetIssuer().getAccountId()));
+				mi.setAssetType(Asset.createNonNativeAsset(_tmd.getSymbol(), mi.getAssetIssuer().getAccountId()));
 				mi.setAssetBase(KeyPair.fromAccountId(mi.getBaseaddress()));
 				mi.setDeanchorFeeHolder(KeyPair.fromAccountId(mi.getDeancfeeholderaddress()));
 				mi.setOfferFeeHolder(KeyPair.fromAccountId(mi.getOfferfeeholderaddress()));
