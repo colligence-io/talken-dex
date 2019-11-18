@@ -481,13 +481,13 @@ public class TokenMetaGovService implements TokenMetaServiceInterface {
 
 	public TokenMeta getMeta(String assetCode) throws TokenMetaNotFoundException {
 		return Optional.ofNullable(
-				tmTable.select(assetCode)
+				tmTable.select(assetCode.toUpperCase())
 		).orElseThrow(() -> new TokenMetaNotFoundException(assetCode));
 	}
 
 	public TokenMeta.ManagedInfo getManaged(String assetCode) throws TokenMetaNotFoundException {
 		return Optional.ofNullable(
-				miTable.select(assetCode).getManagedInfo()
+				miTable.select(assetCode.toUpperCase()).getManagedInfo()
 		).orElseThrow(() -> new TokenMetaNotFoundException(assetCode));
 	}
 

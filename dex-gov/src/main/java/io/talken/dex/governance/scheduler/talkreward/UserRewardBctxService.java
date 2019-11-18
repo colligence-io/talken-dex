@@ -25,6 +25,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.talken.common.persistence.jooq.Tables.USER_REWARD;
 
@@ -72,6 +75,8 @@ public class UserRewardBctxService {
 	private void checkRewardAndQueueBctx() throws TokenMetaNotFoundException {
 		SingleKeyTable<String, DistStatus> dStatus = new SingleKeyTable<>();
 
+		Map<String, AtomicInteger> metaMissing = new HashMap<>();
+
 		Cursor<UserRewardRecord> rewards = dslContext.selectFrom(USER_REWARD)
 				.where(USER_REWARD.APPROVEMENT_FLAG.eq(true)
 						.and(USER_REWARD.CHECK_FLAG.eq(false))
@@ -93,7 +98,16 @@ public class UserRewardBctxService {
 			}
 
 			final String assetCode = rewardRecord.getAssetcode();
-			TokenMeta meta = metaService.getMeta(assetCode);
+			TokenMeta meta;
+			try {
+				meta = metaService.getMeta(assetCode);
+			} catch(TokenMetaNotFoundException ex) {
+				if(!metaMissing.containsKey(assetCode)) {
+					metaMissing.put(assetCode, new AtomicInteger());
+				}
+				metaMissing.get(assetCode).incrementAndGet();
+				continue;
+			}
 
 			if(!dStatus.has(assetCode)) dStatus.insert(createDistStatus(meta));
 
@@ -186,6 +200,9 @@ public class UserRewardBctxService {
 			if(distStatus.getCount().get() > 0) {
 				alarmService.info(logger, "Reward Queued : {} {} ({} transaction)", distStatus.getAmount().stripTrailingZeros().toPlainString(), distStatus.getAssetCode(), distStatus.getCount().get());
 			}
+		}
+		for(Map.Entry<String, AtomicInteger> missing : metaMissing.entrySet()) {
+			alarmService.info(logger, "Reward Error : no meta for {} found. {} rewards is skipped.", missing.getKey(), missing.getValue().get());
 		}
 	}
 }
