@@ -1,6 +1,7 @@
 package io.talken.dex.governance.service.bctx;
 
 import io.talken.common.persistence.enums.BctxStatusEnum;
+import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.GSONWriter;
 import io.talken.common.util.PrefixedLogger;
@@ -32,6 +33,8 @@ public abstract class TxMonitor<TB, TT> {
 
 	private List<BlockHandler<TB>> blockHandlers = new ArrayList<>();
 	private List<TransactionHandler<TT>> txHandlers = new ArrayList<>();
+
+	public abstract BlockChainPlatformEnum[] getBcTypes();
 
 	public void addBlockHandler(BlockHandler<TB> blockHandler) {
 		logger.info("{} Block -> {} binded.", this.getClass().getSimpleName(), blockHandler.getClass().getSimpleName());
@@ -68,12 +71,19 @@ public abstract class TxMonitor<TB, TT> {
 
 	abstract protected TxReceipt toTxMonitorReceipt(TT tx);
 
+	abstract protected TT getTransactionReceipt(String txId);
+
+	public void checkTransactionStatus(String txId) throws Exception {
+		TT tx = getTransactionReceipt(txId);
+		if(tx != null) updateBctxReceiptInfo(tx);
+	}
+
 	private void updateBctxReceiptInfo(TT tx) throws Exception {
 
 		TxReceipt receipt = toTxMonitorReceipt(tx);
 
 		BctxLogRecord logRecord = dslContext.selectFrom(BCTX_LOG)
-				.where(BCTX_LOG.BC_REF_ID.eq(receipt.txRefId).and(BCTX_LOG.STATUS.eq(BctxStatusEnum.SENT)))
+				.where(BCTX_LOG.BC_REF_ID.equalIgnoreCase(receipt.txRefId).and(BCTX_LOG.STATUS.eq(BctxStatusEnum.SENT)))
 				.fetchOne();
 
 		if(logRecord != null) {

@@ -1,6 +1,7 @@
 package io.talken.dex.governance.service.bctx.monitor.stellar;
 
 import io.talken.common.RunningProfile;
+import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.DexGovStatus;
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.Server;
+import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.requests.RequestBuilder;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.TransactionResponse;
@@ -51,6 +53,26 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 		do {
 			processed = processNextTransactions();
 		} while(processed == TXREQUEST_LIMIT);
+	}
+
+	@Override
+	public BlockChainPlatformEnum[] getBcTypes() {
+		return new BlockChainPlatformEnum[]{BlockChainPlatformEnum.STELLAR, BlockChainPlatformEnum.STELLAR_TOKEN};
+	}
+
+	@Override
+	protected TransactionResponse getTransactionReceipt(String txId) {
+		Server server = stellarNetworkService.pickServer();
+
+		try {
+			return server.transactions().transaction(txId);
+		} catch(ErrorResponse ex) {
+			if(ex.getCode() == 404) logger.debug("Stellar Tx {} is not found.", txId);
+			else logger.exception(ex);
+		} catch(Exception ex) {
+			logger.exception(ex);
+		}
+		return null;
 	}
 
 	private int processNextTransactions() {

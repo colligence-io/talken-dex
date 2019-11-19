@@ -24,6 +24,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
 import static io.talken.common.persistence.jooq.Tables.BCTX;
@@ -41,6 +43,8 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 	private final DataSourceTransactionManager txMgr;
 
 	private final SingleKeyTable<BlockChainPlatformEnum, TxSender> txSenders = new SingleKeyTable<>();
+	private final Map<BlockChainPlatformEnum, TxMonitor> txMonitors = new HashMap<>();
+
 
 	private ApplicationContext applicationContext;
 
@@ -61,19 +65,42 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 
 		Map<String, TxMonitor> txmBeans = applicationContext.getBeansOfType(TxMonitor.class);
 		txmBeans.forEach((_name, _bean) -> {
-			logger.info("TxMonitor [{}] loaded.", _bean.getClass().getSimpleName());
+			for(BlockChainPlatformEnum bcType : _bean.getBcTypes()) {
+				if(txMonitors.containsKey(bcType)) throw new IllegalStateException(bcType.toString() + " already registered.");
+				txMonitors.put(bcType, _bean);
+				logger.info("TxMonitor for [{}] registered.", bcType);
+			}
 		});
 	}
 
+	@Scheduled(fixedDelay = 60*60*1000, initialDelay = 5000) // check pending (sent bctx) every one hour
+	private synchronized void checkPending() {
+		Result<BctxRecord> txQueue = dslContext.selectFrom(BCTX)
+				.where(BCTX.STATUS.eq(BctxStatusEnum.SENT)
+						.and(BCTX.UPDATE_TIMESTAMP.isNotNull().and(BCTX.UPDATE_TIMESTAMP.le(UTCUtil.getNow().minusHours(3))))
+				).fetch();
+
+		if(txQueue.isNotEmpty()) {
+			logger.info("Checking sent(pending) txs...");
+			for(BctxRecord bctxRecord : txQueue) {
+				try {
+					if(txMonitors.containsKey(bctxRecord.getBctxType()))
+						txMonitors.get(bctxRecord.getBctxType()).checkTransactionStatus(bctxRecord.getBcRefId());
+				} catch(Exception ex) {
+					logger.exception(ex, "Cannot check pending transaction : {}", bctxRecord.getBcRefId());
+				}
+			}
+		}
+	}
+
 	@Scheduled(fixedDelay = 1000, initialDelay = 3000)
-	private void checkQueue() {
+	private synchronized void checkQueue() {
 		Result<BctxRecord> txQueue = dslContext.selectFrom(BCTX)
 				.where(BCTX.STATUS.eq(BctxStatusEnum.QUEUED)
-						.and(BCTX.SCHEDULE_TIMESTAMP.isNull().or(BCTX.SCHEDULE_TIMESTAMP.ne(UTCUtil.getNow())))
+						.and(BCTX.SCHEDULE_TIMESTAMP.isNull().or(BCTX.SCHEDULE_TIMESTAMP.le(UTCUtil.getNow())))
 				).fetch();
 
 		for(BctxRecord bctxRecord : txQueue) {
-
 			// create new logRecord
 			BctxLogRecord logRecord = new BctxLogRecord();
 			try {
