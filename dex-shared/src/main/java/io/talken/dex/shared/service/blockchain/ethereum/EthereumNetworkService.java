@@ -31,9 +31,8 @@ public class EthereumNetworkService {
 
 	private final DexSettings dexSettings;
 
-	private String serverUri;
-
-	private boolean isParity = false;
+	private EthRpcClient localClient;
+	private EthRpcClient infuraClient;
 
 	private String gasOracleApiUrl;
 
@@ -43,20 +42,21 @@ public class EthereumNetworkService {
 	@PostConstruct
 	private void init() throws Exception {
 		final String network = dexSettings.getBcnode().getEthereum().getNetwork().equalsIgnoreCase("test") ? "TEST" : "PUBLIC";
-		this.serverUri = dexSettings.getBcnode().getEthereum().getRpcUri();
-		final String client = newClient().web3ClientVersion().send().getWeb3ClientVersion();
-		this.isParity = client.startsWith("Parity-Ethereum");
+
+		this.localClient = new EthRpcClient(dexSettings.getBcnode().getEthereum().getRpcUri());
+		this.infuraClient = new EthRpcClient(dexSettings.getBcnode().getEthereum().getInfuraUri());
 		this.gasOracleApiUrl = dexSettings.getBcnode().getEthereum().getGasOracleUrl();
-		logger.info("Using Ethereum {} Network : {} {}", network, this.serverUri, client);
+		logger.info("Using Ethereum {} Network : {} {}", network, this.localClient.getUri(), this.localClient.getClientVersion());
+		logger.info("Using Ethereum Infura {} Network : {} {}", network, this.infuraClient.getUri(), this.infuraClient.getClientVersion());
 		updateGasPrice();
 	}
 
-	public Web3j newClient() {
-		return Web3j.build(newWeb3jService());
+	public EthRpcClient getLocalClient() {
+		return this.localClient;
 	}
 
-	public Web3jService newWeb3jService() {
-		return new Web3jHttpService(this.serverUri);
+	public EthRpcClient getInfuraClient() {
+		return this.infuraClient;
 	}
 
 	@Scheduled(fixedDelay = 5000)
@@ -70,15 +70,6 @@ public class EthereumNetworkService {
 		} catch(Exception ex) {
 			this.gasPrice = defaultGasPrice;
 			logger.error("Cannot query gasprice oracle service, use 20 GWEI as gasPrice");
-		}
-	}
-
-	public BigInteger getNonce(Web3jService web3jService, String address) throws Exception {
-		if(this.isParity) {
-			Request<?, ParityNextNonceResponse> nonceReq = new Request<>("parity_nextNonce", Collections.singletonList(address), web3jService, ParityNextNonceResponse.class);
-			return nonceReq.send().getNextNonce();
-		} else {
-			return Web3j.build(web3jService).ethGetTransactionCount(address, DefaultBlockParameterName.PENDING).sendAsync().get().getTransactionCount();
 		}
 	}
 

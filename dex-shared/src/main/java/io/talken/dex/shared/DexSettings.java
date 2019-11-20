@@ -112,6 +112,7 @@ public class DexSettings {
 	public static class _Ethereum {
 		private String network;
 		private String rpcUri;
+		private String infuraUri;
 		private String gasOracleUrl;
 	}
 

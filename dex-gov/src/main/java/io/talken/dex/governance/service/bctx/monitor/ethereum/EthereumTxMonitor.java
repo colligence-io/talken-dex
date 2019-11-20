@@ -70,7 +70,7 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 	@Override
 	protected TransactionReceipt getTransactionReceipt(String txId) {
 		try {
-			Web3j web3j = ethNetworkService.newClient();
+			Web3j web3j = ethNetworkService.getLocalClient().newClient();
 			Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(txId).send().getTransactionReceipt();
 			if(opt_receipt.isPresent()) {
 				TransactionReceipt receipt = opt_receipt.get();
@@ -113,7 +113,7 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 	private void getBlocks() {
 		Web3j web3j;
 		try {
-			web3j = ethNetworkService.newClient();
+			web3j = ethNetworkService.getLocalClient().newClient();
 		} catch(Exception ex) {
 			logger.exception(ex, "Cannot get ethereum rpc client.");
 			return;

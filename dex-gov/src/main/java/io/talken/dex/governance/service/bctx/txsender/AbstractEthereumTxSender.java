@@ -9,6 +9,7 @@ import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.bctx.TxSender;
+import io.talken.dex.shared.service.blockchain.ethereum.EthRpcClient;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
 import io.talken.dex.shared.service.blockchain.ethereum.StandardERC20ContractFunctions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,12 +64,15 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 	}
 
 	protected boolean sendEthereumTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
-		Web3jService web3jService = ethereumNetworkService.newWeb3jService();
+
+		EthRpcClient infuraClient = ethereumNetworkService.getInfuraClient();
+
+		Web3jService web3jService = infuraClient.newWeb3jService();
 		Web3j web3j = Web3j.build(web3jService);
 
 		final String from = bctx.getAddressFrom();
 
-		BigInteger nonce = ethereumNetworkService.getNonce(web3jService, from);
+		BigInteger nonce = infuraClient.getNonce(web3jService, from);
 
 		// to avoid parity-ethereum nextNonce race bug : https://github.com/paritytech/parity-ethereum/issues/10897
 		if(nonceCheck.containsKey(from)) {
@@ -78,7 +82,7 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
 				logger.warn("parity_nextNonce race condition detected : {} (retry = {})", from, nonceRetry);
 				Thread.sleep(1000);
-				nonce = ethereumNetworkService.getNonce(web3jService, from);
+				nonce = infuraClient.getNonce(web3jService, from);
 			}
 		}
 

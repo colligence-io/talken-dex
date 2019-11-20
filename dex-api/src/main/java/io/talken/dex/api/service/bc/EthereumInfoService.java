@@ -22,7 +22,7 @@ public class EthereumInfoService {
 	private Erc20ContractInfoService contractInfoService;
 
 	public BigInteger getEthBalance(String address) throws GeneralException {
-		return getEthBalance(ethereumNetworkService.newClient(), address);
+		return getEthBalance(ethereumNetworkService.getLocalClient().newClient(), address);
 	}
 
 	public BigInteger getEthBalance(Web3j web3j, String address) throws GeneralException {
@@ -34,7 +34,7 @@ public class EthereumInfoService {
 	}
 
 	public BigInteger getErc20Balance(String contract, String address) throws GeneralException {
-		return getErc20Balance(ethereumNetworkService.newClient(), contract, address);
+		return getErc20Balance(ethereumNetworkService.getLocalClient().newClient(), contract, address);
 	}
 
 	public BigInteger getErc20Balance(Web3j web3j, String contract, String address) throws GeneralException {
