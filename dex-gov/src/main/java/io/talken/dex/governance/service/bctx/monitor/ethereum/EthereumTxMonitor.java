@@ -72,8 +72,10 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 		try {
 			Web3j web3j = ethNetworkService.newClient();
 			Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(txId).send().getTransactionReceipt();
-			if(opt_receipt.isPresent()) return opt_receipt.get();
-			else logger.debug("Ethereum Tx {} is not found.", txId);
+			if(opt_receipt.isPresent()) {
+				TransactionReceipt receipt = opt_receipt.get();
+				if(receipt.getBlockNumberRaw() != null) return opt_receipt.get();
+			} else logger.debug("Ethereum Tx {} is not found.", txId);
 		} catch(Exception ex) {
 			logger.exception(ex);
 		}
