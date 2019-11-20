@@ -37,7 +37,8 @@ public class EthereumNetworkService {
 
 	private String gasOracleApiUrl;
 
-	private GasPriceOracleResult gasOracleResult = null;
+	private static final BigDecimal defaultGasPrice = BigDecimal.valueOf(20); // default 20GWEI
+	private BigDecimal gasPrice = defaultGasPrice;
 
 	@PostConstruct
 	private void init() throws Exception {
@@ -58,13 +59,16 @@ public class EthereumNetworkService {
 		return new Web3jHttpService(this.serverUri);
 	}
 
-	@Scheduled(fixedDelay = 15000)
+	@Scheduled(fixedDelay = 5000)
 	private void updateGasPrice() {
 		try {
-			this.gasOracleResult = queryGasPrice();
-			logger.trace("GasPrice updated : using FAST = {}", this.gasOracleResult.getFast().toPlainString());
+			GasPriceOracleResult result = queryGasPrice();
+			if(this.gasPrice.compareTo(result.getStandard()) != 0) {
+				this.gasPrice = result.getStandard();
+				logger.info("Ethereum gasPrice updated : using STANDARD = {}", this.gasPrice.toPlainString());
+			}
 		} catch(Exception ex) {
-			this.gasOracleResult = null;
+			this.gasPrice = defaultGasPrice;
 			logger.error("Cannot query gasprice oracle service, use 20 GWEI as gasPrice");
 		}
 	}
@@ -79,10 +83,10 @@ public class EthereumNetworkService {
 	}
 
 	public BigInteger getGasPrice(Web3j web3j) {
-		if(gasOracleResult != null) {
-			return Convert.toWei(gasOracleResult.standard.toPlainString(), Convert.Unit.GWEI).toBigInteger();
+		if(gasPrice != null) {
+			return Convert.toWei(gasPrice.toPlainString(), Convert.Unit.GWEI).toBigInteger();
 		} else {
-			return Convert.toWei("10", Convert.Unit.GWEI).toBigInteger();
+			return Convert.toWei(defaultGasPrice.toPlainString(), Convert.Unit.GWEI).toBigInteger();
 		}
 	}
 
