@@ -19,7 +19,7 @@ import java.util.List;
 import static io.talken.common.persistence.jooq.Tables.BCTX;
 import static io.talken.common.persistence.jooq.Tables.BCTX_LOG;
 
-public abstract class TxMonitor<TB, TT> {
+public abstract class TxMonitor<TB, TT, TR> {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TxMonitor.class);
 
 	@Autowired
@@ -33,6 +33,7 @@ public abstract class TxMonitor<TB, TT> {
 
 	private List<BlockHandler<TB>> blockHandlers = new ArrayList<>();
 	private List<TransactionHandler<TT>> txHandlers = new ArrayList<>();
+	private List<ReceiptHandler<TR>> receiptHandlers = new ArrayList<>();
 
 	public abstract BlockChainPlatformEnum[] getBcTypes();
 
@@ -44,6 +45,11 @@ public abstract class TxMonitor<TB, TT> {
 	public void addTransactionHandler(TransactionHandler<TT> transactionHandler) {
 		logger.info("{} Transaction -> {} binded.", this.getClass().getSimpleName(), transactionHandler.getClass().getSimpleName());
 		this.txHandlers.add(transactionHandler);
+	}
+
+	public void addReceiptHandler(ReceiptHandler<TR> receiptHandler) {
+		logger.info("{} Receipt -> {} binded.", this.getClass().getSimpleName(), receiptHandler.getClass().getSimpleName());
+		this.receiptHandlers.add(receiptHandler);
 	}
 
 	protected void callBlockHandlerStack(TB block) throws BctxException {
@@ -62,6 +68,17 @@ public abstract class TxMonitor<TB, TT> {
 		for(TransactionHandler<TT> txHandler : txHandlers) {
 			try {
 				txHandler.handle(tx);
+			} catch(Exception ex) {
+				alarmService.exception(logger, ex);
+				throw new BctxException(ex, ex.getClass().getSimpleName(), ex.getMessage());
+			}
+		}
+	}
+
+	protected void callReceiptHandlerStack(TR receipt) throws Exception {
+		for(ReceiptHandler<TR> receiptHandler : receiptHandlers) {
+			try {
+				receiptHandler.handle(receipt);
 			} catch(Exception ex) {
 				alarmService.exception(logger, ex);
 				throw new BctxException(ex, ex.getClass().getSimpleName(), ex.getMessage());
@@ -110,6 +127,10 @@ public abstract class TxMonitor<TB, TT> {
 
 	public interface TransactionHandler<TT> {
 		void handle(TT transaction) throws Exception;
+	}
+
+	public interface ReceiptHandler<TR> {
+		void handle(TR receipt) throws Exception;
 	}
 
 	@Data

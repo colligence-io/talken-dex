@@ -1,13 +1,12 @@
-package io.talken.dex.governance.service.bctx.monitor.stellar.dextask;
+package io.talken.dex.governance.service.bctx.monitor.stellar;
 
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTxmonRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.TxMonitor;
-import io.talken.dex.governance.service.bctx.monitor.stellar.StellarTxMonitor;
-import io.talken.dex.shared.DexTaskId;
-import io.talken.dex.shared.exception.TaskIntegrityCheckFailedException;
+import io.talken.dex.shared.exception.TransactionResultProcessingException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
+import io.talken.dex.shared.service.blockchain.stellar.StellarTxResult;
 import org.jooq.DSLContext;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +15,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Scope;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-import org.stellar.sdk.Memo;
-import org.stellar.sdk.MemoText;
-import org.stellar.sdk.responses.TransactionResponse;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
@@ -27,7 +23,7 @@ import java.util.Map;
 
 @Component
 @Scope("singleton")
-public class DexTaskTransactionHandler implements ApplicationContextAware, TxMonitor.TransactionHandler<TransactionResponse> {
+public class DexTaskTransactionHandler implements ApplicationContextAware, TxMonitor.TransactionHandler<StellarTxResult> {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(DexTaskTransactionHandler.class);
 
 	@Autowired
@@ -59,58 +55,42 @@ public class DexTaskTransactionHandler implements ApplicationContextAware, TxMon
 	}
 
 	@Override
-	public void handle(TransactionResponse tx) throws Exception {
-
-		Memo memo = tx.getMemo();
-		if(!(memo instanceof MemoText)) return;
-
-		String memoText = ((MemoText) memo).getText();
-
-		if(!memoText.startsWith("TALKEN")) return;
-
-
-		DexTaskId dexTaskId;
-		try {
-			dexTaskId = DexTaskId.decode_taskId(memoText);
-		} catch(TaskIntegrityCheckFailedException e) {
-			logger.warn("Invalid DexTaskId [{}] detected : txHash = {}", memoText, tx.getHash());
-			return;
-		}
+	public void handle(StellarTxResult txResult) throws Exception {
+		if(txResult.getTaskId() == null) return;
 
 		DexTxmonRecord txmRecord = new DexTxmonRecord();
-		txmRecord.setTxid(tx.getHash());
-		txmRecord.setMemotaskid(dexTaskId.getId());
-		txmRecord.setTasktype(dexTaskId.getType());
-		txmRecord.setTxhash(tx.getHash());
-		txmRecord.setLedger(tx.getLedger());
-		txmRecord.setCreatedat(StellarConverter.toLocalDateTime(tx.getCreatedAt()));
-		txmRecord.setSourceaccount(tx.getSourceAccount());
-		txmRecord.setEnvelopexdr(tx.getEnvelopeXdr());
-		txmRecord.setResultxdr(tx.getResultXdr());
-		txmRecord.setResultmetaxdr(tx.getResultMetaXdr());
-		txmRecord.setFeepaid(tx.getFeePaid());
+		txmRecord.setTxid(txResult.getResponse().getHash());
+		txmRecord.setMemotaskid(txResult.getTaskId().getId());
+		txmRecord.setTasktype(txResult.getTaskId().getType());
+		txmRecord.setTxhash(txResult.getResponse().getHash());
+		txmRecord.setLedger(txResult.getResponse().getLedger());
+		txmRecord.setCreatedat(StellarConverter.toLocalDateTime(txResult.getResponse().getCreatedAt()));
+		txmRecord.setSourceaccount(txResult.getResponse().getSourceAccount());
+		txmRecord.setEnvelopexdr(txResult.getResponse().getEnvelopeXdr());
+		txmRecord.setResultxdr(txResult.getResponse().getResultXdr());
+		txmRecord.setResultmetaxdr(txResult.getResponse().getResultMetaXdr());
+		txmRecord.setFeepaid(txResult.getResponse().getFeePaid());
 		dslContext.attach(txmRecord);
 		txmRecord.store();
 
 		try {
 			// FIXME : check before applying stellar-sdk 0.9.0
-			TaskTransactionResponse txResponse = new TaskTransactionResponse(dexTaskId, tx);
-			txmRecord.setOfferidfromresult(txResponse.getOfferIdFromResult());
+			txmRecord.setOfferidfromresult(txResult.getOfferIdFromResult());
 
 			// run processor
-			if(processors.containsKey(dexTaskId.getType())) {
-				TaskTransactionProcessResult result;
+			if(processors.containsKey(txResult.getTaskId().getType())) {
+				DexTaskTransactionProcessResult result;
 				try {
-					logger.info("{} ({}) found. start processing.", dexTaskId, txResponse.getTxHash());
-					result = processors.get(dexTaskId.getType()).process(txmRecord.getId(), txResponse);
+					logger.info("{} ({}) found. start processing.", txResult.getTaskId(), txResult.getTxHash());
+					result = processors.get(txResult.getTaskId().getType()).process(txmRecord.getId(), txResult);
 				} catch(Exception ex) {
-					result = TaskTransactionProcessResult.error("Unknown", ex);
+					result = DexTaskTransactionProcessResult.error("Unknown", ex);
 				}
 
 				if(result.isSuccess()) {
 					txmRecord.setProcessSuccessFlag(true);
 				} else {
-					logger.error("{} transaction {} result process error : {} {}", dexTaskId, tx.getHash(), result.getError().getCode(), result.getError().getMessage());
+					logger.error("{} transaction {} result process error : {} {}", txResult.getTaskId(), txResult.getTxHash(), result.getError().getCode(), result.getError().getMessage());
 
 					// log exception
 					if(result.getError().getCause() != null)
@@ -123,7 +103,7 @@ public class DexTaskTransactionHandler implements ApplicationContextAware, TxMon
 
 				txmRecord.update();
 			} else {
-				logger.verbose("No TaskTransactionProcessor for {} registered", dexTaskId.getType());
+				logger.verbose("No TaskTransactionProcessor for {} registered", txResult.getTaskId().getType());
 			}
 		} catch(Exception ex) {
 			logger.exception(ex);
@@ -133,5 +113,11 @@ public class DexTaskTransactionHandler implements ApplicationContextAware, TxMon
 		}
 
 		txmRecord.update();
+	}
+
+	public static interface TaskTransactionProcessor {
+		DexTaskTypeEnum getDexTaskType();
+
+		DexTaskTransactionProcessResult process(Long txmId, StellarTxResult taskTxResponse) throws TransactionResultProcessingException;
 	}
 }

@@ -6,9 +6,10 @@ import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
-import io.talken.dex.governance.service.bctx.monitor.stellar.dextask.DexTaskTransactionHandler;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
+import io.talken.dex.shared.service.blockchain.stellar.StellarTxReceipt;
+import io.talken.dex.shared.service.blockchain.stellar.StellarTxResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,7 +28,7 @@ import java.util.Optional;
 
 @Service
 @Scope("singleton")
-public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
+public class StellarTxMonitor extends TxMonitor<Void, StellarTxResult, StellarTxReceipt> {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(DexTaskTransactionHandler.class);
 
 	@Autowired
@@ -61,11 +62,11 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 	}
 
 	@Override
-	protected TransactionResponse getTransactionReceipt(String txId) {
+	protected StellarTxResult getTransactionReceipt(String txId) {
 		Server server = stellarNetworkService.pickServer();
 
 		try {
-			return server.transactions().transaction(txId);
+			new StellarTxResult(server.transactions().transaction(txId), stellarNetworkService.getNetwork());
 		} catch(ErrorResponse ex) {
 			if(ex.getCode() == 404) logger.debug("Stellar Tx {} is not found.", txId);
 			else logger.exception(ex);
@@ -103,8 +104,12 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 
 		for(TransactionResponse txRecord : txPage.getRecords()) {
 			try {
+				StellarTxResult txResult = new StellarTxResult(txRecord, stellarNetworkService.getNetwork());
+				callTxHandlerStack(txResult);
 
-				callTxHandlerStack(txRecord);
+				for(StellarTxReceipt payment : txResult.getPaymentReceipts()) {
+					callReceiptHandlerStack(payment);
+				}
 
 				ssService.status().getTxMonitor().getStellar().setLastPagingToken(txRecord.getPagingToken());
 				ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
@@ -120,23 +125,23 @@ public class StellarTxMonitor extends TxMonitor<Void, TransactionResponse> {
 	}
 
 	@Override
-	protected TxReceipt toTxMonitorReceipt(TransactionResponse tx) {
+	protected TxReceipt toTxMonitorReceipt(StellarTxResult txResult) {
 
 		Map<String, Object> receiptObj = new HashMap<>();
 
-		receiptObj.put("txHash", tx.getHash());
-		receiptObj.put("ledger", tx.getLedger());
-		receiptObj.put("resultXdr", tx.getResultXdr());
-		receiptObj.put("envelopeXdr", tx.getEnvelopeXdr());
-		receiptObj.put("resultMetaXdr", tx.getResultMetaXdr());
-		receiptObj.put("feePaid", tx.getFeePaid());
-		receiptObj.put("sourceAccount", tx.getSourceAccount());
-		receiptObj.put("createdAt", tx.getCreatedAt());
+		receiptObj.put("txHash", txResult.getResponse().getHash());
+		receiptObj.put("ledger", txResult.getResponse().getLedger());
+		receiptObj.put("resultXdr", txResult.getResponse().getResultXdr());
+		receiptObj.put("envelopeXdr", txResult.getResponse().getEnvelopeXdr());
+		receiptObj.put("resultMetaXdr", txResult.getResponse().getResultMetaXdr());
+		receiptObj.put("feePaid", txResult.getResponse().getFeePaid());
+		receiptObj.put("sourceAccount", txResult.getResponse().getSourceAccount());
+		receiptObj.put("createdAt", txResult.getResponse().getCreatedAt());
 
-		if(tx.isSuccessful()) {
-			return TxReceipt.ofSuccessful(tx.getHash(), receiptObj);
+		if(txResult.getResponse().isSuccessful()) {
+			return TxReceipt.ofSuccessful(txResult.getResponse().getHash(), receiptObj);
 		} else {
-			return TxReceipt.ofFailed(tx.getHash(), receiptObj);
+			return TxReceipt.ofFailed(txResult.getResponse().getHash(), receiptObj);
 		}
 	}
 }

@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt> {
+public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt, EthereumTxReceipt> {
 	private final PrefixedLogger logger;
 
 	@Autowired
@@ -110,7 +110,12 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 										Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(transaction.getHash()).send().getTransactionReceipt();
 										if(opt_receipt.isPresent()) {
 											callTxHandlerStack(opt_receipt.get());
-											txReceiptDocuments.addAll(getTransfers(web3j, block, transaction, opt_receipt.get()));
+
+											List<EthereumTxReceipt> transfers = getTransfers(web3j, block, transaction, opt_receipt.get());
+											for(EthereumTxReceipt transfer : transfers) {
+												txReceiptDocuments.add(transfer);
+												callReceiptHandlerStack(transfer);
+											}
 										} else {
 											logger.error("Cannot get tx receipt from network, cancel monitoring");
 											break;

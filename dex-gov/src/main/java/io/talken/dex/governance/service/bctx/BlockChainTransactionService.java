@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 
 import static io.talken.common.persistence.jooq.Tables.BCTX;
@@ -73,7 +72,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 		});
 	}
 
-	@Scheduled(fixedDelay = 60*60*1000, initialDelay = 5000) // check pending (sent bctx) every one hour
+	@Scheduled(fixedDelay = 60 * 60 * 1000, initialDelay = 5000) // check pending (sent bctx) every one hour
 	private synchronized void checkPending() {
 		Result<BctxRecord> txQueue = dslContext.selectFrom(BCTX)
 				.where(BCTX.STATUS.eq(BctxStatusEnum.SENT)
