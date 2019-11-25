@@ -3,7 +3,9 @@ package io.talken.dex.governance.service.bctx.monitor.ethereum;
 import io.talken.common.util.BeanCopier;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
+import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.governance.service.bctx.TxMonitor;
+import io.talken.dex.shared.exception.BctxException;
 import io.talken.dex.shared.service.blockchain.ethereum.Erc20ContractInfoService;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumTxReceipt;
 import io.talken.dex.shared.service.blockchain.ethereum.StandardERC20ContractFunctions;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt, EthereumTxReceipt> {
 	private final PrefixedLogger logger;
@@ -37,6 +40,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 	private static final int MAXIMUM_LOOP = 1000; // get 1000 blocks per loop, for reduce crawl load.
 	private final String networkName;
+	private static final BigInteger CONFIRM_BLOCK_COUNT = BigInteger.valueOf(10);
 
 	public AbstractEthereumTxMonitor(PrefixedLogger logger, String networkName) {
 		this.logger = logger;
@@ -49,97 +53,89 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 	abstract protected void saveReceiptDocuments(List<EthereumTxReceipt> documents);
 
-	abstract protected boolean checkTxHashNeedsHandling(String txHash);
-
-	private BigInteger getCursor(Web3j web3j) throws Exception {
-		Optional<BigInteger> opt_lastBlock = Optional.ofNullable(getServiceStatusLastBlock());
-
-		if(opt_lastBlock.isPresent()) {
-			return opt_lastBlock.get();
-		} else {
-			logger.info("{} block collection not found, collect last 10 blocks for initial data.", networkName);
-			return getLatestBlockNumber(web3j).subtract(new BigInteger("10")); // initially collect 100 blocks
-		}
-	}
-
-	private BigInteger getLatestBlockNumber(Web3j web3j) throws Exception {
-		return web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock().getNumber();
-	}
-
 	protected void crawlBlocks(Web3j web3j) {
-		BigInteger cursor;
+		BigInteger latestBlockNumber = null;
+		BigInteger targetBlockNumber = null;
+		BigInteger cursor = null;
+
 		try {
-			cursor = getCursor(web3j);
+			latestBlockNumber = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock().getNumber();
+			if(latestBlockNumber == null || latestBlockNumber.compareTo(CONFIRM_BLOCK_COUNT) <= 0) {
+				logger.warn("{} latest block returned {}, cancel monitoring", networkName, latestBlockNumber);
+				return;
+			}
+
+			targetBlockNumber = latestBlockNumber.subtract(CONFIRM_BLOCK_COUNT);
+
+			Optional<BigInteger> opt_lastBlock = Optional.ofNullable(getServiceStatusLastBlock());
+
+			if(opt_lastBlock.isPresent()) {
+				cursor = opt_lastBlock.get();
+			} else {
+				logger.info("{} block collection not found, collect last 10 blocks for initial data.", networkName);
+				cursor = targetBlockNumber.subtract(new BigInteger("10")); // initially collect 10 blocks
+			}
+
+			// stop if targetBlockNumber is not higher then cursor
+			if(targetBlockNumber.compareTo(cursor) <= 0) return;
+
+			logger.debug("{} : LATEST = {}, CONFIRMED = {}, CURSOR = {}", networkName, latestBlockNumber, targetBlockNumber, cursor);
 		} catch(Exception ex) {
-			logger.exception(ex, "Cannot get block cursor from mongodb.");
+			logger.exception(ex, "Cannot determine {} block cursor.", networkName);
 			return;
 		}
 
 		try {
-			BigInteger latestBlockNumber = getLatestBlockNumber(web3j);
+			for(int i = 0; i < MAXIMUM_LOOP && targetBlockNumber.compareTo(cursor) > 0; i++) {
+				cursor = cursor.add(BigInteger.ONE);
 
-			if(latestBlockNumber.compareTo(cursor) > 0) { // higher block found
-				logger.trace("{} latest block {} found, current cursor = {}", networkName, latestBlockNumber, cursor);
+				// get block of cursor
+				EthBlock.Block block = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(cursor), true).send().getBlock();
 
-				for(int i = 0; i < MAXIMUM_LOOP && latestBlockNumber.compareTo(cursor) > 0; i++) {
-					BigInteger nextCursor = cursor.add(BigInteger.ONE);
+				if(block == null) { // postpone this block to next run
+					logger.warn("{} getBlock {} returned null, postpone monitoring", networkName, cursor);
+					break; // will break block loop, so this block won't processed and serviceStatus will not updated.
+				}
 
-					// get next block of cursor
-					EthBlock.Block block = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(nextCursor), true).send().getBlock();
+				List<ObjectPair<TransactionReceipt, List<EthereumTxReceipt>>> allReceipts = new ArrayList<>();
 
-					if(block != null) {
-						logger.verbose("{} block {} contains {} tx.", networkName, block.getNumber(), block.getTransactions().size());
+				if(block.getTransactions().size() > 0) {
+					for(EthBlock.TransactionResult _txResult : block.getTransactions()) {
+						Transaction transaction = null;
 
-						callBlockHandlerStack(block);
-
-						List<EthereumTxReceipt> txReceiptDocuments = new ArrayList<>();
-
-						if(block.getTransactions().size() > 0) {
-							for(EthBlock.TransactionResult tx : block.getTransactions()) {
-
-								Transaction transaction = null;
-
-								if(tx instanceof EthBlock.TransactionHash) {
-									transaction = web3j.ethGetTransactionByHash((String) tx.get()).send().getTransaction().orElse(null);
-								} else if(tx instanceof EthBlock.TransactionObject) {
-									transaction = (Transaction) tx.get();
-								}
-
-								if(transaction != null) {
-									if(checkTxHashNeedsHandling(transaction.getHash())) {
-										Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(transaction.getHash()).send().getTransactionReceipt();
-										if(opt_receipt.isPresent()) {
-											callTxHandlerStack(opt_receipt.get());
-
-											List<EthereumTxReceipt> transfers = getTransfers(web3j, block, transaction, opt_receipt.get());
-											for(EthereumTxReceipt transfer : transfers) {
-												txReceiptDocuments.add(transfer);
-												callReceiptHandlerStack(transfer);
-											}
-										} else {
-											logger.error("Cannot get tx receipt from network, cancel monitoring");
-											break;
-										}
-									}
-								} else {
-									logger.error("Cannot extract tx from block response, cancel monitoring");
-									break;
-								}
-							}
+						if(_txResult instanceof EthBlock.TransactionHash) {
+							transaction = web3j.ethGetTransactionByHash((String) _txResult.get()).send().getTransaction().orElse(null);
+						} else if(_txResult instanceof EthBlock.TransactionObject) {
+							transaction = (Transaction) _txResult.get();
 						}
 
-						saveServiceStatusLastBlock(block.getNumber(), UTCUtil.ts2ldt(block.getTimestamp().longValue()));
-						saveReceiptDocuments(txReceiptDocuments);
+						if(transaction == null)
+							throw new BctxException("ExtractTransactionFailed", "Cannot extract tx from block response, cancel monitoring");
 
-						cursor = block.getNumber();
-					} else {
-						logger.error("GetBlock {} returned null, cancel monitoring", nextCursor);
-						break;
+						Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(transaction.getHash()).send().getTransactionReceipt();
+
+						if(!opt_receipt.isPresent())
+							throw new BctxException("ReceiptNotNound", "Cannot get tx receipt from network, cancel monitoring");
+
+						allReceipts.add(new ObjectPair<>(opt_receipt.get(), getTransfers(web3j, block, transaction, opt_receipt.get())));
 					}
 				}
+
+				// call handlerStacks
+
+				callBlockHandlerStack(block);
+				for(ObjectPair<TransactionReceipt, List<EthereumTxReceipt>> txReceipt : allReceipts) {
+					callTxHandlerStack(txReceipt.first());
+					for(EthereumTxReceipt rcpt : txReceipt.second()) {
+						callReceiptHandlerStack(rcpt);
+					}
+				}
+
+				saveServiceStatusLastBlock(block.getNumber(), UTCUtil.ts2ldt(block.getTimestamp().longValue()));
+				saveReceiptDocuments(allReceipts.stream().flatMap(_op -> _op.second().stream()).collect(Collectors.toList()));
 			}
 		} catch(Exception ex) {
-			logger.exception(ex);
+			logger.exception(ex, "Exception while processing {} block {}", networkName, cursor);
 		}
 	}
 
@@ -164,62 +160,60 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 		common_txr.setGasUsed(receipt.getGasUsed().toString());
 		common_txr.setCumulativeGasUsed(receipt.getCumulativeGasUsed().toString());
 
-		if(receipt.getLogs() != null) {
+		// extract erc20 transfers from log
+		if(receipt.getLogs() != null && receipt.getTo() != null) {
 			for(Log log : receipt.getLogs()) {
+				EthereumTxReceipt txr = null;
 				try {
-					// log contains erc20 transfer
-					// log topic has addresses
-					if(log.getTopics() != null && log.getTopics().size() == 3 && log.getTopics().get(0).equals(encodedTransferEventTopic)) {
-						List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getNonIndexedParameters());
-						if(values != null && values.size() == 3) { // successfully decoded
-							EthereumTxReceipt txr = new EthereumTxReceipt();
-							BeanCopier.copy(common_txr, txr);
-							txr.setContractAddress(receipt.getTo());
-							txr.setFrom(new Address(log.getTopics().get(1)).toString());
-							txr.setTo(new Address(log.getTopics().get(2)).toString());
-							txr.setValue(((Uint256) values.get(0)).getValue().toString());
-							txr.setInput("deprecated"); // like etherscan
-							Erc20ContractInfoService.Erc20ContractInfo erc20ContractInfo = erc20ContractInfoService.getErc20ContractInfo(web3j, receipt.getTo());
-							if(erc20ContractInfo != null) {
+					// if log contains erc20 transfer event
+					if(log.getTopics() != null && log.getTopics().size() > 0 && log.getTopics().get(0).equals(encodedTransferEventTopic)) {
+						// erc20 standard topics : indexed from, to and non-indexed value
+						if(log.getTopics().size() == 3) {
+							List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getNonIndexedParameters());
+							if(values != null && values.size() == 1) { // successfully decoded
+								txr = new EthereumTxReceipt();
+								BeanCopier.copy(common_txr, txr);
+								txr.setContractAddress(receipt.getTo());
+								txr.setFrom(new Address(log.getTopics().get(1)).toString());
+								txr.setTo(new Address(log.getTopics().get(2)).toString());
+								txr.setValue(((Uint256) values.get(0)).getValue().toString());
+								txr.setInput("deprecated"); // etherscan mockup
+								Erc20ContractInfoService.Erc20ContractInfo erc20ContractInfo = erc20ContractInfoService.getErc20ContractInfo(web3j, receipt.getTo());
 								txr.setTokenName(erc20ContractInfo.getName());
 								txr.setTokenSymbol(erc20ContractInfo.getSymbol());
 								txr.setTokenDecimal(erc20ContractInfo.getDecimals().toString());
-							} else {
-								logger.debug("Cannot get ERC20 contract info for {}, txReceipt is will not stored properly", receipt.getTo());
+								logger.trace("[I] {}({}) {} -> {} {} ({} {})", txr.getContractAddress(), tx.getHash(), txr.getFrom(), txr.getTo(), txr.getValue(), erc20ContractInfo.getSymbol(), erc20ContractInfo.getDecimals());
 							}
-							rtn.add(txr);
 						}
-					}
-					// log contains erc20 transfer
-					// log data contains addresses and value
-					else if(log.getTopics() != null && log.getTopics().size() == 1 && log.getTopics().get(0).equals(encodedTransferEventTopic)) {
-						List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getParameters());
-						if(values != null && values.size() == 3) { // successfully decoded
-							EthereumTxReceipt txr = new EthereumTxReceipt();
-							BeanCopier.copy(common_txr, txr);
-							txr.setContractAddress(receipt.getTo());
-							txr.setFrom(((Address) values.get(0)).toString());
-							txr.setTo(((Address) values.get(1)).toString());
-							txr.setValue(((Uint256) values.get(2)).getValue().toString());
-							txr.setInput("deprecated"); // like etherscan
-							Erc20ContractInfoService.Erc20ContractInfo erc20ContractInfo = erc20ContractInfoService.getErc20ContractInfo(web3j, receipt.getTo());
-							if(erc20ContractInfo != null) {
+						// erc20 non-standard topics : non-indexed from,to,value
+						else if(log.getTopics().size() == 1) {
+							List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getParameters());
+							if(values != null && values.size() == 3) { // successfully decoded
+								txr = new EthereumTxReceipt();
+								BeanCopier.copy(common_txr, txr);
+								txr.setContractAddress(receipt.getTo());
+								txr.setFrom(((Address) values.get(0)).toString());
+								txr.setTo(((Address) values.get(1)).toString());
+								txr.setValue(((Uint256) values.get(2)).getValue().toString());
+								txr.setInput("deprecated"); // etherscan mockup
+								Erc20ContractInfoService.Erc20ContractInfo erc20ContractInfo = erc20ContractInfoService.getErc20ContractInfo(web3j, receipt.getTo());
 								txr.setTokenName(erc20ContractInfo.getName());
 								txr.setTokenSymbol(erc20ContractInfo.getSymbol());
 								txr.setTokenDecimal(erc20ContractInfo.getDecimals().toString());
-							} else {
-								logger.debug("Cannot get ERC20 contract info for {}, txReceipt is will not stored properly", receipt.getTo());
+								logger.trace("[U] {}({}) {} -> {} {} ({} {})", txr.getContractAddress(), tx.getHash(), txr.getFrom(), txr.getTo(), txr.getValue(), erc20ContractInfo.getSymbol(), erc20ContractInfo.getDecimals());
 							}
-							rtn.add(txr);
 						}
 					}
 
+					// add txr if not null
+					if(txr != null) rtn.add(txr);
 				} catch(Exception ex) {
-					logger.exception(ex, "Cannot decode ABI from txReceipt");
+					logger.exception(ex, "Cannot decode txReceipt ABI : {}", tx.getHash());
 				}
 			}
 		}
 
+		// native (eth transfers)
 		if(tx.getValue().compareTo(BigInteger.ZERO) != 0) {
 			EthereumTxReceipt txr = new EthereumTxReceipt();
 			BeanCopier.copy(common_txr, txr);

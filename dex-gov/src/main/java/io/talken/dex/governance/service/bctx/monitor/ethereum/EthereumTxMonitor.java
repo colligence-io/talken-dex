@@ -101,14 +101,6 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 		ssService.save();
 	}
 
-	@Override
-	protected boolean checkTxHashNeedsHandling(String txHash) {
-		return true; // COLLECT ALL TRANSACTIONS
-
-//			return dslContext.selectFrom(BCTX_LOG).where(BCTX_LOG.STATUS.eq(BctxStatusEnum.SENT).and(BCTX_LOG.BC_REF_ID.eq(txHash)))
-//					.fetchOptional().isPresent();
-	}
-
 	@Scheduled(fixedDelay = 15000, initialDelay = 5000)
 	private void getBlocks() {
 		Web3j web3j;

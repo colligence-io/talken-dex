@@ -25,21 +25,23 @@ import java.util.List;
 public class Erc20ContractInfoService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumNetworkService.class);
 
-	@Cacheable(value = CacheConfig.CacheNames.ETH_ERC20_CONTRACT_INFO, key = "#contractAddress", unless = "#result == null")
+	// FIXME : THIS CANNOT CHECK CONTRACT IS ERC20 OR ERC721
+	@Cacheable(value = CacheConfig.CacheNames.ETH_ERC20_CONTRACT_INFO, key = "#p1")
 	public Erc20ContractInfo getErc20ContractInfo(Web3j web3j, String contractAddress) throws Exception {
 		Erc20ContractInfo rtn = new Erc20ContractInfo();
 		rtn.setName(getName(web3j, contractAddress));
 		rtn.setSymbol(getSymbol(web3j, contractAddress));
-		rtn.setDecimals(getDecimals(web3j, contractAddress));
-		if(rtn.decimals == null || rtn.name == null || rtn.symbol == null) return null;
+		BigInteger decimals = getDecimals(web3j, contractAddress);
+		if(decimals != null) rtn.setDecimals(decimals);
+		logger.debug("Caching contract EIP20 info : {} ({} / {} / {})", contractAddress, rtn.getName(), rtn.getSymbol(), rtn.getDecimals());
 		return rtn;
 	}
 
 	@Data
 	public static class Erc20ContractInfo {
-		private String name;
-		private String symbol;
-		private BigInteger decimals;
+		private String name = null;
+		private String symbol = null;
+		private BigInteger decimals = BigInteger.valueOf(18); // default 18 decimals
 	}
 
 	public String getName(Web3j web3j, String contractAddress) throws Exception {

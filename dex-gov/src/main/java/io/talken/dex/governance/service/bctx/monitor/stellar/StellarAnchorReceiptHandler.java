@@ -24,6 +24,6 @@ public class StellarAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Ste
 
 	@Override
 	public void handle(StellarTxReceipt receipt) throws Exception {
-		logger.logObjectAsJSON(receipt);
+//		logger.logObjectAsJSON(receipt);
 	}
 }

@@ -96,11 +96,6 @@ public class LuniverseTxMonitor extends AbstractEthereumTxMonitor {
 		ssService.save();
 	}
 
-	@Override
-	protected boolean checkTxHashNeedsHandling(String txHash) {
-		return true; // COLLECT ALL TRANSACTIONS
-	}
-
 	@Scheduled(fixedDelay = 3000, initialDelay = 5000)
 	private void getBlocks() {
 		Web3j web3j;
