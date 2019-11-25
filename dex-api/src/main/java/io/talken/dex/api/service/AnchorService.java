@@ -40,13 +40,10 @@ import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Optional;
-
-import static io.talken.common.persistence.jooq.Tables.USER;
 
 @Service
 @Scope("singleton")
@@ -62,24 +59,6 @@ public class AnchorService {
 	private final TradeWalletService twService;
 	private final PrivateWalletService pwService;
 	private final DSLContext dslContext;
-
-	@PostConstruct
-	private void test() {
-		try {
-
-			User user = dslContext.selectFrom(USER).where(USER.ID.eq(22L)).fetchOne().into(User.class);
-			AnchorRequest request = new AnchorRequest();
-			request.setNetworkFee(BigDecimal.valueOf(100));
-			request.setAmount(BigDecimal.TEN);
-			request.setPrivateWalletAddress("0x75B3d828aC4a2288A0437b71856991b7A40D1F57");
-			request.setAssetCode("USDT");
-
-			logger.logObjectAsJSON(anchor(user, request));
-
-		} catch(Exception ex) {
-			logger.exception(ex);
-		}
-	}
 
 	public PrivateWalletTransferDTO anchor(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
@@ -110,7 +89,7 @@ public class AnchorService {
 		taskRecord.setHolderaddr(assetHolderAddress);
 		taskRecord.setAssetcode(request.getAssetCode());
 		taskRecord.setPlatformAux(platform_aux);
-		taskRecord.setAmount(StellarConverter.scale(request.getAmount()));
+		taskRecord.setAmount(amount);
 		taskRecord.setNetworkfee(request.getNetworkFee());
 		dslContext.attach(taskRecord);
 		taskRecord.store();
@@ -147,7 +126,7 @@ public class AnchorService {
 		result.setAddrFrom(taskRecord.getPrivateaddr());
 		result.setAddrTo(taskRecord.getHolderaddr());
 		result.setAddrTrade(taskRecord.getTradeaddr());
-		result.setAmount(StellarConverter.scale(request.getAmount()));
+		result.setAmount(amount);
 		result.setNetfee(taskRecord.getNetworkfee());
 		return result;
 	}
