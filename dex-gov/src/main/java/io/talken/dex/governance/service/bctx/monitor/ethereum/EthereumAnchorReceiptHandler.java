@@ -1,26 +1,28 @@
 package io.talken.dex.governance.service.bctx.monitor.ethereum;
 
 
+import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.governance.service.bctx.TxMonitor;
-import io.talken.dex.shared.service.blockchain.ethereum.EthereumTxReceipt;
-import org.jooq.DSLContext;
+import org.jooq.Condition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 
+import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
+
 @Service
 @Scope("singleton")
-public class EthereumAnchorReceiptHandler implements TxMonitor.ReceiptHandler<EthereumTxReceipt> {
+public class EthereumAnchorReceiptHandler extends AbstractEthereumAnchorReceiptHandler {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumAnchorReceiptHandler.class);
 
 	@Autowired
 	private EthereumTxMonitor txMonitor;
 
-	@Autowired
-	private DSLContext dslContext;
+	public EthereumAnchorReceiptHandler() {
+		super(logger);
+	}
 
 	@PostConstruct
 	private void init() {
@@ -28,7 +30,11 @@ public class EthereumAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Et
 	}
 
 	@Override
-	public void handle(EthereumTxReceipt receipt) throws Exception {
-//		logger.info("{} {} {}", receipt.getFrom(), receipt.getTo(), receipt.getValue());
+	protected Condition getBcTypeCondition(String contractAddr) {
+		if(contractAddr == null) {
+			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.ETHEREUM);
+		} else {
+			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN).and(DEX_TASK_ANCHOR.PLATFORM_AUX.eq(contractAddr));
+		}
 	}
 }

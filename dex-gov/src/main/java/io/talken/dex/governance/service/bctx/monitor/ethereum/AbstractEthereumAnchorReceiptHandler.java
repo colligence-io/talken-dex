@@ -1,4 +1,5 @@
-package io.talken.dex.governance.service.bctx.monitor.stellar;
+package io.talken.dex.governance.service.bctx.monitor.ethereum;
+
 
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
@@ -8,24 +9,21 @@ import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.TransactionBlockExecutor;
+import io.talken.dex.shared.service.blockchain.ethereum.EthereumTxReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
-import io.talken.dex.shared.service.blockchain.stellar.StellarTxReceipt;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.stereotype.Service;
+import org.web3j.utils.Convert;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
-@Service
-@Scope("singleton")
-public class StellarAnchorReceiptHandler implements TxMonitor.ReceiptHandler<StellarTxReceipt> {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarAnchorReceiptHandler.class);
+public abstract class AbstractEthereumAnchorReceiptHandler implements TxMonitor.ReceiptHandler<EthereumTxReceipt> {
+	private PrefixedLogger logger;
 
 	@Autowired
 	private DSLContext dslContext;
@@ -36,27 +34,32 @@ public class StellarAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Ste
 	@Autowired
 	private DataSourceTransactionManager txMgr;
 
-	@Autowired
-	private StellarTxMonitor txMonitor;
-
-	@PostConstruct
-	private void init() {
-		txMonitor.addReceiptHandler(this);
+	public AbstractEthereumAnchorReceiptHandler(PrefixedLogger logger) {
+		this.logger = logger;
 	}
 
+	abstract protected Condition getBcTypeCondition(String contractAddr);
+
 	@Override
-	public void handle(StellarTxReceipt receipt) throws Exception {
-		// convert amount to stellar raw
-		BigDecimal amount  = StellarConverter.rawToActual(receipt.getAmount());
+	public void handle(EthereumTxReceipt receipt) throws Exception {
+		// convert amount to actual
+		BigDecimal amountValue = new BigDecimal(receipt.getValue());
+		BigDecimal amount;
+		if(receipt.getTokenDecimal() != null) {
+			amount = amountValue.divide(BigDecimal.TEN.pow(Integer.valueOf(receipt.getTokenDecimal())), RoundingMode.FLOOR);
+		} else {
+			amount = Convert.fromWei(amountValue.toString(), Convert.Unit.ETHER);
+		}
+		amount = StellarConverter.scale(amount);
+
+//		logger.verbose("{} {} {}", receipt.getValue(), receipt.getTokenDecimal(), amount.stripTrailingZeros().toPlainString());
+
+		// return amount is smaller than zero
+		if(amount.compareTo(BigDecimal.ZERO) <= 0) return;
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
-				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(receipt.getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(receipt.getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)));
-
-		if(receipt.getTokenIssuer() == null) {
-			condition = condition.and(DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.STELLAR));
-		} else {
-			condition = condition.and(DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.STELLAR_TOKEN).and(DEX_TASK_ANCHOR.PLATFORM_AUX.eq(receipt.getTokenIssuer())));
-		}
+				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(receipt.getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(receipt.getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)))
+				.and(getBcTypeCondition(receipt.getContractAddress()));
 
 		DexTaskAnchorRecord taskRecord = dslContext.selectFrom(DEX_TASK_ANCHOR)
 				.where(condition)

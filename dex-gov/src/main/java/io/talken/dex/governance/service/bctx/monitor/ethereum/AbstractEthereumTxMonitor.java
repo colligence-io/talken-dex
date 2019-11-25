@@ -79,7 +79,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 			// stop if targetBlockNumber is not higher then cursor
 			if(targetBlockNumber.compareTo(cursor) <= 0) return;
 
-			logger.debug("{} : LATEST = {}, CONFIRMED = {}, CURSOR = {}", networkName, latestBlockNumber, targetBlockNumber, cursor);
+			logger.trace("{} : LATEST = {}, CONFIRMED = {}, CURSOR = {}", networkName, latestBlockNumber, targetBlockNumber, cursor);
 		} catch(Exception ex) {
 			logger.exception(ex, "Cannot determine {} block cursor.", networkName);
 			return;

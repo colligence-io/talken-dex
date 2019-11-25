@@ -27,7 +27,9 @@ import io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import io.talken.dex.shared.service.blockchain.stellar.StellarSignerAccount;
-import io.talken.dex.shared.service.integration.anchor.*;
+import io.talken.dex.shared.service.integration.anchor.AncServerDeanchorRequest;
+import io.talken.dex.shared.service.integration.anchor.AncServerDeanchorResponse;
+import io.talken.dex.shared.service.integration.anchor.AnchorServerService;
 import io.talken.dex.shared.service.tradewallet.TradeWalletInfo;
 import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import lombok.RequiredArgsConstructor;
@@ -38,10 +40,13 @@ import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Optional;
+
+import static io.talken.common.persistence.jooq.Tables.USER;
 
 @Service
 @Scope("singleton")
@@ -58,12 +63,39 @@ public class AnchorService {
 	private final PrivateWalletService pwService;
 	private final DSLContext dslContext;
 
-	public PrivateWalletTransferDTO anchor(User user, AnchorRequest request) throws TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException {
+	@PostConstruct
+	private void test() {
+		try {
+
+			User user = dslContext.selectFrom(USER).where(USER.ID.eq(22L)).fetchOne().into(User.class);
+			AnchorRequest request = new AnchorRequest();
+			request.setNetworkFee(BigDecimal.valueOf(100));
+			request.setAmount(BigDecimal.TEN);
+			request.setPrivateWalletAddress("GDLUONIAWZ567OJF5SXR2AZOXMVBHEHL5GRPTKX7R4NUN4M565XOXXEB");
+			request.setAssetCode("XLM");
+
+			logger.logObjectAsJSON(anchor(user, request));
+
+		} catch(Exception ex) {
+			logger.exception(ex);
+		}
+	}
+
+	public PrivateWalletTransferDTO anchor(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
 		final String assetHolderAddress = tmService.getActiveHolderAccountAddress(request.getAssetCode());
 		final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
 		final long userId = user.getId();
+
+		PrivateWalletTransferDTO result = pwService.createTransferDTObase(PrivateWalletMsgTypeEnum.ANCHOR, request.getAssetCode());
+
+		String platform_aux = null;
+		if(result.getPlatform().getAuxCode() != null) {
+			if(!result.getAux().containsKey(result.getPlatform().getAuxCode().name()))
+				throw new BlockChainPlatformNotSupportedException("No aux data for " + request.getAssetCode() + " found on meta.");
+			platform_aux = result.getAux().get(result.getPlatform().getAuxCode().name()).toString();
+		}
 
 		String position;
 
@@ -72,11 +104,13 @@ public class AnchorService {
 		taskRecord.setTaskid(dexTaskId.getId());
 		taskRecord.setUserId(userId);
 
+		taskRecord.setBctxType(result.getPlatform());
 		taskRecord.setPrivateaddr(request.getPrivateWalletAddress());
 		taskRecord.setTradeaddr(tradeWallet.getAccountId());
 		taskRecord.setHolderaddr(assetHolderAddress);
 		taskRecord.setAssetcode(request.getAssetCode());
-		taskRecord.setAmountraw(StellarConverter.actualToRaw(amount).longValueExact());
+		taskRecord.setPlatformAux(platform_aux);
+		taskRecord.setAmount(StellarConverter.scale(request.getAmount()));
 		taskRecord.setNetworkfee(request.getNetworkFee());
 		dslContext.attach(taskRecord);
 		taskRecord.store();
@@ -109,37 +143,11 @@ public class AnchorService {
 			throw tex;
 		}
 
-		position = "req_anc";
-		try {
-			AncServerAnchorRequest anchor_request = new AncServerAnchorRequest();
-			anchor_request.setTaskId(dexTaskId.getId());
-			anchor_request.setUid(String.valueOf(userId));
-			anchor_request.setFrom(request.getPrivateWalletAddress());
-			anchor_request.setTo(assetHolderAddress);
-			anchor_request.setStellar(tradeWallet.getAccountId());
-			anchor_request.setSymbol(request.getAssetCode());
-			anchor_request.setValue(amount);
-			anchor_request.setMemo(UTCUtil.getNow().toString());
-
-			// request anchor monitor
-			IntegrationResult<AncServerAnchorResponse> anchorResult = anchorServerService.requestAnchor(anchor_request);
-			if(!anchorResult.isSuccess()) {
-				throw new IntegrationException(anchorResult);
-			}
-
-			taskRecord.setAncIndex(anchorResult.getData().getData().getIndex());
-			taskRecord.store();
-		} catch(TalkenException tex) {
-			DexTaskRecord.writeError(taskRecord, position, tex);
-			throw tex;
-		}
-
 		logger.info("{} complete. userId = {}", dexTaskId, userId);
-		PrivateWalletTransferDTO result = pwService.createTransferDTObase(PrivateWalletMsgTypeEnum.ANCHOR, taskRecord.getAssetcode());
 		result.setAddrFrom(taskRecord.getPrivateaddr());
 		result.setAddrTo(taskRecord.getHolderaddr());
 		result.setAddrTrade(taskRecord.getTradeaddr());
-		result.setAmount(StellarConverter.rawToActual(taskRecord.getAmountraw()));
+		result.setAmount(StellarConverter.scale(request.getAmount()));
 		result.setNetfee(taskRecord.getNetworkfee());
 		return result;
 	}
