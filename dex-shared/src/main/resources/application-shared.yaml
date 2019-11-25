@@ -23,7 +23,7 @@ talken:
             secretKey: SD6E6B5RTXITG6GUSAIIWYRVFFARCHRZZFDZRIAFRVNTW6J7FEHIY7DA
       ethereum:
         network: test
-        rpcUri: "http://192.168.0.37:8545"
+        rpcUri: "https://ropsten.infura.io/v3/a374b566c26149e2b94cc9bf7bafec50"
         gasOracleUrl: "http://192.168.0.37:38084/ethgasAPI.json"
         infuraUri: "https://ropsten.infura.io/v3/a374b566c26149e2b94cc9bf7bafec50"
       luniverse:

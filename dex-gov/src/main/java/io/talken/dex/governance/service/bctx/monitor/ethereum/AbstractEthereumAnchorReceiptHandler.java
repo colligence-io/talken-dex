@@ -82,6 +82,7 @@ public abstract class AbstractEthereumAnchorReceiptHandler implements TxMonitor.
 		bctxRecord.setAddressTo(taskRecord.getTradeaddr());
 		bctxRecord.setAmount(amount);
 		bctxRecord.setNetfee(BigDecimal.ZERO);
+		bctxRecord.setTxAux(taskRecord.getTaskid());
 		dslContext.attach(bctxRecord);
 
 		TransactionBlockExecutor.of(txMgr).transactional(() -> {

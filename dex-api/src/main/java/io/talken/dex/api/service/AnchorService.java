@@ -71,8 +71,8 @@ public class AnchorService {
 			AnchorRequest request = new AnchorRequest();
 			request.setNetworkFee(BigDecimal.valueOf(100));
 			request.setAmount(BigDecimal.TEN);
-			request.setPrivateWalletAddress("GDLUONIAWZ567OJF5SXR2AZOXMVBHEHL5GRPTKX7R4NUN4M565XOXXEB");
-			request.setAssetCode("XLM");
+			request.setPrivateWalletAddress("0x75B3d828aC4a2288A0437b71856991b7A40D1F57");
+			request.setAssetCode("USDT");
 
 			logger.logObjectAsJSON(anchor(user, request));
 
