@@ -1,9 +1,7 @@
 package io.talken.dex.shared;
 
 import io.talken.common.persistence.vault.VaultSecretReader;
-import io.talken.common.persistence.vault.data.VaultSecretDataDexSettings;
-import io.talken.common.persistence.vault.data.VaultSecretDataLuniverse;
-import io.talken.common.persistence.vault.data.VaultSecretDataSlack;
+import io.talken.common.persistence.vault.data.*;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,6 +31,9 @@ public class DexSettings {
 		getIntegration().setSlack(secretReader.readSecret("slack", VaultSecretDataSlack.class));
 
 		this.getBcnode().getLuniverse().secret = secretReader.readSecret("luniverse", VaultSecretDataLuniverse.class);
+
+		// stellar
+		this.getBcnode().getStellar().secret = secretReader.readSecret("stellar", VaultSecretDataStellar.class);
 	}
 
 	private _TradeWallet tradeWallet;
@@ -95,14 +96,7 @@ public class DexSettings {
 	public static class _Stellar {
 		private String network;
 		private String rpcUri;
-		private List<_Channel> channels;
-
-		@Getter
-		@Setter
-		public static class _Channel {
-			private String publicKey;
-			private String secretKey;
-		}
+		private VaultSecretDataStellar secret;
 	}
 
 	@Getter

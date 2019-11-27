@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static io.talken.common.persistence.redis.RedisConsts.KEY_GOVERNANCE_DEX_CHANNEL;
 
@@ -49,10 +50,11 @@ public class StellarNetworkService {
 		this.network = dexSettings.getBcnode().getStellar().getNetwork().equalsIgnoreCase("test") ? Network.TESTNET : Network.PUBLIC;
 		this.serverUri = dexSettings.getBcnode().getStellar().getRpcUri();
 		logger.info("Using Stellar {} Network : {}", this.network, this.serverUri);
-		for(DexSettings._Stellar._Channel _ch : dexSettings.getBcnode().getStellar().getChannels()) {
-			KeyPair chkp = KeyPair.fromSecretSeed(_ch.getSecretKey());
-			if(!chkp.getAccountId().equals(_ch.getPublicKey()))
-				throw new IllegalArgumentException("Stellar Channel for " + _ch.getPublicKey() + " has set with mismatch secretKey.");
+
+		for(Map.Entry<String, String> _ch : dexSettings.getBcnode().getStellar().getSecret().getChannels().entrySet()) {
+			KeyPair chkp = KeyPair.fromSecretSeed(_ch.getValue());
+			if(!chkp.getAccountId().equals(_ch.getKey()))
+				throw new IllegalArgumentException("Stellar Channel for " + _ch.getKey() + " has set with mismatch secretKey.");
 			final StellarChannel sc = new StellarChannel(chkp);
 			AccountResponse accountResponse = pickServer().accounts().account(chkp.getAccountId());
 			sc.update(accountResponse);
