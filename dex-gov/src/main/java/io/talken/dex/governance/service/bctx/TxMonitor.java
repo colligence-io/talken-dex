@@ -32,23 +32,36 @@ public abstract class TxMonitor<TB, TT, TR> {
 	private AdminAlarmService alarmService;
 
 	private List<BlockHandler<TB>> blockHandlers = new ArrayList<>();
-	private List<TransactionHandler<TT>> txHandlers = new ArrayList<>();
-	private List<ReceiptHandler<TR>> receiptHandlers = new ArrayList<>();
+	private List<TransactionHandler<TB, TT>> txHandlers = new ArrayList<>();
+	private List<ReceiptHandler<TB, TT, TR>> receiptHandlers = new ArrayList<>();
+
+
+	public interface BlockHandler<TB> {
+		void handle(TB block) throws Exception;
+	}
+
+	public interface TransactionHandler<TB, TT> {
+		void handle(TB block, TT transaction) throws Exception;
+	}
+
+	public interface ReceiptHandler<TB, TT, TR> {
+		void handle(TB block, TT transaction, TR receipt) throws Exception;
+	}
 
 	public abstract BlockChainPlatformEnum[] getBcTypes();
 
 	public void addBlockHandler(BlockHandler<TB> blockHandler) {
-		logger.info("{} Block -> {} binded.", this.getClass().getSimpleName(), blockHandler.getClass().getSimpleName());
+		logger.info("BlockHandler {} binded on {}.", blockHandler.getClass().getSimpleName(), this.getClass().getSimpleName());
 		this.blockHandlers.add(blockHandler);
 	}
 
-	public void addTransactionHandler(TransactionHandler<TT> transactionHandler) {
-		logger.info("{} Transaction -> {} binded.", this.getClass().getSimpleName(), transactionHandler.getClass().getSimpleName());
+	public void addTransactionHandler(TransactionHandler<TB, TT> transactionHandler) {
+		logger.info("TransactionHandler {} binded on {}", transactionHandler.getClass().getSimpleName(), this.getClass().getSimpleName());
 		this.txHandlers.add(transactionHandler);
 	}
 
-	public void addReceiptHandler(ReceiptHandler<TR> receiptHandler) {
-		logger.info("{} Receipt -> {} binded.", this.getClass().getSimpleName(), receiptHandler.getClass().getSimpleName());
+	public void addReceiptHandler(ReceiptHandler<TB, TT, TR> receiptHandler) {
+		logger.info("ReceiptHandler {} binded on {}", receiptHandler.getClass().getSimpleName(), this.getClass().getSimpleName());
 		this.receiptHandlers.add(receiptHandler);
 	}
 
@@ -63,11 +76,11 @@ public abstract class TxMonitor<TB, TT, TR> {
 		}
 	}
 
-	protected void callTxHandlerStack(TT tx) throws Exception {
+	protected void callTxHandlerStack(TB block, TT tx) throws Exception {
 		updateBctxReceiptInfo(tx);
-		for(TransactionHandler<TT> txHandler : txHandlers) {
+		for(TransactionHandler<TB, TT> txHandler : txHandlers) {
 			try {
-				txHandler.handle(tx);
+				txHandler.handle(block, tx);
 			} catch(Exception ex) {
 				alarmService.exception(logger, ex);
 				throw new BctxException(ex, ex.getClass().getSimpleName(), ex.getMessage());
@@ -75,10 +88,10 @@ public abstract class TxMonitor<TB, TT, TR> {
 		}
 	}
 
-	protected void callReceiptHandlerStack(TR receipt) throws Exception {
-		for(ReceiptHandler<TR> receiptHandler : receiptHandlers) {
+	protected void callReceiptHandlerStack(TB block, TT tx, TR receipt) throws Exception {
+		for(ReceiptHandler<TB, TT, TR> receiptHandler : receiptHandlers) {
 			try {
-				receiptHandler.handle(receipt);
+				receiptHandler.handle(block, tx, receipt);
 			} catch(Exception ex) {
 				alarmService.exception(logger, ex);
 				throw new BctxException(ex, ex.getClass().getSimpleName(), ex.getMessage());
@@ -119,18 +132,6 @@ public abstract class TxMonitor<TB, TT, TR> {
 						.execute();
 			});
 		}
-	}
-
-	public interface BlockHandler<TB> {
-		void handle(TB block) throws Exception;
-	}
-
-	public interface TransactionHandler<TT> {
-		void handle(TT transaction) throws Exception;
-	}
-
-	public interface ReceiptHandler<TR> {
-		void handle(TR receipt) throws Exception;
 	}
 
 	@Data

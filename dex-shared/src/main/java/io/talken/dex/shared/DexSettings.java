@@ -62,9 +62,7 @@ public class DexSettings {
 		@Getter
 		@Setter
 		public static class _Deanchor {
-			private String feePivotAsset;
-			private BigDecimal feeAmount;
-			private BigDecimal feeRateTalkFactor;
+			private BigDecimal feeAmountTalk;
 		}
 
 		@Getter

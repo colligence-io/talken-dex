@@ -6,7 +6,7 @@ import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
-import io.talken.dex.shared.service.blockchain.ethereum.EthereumTxReceipt;
+import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -83,8 +83,8 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 	}
 
 	@Override
-	protected void saveReceiptDocuments(List<EthereumTxReceipt> documents) {
-		for(EthereumTxReceipt document : documents) {
+	protected void saveReceiptDocuments(List<EthereumTransferReceipt> documents) {
+		for(EthereumTransferReceipt document : documents) {
 			mongoTemplate.save(document, COLLECTION_NAME);
 		}
 	}

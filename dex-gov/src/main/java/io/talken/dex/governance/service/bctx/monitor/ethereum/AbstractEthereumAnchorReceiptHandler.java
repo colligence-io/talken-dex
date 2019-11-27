@@ -9,12 +9,14 @@ import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.TransactionBlockExecutor;
-import io.talken.dex.shared.service.blockchain.ethereum.EthereumTxReceipt;
+import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.web3j.protocol.core.methods.response.EthBlock;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
 
 import java.math.BigDecimal;
@@ -22,7 +24,7 @@ import java.math.RoundingMode;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
-public abstract class AbstractEthereumAnchorReceiptHandler implements TxMonitor.ReceiptHandler<EthereumTxReceipt> {
+public abstract class AbstractEthereumAnchorReceiptHandler implements TxMonitor.ReceiptHandler<EthBlock.Block, TransactionReceipt, EthereumTransferReceipt> {
 	private PrefixedLogger logger;
 
 	@Autowired
@@ -41,7 +43,7 @@ public abstract class AbstractEthereumAnchorReceiptHandler implements TxMonitor.
 	abstract protected Condition getBcTypeCondition(String contractAddr);
 
 	@Override
-	public void handle(EthereumTxReceipt receipt) throws Exception {
+	public void handle(EthBlock.Block block, TransactionReceipt txResult, EthereumTransferReceipt receipt) throws Exception {
 		// convert amount to actual
 		BigDecimal amountValue = new BigDecimal(receipt.getValue());
 		BigDecimal amount;

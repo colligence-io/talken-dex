@@ -7,7 +7,7 @@ import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.exception.BctxException;
 import io.talken.dex.shared.service.blockchain.ethereum.Erc20ContractInfoService;
-import io.talken.dex.shared.service.blockchain.ethereum.EthereumTxReceipt;
+import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
 import io.talken.dex.shared.service.blockchain.ethereum.StandardERC20ContractFunctions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.abi.EventEncoder;
@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt, EthereumTxReceipt> {
+public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt, EthereumTransferReceipt> {
 	private final PrefixedLogger logger;
 
 	@Autowired
@@ -51,7 +51,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 	abstract protected void saveServiceStatusLastBlock(BigInteger blockNumber, LocalDateTime timestamp);
 
-	abstract protected void saveReceiptDocuments(List<EthereumTxReceipt> documents);
+	abstract protected void saveReceiptDocuments(List<EthereumTransferReceipt> documents);
 
 	protected void crawlBlocks(Web3j web3j) {
 		BigInteger latestBlockNumber = null;
@@ -97,7 +97,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 					break; // will break block loop, so this block won't processed and serviceStatus will not updated.
 				}
 
-				List<ObjectPair<TransactionReceipt, List<EthereumTxReceipt>>> allReceipts = new ArrayList<>();
+				List<ObjectPair<TransactionReceipt, List<EthereumTransferReceipt>>> allReceipts = new ArrayList<>();
 
 				if(block.getTransactions().size() > 0) {
 					for(EthBlock.TransactionResult _txResult : block.getTransactions()) {
@@ -124,10 +124,10 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 				// call handlerStacks
 
 				callBlockHandlerStack(block);
-				for(ObjectPair<TransactionReceipt, List<EthereumTxReceipt>> txReceipt : allReceipts) {
-					callTxHandlerStack(txReceipt.first());
-					for(EthereumTxReceipt rcpt : txReceipt.second()) {
-						callReceiptHandlerStack(rcpt);
+				for(ObjectPair<TransactionReceipt, List<EthereumTransferReceipt>> txReceipt : allReceipts) {
+					callTxHandlerStack(block, txReceipt.first());
+					for(EthereumTransferReceipt rcpt : txReceipt.second()) {
+						callReceiptHandlerStack(block, txReceipt.first(), rcpt);
 					}
 				}
 
@@ -142,10 +142,10 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 	private static final Event transferEvent = StandardERC20ContractFunctions.transferEvent();
 	private static final String encodedTransferEventTopic = EventEncoder.encode(transferEvent);
 
-	private List<EthereumTxReceipt> getTransfers(Web3j web3j, EthBlock.Block block, Transaction tx, TransactionReceipt receipt) {
-		List<EthereumTxReceipt> rtn = new ArrayList<>();
+	private List<EthereumTransferReceipt> getTransfers(Web3j web3j, EthBlock.Block block, Transaction tx, TransactionReceipt receipt) {
+		List<EthereumTransferReceipt> rtn = new ArrayList<>();
 
-		EthereumTxReceipt common_txr = new EthereumTxReceipt();
+		EthereumTransferReceipt common_txr = new EthereumTransferReceipt();
 
 		common_txr.setTimeStamp(block.getTimestamp());
 		common_txr.setNonce(tx.getNonce().toString());
@@ -163,7 +163,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 		// extract erc20 transfers from log
 		if(receipt.getLogs() != null && receipt.getTo() != null) {
 			for(Log log : receipt.getLogs()) {
-				EthereumTxReceipt txr = null;
+				EthereumTransferReceipt txr = null;
 				try {
 					// if log contains erc20 transfer event
 					if(log.getTopics() != null && log.getTopics().size() > 0 && log.getTopics().get(0).equals(encodedTransferEventTopic)) {
@@ -171,7 +171,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 						if(log.getTopics().size() == 3) {
 							List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getNonIndexedParameters());
 							if(values != null && values.size() == 1) { // successfully decoded
-								txr = new EthereumTxReceipt();
+								txr = new EthereumTransferReceipt();
 								BeanCopier.copy(common_txr, txr);
 								txr.setContractAddress(receipt.getTo());
 								txr.setFrom(new Address(log.getTopics().get(1)).toString());
@@ -189,7 +189,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 						else if(log.getTopics().size() == 1) {
 							List<Type> values = FunctionReturnDecoder.decode(log.getData(), transferEvent.getParameters());
 							if(values != null && values.size() == 3) { // successfully decoded
-								txr = new EthereumTxReceipt();
+								txr = new EthereumTransferReceipt();
 								BeanCopier.copy(common_txr, txr);
 								txr.setContractAddress(receipt.getTo());
 								txr.setFrom(((Address) values.get(0)).toString());
@@ -215,7 +215,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 		// native (eth transfers)
 		if(tx.getValue().compareTo(BigInteger.ZERO) != 0) {
-			EthereumTxReceipt txr = new EthereumTxReceipt();
+			EthereumTransferReceipt txr = new EthereumTransferReceipt();
 			BeanCopier.copy(common_txr, txr);
 			txr.setContractAddress(receipt.getContractAddress());
 			txr.setFrom(receipt.getFrom());

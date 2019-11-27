@@ -14,9 +14,4 @@ public class DeanchorRequest {
 	private String assetCode;
 	@NotNull
 	private BigDecimal amount;
-	private Boolean feeByTalk;
-
-	public Boolean getFeeByTalk() {
-		return (feeByTalk != null) ? feeByTalk : false;
-	}
 }

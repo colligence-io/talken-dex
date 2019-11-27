@@ -2,16 +2,24 @@ package io.talken.dex.governance.service.bctx.monitor.stellar;
 
 import io.talken.common.RunningProfile;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
+import io.talken.common.persistence.enums.DexTaskTypeEnum;
+import io.talken.common.persistence.jooq.tables.records.DexTxmonRecord;
 import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
+import io.talken.dex.shared.exception.TransactionResultProcessingException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
+import io.talken.dex.shared.service.blockchain.stellar.StellarTransferReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarTxReceipt;
-import io.talken.dex.shared.service.blockchain.stellar.StellarTxResult;
+import org.jooq.DSLContext;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Scope;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.Server;
@@ -28,14 +36,27 @@ import java.util.Optional;
 
 @Service
 @Scope("singleton")
-public class StellarTxMonitor extends TxMonitor<Void, StellarTxResult, StellarTxReceipt> {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(DexTaskTransactionHandler.class);
+public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarTransferReceipt> implements ApplicationContextAware {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarTxMonitor.class);
+
+	private ApplicationContext applicationContext;
 
 	@Autowired
 	private StellarNetworkService stellarNetworkService;
 
 	@Autowired
 	private ServiceStatusService<DexGovStatus> ssService;
+
+	@Autowired
+	private DSLContext dslContext;
+
+	private HashMap<DexTaskTypeEnum, DexTaskTransactionProcessor> processors = new HashMap<>();
+
+	public static interface TaskTransactionProcessor {
+		DexTaskTypeEnum getDexTaskType();
+
+		DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt taskTxResponse) throws TransactionResultProcessingException;
+	}
 
 	private static final int TXREQUEST_LIMIT = 200;
 
@@ -46,6 +67,17 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxResult, StellarTx
 			ssService.status().getTxMonitor().getStellar().setLastPagingToken(null);
 			ssService.save();
 		}
+
+		Map<String, DexTaskTransactionProcessor> ascBeans = applicationContext.getBeansOfType(DexTaskTransactionProcessor.class);
+		ascBeans.forEach((_name, _asc) -> {
+			processors.put(_asc.getDexTaskType(), _asc);
+			logger.info("DexTaskTransactionProcessor for [{}] registered.", _asc.getDexTaskType());
+		});
+	}
+
+	@Override
+	public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 
 	@Scheduled(fixedDelay = 3000, initialDelay = 5000)
@@ -62,11 +94,11 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxResult, StellarTx
 	}
 
 	@Override
-	protected StellarTxResult getTransactionReceipt(String txId) {
+	protected StellarTxReceipt getTransactionReceipt(String txId) {
 		Server server = stellarNetworkService.pickServer();
 
 		try {
-			new StellarTxResult(server.transactions().transaction(txId), stellarNetworkService.getNetwork());
+			new StellarTxReceipt(server.transactions().transaction(txId), stellarNetworkService.getNetwork());
 		} catch(ErrorResponse ex) {
 			if(ex.getCode() == 404) logger.debug("Stellar Tx {} is not found.", txId);
 			else logger.exception(ex);
@@ -104,11 +136,13 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxResult, StellarTx
 
 		for(TransactionResponse txRecord : txPage.getRecords()) {
 			try {
-				StellarTxResult txResult = new StellarTxResult(txRecord, stellarNetworkService.getNetwork());
-				callTxHandlerStack(txResult);
+				StellarTxReceipt txResult = new StellarTxReceipt(txRecord, stellarNetworkService.getNetwork());
+				callTxHandlerStack(null, txResult);
 
-				for(StellarTxReceipt payment : txResult.getPaymentReceipts()) {
-					callReceiptHandlerStack(payment);
+				processDexTask(txResult);
+
+				for(StellarTransferReceipt payment : txResult.getPaymentReceipts()) {
+					callReceiptHandlerStack(null, txResult, payment);
 				}
 
 				ssService.status().getTxMonitor().getStellar().setLastPagingToken(txRecord.getPagingToken());
@@ -124,8 +158,70 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxResult, StellarTx
 		return processed;
 	}
 
+	public void processDexTask(StellarTxReceipt txResult) {
+		if(txResult.getTaskId() == null) return;
+
+		DexTxmonRecord txmRecord = new DexTxmonRecord();
+		txmRecord.setTxid(txResult.getResponse().getHash());
+		txmRecord.setMemotaskid(txResult.getTaskId().getId());
+		txmRecord.setTasktype(txResult.getTaskId().getType());
+		txmRecord.setTxhash(txResult.getResponse().getHash());
+		txmRecord.setLedger(txResult.getResponse().getLedger());
+		txmRecord.setCreatedat(StellarConverter.toLocalDateTime(txResult.getResponse().getCreatedAt()));
+		txmRecord.setSourceaccount(txResult.getResponse().getSourceAccount());
+		txmRecord.setEnvelopexdr(txResult.getResponse().getEnvelopeXdr());
+		txmRecord.setResultxdr(txResult.getResponse().getResultXdr());
+		txmRecord.setResultmetaxdr(txResult.getResponse().getResultMetaXdr());
+		txmRecord.setFeepaid(txResult.getResponse().getFeePaid());
+		dslContext.attach(txmRecord);
+		txmRecord.store();
+
+		try {
+			txmRecord.setOfferidfromresult(txResult.getOfferIdFromResult());
+
+			// run processor
+			if(processors.containsKey(txResult.getTaskId().getType())) {
+
+				DexTaskTransactionProcessor taskTransactionProcessor = processors.get(txResult.getTaskId().getType());
+				DexTaskTransactionProcessResult result;
+				try {
+					logger.info("{} ({}) => {}", txResult.getTaskId(), txResult.getTxHash(), taskTransactionProcessor.getClass().getSimpleName());
+					result = taskTransactionProcessor.process(txmRecord.getId(), txResult);
+				} catch(Exception ex) {
+					result = DexTaskTransactionProcessResult.error("Unknown", ex);
+				}
+
+				if(result.isSuccess()) {
+					txmRecord.setProcessSuccessFlag(true);
+				} else {
+					logger.error("{} transaction {} result process error : {} {}", txResult.getTaskId(), txResult.getTxHash(), result.getError().getCode(), result.getError().getMessage());
+
+					// log exception
+					if(result.getError().getCause() != null)
+						logger.exception(result.getError().getCause());
+
+					txmRecord.setProcessSuccessFlag(false);
+					txmRecord.setErrorcode(result.getError().getCode());
+					txmRecord.setErrormessage(result.getError().getMessage());
+				}
+
+				txmRecord.update();
+			} else {
+				logger.verbose("No TaskTransactionProcessor for {} registered", txResult.getTaskId().getType());
+			}
+		} catch(Exception ex) {
+			logger.exception(ex);
+			txmRecord.setProcessSuccessFlag(false);
+			txmRecord.setErrorcode(ex.getClass().getSimpleName());
+			txmRecord.setErrormessage(ex.getMessage());
+		}
+
+		txmRecord.update();
+	}
+
+
 	@Override
-	protected TxReceipt toTxMonitorReceipt(StellarTxResult txResult) {
+	protected TxReceipt toTxMonitorReceipt(StellarTxReceipt txResult) {
 
 		Map<String, Object> receiptObj = new HashMap<>();
 

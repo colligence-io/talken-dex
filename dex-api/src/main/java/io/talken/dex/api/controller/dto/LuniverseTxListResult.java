@@ -1,6 +1,6 @@
 package io.talken.dex.api.controller.dto;
 
-import io.talken.dex.shared.service.blockchain.ethereum.EthereumTxReceipt;
+import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
 import lombok.Data;
 
 import java.util.List;
@@ -10,5 +10,5 @@ public class LuniverseTxListResult {
 	private String status = "1";
 	private String message = "OK";
 
-	private List<EthereumTxReceipt> result;
+	private List<EthereumTransferReceipt> result;
 }

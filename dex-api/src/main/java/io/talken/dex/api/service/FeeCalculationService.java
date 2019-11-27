@@ -13,7 +13,6 @@ import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.Asset;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -35,9 +34,7 @@ public class FeeCalculationService {
 	@Autowired
 	private AssetConvertService assetConvertService;
 
-	private Asset deanchorPivotAssetType;
-	private BigDecimal deanchorPivotAmount;
-	private BigDecimal deanchorFeeRateTalkFactor;
+	private BigDecimal deanchorFeeAmountTalk;
 	private BigDecimal offerFeeRate;
 	private BigDecimal offerFeeRateTalkFactor;
 	private Map<String, DexSettings._Task._Swap._SwapFee> swapFeeMap;
@@ -45,10 +42,8 @@ public class FeeCalculationService {
 	private static final BigInteger MINIMUM_FEE_RAW = BigInteger.ONE;
 
 	@PostConstruct
-	private void init() throws TokenMetaNotFoundException {
-		deanchorPivotAssetType = maService.getAssetType(apiSettings.getTask().getDeanchor().getFeePivotAsset());
-		deanchorPivotAmount = StellarConverter.scale(apiSettings.getTask().getDeanchor().getFeeAmount());
-		deanchorFeeRateTalkFactor = apiSettings.getTask().getDeanchor().getFeeRateTalkFactor();
+	private void init() {
+		deanchorFeeAmountTalk = apiSettings.getTask().getDeanchor().getFeeAmountTalk();
 		offerFeeRate = apiSettings.getTask().getCreateOffer().getFeeRate();
 		offerFeeRateTalkFactor = apiSettings.getTask().getCreateOffer().getFeeRateTalkFactor();
 		swapFeeMap = apiSettings.getTask().getSwap().getAsset();
@@ -95,31 +90,15 @@ public class FeeCalculationService {
 		return rtn;
 	}
 
-	public CalculateFeeResult calculateDeanchorFee(String sellAssetCode, BigDecimal amount, boolean feeByTalk) throws TokenMetaNotFoundException, AssetConvertException, EffectiveAmountIsNegativeException {
+	public CalculateFeeResult calculateDeanchorFee(String sellAssetCode, BigDecimal amount, boolean feeByTalk) throws TokenMetaNotFoundException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 
 		rtn.setSellAssetType(maService.getAssetType(sellAssetCode));
-		rtn.setFeeAssetType((feeByTalk) ? maService.getAssetType("TALK") : rtn.getSellAssetType());
+		rtn.setFeeAssetType(maService.getAssetType("TALK"));
 		rtn.setFeeHolderAccount(maService.getDeanchorFeeHolderAccount(rtn.getFeeAssetCode()));
 
-		BigInteger calculatedAmountRaw;
-
-		// normal fee rate and no discount when deanchor TALK
-		if(sellAssetCode.equalsIgnoreCase("TALK") || !feeByTalk) {
-			BigInteger feeAmountRaw = StellarConverter.actualToRaw(assetConvertService.convert(deanchorPivotAssetType, deanchorPivotAmount, rtn.getFeeAssetType()));
-			rtn.setFeeAmountRaw(feeAmountRaw.equals(BigInteger.ZERO) ? MINIMUM_FEE_RAW : feeAmountRaw);
-			calculatedAmountRaw = StellarConverter.actualToRaw(amount).subtract(rtn.getFeeAmountRaw());
-		} else {
-			BigDecimal talkFeeAmount = assetConvertService.convert(deanchorPivotAssetType, deanchorPivotAmount, rtn.getFeeAssetType()).multiply(deanchorFeeRateTalkFactor);
-			// TODO : handle when fee is zero
-			rtn.setFeeAmountRaw(StellarConverter.actualToRaw(talkFeeAmount));
-			calculatedAmountRaw = StellarConverter.actualToRaw(amount);
-		}
-
-		if(calculatedAmountRaw.compareTo(BigInteger.ZERO) == 0)
-			throw new EffectiveAmountIsNegativeException(rtn.getFeeAssetCode(), StellarConverter.actualToString(rtn.getFeeAmount()));
-
-		rtn.setSellAmountRaw(calculatedAmountRaw);
+		rtn.setFeeAmountRaw(StellarConverter.actualToRaw(deanchorFeeAmountTalk));
+		rtn.setSellAmountRaw(StellarConverter.actualToRaw(amount));
 
 		return rtn;
 	}

@@ -59,7 +59,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 		Map<String, TxSender> txsBeans = applicationContext.getBeansOfType(TxSender.class);
 		txsBeans.forEach((_name, _bean) -> {
 			txSenders.insert(_bean);
-			logger.info("TxSender for [{}] registered.", _bean.getPlatform());
+			logger.info("TxSender {} for [{}] registered.", _bean.getClass().getSimpleName(), _bean.getPlatform());
 		});
 
 		Map<String, TxMonitor> txmBeans = applicationContext.getBeansOfType(TxMonitor.class);
@@ -67,7 +67,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 			for(BlockChainPlatformEnum bcType : _bean.getBcTypes()) {
 				if(txMonitors.containsKey(bcType)) throw new IllegalStateException(bcType.toString() + " already registered.");
 				txMonitors.put(bcType, _bean);
-				logger.info("TxMonitor for [{}] registered.", bcType);
+				logger.info("TxMonitor {} for [{}] registered.", _bean.getClass().getSimpleName(), bcType);
 			}
 		});
 	}

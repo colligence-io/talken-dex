@@ -79,6 +79,11 @@ public class TokenMetaService implements TokenMetaServiceInterface {
 		return tmTable.get(symbol.toUpperCase());
 	}
 
+	public TokenMetaTable.Meta getTokenMetaManaged(String symbol) throws TokenMetaNotFoundException {
+		if(!miTable.containsKey(symbol.toUpperCase())) throw new TokenMetaNotFoundException(symbol);
+		return miTable.get(symbol.toUpperCase());
+	}
+
 	public BlockChainPlatformEnum getTokenBctxPlatform(String symbol) throws TokenMetaNotFoundException, BlockChainPlatformNotSupportedException {
 		String platform_name = getTokenMeta(symbol).getPlatform();
 
@@ -133,6 +138,10 @@ public class TokenMetaService implements TokenMetaServiceInterface {
 
 	public KeyPair getSwapFeeHolderAccount(String code) throws TokenMetaNotFoundException {
 		return getPack(code).getCache().getSwapFeeHolder();
+	}
+
+	public KeyPair getIssuerAccount(String code) throws TokenMetaNotFoundException {
+		return getPack(code).getCache().getAssetIssuer();
 	}
 
 	public KeyPair getBaseAccount(String code) throws TokenMetaNotFoundException {

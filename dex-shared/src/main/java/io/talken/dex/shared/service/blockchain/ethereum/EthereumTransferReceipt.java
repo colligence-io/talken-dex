@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import java.math.BigInteger;
 
 @Data
-public class EthereumTxReceipt {
+public class EthereumTransferReceipt {
 	@Id
 	private String hash;
 	private String blockNumber;

@@ -101,22 +101,6 @@ public class TradeWalletService {
 		}
 	}
 
-	public BigDecimal getNativeBalance(AccountResponse ar) {
-		for(AccountResponse.Balance _bal : ar.getBalances()) {
-			if(_bal.getAsset() instanceof AssetTypeNative) {
-				return new BigDecimal(_bal.getBalance());
-			}
-		}
-		return null;
-	}
-
-	public boolean isTrusted(AccountResponse ar, Asset asset) {
-		for(AccountResponse.Balance _bal : ar.getBalances()) {
-			if(_bal.getAsset().equals(asset)) return true;
-		}
-		return false;
-	}
-
 	public TradeWalletInfo getTradeWallet(User user) throws TradeWalletCreateFailedException {
 		return loadTradeWallet(user, false);
 	}
@@ -294,7 +278,7 @@ public class TradeWalletService {
 	public ObjectPair<Boolean, BigDecimal> addNativeBalancingOperation(StellarChannelTransaction.Builder sctxBuilder, TradeWalletInfo tradeWallet, boolean plusOneEntry, String... assetCodes) throws TokenMetaNotFoundException, TradeWalletRebalanceException {
 		boolean added = false;
 
-		BigDecimal nativeBalance = getNativeBalance(tradeWallet.getAccountResponse());
+		BigDecimal nativeBalance = tradeWallet.getNativeBalance();
 
 		BigDecimal currentReserve = minimumBalance.add(reservePerEntry.multiply(BigDecimal.valueOf(tradeWallet.getAccountResponse().getSubentryCount())));
 
@@ -302,7 +286,7 @@ public class TradeWalletService {
 		if(assetCodes != null) {
 			for(String assetCode : assetCodes) {
 				Asset assetType = tmService.getAssetType(assetCode);
-				if(!isTrusted(tradeWallet.getAccountResponse(), assetType)) haveToTrust.add(assetType);
+				if(!tradeWallet.isTrusted(assetType)) haveToTrust.add(assetType);
 			}
 		}
 

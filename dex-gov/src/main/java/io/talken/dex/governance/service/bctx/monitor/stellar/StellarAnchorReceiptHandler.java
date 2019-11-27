@@ -1,5 +1,6 @@
 package io.talken.dex.governance.service.bctx.monitor.stellar;
 
+import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
@@ -9,6 +10,7 @@ import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
+import io.talken.dex.shared.service.blockchain.stellar.StellarTransferReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarTxReceipt;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -24,7 +26,7 @@ import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
 @Service
 @Scope("singleton")
-public class StellarAnchorReceiptHandler implements TxMonitor.ReceiptHandler<StellarTxReceipt> {
+public class StellarAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Void, StellarTxReceipt, StellarTransferReceipt> {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarAnchorReceiptHandler.class);
 
 	@Autowired
@@ -45,9 +47,9 @@ public class StellarAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Ste
 	}
 
 	@Override
-	public void handle(StellarTxReceipt receipt) throws Exception {
+	public void handle(Void _void, StellarTxReceipt txResult, StellarTransferReceipt receipt) throws Exception {
 		// convert amount to stellar raw
-		BigDecimal amount  = StellarConverter.rawToActual(receipt.getAmount());
+		BigDecimal amount  = StellarConverter.rawToActual(receipt.getAmountRaw());
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
 				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(receipt.getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(receipt.getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)));
@@ -72,6 +74,7 @@ public class StellarAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Ste
 		TokenMeta.ManagedInfo tm = tmService.getManaged(taskRecord.getAssetcode());
 
 		BctxRecord bctxRecord = new BctxRecord();
+		bctxRecord.setStatus(BctxStatusEnum.QUEUED);
 		bctxRecord.setBctxType(BlockChainPlatformEnum.STELLAR_TOKEN);
 		bctxRecord.setSymbol(taskRecord.getAssetcode());
 		bctxRecord.setPlatformAux(tm.getIssueraddress());

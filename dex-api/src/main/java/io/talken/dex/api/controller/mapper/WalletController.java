@@ -67,6 +67,6 @@ public class WalletController {
 	@RequestMapping(value = RequestMappings.TRADE_WALLET_DEANCHOR_FEE, method = RequestMethod.POST)
 	public DexResponse<CalculateFeeResult> deanchorFee(@RequestBody DeanchorRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(feeService.calculateDeanchorFee(postBody.getAssetCode(), postBody.getAmount(), postBody.getFeeByTalk()));
+		return DexResponse.buildResponse(feeService.calculateDeanchorFee(postBody.getAssetCode(), postBody.getAmount(), true));
 	}
 }

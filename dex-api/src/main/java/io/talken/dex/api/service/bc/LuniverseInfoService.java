@@ -4,7 +4,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.dto.LuniverseGasPriceResult;
 import io.talken.dex.api.controller.dto.LuniverseTxListResult;
 import io.talken.dex.shared.exception.InternalServerErrorException;
-import io.talken.dex.shared.service.blockchain.ethereum.EthereumTxReceipt;
+import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -71,7 +71,7 @@ public class LuniverseInfoService {
 				.skip(Math.max((page - 1), 0) * offset)
 				.with(new Sort(direction, "timeStamp"));
 
-		rtn.setResult(mongoTemplate.find(qry, EthereumTxReceipt.class, "luniverse_txReceipt"));
+		rtn.setResult(mongoTemplate.find(qry, EthereumTransferReceipt.class, "luniverse_txReceipt"));
 		return rtn;
 	}
 }
