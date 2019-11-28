@@ -13,8 +13,6 @@ import io.talken.dex.api.controller.dto.LuniverseGasPriceResult;
 import io.talken.dex.api.controller.dto.LuniverseTxListResult;
 import io.talken.dex.api.service.bc.EthereumInfoService;
 import io.talken.dex.api.service.bc.LuniverseInfoService;
-import io.talken.dex.api.service.integration.relay.RelayServerService;
-import io.talken.dex.api.service.integration.relay.dto.RelayTransferDTO;
 import io.talken.dex.shared.exception.DexException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -31,9 +29,6 @@ public class BlockChainInfoController {
 
 	@Autowired
 	private EthereumInfoService ethereumInfoService;
-
-	@Autowired
-	private RelayServerService relayServerService;
 
 	@Autowired
 	private AuthInfo authInfo;
@@ -63,11 +58,6 @@ public class BlockChainInfoController {
 		if(offset == null) offset = 10;
 
 		return DexResponse.buildResponse(luniverseInfoService.getTxList(address, contractaddress, direction, page, offset));
-	}
-
-	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_TRANSFER_BCINFO, method = RequestMethod.GET)
-	public DexResponse<RelayTransferDTO> transferBlockchainInfo(@RequestParam("symbol") String symbol) throws TalkenException {
-		return DexResponse.buildResponse(relayServerService.createTransferDTObase(symbol));
 	}
 
 	@AuthRequired

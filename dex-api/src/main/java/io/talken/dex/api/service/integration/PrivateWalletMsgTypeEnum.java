@@ -1,7 +1,7 @@
 package io.talken.dex.api.service.integration;
 
 public enum PrivateWalletMsgTypeEnum {
-	WITHDRAW("3000"),
+	TRANSFER("3000"),
 	ANCHOR("3001");
 
 	private final String msgType;

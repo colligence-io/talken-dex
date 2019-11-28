@@ -11,7 +11,6 @@ import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.api.service.AnchorService;
 import io.talken.dex.api.service.FeeCalculationService;
 import io.talken.dex.api.service.WalletService;
-import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import io.talken.dex.api.service.integration.PrivateWalletMsgTypeEnum;
 import io.talken.dex.api.service.integration.PrivateWalletService;
 import io.talken.dex.api.service.integration.PrivateWalletTransferDTO;
@@ -47,7 +46,7 @@ public class WalletController {
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_WITHDRAW_BASE, method = RequestMethod.GET)
 	public DexResponse<PrivateWalletTransferDTO> withdraw_base(@RequestParam("assetCode") String assetCode) throws TalkenException {
-		return DexResponse.buildResponse(pwService.createTransferDTObase(PrivateWalletMsgTypeEnum.WITHDRAW, assetCode));
+		return DexResponse.buildResponse(pwService.createTransferDTObase(PrivateWalletMsgTypeEnum.TRANSFER, assetCode));
 	}
 
 	@AuthRequired

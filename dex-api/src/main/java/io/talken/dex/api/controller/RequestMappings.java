@@ -7,7 +7,7 @@ public class RequestMappings {
 
 	// WalletService
 	private static final String PRIVATE_WALLET = DEX + "/pw";
-	public static final String PRIVATE_WALLET_WITHDRAW_BASE = PRIVATE_WALLET + "/withdraw_base";
+	public static final String PRIVATE_WALLET_WITHDRAW_BASE = PRIVATE_WALLET + "/transferBase";
 	public static final String PRIVATE_WALLET_ANCHOR_TASK = PRIVATE_WALLET + "/anchor";
 
 	private static final String TRADE_WALLET = DEX + "/tw";
@@ -40,7 +40,6 @@ public class RequestMappings {
 
 	// BlockChainInfoService
 	private static final String BLOCK_CHAIN = DEX + "/bc";
-	public static final String BLOCK_CHAIN_TRANSFER_BCINFO = BLOCK_CHAIN + "/transferBase";
 	private static final String BLOCK_CHAIN_LUNIVERSE = BLOCK_CHAIN + "/luniverse";
 	public static final String BLOCK_CHAIN_LUNIVERSE_GASPRICE = BLOCK_CHAIN_LUNIVERSE + "/gasPrice";
 	public static final String BLOCK_CHAIN_LUNIVERSE_TXLIST = BLOCK_CHAIN_LUNIVERSE + "/txList";
