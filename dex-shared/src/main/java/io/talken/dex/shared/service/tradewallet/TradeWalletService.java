@@ -2,12 +2,13 @@ package io.talken.dex.shared.service.tradewallet;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
+import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.UserTradeWalletRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.shared.DexSettings;
-import io.talken.dex.shared.TokenMetaServiceInterface;
+import io.talken.dex.shared.TokenMetaTableService;
 import io.talken.dex.shared.exception.SigningException;
 import io.talken.dex.shared.exception.TradeWalletCreateFailedException;
 import io.talken.dex.shared.exception.TradeWalletRebalanceException;
@@ -57,7 +58,7 @@ public class TradeWalletService {
 	@Autowired
 	private SignServerService signServerService;
 
-	private final TokenMetaServiceInterface tmService;
+	private final TokenMetaTableService tmService;
 
 	private static final BigDecimal minimumBalance = BigDecimal.valueOf(1);
 	private static final BigDecimal reserveBufferAmount = BigDecimal.valueOf(1);
@@ -275,7 +276,7 @@ public class TradeWalletService {
 	 * @return (tx modified, rebalace amount)
 	 * @throws TokenMetaNotFoundException
 	 */
-	public ObjectPair<Boolean, BigDecimal> addNativeBalancingOperation(StellarChannelTransaction.Builder sctxBuilder, TradeWalletInfo tradeWallet, boolean plusOneEntry, String... assetCodes) throws TokenMetaNotFoundException, TradeWalletRebalanceException {
+	public ObjectPair<Boolean, BigDecimal> addNativeBalancingOperation(StellarChannelTransaction.Builder sctxBuilder, TradeWalletInfo tradeWallet, boolean plusOneEntry, String... assetCodes) throws TokenMetaNotFoundException, TradeWalletRebalanceException, TokenMetaNotManagedException {
 		boolean added = false;
 
 		BigDecimal nativeBalance = tradeWallet.getNativeBalance();

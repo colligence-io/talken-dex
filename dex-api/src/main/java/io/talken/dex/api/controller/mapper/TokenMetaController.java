@@ -23,7 +23,7 @@ public class TokenMetaController {
 
 	@RequestMapping(value = RequestMappings.TMS_MI_LIST, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable> managedInfoList() throws TalkenException {
-		return DexResponse.buildResponse(tmService.getManagedInfoList());
+		return DexResponse.buildResponse(tmService.getTokenMetaManagedList());
 	}
 
 	@RequestMapping(value = RequestMappings.TMS_TM_INFO, method = RequestMethod.GET)

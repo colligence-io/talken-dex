@@ -5,6 +5,7 @@ import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.exception.TalkenException;
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
+import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.persistence.DexTaskRecord;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
@@ -61,15 +62,15 @@ public class OfferService {
 	private final DSLContext dslContext;
 	private final DataSourceTransactionManager txMgr;
 
-	public CreateOfferResult createSellOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException {
+	public CreateOfferResult createSellOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException {
 		return createOffer(user, DexTaskTypeEnum.OFFER_CREATE_SELL, request);
 	}
 
-	public CreateOfferResult createBuyOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException {
+	public CreateOfferResult createBuyOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException {
 		return createOffer(user, DexTaskTypeEnum.OFFER_CREATE_BUY, request);
 	}
 
-	private CreateOfferResult createOffer(User user, DexTaskTypeEnum taskType, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException {
+	private CreateOfferResult createOffer(User user, DexTaskTypeEnum taskType, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException {
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(taskType);
 		final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
 		final long userId = user.getId();
@@ -317,15 +318,15 @@ public class OfferService {
 	}
 
 
-	public DeleteOfferResult deleteSellOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException {
+	public DeleteOfferResult deleteSellOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException {
 		return deleteOffer(user, DexTaskTypeEnum.OFFER_DELETE_SELL, request);
 	}
 
-	public DeleteOfferResult deleteBuyOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException {
+	public DeleteOfferResult deleteBuyOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException {
 		return deleteOffer(user, DexTaskTypeEnum.OFFER_DELETE_BUY, request);
 	}
 
-	private DeleteOfferResult deleteOffer(User user, DexTaskTypeEnum taskType, DeleteOfferRequest request) throws TokenMetaNotFoundException, StellarException, SigningException, TradeWalletCreateFailedException {
+	private DeleteOfferResult deleteOffer(User user, DexTaskTypeEnum taskType, DeleteOfferRequest request) throws TokenMetaNotFoundException, StellarException, SigningException, TradeWalletCreateFailedException, TokenMetaNotManagedException {
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(taskType);
 		final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
 		final long userId = user.getId();

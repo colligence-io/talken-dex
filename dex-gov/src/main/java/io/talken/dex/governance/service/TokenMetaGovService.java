@@ -4,11 +4,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
-import io.talken.common.persistence.jooq.tables.pojos.TokenMetaExrate;
-import io.talken.common.persistence.jooq.tables.pojos.TokenMetaPlatform;
+import io.talken.common.persistence.jooq.tables.pojos.*;
 import io.talken.common.persistence.jooq.tables.records.*;
 import io.talken.common.persistence.redis.AssetExchangeRate;
 import io.talken.common.persistence.redis.AssetOHLCData;
@@ -17,9 +15,8 @@ import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.DoubleKeyObject;
 import io.talken.common.util.collection.DoubleKeyTable;
 import io.talken.common.util.collection.ObjectPair;
-import io.talken.common.util.collection.SingleKeyTable;
-import io.talken.dex.shared.TokenMetaServiceInterface;
 import io.talken.dex.shared.TokenMetaTable;
+import io.talken.dex.shared.TokenMetaTableService;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
@@ -35,19 +32,21 @@ import org.stellar.sdk.*;
 import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
-import org.stellar.sdk.xdr.AssetType;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.talken.common.persistence.jooq.Tables.*;
 
 @Service
 @Scope("singleton")
 @DependsOn("dbmigration")
-public class TokenMetaGovService implements TokenMetaServiceInterface {
+public class TokenMetaGovService extends TokenMetaTableService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaGovService.class);
 
 	@Autowired
@@ -65,10 +64,6 @@ public class TokenMetaGovService implements TokenMetaServiceInterface {
 	private static Long lastTradeAggregationUpdatedTimestamp = null;
 	private static Long lastExchangeRateUpdatedTimestamp = null;
 	private static Long loadTimestamp;
-
-	private Map<Long, TokenMeta> tmIdMap = new HashMap<>();
-	private SingleKeyTable<String, TokenMeta> tmTable = new SingleKeyTable<>();
-	private SingleKeyTable<String, TokenMeta> miTable = new SingleKeyTable<>();
 
 	// checked trustline registry
 	private DoubleKeyTable<String, Asset, TrustedAsset> checkedTrusts = new DoubleKeyTable<>();
@@ -131,39 +126,36 @@ public class TokenMetaGovService implements TokenMetaServiceInterface {
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
-			SingleKeyTable<String, TokenMeta> newTmTable = new SingleKeyTable<>();
-			SingleKeyTable<String, TokenMeta> newMiTable = new SingleKeyTable<>();
 
 			// preload token_meta_id / marketpairList map
-			Map<Long, List<TokenMeta.MarketPairInfo>> _tmMpMap = new HashMap<>();
+			Map<Long, List<TokenMetaManagedMarketpair>> _tmMpMap = new HashMap<>();
 			for(TokenMetaManagedMarketpairRecord _tmp : dslContext.selectFrom(TOKEN_META_MANAGED_MARKETPAIR).fetch()) {
 				Long metaId = _tmp.getTmId();
 				if(!_tmMpMap.containsKey(metaId))
 					_tmMpMap.put(metaId, new ArrayList<>());
-				_tmMpMap.get(metaId).add(_tmp.into(TokenMeta.MarketPairInfo.class));
+				_tmMpMap.get(metaId).add(_tmp.into(TokenMetaManagedMarketpair.class));
 			}
 
 			// preload token_meta_id / managedHolderList map
-			Map<Long, List<TokenMeta.HolderAccountInfo>> _tmHaMap = new HashMap<>();
+			Map<Long, List<TokenMetaManagedHolder>> _tmHaMap = new HashMap<>();
 			for(TokenMetaManagedHolderRecord _tmh : dslContext.selectFrom(TOKEN_META_MANAGED_HOLDER).fetch()) {
 				Long metaId = _tmh.getTmId();
 				if(!_tmHaMap.containsKey(metaId))
 					_tmHaMap.put(metaId, new ArrayList<>());
 
-				TokenMeta.HolderAccountInfo _tmhData = _tmh.into(TokenMeta.HolderAccountInfo.class);
+				TokenMetaManagedHolder _tmhData = _tmh.into(TokenMetaManagedHolder.class);
 				_tmhData.setAddress(_tmhData.getAddress().trim());
 
 				_tmHaMap.get(metaId).add(_tmhData);
 			}
 
 			// preload token_meta_id / managedInfo map
-			Map<Long, TokenMeta.ManagedInfo> _tmMiMap = new HashMap<>();
+			Map<Long, TokenMetaManaged> _tmMiMap = new HashMap<>();
 			for(TokenMetaManagedRecord _tmi : dslContext.selectFrom(TOKEN_META_MANAGED).fetch()) {
 
 				// trim data for sure
-				TokenMeta.ManagedInfo _miData = _tmi.into(TokenMeta.ManagedInfo.class);
+				TokenMetaManaged _miData = _tmi.into(TokenMetaManaged.class);
 				_miData.setIssueraddress(_miData.getIssueraddress().trim());
-				_miData.setBaseaddress(_miData.getBaseaddress().trim());
 				_miData.setOfferfeeholderaddress(_miData.getOfferfeeholderaddress().trim());
 				_miData.setDeancfeeholderaddress(_miData.getDeancfeeholderaddress().trim());
 				_miData.setSwapfeeholderaddress(_miData.getSwapfeeholderaddress().trim());
@@ -183,12 +175,12 @@ public class TokenMetaGovService implements TokenMetaServiceInterface {
 			}
 
 			// preload token_meta_id / token_info map
-			Map<Long, Map<RegionEnum, TokenMeta.EntryInfo>> _tmEiMap = new HashMap<>();
+			Map<Long, Map<RegionEnum, TokenEntry>> _tmEiMap = new HashMap<>();
 			for(TokenEntryRecord _te : dslContext.selectFrom(TOKEN_ENTRY).fetch()) {
 				Long metaId = _te.getTmId();
 				if(!_tmEiMap.containsKey(metaId))
 					_tmEiMap.put(metaId, new HashMap<>());
-				_tmEiMap.get(metaId).put(_te.getRegion(), _te.into(TokenMeta.EntryInfo.class));
+				_tmEiMap.get(metaId).put(_te.getRegion(), _te.into(TokenEntry.class));
 			}
 
 			// preload token_meta_id / token_aux list map
@@ -236,192 +228,154 @@ public class TokenMetaGovService implements TokenMetaServiceInterface {
 				newTmIdMap.put(_tmr.getId(), _tmr.into(TokenMeta.class));
 			}
 
+			// build new meta table
+			TokenMetaTable newTmTable = new TokenMetaTable();
+
 			// Composite TokenMeta
 			for(TokenMeta _tm : newTmIdMap.values()) {
 				Long metaId = _tm.getId();
+				String symbol = _tm.getSymbol().toUpperCase();
+
+				TokenMetaTable.Meta meta = newTmTable.forMeta(symbol);
+
+				meta.setId(_tm.getId());
+				meta.setNameKey(_tm.getNamekey());
+				meta.setSymbol(_tm.getSymbol());
+				meta.setPlatform(_tm.getPlatform());
+				meta.setIconUrl(_tm.getIconUrl());
+				meta.setThumbnailUrl(_tm.getThumbnailUrl());
+				meta.setViewUnitExpn(_tm.getViewUnitExpn());
+				meta.setUnitDecimals(_tm.getUnitDecimals());
+				meta.setCmcId(_tm.getCmcId());
 
 				if(_tm.getPlatform() != null && _tmpMap.containsKey(_tm.getPlatform())) {
-					_tm.setNativeFlag(_tmpMap.get(_tm.getPlatform()).getNativeFlag());
-					_tm.setBctxType(_tmpMap.get(_tm.getPlatform()).getBctxType());
+					meta.setNativeFlag(_tmpMap.get(_tm.getPlatform()).getNativeFlag());
+					meta.setBctxType(_tmpMap.get(_tm.getPlatform()).getBctxType());
 				}
 
 				if(_auxMap.containsKey(metaId)) {
-					_tm.setAux(_auxMap.get(metaId));
+					meta.setAux(_auxMap.get(metaId));
 				}
 
 				if(_tmEiMap.containsKey(metaId)) {
-					_tm.setEntryInfo(_tmEiMap.get(metaId));
+					for(Map.Entry<RegionEnum, TokenEntry> _eikv : _tmEiMap.get(metaId).entrySet()) {
+						TokenMetaTable.EntryInfo entryInfo = meta.forEntry(_eikv.getKey());
+						entryInfo.setId(_eikv.getValue().getId());
+						entryInfo.setName(_eikv.getValue().getName());
+						entryInfo.setRevision(_eikv.getValue().getRevision());
+						entryInfo.setNumFollower(_eikv.getValue().getNumFollower());
+						entryInfo.setShowFlag(_eikv.getValue().getShowFlag());
+						entryInfo.setConfirmFlag(_eikv.getValue().getConfirmFlag());
+						if(_eikv.getValue().getUpdateTimestamp() == null)
+							entryInfo.setUpdateTimestamp(UTCUtil.toTimestamp_s(_eikv.getValue().getCreateTimestamp()));
+						else entryInfo.setUpdateTimestamp(UTCUtil.toTimestamp_s(_eikv.getValue().getUpdateTimestamp()));
+					}
 				}
 
 				// build name map
 				Map<RegionEnum, String> nameMap = new HashMap<>();
 				for(RegionEnum _lt : RegionEnum.values()) {
-					if(_tm.getEntryInfo() != null && _tm.getEntryInfo().containsKey(_lt))
-						nameMap.put(_lt, _tm.getEntryInfo().get(_lt).getName());
+					if(meta.getEntryInfo() != null && meta.getEntryInfo().containsKey(_lt))
+						nameMap.put(_lt, meta.getEntryInfo().get(_lt).getName());
 					else nameMap.put(_lt, _tm.getNamekey());
 				}
-				_tm.setName(nameMap);
+				meta.setName(nameMap);
 
 				// build exchange rate
 				if(_erMap.containsKey(metaId)) {
 					Map<String, BigDecimal> exr = new HashMap<>();
 					for(TokenMetaExrate _er : _erMap.get(metaId))
 						exr.put(_er.getCountertype(), _er.getPrice());
-					_tm.setExchangeRate(exr);
+					meta.setExchangeRate(exr);
 				}
 
+				// managed info
 				if(_tmMiMap.containsKey(metaId)) {
-					_tm.setManagedInfo(_tmMiMap.get(metaId));
-					newMiTable.insert(_tm);
-				}
+					TokenMetaManaged _mi = _tmMiMap.get(metaId);
+					TokenMetaTable.ManagedInfo mi = new TokenMetaTable.ManagedInfo();
 
-				newTmTable.insert(_tm);
-			}
+					// basic managed info data
+					mi.setAssetCode(meta.getSymbol());
+					mi.setIssuerAddress(_mi.getIssueraddress());
+					mi.setOfferFeeHolderAddress(_mi.getOfferfeeholderaddress());
+					mi.setDeancFeeHolderAddress(_mi.getDeancfeeholderaddress());
+					mi.setSwapFeeHolderAddress(_mi.getSwapfeeholderaddress());
+					mi.setDistributorAddress(_mi.getDistributoraddress());
+					if(_mi.getUpdateTimestamp() == null)
+						mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getCreateTimestamp()));
+					else
+						mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getUpdateTimestamp()));
 
-			// Composite managed info
-			for(TokenMeta _tmd : newMiTable.__getRawData().values()) {
-				logger.info("Load managed accounts for {}({})", _tmd.getNamekey(), _tmd.getSymbol());
-				TokenMeta.ManagedInfo mi = _tmd.getManagedInfo();
-				mi.setAssetHolderAccounts(_tmHaMap.get(_tmd.getId()));
-				mi.setAssetCode(_tmd.getSymbol());
-				mi.setAssetIssuer(KeyPair.fromAccountId(mi.getIssueraddress()));
-				mi.setAssetType(Asset.createNonNativeAsset(_tmd.getSymbol(), mi.getAssetIssuer().getAccountId()));
-				mi.setAssetBase(KeyPair.fromAccountId(mi.getBaseaddress()));
-				mi.setDeanchorFeeHolder(KeyPair.fromAccountId(mi.getDeancfeeholderaddress()));
-				mi.setOfferFeeHolder(KeyPair.fromAccountId(mi.getOfferfeeholderaddress()));
-				mi.setSwapFeeHolder(KeyPair.fromAccountId(mi.getSwapfeeholderaddress()));
-				mi.setDistributoraddress(mi.getDistributoraddress());
+					mi.prepareCache();
 
-				mi.setMarketPair(new HashMap<>());
-				if(_tmMpMap.containsKey(_tmd.getId())) {
-					for(TokenMeta.MarketPairInfo _mp : _tmMpMap.get(_tmd.getId())) {
-						mi.getMarketPair().put(newTmIdMap.get(_mp.getTmIdCounter()).getSymbol(), _mp);
+					// holder accounts
+					if(_tmHaMap.containsKey(metaId)) {
+						for(TokenMetaManagedHolder _hai : _tmHaMap.get(metaId)) {
+							TokenMetaTable.HolderAccountInfo hai = mi.newHolderAccountInfo();
+							hai.setAddress(_hai.getAddress());
+							hai.setActiveFlag(_hai.getActiveFlag());
+							hai.setHotFlag(_hai.getHotFlag());
+						}
 					}
+
+					// market pairs
+					if(_tmMpMap.containsKey(metaId)) {
+						for(TokenMetaManagedMarketpair _mp : _tmMpMap.get(metaId)) {
+							TokenMetaTable.MarketPairInfo mp = mi.forMarketPair(newTmIdMap.get(_mp.getTmIdCounter()).getSymbol());
+
+							mp.setActiveFlag(_mp.getActiveFlag());
+							mp.setTradeUnitExpn(_mp.getTradeUnitExpn());
+							if(_mp.getAggrTimestamp() != null) mp.setAggrTimestamp(UTCUtil.toTimestamp_s(_mp.getAggrTimestamp()));
+							mp.setTradeCount(_mp.getTradeCount());
+							mp.setBaseVolume(_mp.getBaseVolume());
+							mp.setCounterVolume(_mp.getCounterVolume());
+							mp.setPriceAvg(_mp.getPriceAvg());
+							mp.setPriceH(_mp.getPriceH());
+							mp.setPriceL(_mp.getPriceL());
+							mp.setPriceO(_mp.getPriceO());
+							mp.setPriceC(_mp.getPriceC());
+							if(_mp.getUpdateTimestamp() == null)
+								mp.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mp.getCreateTimestamp()));
+							else mp.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mp.getUpdateTimestamp()));
+						}
+					}
+
+					meta.setManagedInfo(mi);
 				}
+
+				if(_tm.getUpdateTimestamp() == null) meta.setUpdateTimestamp(UTCUtil.toTimestamp_s(_tm.getCreateTimestamp()));
+				else meta.setUpdateTimestamp(UTCUtil.toTimestamp_s(_tm.getUpdateTimestamp()));
 			}
 
-			if(!verifyManaged(newMiTable)) {
+			if(!verifyManaged(newTmTable)) {
 				logger.error("Cannot verify token meta data");
 				throw new TokenMetaLoadException("Cannot verify token meta data");
 			}
 
-			tmIdMap = newTmIdMap;
-			tmTable = newTmTable;
-			miTable = newMiTable;
 			loadTimestamp = UTCUtil.getNowTimestamp_s();
-			exportToRedis();
+			updateStorage(newTmTable);
 
+			redisTemplate.opsForValue().set(TokenMetaTable.REDIS_KEY, newTmTable);
+			redisTemplate.opsForValue().set(TokenMetaTable.REDIS_UDPATED_KEY, loadTimestamp);
 		} catch(Exception ex) {
 			throw new TokenMetaLoadException(ex);
 		}
 	}
 
-	// deep copy
-	private void exportToRedis() {
-		TokenMetaTable data = new TokenMetaTable();
-		data.setUpdated(loadTimestamp);
-
-		tmTable.forEach(_tm -> {
-			TokenMetaTable.Meta meta = data.forMeta(_tm.__getSKey__());
-			meta.setId(_tm.getId());
-			meta.setNameKey(_tm.getNamekey());
-			meta.setSymbol(_tm.getSymbol());
-			meta.setPlatform(_tm.getPlatform());
-			meta.setNativeFlag(_tm.getNativeFlag());
-			meta.setIconUrl(_tm.getIconUrl());
-			meta.setThumbnailUrl(_tm.getThumbnailUrl());
-			meta.setViewUnitExpn(_tm.getViewUnitExpn());
-			meta.setUnitDecimals(_tm.getUnitDecimals());
-			meta.setCmcId(_tm.getCmcId());
-			meta.setName(_tm.getName());
-
-			if(_tm.getEntryInfo() != null) {
-				_tm.getEntryInfo().forEach((_eiKey, _ei) -> {
-					TokenMetaTable.EntryInfo entryInfo = meta.forEntry(_eiKey);
-					entryInfo.setId(_ei.getId());
-					entryInfo.setName(_ei.getName());
-					entryInfo.setRevision(_ei.getRevision());
-					entryInfo.setNumFollower(_ei.getNumFollower());
-					entryInfo.setShowFlag(_ei.getShowFlag());
-					entryInfo.setConfirmFlag(_ei.getConfirmFlag());
-					if(_ei.getUpdateTimestamp() == null)
-						entryInfo.setUpdateTimestamp(UTCUtil.toTimestamp_s(_ei.getCreateTimestamp()));
-					else entryInfo.setUpdateTimestamp(UTCUtil.toTimestamp_s(_ei.getUpdateTimestamp()));
-				});
-			}
-
-			if(_tm.getManagedInfo() != null) {
-				TokenMeta.ManagedInfo _mi = _tm.getManagedInfo();
-
-				TokenMetaTable.ManagedInfo mi = new TokenMetaTable.ManagedInfo();
-				mi.setAssetCode(_mi.getAssetCode());
-				mi.setIssuerAddress(_mi.getIssueraddress());
-				mi.setBaseAddress(_mi.getBaseaddress());
-				mi.setOfferFeeHolderAddress(_mi.getOfferfeeholderaddress());
-				mi.setDeancFeeHolderAddress(_mi.getDeancfeeholderaddress());
-				mi.setSwapFeeHolderAddress(_mi.getSwapfeeholderaddress());
-				mi.setDistributorAddress(_mi.getDistributoraddress());
-				if(_mi.getUpdateTimestamp() == null)
-					mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getCreateTimestamp()));
-				else
-					mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getUpdateTimestamp()));
-
-				if(_mi.getMarketPair() != null) {
-					_mi.getMarketPair().forEach((_mpKey, _mp) -> {
-						TokenMetaTable.MarketPairInfo mp = mi.forMarketPair(_mpKey);
-						mp.setActiveFlag(_mp.getActiveFlag());
-						mp.setTradeUnitExpn(_mp.getTradeUnitExpn());
-						if(_mp.getAggrTimestamp() != null) mp.setAggrTimestamp(UTCUtil.toTimestamp_s(_mp.getAggrTimestamp()));
-						mp.setTradeCount(_mp.getTradeCount());
-						mp.setBaseVolume(_mp.getBaseVolume());
-						mp.setCounterVolume(_mp.getCounterVolume());
-						mp.setPriceAvg(_mp.getPriceAvg());
-						mp.setPriceH(_mp.getPriceH());
-						mp.setPriceL(_mp.getPriceL());
-						mp.setPriceO(_mp.getPriceO());
-						mp.setPriceC(_mp.getPriceC());
-						if(_mp.getUpdateTimestamp() == null)
-							mp.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mp.getCreateTimestamp()));
-						else mp.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mp.getUpdateTimestamp()));
-					});
-				}
-
-				if(_mi.getAssetHolderAccounts() != null) {
-					for(TokenMeta.HolderAccountInfo _hai : _mi.getAssetHolderAccounts()) {
-						TokenMetaTable.HolderAccountInfo hai = mi.newHolderAccountInfo();
-						hai.setAddress(_hai.getAddress());
-						hai.setActiveFlag(_hai.getActiveFlag());
-						hai.setHotFlag(_hai.getHotFlag());
-					}
-				}
-
-				meta.setManagedInfo(mi);
-			}
-
-			meta.setAux(_tm.getAux());
-			meta.setExchangeRate(_tm.getExchangeRate());
-			if(_tm.getUpdateTimestamp() == null) meta.setUpdateTimestamp(UTCUtil.toTimestamp_s(_tm.getCreateTimestamp()));
-			else meta.setUpdateTimestamp(UTCUtil.toTimestamp_s(_tm.getUpdateTimestamp()));
-		});
-
-		redisTemplate.opsForValue().set(TokenMetaTable.REDIS_KEY, data);
-		redisTemplate.opsForValue().set(TokenMetaTable.REDIS_UDPATED_KEY, loadTimestamp);
-	}
-
-
-	private boolean verifyManaged(SingleKeyTable<String, TokenMeta> checkTarget) {
+	private boolean verifyManaged(TokenMetaTable metaTable) {
 		boolean trustFailed = false;
-		for(TokenMeta _tm : checkTarget.__getRawData().values()) {
-			if(!checkTrust(_tm.getManagedInfo().getAssetBase(), _tm.getManagedInfo())) trustFailed = true;
-			if(!checkTrust(_tm.getManagedInfo().getOfferFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
-			if(!checkTrust(_tm.getManagedInfo().getDeanchorFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
-			if(!checkTrust(_tm.getManagedInfo().getSwapFeeHolder(), _tm.getManagedInfo())) trustFailed = true;
+		for(TokenMetaTable.Meta _tm : metaTable.values()) {
+			if(_tm.isManaged()) {
+				if(!checkTrust(_tm.getManagedInfo().dexOfferFeeHolderAccount(), _tm.getManagedInfo())) trustFailed = true;
+				if(!checkTrust(_tm.getManagedInfo().dexDeanchorFeeHolderAccount(), _tm.getManagedInfo())) trustFailed = true;
+				if(!checkTrust(_tm.getManagedInfo().dexSwapFeeHolderAccount(), _tm.getManagedInfo())) trustFailed = true;
+			}
 		}
 		return !trustFailed;
 	}
 
-	private boolean checkTrust(KeyPair source, TokenMeta.ManagedInfo target) {
-		TrustedAsset ta = new TrustedAsset(source.getAccountId(), target.getAssetType());
+	private boolean checkTrust(KeyPair source, TokenMetaTable.ManagedInfo target) {
+		TrustedAsset ta = new TrustedAsset(source.getAccountId(), target.dexAssetType());
 		if(checkedTrusts.has(ta)) return true;
 
 		boolean trusted = false;
@@ -435,13 +389,13 @@ public class TokenMetaGovService implements TokenMetaServiceInterface {
 			}
 
 			if(!trusted) {
-				logger.info("No trust on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
+				logger.info("No trust on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.dexIssuerAccount().getAccountId());
 				Transaction tx = new Transaction.Builder(sourceAccount, stellarNetworkService.getNetwork())
 						.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
 						.setOperationFee(stellarNetworkService.getNetworkFee())
 						.addOperation(
 								new ChangeTrustOperation.Builder(
-										target.getAssetType(),
+										target.dexAssetType(),
 										String.valueOf(StellarConverter.rawToActualString(BigInteger.valueOf(Long.MAX_VALUE)))
 								).build()
 						)
@@ -452,11 +406,11 @@ public class TokenMetaGovService implements TokenMetaServiceInterface {
 				SubmitTransactionResponse txResponse = server.submitTransaction(tx);
 
 				if(txResponse.isSuccess()) {
-					logger.info("Trustline made on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
+					logger.info("Trustline made on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.dexIssuerAccount().getAccountId());
 					trusted = true;
 				} else {
 					ObjectPair<String, String> resultCodesFromExtra = StellarConverter.getResultCodesFromExtra(txResponse);
-					logger.error("Cannot make trustline on {} for {} / {} : {} - {}", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId(), resultCodesFromExtra.first(), resultCodesFromExtra.second());
+					logger.error("Cannot make trustline on {} for {} / {} : {} - {}", source.getAccountId(), target.getAssetCode(), target.dexIssuerAccount().getAccountId(), resultCodesFromExtra.first(), resultCodesFromExtra.second());
 				}
 			}
 		} catch(ErrorResponse er) {
@@ -472,37 +426,13 @@ public class TokenMetaGovService implements TokenMetaServiceInterface {
 
 		if(trusted) {
 			checkedTrusts.insert(ta);
-			logger.info("Trustline on {} for {} / {} verified", source.getAccountId(), target.getAssetCode(), target.getAssetIssuer().getAccountId());
+			logger.info("Trustline on {} for {} / {} verified", source.getAccountId(), target.getAssetCode(), target.dexIssuerAccount().getAccountId());
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	public TokenMeta getMeta(String assetCode) throws TokenMetaNotFoundException {
-		return Optional.ofNullable(
-				tmTable.select(assetCode.toUpperCase())
-		).orElseThrow(() -> new TokenMetaNotFoundException(assetCode));
-	}
-
-	public TokenMeta.ManagedInfo getManaged(String assetCode) throws TokenMetaNotFoundException {
-		return Optional.ofNullable(
-				miTable.select(assetCode.toUpperCase()).getManagedInfo()
-		).orElseThrow(() -> new TokenMetaNotFoundException(assetCode));
-	}
-
-	@Override
-	public Asset getAssetType(String assetCode) throws TokenMetaNotFoundException {
-		return getManaged(assetCode).getAssetType();
-	}
-
-	public Collection<TokenMeta> getManagedCollection() {
-		return miTable.select();
-	}
-
-	public TokenMeta getTokenMetaById(Long tm_id) throws TokenMetaNotFoundException {
-		return Optional.ofNullable(tmIdMap.get(tm_id)).orElseThrow(() -> new TokenMetaNotFoundException(Long.toString(tm_id)));
-	}
 
 //
 //	public String getActiveHolderAccountAddress(String code) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException {

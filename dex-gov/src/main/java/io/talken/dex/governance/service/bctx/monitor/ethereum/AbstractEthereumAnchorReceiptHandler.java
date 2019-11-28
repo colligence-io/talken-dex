@@ -5,9 +5,9 @@ import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.bctx.TxMonitor;
+import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
@@ -74,13 +74,13 @@ public abstract class AbstractEthereumAnchorReceiptHandler implements TxMonitor.
 
 		taskRecord.setBcRefId(receipt.getHash());
 
-		TokenMeta.ManagedInfo tm = tmService.getManaged(taskRecord.getAssetcode());
+		TokenMetaTable.ManagedInfo tm = tmService.getManagedInfo(taskRecord.getAssetcode());
 
 		BctxRecord bctxRecord = new BctxRecord();
 		bctxRecord.setBctxType(BlockChainPlatformEnum.STELLAR_TOKEN);
 		bctxRecord.setSymbol(taskRecord.getAssetcode());
-		bctxRecord.setPlatformAux(tm.getIssueraddress());
-		bctxRecord.setAddressFrom(tm.getIssueraddress());
+		bctxRecord.setPlatformAux(tm.getIssuerAddress());
+		bctxRecord.setAddressFrom(tm.getIssuerAddress());
 		bctxRecord.setAddressTo(taskRecord.getTradeaddr());
 		bctxRecord.setAmount(amount);
 		bctxRecord.setNetfee(BigDecimal.ZERO);

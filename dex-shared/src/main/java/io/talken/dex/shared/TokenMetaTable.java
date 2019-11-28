@@ -1,8 +1,10 @@
 package io.talken.dex.shared;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
+import io.talken.dex.shared.exception.ActiveAssetHolderAccountNotFoundException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,10 +13,7 @@ import org.stellar.sdk.KeyPair;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -23,8 +22,6 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 
 	public static final String REDIS_KEY = "talken:svc:token_meta";
 	public static final String REDIS_UDPATED_KEY = "talken:svc:token_meta_updated";
-
-	private long updated;
 
 	public Meta forMeta(String key) {
 		if(!this.containsKey(key)) this.put(key, new Meta());
@@ -37,6 +34,7 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private String nameKey;
 		private String symbol;
 		private String platform;
+		private BlockChainPlatformEnum bctxType;
 		private Boolean nativeFlag;
 		private String iconUrl;
 		private String thumbnailUrl;
@@ -77,7 +75,6 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 	public static class ManagedInfo {
 		private String assetCode;
 		private String issuerAddress;
-		private String baseAddress;
 		private String offerFeeHolderAddress;
 		private String deancFeeHolderAddress;
 		private String swapFeeHolderAddress;
@@ -105,6 +102,40 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 			assetHolderAccounts.add(rtn);
 			return rtn;
 		}
+
+		public Asset dexAssetType() {
+			return cache.getAssetType();
+		}
+
+		public KeyPair dexOfferFeeHolderAccount() {
+			return cache.getOfferFeeHolder();
+		}
+
+		public KeyPair dexDeanchorFeeHolderAccount() {
+			return cache.getDeanchorFeeHolder();
+		}
+
+		public KeyPair dexSwapFeeHolderAccount() {
+			return cache.getSwapFeeHolder();
+		}
+
+		public KeyPair dexIssuerAccount() {
+			return cache.getAssetIssuer();
+		}
+
+		public String pickActiveHolderAccountAddress() throws ActiveAssetHolderAccountNotFoundException {
+			Optional<HolderAccountInfo> opt_aha = assetHolderAccounts.stream()
+					.filter(TokenMetaTable.HolderAccountInfo::getActiveFlag)
+					.findAny();
+			if(opt_aha.isPresent()) return opt_aha.get().getAddress();
+			else {
+				Optional<TokenMetaTable.HolderAccountInfo> opt_ahh = assetHolderAccounts.stream()
+						.filter(TokenMetaTable.HolderAccountInfo::getHotFlag)
+						.findAny();
+				if(opt_ahh.isPresent()) return opt_ahh.get().getAddress();
+				else throw new ActiveAssetHolderAccountNotFoundException(assetCode);
+			}
+		}
 	}
 
 	@Getter
@@ -112,7 +143,6 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private StellarCache(ManagedInfo mi) {
 			assetIssuer = KeyPair.fromAccountId(mi.issuerAddress);
 			assetType = Asset.createNonNativeAsset(mi.assetCode, assetIssuer.getAccountId());
-			assetBase = KeyPair.fromAccountId(mi.baseAddress);
 			offerFeeHolder = KeyPair.fromAccountId(mi.offerFeeHolderAddress);
 			deanchorFeeHolder = KeyPair.fromAccountId(mi.deancFeeHolderAddress);
 			swapFeeHolder = KeyPair.fromAccountId(mi.swapFeeHolderAddress);
@@ -120,7 +150,6 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 
 		private Asset assetType;
 		private KeyPair assetIssuer;
-		private KeyPair assetBase;
 		private KeyPair offerFeeHolder;
 		private KeyPair deanchorFeeHolder;
 		private KeyPair swapFeeHolder;

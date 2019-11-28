@@ -9,15 +9,14 @@ import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.governance.scheduler.swap.SwapTaskWorker;
 import io.talken.dex.governance.scheduler.swap.WorkerProcessResult;
-import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.shared.DexTaskId;
+import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.SigningException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarSignerTSS;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 import org.stellar.sdk.PathPaymentOperation;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 import org.stellar.sdk.xdr.OperationResult;
@@ -53,11 +52,11 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 		DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.SWAP_PATHPAYMENT);
 		record.setPpTaskid(dexTaskId.getId());
 
-		TokenMeta.ManagedInfo sourceMeta;
-		TokenMeta.ManagedInfo targetMeta;
+		TokenMetaTable.ManagedInfo sourceMeta;
+		TokenMetaTable.ManagedInfo targetMeta;
 		try {
-			sourceMeta = tmService.getManaged(record.getSourceassetcode());
-			targetMeta = tmService.getManaged(record.getTargetassetcode());
+			sourceMeta = tmService.getManagedInfo(record.getSourceassetcode());
+			targetMeta = tmService.getManagedInfo(record.getTargetassetcode());
 		} catch(Exception ex) {
 			retryOrFail(record);
 			return new WorkerProcessResult.Builder(this, record).exception("get meta", ex);
@@ -69,10 +68,10 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 			sctxBuilder = stellarNetworkService.newChannelTxBuilder().setMemo(dexTaskId.getId())
 					.addOperation(
 							new PathPaymentOperation.Builder(
-									sourceMeta.getAssetType(),
+									sourceMeta.dexAssetType(),
 									StellarConverter.rawToActualString(record.getSourceamountraw()),
 									record.getSwapperaddr(),
-									targetMeta.getAssetType(),
+									targetMeta.dexAssetType(),
 									StellarConverter.rawToActualString(record.getTargetamountraw())
 							)
 									.setSourceAccount(record.getSwapperaddr())

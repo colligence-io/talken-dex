@@ -5,8 +5,8 @@ import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.collection.SingleKeyObject;
-import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.TokenMetaGovService;
+import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.service.integration.signer.SignServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,7 +33,7 @@ public abstract class TxSender implements SingleKeyObject<BlockChainPlatformEnum
 	}
 
 	public boolean buildAndSendTx(Bctx bctx, BctxLogRecord logRecord) throws Exception {
-		TokenMeta meta = tmService.getMeta(bctx.getSymbol());
+		TokenMetaTable.Meta meta = tmService.getTokenMeta(bctx.getSymbol());
 
 //		if(!meta.getPlatform().equals(bctx.getPlatform()))
 //			throw new BctxException("PlatformNotMatch", "platform not match");
@@ -41,7 +41,7 @@ public abstract class TxSender implements SingleKeyObject<BlockChainPlatformEnum
 		return sendTx(meta, bctx, logRecord);
 	}
 
-	public abstract boolean sendTx(TokenMeta meta, Bctx bctx, BctxLogRecord log) throws Exception;
+	public abstract boolean sendTx(TokenMetaTable.Meta meta, Bctx bctx, BctxLogRecord log) throws Exception;
 
 	protected SignServerService signServer() {
 		return signServerService;

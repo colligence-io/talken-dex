@@ -1,6 +1,7 @@
 package io.talken.dex.api.service;
 
 import io.talken.common.exception.common.TokenMetaNotFoundException;
+import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.AssetConvertException;
@@ -23,7 +24,7 @@ public class AssetConvertService {
 	// interchange assets, in order
 	private static final String[] INTERCHANGE = new String[]{"BTC", "ETH", "XLM", "CTX"};
 
-	public BigDecimal convert(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaNotFoundException {
+	public BigDecimal convert(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaNotFoundException, TokenMetaNotManagedException {
 		return convert(tmService.getAssetType(fromCode), amount, tmService.getAssetType(toCode));
 	}
 

@@ -10,8 +10,8 @@ import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.dex.governance.scheduler.swap.SwapTaskWorker;
 import io.talken.dex.governance.scheduler.swap.WorkerProcessResult;
-import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.shared.DexTaskId;
+import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.SigningException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
@@ -21,7 +21,6 @@ import io.talken.dex.shared.service.integration.anchor.AncServerDeanchorResponse
 import io.talken.dex.shared.service.integration.anchor.AnchorServerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.Server;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
@@ -60,9 +59,9 @@ public class SwapDeanchorWorker extends SwapTaskWorker {
 		// pick horizon server
 		Server server = stellarNetworkService.pickServer();
 
-		TokenMeta.ManagedInfo targetMeta;
+		TokenMetaTable.ManagedInfo targetMeta;
 		try {
-			targetMeta = tmService.getManaged(record.getTargetassetcode());
+			targetMeta = tmService.getManagedInfo(record.getTargetassetcode());
 		} catch(Exception ex) {
 			retryOrFail(record);
 			return new WorkerProcessResult.Builder(this, record).exception("get meta", ex);
@@ -74,8 +73,8 @@ public class SwapDeanchorWorker extends SwapTaskWorker {
 			sctxBuilder = stellarNetworkService.newChannelTxBuilder().setMemo(dexTaskId.getId())
 					.addOperation(
 							new PaymentOperation.Builder(
-									targetMeta.getBaseaddress(),
-									targetMeta.getAssetType(),
+									targetMeta.getIssuerAddress(),
+									targetMeta.dexAssetType(),
 									StellarConverter.rawToActualString(record.getTargetamountraw())
 							)
 									.setSourceAccount(record.getSwapperaddr())
@@ -96,7 +95,7 @@ public class SwapDeanchorWorker extends SwapTaskWorker {
 			deanchor_request.setSymbol(record.getTargetassetcode());
 			deanchor_request.setHash(ByteArrayUtil.toHexString(sctx.getTx().hash()));
 			deanchor_request.setFrom(record.getSwapperaddr());
-			deanchor_request.setTo(targetMeta.getBaseaddress());
+			deanchor_request.setTo(targetMeta.getIssuerAddress());
 			deanchor_request.setAddress(record.getPrivatetargetaddr());
 			deanchor_request.setValue(StellarConverter.rawToActual(record.getTargetamountraw()).doubleValue());
 			deanchor_request.setMemo(UTCUtil.getNow().toString());

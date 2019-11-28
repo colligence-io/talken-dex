@@ -6,11 +6,11 @@ import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskDeanchorRecord;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.bctx.monitor.stellar.DexTaskTransactionProcessError;
 import io.talken.dex.governance.service.bctx.monitor.stellar.DexTaskTransactionProcessResult;
 import io.talken.dex.governance.service.bctx.monitor.stellar.DexTaskTransactionProcessor;
+import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarTransferReceipt;
@@ -74,7 +74,7 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 
 			if(matchFound) {
 				BctxRecord bctxRecord = new BctxRecord();
-				TokenMeta meta = tmService.getMeta(taskRecord.getAssetcode());
+				TokenMetaTable.Meta meta = tmService.getTokenMeta(taskRecord.getAssetcode());
 
 				bctxRecord.setStatus(BctxStatusEnum.QUEUED);
 				bctxRecord.setBctxType(meta.getBctxType());

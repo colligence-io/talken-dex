@@ -1,6 +1,7 @@
 package io.talken.dex.api.service;
 
 import io.talken.common.exception.common.TokenMetaNotFoundException;
+import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.ApiSettings;
 import io.talken.dex.api.controller.dto.CalculateFeeResult;
@@ -49,13 +50,13 @@ public class FeeCalculationService {
 		swapFeeMap = apiSettings.getTask().getSwap().getAsset();
 	}
 
-	public CalculateFeeResult calculateOfferFee(boolean isSell, String sellAssetCode, String buyAssetCode, BigDecimal amount, BigDecimal price, boolean feeByTalk) throws TokenMetaNotFoundException, AssetConvertException, EffectiveAmountIsNegativeException {
+	public CalculateFeeResult calculateOfferFee(boolean isSell, String sellAssetCode, String buyAssetCode, BigDecimal amount, BigDecimal price, boolean feeByTalk) throws TokenMetaNotFoundException, AssetConvertException, EffectiveAmountIsNegativeException, TokenMetaNotManagedException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 
 		rtn.setSellAssetType(maService.getAssetType(sellAssetCode));
 		rtn.setBuyAssetType(maService.getAssetType(buyAssetCode));
 		rtn.setFeeAssetType((feeByTalk) ? maService.getAssetType("TALK") : rtn.getSellAssetType());
-		rtn.setFeeHolderAccount(maService.getOfferFeeHolderAccount(rtn.getFeeAssetCode()));
+		rtn.setFeeHolderAccount(maService.getManagedInfo(rtn.getFeeAssetCode()).dexOfferFeeHolderAccount());
 
 		BigDecimal sellAmount;
 		BigDecimal sellPrice;
@@ -90,12 +91,12 @@ public class FeeCalculationService {
 		return rtn;
 	}
 
-	public CalculateFeeResult calculateDeanchorFee(String sellAssetCode, BigDecimal amount, boolean feeByTalk) throws TokenMetaNotFoundException {
+	public CalculateFeeResult calculateDeanchorFee(String sellAssetCode, BigDecimal amount, boolean feeByTalk) throws TokenMetaNotFoundException, TokenMetaNotManagedException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 
 		rtn.setSellAssetType(maService.getAssetType(sellAssetCode));
 		rtn.setFeeAssetType(maService.getAssetType("TALK"));
-		rtn.setFeeHolderAccount(maService.getDeanchorFeeHolderAccount(rtn.getFeeAssetCode()));
+		rtn.setFeeHolderAccount(maService.getManagedInfo(rtn.getFeeAssetCode()).dexDeanchorFeeHolderAccount());
 
 		rtn.setFeeAmountRaw(StellarConverter.actualToRaw(deanchorFeeAmountTalk));
 		rtn.setSellAmountRaw(StellarConverter.actualToRaw(amount));
@@ -103,14 +104,14 @@ public class FeeCalculationService {
 		return rtn;
 	}
 
-	public CalculateFeeResult calculateSwapFee(String sourceAssetCode, BigDecimal sourceAmount, String targetAssetCode) throws SwapServiceNotAvailableException, SwapUnderMinimumAmountException, TokenMetaNotFoundException {
+	public CalculateFeeResult calculateSwapFee(String sourceAssetCode, BigDecimal sourceAmount, String targetAssetCode) throws SwapServiceNotAvailableException, SwapUnderMinimumAmountException, TokenMetaNotFoundException, TokenMetaNotManagedException {
 		DexSettings._Task._Swap._SwapFee swapFeeSetting = swapFeeMap.get(sourceAssetCode);
 
 		CalculateFeeResult rtn = new CalculateFeeResult();
 		rtn.setSellAssetType(maService.getAssetType(sourceAssetCode));
 		rtn.setSellAmountRaw(StellarConverter.actualToRaw(sourceAmount));
 		rtn.setBuyAssetType(maService.getAssetType(targetAssetCode));
-		rtn.setFeeHolderAccount(maService.getSwapFeeHolderAccount(sourceAssetCode));
+		rtn.setFeeHolderAccount(maService.getManagedInfo(rtn.getFeeAssetCode()).dexSwapFeeHolderAccount());
 		rtn.setFeeAssetType(rtn.getSellAssetType());
 
 		// check swap fee settings for source asset

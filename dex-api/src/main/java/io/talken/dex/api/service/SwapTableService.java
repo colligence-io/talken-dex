@@ -1,6 +1,7 @@
 package io.talken.dex.api.service;
 
 import io.talken.common.exception.common.TokenMetaNotFoundException;
+import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.exception.StellarException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
@@ -28,7 +29,7 @@ public class SwapTableService {
 	private TokenMetaService tmService;
 
 	@Cacheable("swapPredictSet")
-	public SwapPredictSet getSwapTable(String sourceAssetCode, String targetAssetCode) throws StellarException, TokenMetaNotFoundException {
+	public SwapPredictSet getSwapTable(String sourceAssetCode, String targetAssetCode) throws StellarException, TokenMetaNotFoundException, TokenMetaNotManagedException {
 		Asset sourceAssetType = tmService.getAssetType(sourceAssetCode);
 		Asset targetAssetType = tmService.getAssetType(targetAssetCode);
 

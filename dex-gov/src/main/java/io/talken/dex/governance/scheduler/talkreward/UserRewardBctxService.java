@@ -11,8 +11,8 @@ import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.collection.SingleKeyTable;
 import io.talken.common.util.integration.slack.AdminAlarmService;
-import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.TokenMetaGovService;
+import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.service.integration.wallet.TalkenWalletService;
 import org.jooq.Cursor;
@@ -66,9 +66,9 @@ public class UserRewardBctxService {
 		}
 	}
 
-	private DistStatus createDistStatus(TokenMeta meta) {
+	private DistStatus createDistStatus(TokenMetaTable.Meta meta) {
 		DistStatus ds = new DistStatus(meta.getSymbol());
-		ds.setDistributorAddress(meta.getManagedInfo().getDistributoraddress());
+		ds.setDistributorAddress(meta.getManagedInfo().getDistributorAddress());
 		return ds;
 	}
 
@@ -92,15 +92,15 @@ public class UserRewardBctxService {
 			UserRewardRecord rewardRecord = rewards.fetchNext();
 
 			// check private/trade wallet type
-			if (!rewardRecord.getPrivateWalletFlag()) {
+			if(!rewardRecord.getPrivateWalletFlag()) {
 				// TODO: reward(airdrop) to trade wallet
 				continue;
 			}
 
 			final String assetCode = rewardRecord.getAssetcode();
-			TokenMeta meta;
+			TokenMetaTable.Meta meta;
 			try {
-				meta = metaService.getMeta(assetCode);
+				meta = metaService.getTokenMeta(assetCode);
 			} catch(TokenMetaNotFoundException ex) {
 				if(!metaMissing.containsKey(assetCode)) {
 					metaMissing.put(assetCode, new AtomicInteger());

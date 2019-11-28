@@ -9,15 +9,14 @@ import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.governance.scheduler.swap.SwapTaskWorker;
 import io.talken.dex.governance.scheduler.swap.WorkerProcessResult;
-import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.shared.DexTaskId;
+import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.SigningException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarSignerTSS;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.Server;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
@@ -55,9 +54,9 @@ public class SwapFeeCollectWorker extends SwapTaskWorker {
 		// pick horizon server
 		Server server = stellarNetworkService.pickServer();
 
-		TokenMeta.ManagedInfo sourceMeta;
+		TokenMetaTable.ManagedInfo sourceMeta;
 		try {
-			sourceMeta = tmService.getManaged(record.getSourceassetcode());
+			sourceMeta = tmService.getManagedInfo(record.getSourceassetcode());
 		} catch(Exception ex) {
 			retryOrFail(record);
 			return new WorkerProcessResult.Builder(this, record).exception("get meta", ex);
@@ -85,7 +84,7 @@ public class SwapFeeCollectWorker extends SwapTaskWorker {
 					.addOperation(
 							new PaymentOperation.Builder(
 									record.getFcFeecollectaccount(),
-									sourceMeta.getAssetType(),
+									sourceMeta.dexAssetType(),
 									StellarConverter.rawToActualString(amount)
 							)
 									.setSourceAccount(record.getSwapperaddr())

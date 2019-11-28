@@ -1,6 +1,7 @@
 package io.talken.dex.api.controller.mapper;
 
 import io.talken.common.exception.common.TokenMetaNotFoundException;
+import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.config.auth.AuthInfo;
 import io.talken.dex.api.config.auth.AuthRequired;
@@ -13,7 +14,6 @@ import io.talken.dex.api.controller.dto.TaskTransactionResult;
 import io.talken.dex.api.controller.dto.TxListRequest;
 import io.talken.dex.api.service.AssetConvertService;
 import io.talken.dex.api.service.TaskTransactionListService;
-import io.talken.dex.api.service.integration.relay.RelayServerService;
 import io.talken.dex.shared.exception.AssetConvertException;
 import io.talken.dex.shared.exception.DexException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +46,7 @@ public class MiscController {
 					.convert(postBody.getFrom(), postBody.getAmount(), postBody.getTo())
 					.setScale(7, BigDecimal.ROUND_UP);
 			return DexResponse.buildResponse(result);
-		} catch(AssetConvertException | TokenMetaNotFoundException ex) {
+		} catch(AssetConvertException | TokenMetaNotFoundException | TokenMetaNotManagedException ex) {
 			return DexResponse.buildResponse(BigDecimal.ZERO);
 		}
 	}

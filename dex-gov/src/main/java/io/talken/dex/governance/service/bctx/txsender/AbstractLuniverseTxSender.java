@@ -7,8 +7,8 @@ import io.talken.common.persistence.jooq.tables.pojos.Bctx;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.JSONWriter;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.governance.service.TokenMeta;
 import io.talken.dex.governance.service.bctx.TxSender;
+import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.service.blockchain.ethereum.StandardERC20ContractFunctions;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 	}
 
 	@Override
-	public boolean sendTx(TokenMeta meta, Bctx bctx, BctxLogRecord log) throws Exception {
+	public boolean sendTx(TokenMetaTable.Meta meta, Bctx bctx, BctxLogRecord log) throws Exception {
 		String metaCA = null;
 		if(meta.getAux() != null && meta.getAux().containsKey(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID)) {
 			metaCA = meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString();

@@ -4,6 +4,7 @@ package io.talken.dex.api.service;
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.exception.TalkenException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
+import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.persistence.DexTaskRecord;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.User;
@@ -52,10 +53,10 @@ public class AnchorService {
 	private final PrivateWalletService pwService;
 	private final DSLContext dslContext;
 
-	public PrivateWalletTransferDTO anchor(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException {
+	public PrivateWalletTransferDTO anchor(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException, TokenMetaNotManagedException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
-		final String assetHolderAddress = tmService.getActiveHolderAccountAddress(request.getAssetCode());
+		final String assetHolderAddress = tmService.getManagedInfo(request.getAssetCode()).pickActiveHolderAccountAddress();
 		final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
 		final long userId = user.getId();
 
@@ -123,11 +124,11 @@ public class AnchorService {
 		return result;
 	}
 
-	public DeanchorResult deanchor(User user, DeanchorRequest request) throws TokenMetaNotFoundException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, SigningException, ActiveAssetHolderAccountNotFoundException, NotEnoughBalanceException {
+	public DeanchorResult deanchor(User user, DeanchorRequest request) throws TokenMetaNotFoundException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, SigningException, ActiveAssetHolderAccountNotFoundException, NotEnoughBalanceException, TokenMetaNotManagedException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
-		final KeyPair issuerAccount = tmService.getIssuerAccount(request.getAssetCode());
-		final String assetHolderAddress = tmService.getActiveHolderAccountAddress(request.getAssetCode());
+		final KeyPair issuerAccount = tmService.getManagedInfo(request.getAssetCode()).dexIssuerAccount();
+		final String assetHolderAddress = tmService.getManagedInfo(request.getAssetCode()).pickActiveHolderAccountAddress();
 		final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
 		final long userId = user.getId();
 

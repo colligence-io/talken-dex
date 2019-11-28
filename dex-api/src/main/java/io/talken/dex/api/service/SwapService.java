@@ -2,6 +2,7 @@ package io.talken.dex.api.service;
 
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
+import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.persistence.enums.DexSwapStatusEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.User;
@@ -25,7 +26,6 @@ import io.talken.dex.shared.service.integration.anchor.AnchorServerService;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
@@ -49,7 +49,7 @@ public class SwapService {
 
 	private static final String pivotAssetCode = "USDT";
 
-	public SwapResult swap(User user, SwapRequest request) throws SwapPredictionThresholdException, SwapServiceNotAvailableException, SwapPathNotAvailableException, TokenMetaNotFoundException, SwapUnderMinimumAmountException, StellarException, IntegrationException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, InternalServerErrorException {
+	public SwapResult swap(User user, SwapRequest request) throws SwapPredictionThresholdException, SwapServiceNotAvailableException, SwapPathNotAvailableException, TokenMetaNotFoundException, SwapUnderMinimumAmountException, StellarException, IntegrationException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, InternalServerErrorException, TokenMetaNotManagedException {
 		final long userId = user.getId();
 
 
@@ -84,7 +84,7 @@ public class SwapService {
 		}
 
 		// get service account addresses
-		String holderAddr = tmService.getActiveHolderAccountAddress(request.getSourceAssetCode());
+		String holderAddr = tmService.getManagedInfo(request.getSourceAssetCode()).pickActiveHolderAccountAddress();
 		String swapperAddr = pickSwapAccount();
 
 		// create task record
@@ -205,7 +205,7 @@ public class SwapService {
 		return "GAAZIQRCZ2WKTKQ5DE62ZI63PGDWWXKVT3FUAFB5OTBQDHOZINQEUMLM";
 	}
 
-	public SwapPredictionResult getSwapResultPrediction(String sourceAssetCode, BigDecimal sourceAmount, String targetAssetCode) throws StellarException, TokenMetaNotFoundException, SwapPathNotAvailableException, SwapServiceNotAvailableException, SwapUnderMinimumAmountException {
+	public SwapPredictionResult getSwapResultPrediction(String sourceAssetCode, BigDecimal sourceAmount, String targetAssetCode) throws StellarException, TokenMetaNotFoundException, SwapPathNotAvailableException, SwapServiceNotAvailableException, SwapUnderMinimumAmountException, TokenMetaNotManagedException {
 		CalculateFeeResult feeResult = feeCalculationService.calculateSwapFee(sourceAssetCode, sourceAmount, targetAssetCode);
 
 		// calculate target amount prediction
