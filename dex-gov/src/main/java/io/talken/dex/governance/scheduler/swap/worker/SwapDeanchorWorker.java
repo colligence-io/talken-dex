@@ -29,7 +29,8 @@ import org.stellar.sdk.responses.SubmitTransactionResponse;
 import java.io.IOException;
 import java.time.Duration;
 
-@Component
+// Service Disabled [TKN-1426]
+//@Component
 @Scope("singleton")
 @RequiredArgsConstructor
 public class SwapDeanchorWorker extends SwapTaskWorker {

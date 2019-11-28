@@ -26,7 +26,8 @@ import org.stellar.sdk.xdr.OperationType;
 import java.io.IOException;
 import java.time.Duration;
 
-@Component
+// Service Disabled [TKN-1426]
+//@Component
 @Scope("singleton")
 @RequiredArgsConstructor
 public class SwapPathPaymentWorker extends SwapTaskWorker {

@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-@Component
+// Service Disabled [TKN-1426]
+//@Component
 @Scope("singleton")
 @RequiredArgsConstructor
 public class SwapPathPaymentFailedWorker extends SwapTaskWorker {
