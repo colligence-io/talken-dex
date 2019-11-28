@@ -32,7 +32,8 @@ import java.security.GeneralSecurityException;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_SWAP;
 
-@Service
+// Service Disabled [TKN-1426]
+//@Service
 @Scope("singleton")
 @RequiredArgsConstructor
 public class SwapService {

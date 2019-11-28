@@ -16,7 +16,8 @@ import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_SWAP;
 
-@Component
+// Service Disabled [TKN-1426]
+//@Component
 public class SwapFeeCollectTaskTransactionProcessor implements DexTaskTransactionProcessor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(SwapFeeCollectTaskTransactionProcessor.class);
 

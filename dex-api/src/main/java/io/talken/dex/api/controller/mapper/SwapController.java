@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-
-@RestController
+// Service Disabled [TKN-1426]
+//@RestController
 public class SwapController {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(SwapController.class);
 
