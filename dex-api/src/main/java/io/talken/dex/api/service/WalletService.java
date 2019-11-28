@@ -1,45 +1,64 @@
 package io.talken.dex.api.service;
 
 import io.talken.common.persistence.jooq.tables.pojos.User;
+import io.talken.common.util.PostLaunchExecutor;
+import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.dto.TradeWalletResult;
 import io.talken.dex.shared.exception.TradeWalletCreateFailedException;
 import io.talken.dex.shared.service.tradewallet.TradeWalletInfo;
 import io.talken.dex.shared.service.tradewallet.TradeWalletService;
+import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.AssetTypeNative;
 import org.stellar.sdk.responses.AccountResponse;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.talken.common.persistence.jooq.Tables.USER;
+
 @Service
 @Scope("singleton")
 public class WalletService {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(WalletService.class);
 
 	@Autowired
 	private TradeWalletService twService;
 
+	@Autowired
+	private DSLContext dslContext;
+
+	@PostConstruct
+	private void test() {
+		PostLaunchExecutor.addTask(() -> {
+			try {
+				logger.logObjectAsJSON(getTradeWalletBalances(dslContext.selectFrom(USER).where(USER.ID.eq(22L)).fetchOneInto(User.class)));
+			} catch(Exception ex) {
+				logger.exception(ex);
+			}
+		});
+	}
+
 	public TradeWalletResult getTradeWalletBalances(User user) throws TradeWalletCreateFailedException {
 		TradeWalletInfo tw = twService.getTradeWallet(user);
 		TradeWalletResult rtn = new TradeWalletResult();
-		rtn.setActive(tw.isConfirmed());
+		Map<String, BigDecimal> balances = new HashMap<>();
 
 		if(tw.isConfirmed()) {
-			rtn.setAddress(tw.getAccountId());
-
-			Map<String, BigDecimal> balances = new HashMap<>();
-
 			for(AccountResponse.Balance balance : tw.getAccountResponse().getBalances()) {
 				if(!(balance.getAsset() instanceof AssetTypeNative)) {
 					balances.put(balance.getAssetCode(), new BigDecimal(balance.getBalance()).stripTrailingZeros());
 				}
 			}
-
-			rtn.setBalances(balances);
 		}
+
+		rtn.setActive(tw.isConfirmed());
+		rtn.setAddress(tw.getAccountId());
+		rtn.setBalances(balances);
 
 		return rtn;
 	}

@@ -118,10 +118,7 @@ public class TradeWalletService {
 		String walletString;
 		String accountId;
 		if(twRecord == null) {
-			// return as not confirmed status
-			if(!ensure) return rtn;
-
-			// generate address when ensure is true
+			// generate address
 			twRecord = new UserTradeWalletRecord();
 
 			try {
@@ -135,13 +132,13 @@ public class TradeWalletService {
 			} catch(Exception ex) {
 				throw new TradeWalletCreateFailedException(ex, "DB Error");
 			}
-		} else {
-			try {
-				walletString = twRecord.getSecret();
-				accountId = decryptSecret(user.getUid(), walletString).getAccountId();
-			} catch(Exception ex) {
-				throw new TradeWalletCreateFailedException(ex, "Crypto Error");
-			}
+		}
+
+		try {
+			walletString = twRecord.getSecret();
+			accountId = decryptSecret(user.getUid(), walletString).getAccountId();
+		} catch(Exception ex) {
+			throw new TradeWalletCreateFailedException(ex, "Crypto Error");
 		}
 		rtn.setAccountId(accountId);
 		rtn.setSecret(walletString);
