@@ -54,12 +54,15 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 
 			DexTaskDeanchorRecord taskRecord = opt_taskRecord.get();
 
-			// set signed tx catch flag to true
+			if(taskRecord.getDeanchorBctxId() != null || taskRecord.getSignedTxCatchFlag().equals(true))
+				throw new DexTaskTransactionProcessError("DeanchorAlreadyProcessed");
+
+			// mark signed tx catch flag to true
 			taskRecord.setSignedTxCatchFlag(true);
+			taskRecord.update();
 
 			// check payments ops matching for deanchortask
 			// update task as signed tx catched
-
 			final String from = taskRecord.getTradeaddr(); // from
 			final String to = taskRecord.getIssueraddr(); // to
 			final BigInteger amountRaw = StellarConverter.actualToRaw(taskRecord.getAmount()); // amount

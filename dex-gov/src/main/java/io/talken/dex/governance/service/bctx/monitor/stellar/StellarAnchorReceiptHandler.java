@@ -80,6 +80,7 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 		if(taskRecord == null) return;
 
 		taskRecord.setBcRefId(receipt.getHash());
+		taskRecord.update();
 
 		TokenMetaTable.ManagedInfo tm = tmService.getManagedInfo(taskRecord.getAssetcode());
 

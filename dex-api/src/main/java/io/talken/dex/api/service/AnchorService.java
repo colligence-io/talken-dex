@@ -38,6 +38,10 @@ import org.stellar.sdk.responses.SubmitTransactionResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Optional;
+
+import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
+import static io.talken.common.persistence.jooq.Tables.DEX_TASK_DEANCHOR;
 
 @Service
 @Scope("singleton")
@@ -53,7 +57,7 @@ public class AnchorService {
 	private final PrivateWalletService pwService;
 	private final DSLContext dslContext;
 
-	public PrivateWalletTransferDTO anchor(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException, TokenMetaNotManagedException {
+	public PrivateWalletTransferDTO anchor(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
 		final String assetHolderAddress = tmService.getManagedInfo(request.getAssetCode()).pickActiveHolderAccountAddress();
@@ -68,6 +72,18 @@ public class AnchorService {
 				throw new BlockChainPlatformNotSupportedException("No aux data for " + request.getAssetCode() + " found on meta.");
 			platform_aux = result.getAux().get(result.getPlatform().getAuxCode().name()).toString();
 		}
+
+		Optional<DexTaskAnchorRecord> sameRequest = dslContext.selectFrom(DEX_TASK_ANCHOR).where(
+				DEX_TASK_ANCHOR.PRIVATEADDR.eq(request.getPrivateWalletAddress())
+						.and(DEX_TASK_ANCHOR.ASSETCODE.eq(request.getAssetCode()))
+						.and(DEX_TASK_ANCHOR.AMOUNT.eq(amount))
+						.and(DEX_TASK_ANCHOR.BC_REF_ID.isNull())
+		).limit(1).fetchOptional();
+
+		if(sameRequest.isPresent()) {
+			throw new DuplicatedTaskFoundException(sameRequest.get().getTaskid());
+		}
+
 
 		String position;
 
@@ -124,7 +140,7 @@ public class AnchorService {
 		return result;
 	}
 
-	public DeanchorResult deanchor(User user, DeanchorRequest request) throws TokenMetaNotFoundException, StellarException, AssetConvertException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, SigningException, ActiveAssetHolderAccountNotFoundException, NotEnoughBalanceException, TokenMetaNotManagedException {
+	public DeanchorResult deanchor(User user, DeanchorRequest request) throws TokenMetaNotFoundException, StellarException, TradeWalletCreateFailedException, SigningException, ActiveAssetHolderAccountNotFoundException, NotEnoughBalanceException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 		final KeyPair issuerAccount = tmService.getManagedInfo(request.getAssetCode()).dexIssuerAccount();
@@ -133,6 +149,17 @@ public class AnchorService {
 		final long userId = user.getId();
 
 		String position;
+
+		Optional<DexTaskDeanchorRecord> sameRequest = dslContext.selectFrom(DEX_TASK_DEANCHOR).where(
+				DEX_TASK_DEANCHOR.PRIVATEADDR.eq(request.getPrivateWalletAddress())
+						.and(DEX_TASK_DEANCHOR.ASSETCODE.eq(request.getAssetCode()))
+						.and(DEX_TASK_DEANCHOR.AMOUNT.eq(amount))
+						.and(DEX_TASK_DEANCHOR.SIGNED_TX_CATCH_FLAG.ne(true))
+		).limit(1).fetchOptional();
+
+		if(sameRequest.isPresent()) {
+			throw new DuplicatedTaskFoundException(sameRequest.get().getTaskid());
+		}
 
 		// create task record
 		DexTaskDeanchorRecord taskRecord = new DexTaskDeanchorRecord();
