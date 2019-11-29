@@ -54,12 +54,12 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 
 	@Override
 	public void handle(Void _void, StellarTxReceipt txResult, StellarTransferReceipt receipt) throws Exception {
-		// check transfer is to holder
-		if(!checkHolder(receipt.getTo())) return;
-		logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), receipt.getAmountRaw(), receipt.getTokenSymbol(), receipt.getTokenIssuer());
-
 		// convert amount to stellar raw
 		BigDecimal amount = StellarConverter.rawToActual(receipt.getAmountRaw());
+
+		// check transfer is to holder
+		if(!checkHolder(receipt.getTo())) return;
+		logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getTokenIssuer());
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
 				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(receipt.getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(receipt.getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)));

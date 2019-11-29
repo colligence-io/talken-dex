@@ -9,7 +9,6 @@ import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.governance.service.bctx.monitor.AbstractAnchorReceiptHandler;
 import io.talken.dex.shared.TokenMetaTable;
-import io.talken.dex.shared.TokenMetaTableUpdateEventHandler;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
@@ -48,7 +47,6 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 	public void handle(EthBlock.Block block, TransactionReceipt txResult, EthereumTransferReceipt receipt) throws Exception {
 		// check transfer is to holder
 		if(!checkHolder(receipt.getTo())) return;
-		logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), receipt.getValue(), receipt.getTokenSymbol(), receipt.getContractAddress());
 
 		// convert amount to actual
 		BigDecimal amountValue = new BigDecimal(receipt.getValue());
@@ -59,6 +57,8 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 			amount = Convert.fromWei(amountValue.toString(), Convert.Unit.ETHER);
 		}
 		amount = StellarConverter.scale(amount);
+
+		logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getContractAddress());
 
 //		logger.verbose("{} {} {}", receipt.getValue(), receipt.getTokenDecimal(), amount.stripTrailingZeros().toPlainString());
 
