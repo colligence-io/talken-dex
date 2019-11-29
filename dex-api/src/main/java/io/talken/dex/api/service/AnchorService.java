@@ -29,6 +29,8 @@ import io.talken.dex.shared.service.tradewallet.TradeWalletInfo;
 import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.DatePart;
+import org.jooq.impl.DSL;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.KeyPair;
@@ -73,11 +75,13 @@ public class AnchorService {
 			platform_aux = result.getAux().get(result.getPlatform().getAuxCode().name()).toString();
 		}
 
+		// check there is same unchecked request within 1 minutes
 		Optional<DexTaskAnchorRecord> sameRequest = dslContext.selectFrom(DEX_TASK_ANCHOR).where(
 				DEX_TASK_ANCHOR.PRIVATEADDR.eq(request.getPrivateWalletAddress())
 						.and(DEX_TASK_ANCHOR.ASSETCODE.eq(request.getAssetCode()))
 						.and(DEX_TASK_ANCHOR.AMOUNT.eq(amount))
 						.and(DEX_TASK_ANCHOR.BC_REF_ID.isNull())
+						.and(DEX_TASK_ANCHOR.CREATE_TIMESTAMP.gt(DSL.localDateTimeSub(DSL.currentLocalDateTime(), 60, DatePart.SECOND)))
 		).limit(1).fetchOptional();
 
 		if(sameRequest.isPresent()) {
@@ -150,11 +154,13 @@ public class AnchorService {
 
 		String position;
 
+		// check there is same unchecked request within 1 minutes
 		Optional<DexTaskDeanchorRecord> sameRequest = dslContext.selectFrom(DEX_TASK_DEANCHOR).where(
 				DEX_TASK_DEANCHOR.PRIVATEADDR.eq(request.getPrivateWalletAddress())
 						.and(DEX_TASK_DEANCHOR.ASSETCODE.eq(request.getAssetCode()))
 						.and(DEX_TASK_DEANCHOR.AMOUNT.eq(amount))
 						.and(DEX_TASK_DEANCHOR.SIGNED_TX_CATCH_FLAG.ne(true))
+						.and(DEX_TASK_DEANCHOR.CREATE_TIMESTAMP.gt(DSL.localDateTimeSub(DSL.currentLocalDateTime(), 60, DatePart.SECOND)))
 		).limit(1).fetchOptional();
 
 		if(sameRequest.isPresent()) {
