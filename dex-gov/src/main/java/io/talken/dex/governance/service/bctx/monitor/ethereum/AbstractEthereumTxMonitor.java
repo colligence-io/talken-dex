@@ -1,5 +1,6 @@
 package io.talken.dex.governance.service.bctx.monitor.ethereum;
 
+import io.talken.common.RunningProfile;
 import io.talken.common.util.BeanCopier;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
@@ -65,7 +66,8 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 				return;
 			}
 
-			targetBlockNumber = latestBlockNumber.subtract(CONFIRM_BLOCK_COUNT);
+			// substract latest-CONFIRM_BLOCK_COUNT for block confirmation
+			targetBlockNumber = (RunningProfile.isProduction()) ? latestBlockNumber.subtract(CONFIRM_BLOCK_COUNT) : latestBlockNumber;
 
 			Optional<BigInteger> opt_lastBlock = Optional.ofNullable(getServiceStatusLastBlock());
 
