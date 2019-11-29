@@ -44,6 +44,7 @@ public abstract class AbstractAnchorReceiptHandler implements TokenMetaTableUpda
 	}
 
 	protected synchronized boolean checkHolder(String holderAddress) {
+		if(holderAddress == null) return false;
 		// do not check holder address and return true for all addresses.
 		// this is intended to sure anchor task working even if meta update is failed.
 		if(holderAddresses == null || holderAddresses.isEmpty()) return true;

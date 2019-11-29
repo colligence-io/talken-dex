@@ -60,13 +60,14 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 
 		logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getContractAddress());
 
-//		logger.verbose("{} {} {}", receipt.getValue(), receipt.getTokenDecimal(), amount.stripTrailingZeros().toPlainString());
-
 		// return amount is smaller than zero
 		if(amount.compareTo(BigDecimal.ZERO) <= 0) return;
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
-				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(receipt.getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(receipt.getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)))
+				.and(
+						DEX_TASK_ANCHOR.PRIVATEADDR.equalIgnoreCase(receipt.getFrom())
+								.and(DEX_TASK_ANCHOR.HOLDERADDR.equalIgnoreCase(receipt.getTo()))
+								.and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)))
 				.and(getBcTypeCondition(receipt.getContractAddress()));
 
 		DexTaskAnchorRecord taskRecord = dslContext.selectFrom(DEX_TASK_ANCHOR)
@@ -76,7 +77,12 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 				.fetchOne();
 
 		// finish if task not found
-		if(taskRecord == null) return;
+		if(taskRecord == null) {
+			logger.error("Transfer to holder detected but no matching anchor task found : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getContractAddress());
+			return;
+		} else {
+			logger.info("Transfer to holder detected for {} : {} -> {} : {} {}({})", taskRecord.getTaskid(), receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getContractAddress());
+		}
 
 		taskRecord.setBcRefId(receipt.getHash());
 

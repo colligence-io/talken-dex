@@ -4,6 +4,7 @@ import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.monitor.ethereum.AbstractEthereumAnchorReceiptHandler;
 import org.jooq.Condition;
+import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,7 @@ public class LuniverseAnchorReceiptHandler extends AbstractEthereumAnchorReceipt
 		if(contractAddr == null) {
 			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.LUNIVERSE);
 		} else {
-			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.LUNIVERSE_MAIN_TOKEN).and(DEX_TASK_ANCHOR.PLATFORM_AUX.eq(contractAddr));
+			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.LUNIVERSE_MAIN_TOKEN).and(DEX_TASK_ANCHOR.PLATFORM_AUX.equalIgnoreCase(contractAddr));
 		}
 	}
 }

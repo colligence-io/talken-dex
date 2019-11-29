@@ -4,6 +4,7 @@ package io.talken.dex.governance.service.bctx.monitor.ethereum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.util.PrefixedLogger;
 import org.jooq.Condition;
+import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ public class EthereumAnchorReceiptHandler extends AbstractEthereumAnchorReceiptH
 		if(contractAddr == null) {
 			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.ETHEREUM);
 		} else {
-			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN).and(DEX_TASK_ANCHOR.PLATFORM_AUX.eq(contractAddr));
+			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN).and(DEX_TASK_ANCHOR.PLATFORM_AUX.equalIgnoreCase(contractAddr));
 		}
 	}
 }

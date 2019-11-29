@@ -59,7 +59,6 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 
 		// check transfer is to holder
 		if(!checkHolder(receipt.getTo())) return;
-		logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getTokenIssuer());
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
 				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(receipt.getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(receipt.getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)));
@@ -77,7 +76,12 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 				.fetchOne();
 
 		// finish if task not found
-		if(taskRecord == null) return;
+		if(taskRecord == null) {
+			logger.error("Transfer to holder detected but no matching anchor task found : [{}] {} -> {} : {} {}({})", receipt.getHash(), receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getTokenIssuer());
+			return;
+		} else {
+			logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getTokenIssuer());
+		}
 
 		taskRecord.setBcRefId(receipt.getHash());
 		taskRecord.update();
