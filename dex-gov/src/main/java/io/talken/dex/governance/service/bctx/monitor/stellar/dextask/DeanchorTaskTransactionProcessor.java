@@ -71,6 +71,7 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 			for(StellarTransferReceipt rcpt : txResult.getPaymentReceipts()) {
 				// found matching payment
 				if(rcpt.getFrom().equalsIgnoreCase(from) && rcpt.getTo().equalsIgnoreCase(to) && rcpt.getAmountRaw().equals(amountRaw)) {
+					logger.info("Transfer to issuer detected : {} -> {} : {} {}({})", rcpt.getFrom(), rcpt.getTo(), taskRecord.getAmount(), rcpt.getTokenSymbol(), rcpt.getTokenIssuer());
 					matchFound = true;
 				}
 			}
@@ -106,6 +107,7 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 					taskRecord.store();
 				});
 			} else {
+				logger.error("Matching transfer not found on () for {}", txResult.getTxHash(), txResult.getTaskId());
 				taskRecord.setErrorposition("matching_tx");
 				taskRecord.setErrorcode("no match found");
 				taskRecord.setErrormessage("Matching payment not found in tx");
