@@ -32,7 +32,7 @@ public abstract class AbstractAnchorReceiptHandler implements TokenMetaTableUpda
 			if(meta.isManaged()) {
 				if(bcTypes.contains(meta.getBctxType())) {
 					for(TokenMetaTable.HolderAccountInfo assetHolderAccount : meta.getManagedInfo().getAssetHolderAccounts()) {
-						holderAddresses.add(assetHolderAccount.getAddress());
+						holderAddresses.add(assetHolderAccount.getAddress().toLowerCase());
 					}
 				}
 			}
@@ -48,6 +48,6 @@ public abstract class AbstractAnchorReceiptHandler implements TokenMetaTableUpda
 		// do not check holder address and return true for all addresses.
 		// this is intended to sure anchor task working even if meta update is failed.
 		if(holderAddresses == null || holderAddresses.isEmpty()) return true;
-		else return holderAddresses.contains(holderAddress);
+		else return holderAddresses.contains(holderAddress.toLowerCase());
 	}
 }

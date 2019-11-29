@@ -65,8 +65,8 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
 				.and(
-						DEX_TASK_ANCHOR.PRIVATEADDR.equalIgnoreCase(receipt.getFrom())
-								.and(DEX_TASK_ANCHOR.HOLDERADDR.equalIgnoreCase(receipt.getTo()))
+						DEX_TASK_ANCHOR.VC4S_PRIVATEADDR.eq(receipt.getFrom().toLowerCase())
+								.and(DEX_TASK_ANCHOR.VC4S_HOLDERADDR.eq(receipt.getTo().toLowerCase()))
 								.and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)))
 				.and(getBcTypeCondition(receipt.getContractAddress()));
 

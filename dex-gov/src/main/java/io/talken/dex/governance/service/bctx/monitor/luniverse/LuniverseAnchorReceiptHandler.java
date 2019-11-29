@@ -37,7 +37,7 @@ public class LuniverseAnchorReceiptHandler extends AbstractEthereumAnchorReceipt
 		if(contractAddr == null) {
 			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.LUNIVERSE);
 		} else {
-			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.LUNIVERSE_MAIN_TOKEN).and(DEX_TASK_ANCHOR.PLATFORM_AUX.equalIgnoreCase(contractAddr));
+			return DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.LUNIVERSE_MAIN_TOKEN).and(DEX_TASK_ANCHOR.VC4S_PLATFORM_AUX.eq(contractAddr.toLowerCase()));
 		}
 	}
 }
