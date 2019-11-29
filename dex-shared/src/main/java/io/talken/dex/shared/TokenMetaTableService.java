@@ -5,6 +5,9 @@ import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.util.PrefixedLogger;
 import org.stellar.sdk.Asset;
 
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public abstract class TokenMetaTableService {
@@ -13,13 +16,26 @@ public abstract class TokenMetaTableService {
 	private TokenMetaTable tmTable = new TokenMetaTable();
 	private TokenMetaTable miTable = new TokenMetaTable();
 
+	private List<TokenMetaTableUpdateEventHandler> updateHandlers = null;
+
 	public void updateStorage(TokenMetaTable tmTable) {
 		TokenMetaTable newMiTable = new TokenMetaTable();
 
-		for(Map.Entry<String, TokenMetaTable.Meta> _kv : tmTable.entrySet()) {
+		for(
+				Map.Entry<String, TokenMetaTable.Meta> _kv : tmTable.entrySet()) {
 			if(_kv.getValue().isManaged()) {
 				_kv.getValue().getManagedInfo().prepareCache();
 				newMiTable.put(_kv.getKey(), _kv.getValue());
+			}
+		}
+
+		if(updateHandlers != null) {
+			for(TokenMetaTableUpdateEventHandler updateHandler : updateHandlers) {
+				try {
+					updateHandler.handleTokenMetaTableUpdate(tmTable);
+				} catch(Exception ex) {
+					logger.exception(ex, "Exception detected while updating meta data. this may cause unpredictable results.");
+				}
 			}
 		}
 
@@ -27,6 +43,15 @@ public abstract class TokenMetaTableService {
 		this.miTable = newMiTable;
 
 		logger.info("Token Meta loaded : all {}, managed {}", tmTable.size(), miTable.size());
+	}
+
+	public synchronized void addUpdateEventHandler(TokenMetaTableUpdateEventHandler handler) {
+		if(this.updateHandlers == null) this.updateHandlers = new ArrayList<>();
+
+		this.updateHandlers.add(handler);
+		// initial run
+		handler.handleTokenMetaTableUpdate(this.tmTable);
+		logger.info("TokenMetaTableUpdateEventHandler {} registered.", handler.getClass().getSimpleName());
 	}
 
 	public TokenMetaTable.Meta getTokenMeta(String symbol) throws TokenMetaNotFoundException {

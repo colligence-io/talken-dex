@@ -22,6 +22,8 @@ public class LuniverseAnchorReceiptHandler extends AbstractEthereumAnchorReceipt
 
 	public LuniverseAnchorReceiptHandler() {
 		super(logger);
+		addBcType(BlockChainPlatformEnum.LUNIVERSE);
+		addBcType(BlockChainPlatformEnum.LUNIVERSE_MAIN_TOKEN);
 	}
 
 	@PostConstruct

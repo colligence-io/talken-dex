@@ -7,6 +7,7 @@ import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.bctx.TxMonitor;
+import io.talken.dex.governance.service.bctx.monitor.AbstractAnchorReceiptHandler;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
@@ -26,7 +27,7 @@ import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
 @Service
 @Scope("singleton")
-public class StellarAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Void, StellarTxReceipt, StellarTransferReceipt> {
+public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Void, StellarTxReceipt, StellarTransferReceipt> {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarAnchorReceiptHandler.class);
 
 	@Autowired
@@ -41,6 +42,11 @@ public class StellarAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Voi
 	@Autowired
 	private StellarTxMonitor txMonitor;
 
+	public StellarAnchorReceiptHandler() {
+		addBcType(BlockChainPlatformEnum.STELLAR);
+		addBcType(BlockChainPlatformEnum.STELLAR_TOKEN);
+	}
+
 	@PostConstruct
 	private void init() {
 		txMonitor.addReceiptHandler(this);
@@ -48,6 +54,10 @@ public class StellarAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Voi
 
 	@Override
 	public void handle(Void _void, StellarTxReceipt txResult, StellarTransferReceipt receipt) throws Exception {
+		// check transfer is to holder
+		if(!checkHolder(receipt.getTo())) return;
+		logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), receipt.getAmountRaw(), receipt.getTokenSymbol(), receipt.getTokenIssuer());
+
 		// convert amount to stellar raw
 		BigDecimal amount = StellarConverter.rawToActual(receipt.getAmountRaw());
 

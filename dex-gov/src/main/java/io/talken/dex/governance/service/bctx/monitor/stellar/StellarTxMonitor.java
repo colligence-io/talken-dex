@@ -185,7 +185,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarT
 				DexTaskTransactionProcessor taskTransactionProcessor = processors.get(txResult.getTaskId().getType());
 				DexTaskTransactionProcessResult result;
 				try {
-					logger.info("{} ({}) => {}", txResult.getTaskId(), txResult.getTxHash(), taskTransactionProcessor.getClass().getSimpleName());
+					logger.info("Catched {} transaction ({}) => {}", txResult.getTaskId(), txResult.getTxHash(), taskTransactionProcessor.getClass().getSimpleName());
 					result = taskTransactionProcessor.process(txmRecord.getId(), txResult);
 				} catch(Exception ex) {
 					result = DexTaskTransactionProcessResult.error("Unknown", ex);

@@ -22,10 +22,13 @@ public class EthereumAnchorReceiptHandler extends AbstractEthereumAnchorReceiptH
 
 	public EthereumAnchorReceiptHandler() {
 		super(logger);
+		addBcType(BlockChainPlatformEnum.ETHEREUM);
+		addBcType(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN);
 	}
 
 	@PostConstruct
 	private void init() {
+
 		txMonitor.addReceiptHandler(this);
 	}
 

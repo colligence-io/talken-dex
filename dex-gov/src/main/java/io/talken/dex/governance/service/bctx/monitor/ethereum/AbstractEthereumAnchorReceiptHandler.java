@@ -7,7 +7,9 @@ import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.bctx.TxMonitor;
+import io.talken.dex.governance.service.bctx.monitor.AbstractAnchorReceiptHandler;
 import io.talken.dex.shared.TokenMetaTable;
+import io.talken.dex.shared.TokenMetaTableUpdateEventHandler;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
@@ -24,7 +26,7 @@ import java.math.RoundingMode;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
-public abstract class AbstractEthereumAnchorReceiptHandler implements TxMonitor.ReceiptHandler<EthBlock.Block, TransactionReceipt, EthereumTransferReceipt> {
+public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAnchorReceiptHandler implements TxMonitor.ReceiptHandler<EthBlock.Block, TransactionReceipt, EthereumTransferReceipt> {
 	private PrefixedLogger logger;
 
 	@Autowired
@@ -44,6 +46,10 @@ public abstract class AbstractEthereumAnchorReceiptHandler implements TxMonitor.
 
 	@Override
 	public void handle(EthBlock.Block block, TransactionReceipt txResult, EthereumTransferReceipt receipt) throws Exception {
+		// check transfer is to holder
+		if(!checkHolder(receipt.getTo())) return;
+		logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), receipt.getValue(), receipt.getTokenSymbol(), receipt.getContractAddress());
+
 		// convert amount to actual
 		BigDecimal amountValue = new BigDecimal(receipt.getValue());
 		BigDecimal amount;
