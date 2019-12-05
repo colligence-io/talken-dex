@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Data
 public class DistStatus implements SingleKeyObject<String> {
 	private String assetCode;
-	private String distributorAddress;
 	private AtomicInteger count = new AtomicInteger();
 	private BigDecimal amount = BigDecimal.ZERO;
 

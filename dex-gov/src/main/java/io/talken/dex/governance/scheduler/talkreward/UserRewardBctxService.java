@@ -3,7 +3,9 @@ package io.talken.dex.governance.scheduler.talkreward;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.BctxStatusEnum;
+import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
+import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.persistence.jooq.tables.records.UserRewardRecord;
 import io.talken.common.util.PrefixedLogger;
@@ -14,7 +16,14 @@ import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
+import io.talken.dex.shared.exception.TradeWalletCreateFailedException;
+import io.talken.dex.shared.exception.TradeWalletRebalanceException;
+import io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
+import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import io.talken.dex.shared.service.integration.wallet.TalkenWalletService;
+import io.talken.dex.shared.service.tradewallet.TradeWalletInfo;
+import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import org.jooq.Cursor;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +31,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -29,6 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.talken.common.persistence.jooq.Tables.USER;
 import static io.talken.common.persistence.jooq.Tables.USER_REWARD;
 
 @Service
@@ -49,7 +60,13 @@ public class UserRewardBctxService {
 	private TokenMetaGovService metaService;
 
 	@Autowired
-	private TalkenWalletService walletService;
+	private TalkenWalletService pwService;
+
+	@Autowired
+	private TradeWalletService twService;
+
+	@Autowired
+	private StellarNetworkService stellarNetworkService;
 
 	private static final int tickLimit = 100;
 
@@ -66,13 +83,7 @@ public class UserRewardBctxService {
 		}
 	}
 
-	private DistStatus createDistStatus(TokenMetaTable.Meta meta) {
-		DistStatus ds = new DistStatus(meta.getSymbol());
-		ds.setDistributorAddress(meta.getManagedInfo().getDistributorAddress());
-		return ds;
-	}
-
-	private void checkRewardAndQueueBctx() throws TokenMetaNotFoundException {
+	private void checkRewardAndQueueBctx() {
 		SingleKeyTable<String, DistStatus> dStatus = new SingleKeyTable<>();
 
 		Map<String, AtomicInteger> metaMissing = new HashMap<>();
@@ -91,12 +102,6 @@ public class UserRewardBctxService {
 		while(rewards.hasNext()) {
 			UserRewardRecord rewardRecord = rewards.fetchNext();
 
-			// check private/trade wallet type
-			if(!rewardRecord.getPrivateWalletFlag()) {
-				// TODO: reward(airdrop) to trade wallet
-				continue;
-			}
-
 			final String assetCode = rewardRecord.getAssetcode();
 			TokenMetaTable.Meta meta;
 			try {
@@ -109,79 +114,29 @@ public class UserRewardBctxService {
 				continue;
 			}
 
-			if(!dStatus.has(assetCode)) dStatus.insert(createDistStatus(meta));
-
-			DistStatus ds = dStatus.select(assetCode);
-
-			if(ds.getDistributorAddress() == null || ds.getDistributorAddress().isEmpty())
-				continue; // skip distribution if no distributor set
-
-			String userWalletAddress;
-
 			try {
-				ObjectPair<Boolean, String> address = walletService.getAddress(rewardRecord.getUserId(), meta.getPlatform(), meta.getSymbol());
-				if(address.first().equals(false)) {
-					logger.debug("User {} does not have valid wallet, postpone reward action for 12 hours", rewardRecord.getUserId());
-					// User Wallet not created
-					// Postpone reward for 12 hours.
-					rewardRecord.setScheduleTimestamp(UTCUtil.getNow().plusHours(12));
-					rewardRecord.store();
-					continue;
+				BctxRecord bctxRecord;
+
+				if(rewardRecord.getPrivateWalletFlag()) {
+					bctxRecord = getPrivateWalletBctxRecord(rewardRecord, meta);
+				} else {
+					bctxRecord = processTradeWalletReward(rewardRecord, meta);
 				}
 
-				userWalletAddress = address.second();
+				if(bctxRecord != null) {
+					TransactionBlockExecutor.of(txMgr).transactional(() -> {
+						dslContext.attach(bctxRecord);
+						bctxRecord.store();
+						rewardRecord.setBctxId(bctxRecord.getId());
+						rewardRecord.setCheckFlag(true);
+						rewardRecord.store();
+					});
 
-				if(userWalletAddress == null) {
-					// Luniverse address not found
-					// Postpone reward for 24 hours.
-					logger.warn("User {} wallet does not containes {} wallet address. postpone reward action for 24 hours", rewardRecord.getUserId(), meta.getSymbol());
-					rewardRecord.setScheduleTimestamp(UTCUtil.getNow().plusHours(24));
-					rewardRecord.store();
-					continue;
+					if(!dStatus.has(assetCode)) dStatus.insert(new DistStatus(meta.getSymbol()));
+					DistStatus ds = dStatus.select(assetCode);
+					ds.getCount().incrementAndGet();
+					ds.setAmount(ds.getAmount().add(rewardRecord.getAmount()));
 				}
-			} catch(IntegrationException ex) {
-				try {
-					logger.warn("Cannot get user wallet : {} {}", ex.getResult().getErrorCode(), ex.getResult().getErrorMessage());
-				} catch(Exception ex2) {
-					logger.exception(ex2);
-				}
-				continue;
-			} catch(Exception ex) {
-
-				alarmService.exception(logger, ex);
-				continue;
-			}
-
-			try {
-				BctxRecord bctxRecord = new BctxRecord();
-				bctxRecord.setStatus(BctxStatusEnum.QUEUED);
-				bctxRecord.setBctxType(meta.getBctxType());
-				bctxRecord.setSymbol(meta.getSymbol());
-
-				switch(meta.getBctxType()) {
-					case LUNIVERSE_MAIN_TOKEN:
-					case ETHEREUM_ERC20_TOKEN:
-						bctxRecord.setPlatformAux(meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString());
-						break;
-					case STELLAR_TOKEN:
-						bctxRecord.setPlatformAux(meta.getAux().get(TokenMetaAuxCodeEnum.STELLAR_ISSUER_ID).toString());
-						break;
-				}
-
-				bctxRecord.setAddressFrom(ds.getDistributorAddress());
-				bctxRecord.setAddressTo(userWalletAddress);
-				bctxRecord.setAmount(rewardRecord.getAmount());
-				bctxRecord.setNetfee(BigDecimal.ZERO);
-
-				TransactionBlockExecutor.of(txMgr).transactional(() -> {
-					dslContext.attach(bctxRecord);
-					bctxRecord.store();
-					rewardRecord.setBctxId(bctxRecord.getId());
-					rewardRecord.setCheckFlag(true);
-					rewardRecord.store();
-				});
-				ds.getCount().incrementAndGet();
-				ds.setAmount(ds.getAmount().add(rewardRecord.getAmount()));
 			} catch(Exception ex) {
 				alarmService.error(logger, "Reward distribute failed : {} {}", ex.getClass().getSimpleName(), ex.getMessage());
 				alarmService.exception(logger, ex);
@@ -193,10 +148,6 @@ public class UserRewardBctxService {
 		}
 
 		for(DistStatus distStatus : dStatus.select()) {
-			if(distStatus.getDistributorAddress() == null || distStatus.getDistributorAddress().isEmpty()) {
-				alarmService.info(logger, "Reward Error : {} distributor address is not set", distStatus.getAssetCode());
-			}
-
 			if(distStatus.getCount().get() > 0) {
 				alarmService.info(logger, "Reward Queued : {} {} ({} transaction)", distStatus.getAmount().stripTrailingZeros().toPlainString(), distStatus.getAssetCode(), distStatus.getCount().get());
 			}
@@ -204,5 +155,112 @@ public class UserRewardBctxService {
 		for(Map.Entry<String, AtomicInteger> missing : metaMissing.entrySet()) {
 			alarmService.info(logger, "Reward Error : no meta for {} found. {} rewards is skipped.", missing.getKey(), missing.getValue().get());
 		}
+	}
+
+	private BctxRecord getPrivateWalletBctxRecord(UserRewardRecord rewardRecord, TokenMetaTable.Meta meta) {
+		String userWalletAddress;
+		String distributorAddress = meta.getManagedInfo().getDistributorAddress();
+
+		if(distributorAddress == null) {
+			alarmService.error(logger, "Reward Error : {} distributor address is not set", meta.getSymbol());
+			return null;
+		}
+
+		try {
+			ObjectPair<Boolean, String> address = pwService.getAddress(rewardRecord.getUserId(), meta.getPlatform(), meta.getSymbol());
+			if(address.first().equals(false)) {
+				logger.debug("User {} does not have valid wallet, postpone reward action for 12 hours", rewardRecord.getUserId());
+				// User Wallet not created
+				// Postpone reward for 12 hours.
+				rewardRecord.setScheduleTimestamp(UTCUtil.getNow().plusHours(12));
+				rewardRecord.store();
+				return null;
+			}
+
+			userWalletAddress = address.second();
+
+			if(userWalletAddress == null) {
+				// Luniverse address not found
+				// Postpone reward for 24 hours.
+				logger.warn("User {} wallet does not containes {} wallet address. postpone reward action for 24 hours", rewardRecord.getUserId(), meta.getSymbol());
+				rewardRecord.setScheduleTimestamp(UTCUtil.getNow().plusHours(24));
+				rewardRecord.store();
+				return null;
+			}
+		} catch(IntegrationException ex) {
+			try {
+				logger.warn("Cannot get user wallet : {} {}", ex.getResult().getErrorCode(), ex.getResult().getErrorMessage());
+			} catch(Exception ex2) {
+				logger.exception(ex2);
+			}
+			return null;
+		} catch(Exception ex) {
+			alarmService.exception(logger, ex);
+			return null;
+		}
+
+		BctxRecord bctxRecord = new BctxRecord();
+		bctxRecord.setStatus(BctxStatusEnum.QUEUED);
+		bctxRecord.setBctxType(meta.getBctxType());
+		bctxRecord.setSymbol(meta.getSymbol());
+
+		switch(meta.getBctxType()) {
+			case LUNIVERSE_MAIN_TOKEN:
+			case ETHEREUM_ERC20_TOKEN:
+				bctxRecord.setPlatformAux(meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString());
+				break;
+			case STELLAR_TOKEN:
+				bctxRecord.setPlatformAux(meta.getAux().get(TokenMetaAuxCodeEnum.STELLAR_ISSUER_ID).toString());
+				break;
+		}
+
+		bctxRecord.setAddressFrom(meta.getManagedInfo().getDistributorAddress());
+		bctxRecord.setAddressTo(userWalletAddress);
+		bctxRecord.setAmount(rewardRecord.getAmount());
+		bctxRecord.setNetfee(BigDecimal.ZERO);
+
+		return bctxRecord;
+	}
+
+	private BctxRecord processTradeWalletReward(UserRewardRecord rewardRecord, TokenMetaTable.Meta meta) throws TradeWalletCreateFailedException, TradeWalletRebalanceException {
+		if(!meta.isManaged()) {
+			alarmService.error(logger, "Reward Error : {} is not managed asset", meta.getSymbol());
+			return null;
+		}
+
+		TokenMetaTable.ManagedInfo managedInfo = meta.getManagedInfo();
+
+		User user = dslContext.selectFrom(USER).where(USER.ID.eq(rewardRecord.getUserId())).fetchOneInto(User.class);
+		TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
+
+		StellarChannelTransaction.Builder sctxBuilder = stellarNetworkService.newChannelTxBuilder();
+		try {
+			ObjectPair<Boolean, BigDecimal> rebalanced = twService.addNativeBalancingOperation(sctxBuilder, tradeWallet, false, meta.getManagedInfo().getAssetCode());
+			if(rebalanced.first()) {
+				logger.debug("Rebalance trade wallet {} (#{}) for reward.", tradeWallet.getAccountId(), user.getId());
+				SubmitTransactionResponse rebalanceResponse = sctxBuilder.buildAndSubmit();
+				if(!rebalanceResponse.isSuccess()) {
+					ObjectPair<String, String> errorInfo = StellarConverter.getResultCodesFromExtra(rebalanceResponse);
+					logger.error("Cannot rebalance trade wallet {} {} : {} {}", user.getId(), tradeWallet.getAccountId(), errorInfo.first(), errorInfo.second());
+					throw new TradeWalletRebalanceException(errorInfo.first());
+				}
+			}
+		} catch(TradeWalletRebalanceException ex) {
+			throw ex;
+		} catch(Exception ex) {
+			throw new TradeWalletRebalanceException(ex, "Cannot rebalance trade wallet.");
+		}
+
+		BctxRecord bctxRecord = new BctxRecord();
+		bctxRecord.setStatus(BctxStatusEnum.QUEUED);
+		bctxRecord.setBctxType(BlockChainPlatformEnum.STELLAR_TOKEN);
+		bctxRecord.setSymbol(meta.getManagedInfo().getAssetCode());
+		bctxRecord.setPlatformAux(meta.getManagedInfo().getIssuerAddress());
+		bctxRecord.setAddressFrom(meta.getManagedInfo().getIssuerAddress());
+		bctxRecord.setAddressTo(tradeWallet.getAccountId());
+		bctxRecord.setAmount(rewardRecord.getAmount());
+		bctxRecord.setNetfee(BigDecimal.ZERO);
+
+		return bctxRecord;
 	}
 }
