@@ -17,7 +17,8 @@ public class StellarTransferReceipt {
 	private Long timeStamp;
 	private String sourceAccount;
 	private Long seq;
-	private BigInteger feePaid;
+	private BigInteger feeMax;
+	private BigInteger feeCharged;
 	@Indexed
 	private String from;
 	@Indexed

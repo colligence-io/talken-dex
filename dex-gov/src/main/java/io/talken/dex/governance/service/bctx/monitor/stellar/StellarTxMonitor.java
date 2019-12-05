@@ -172,7 +172,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarT
 		txmRecord.setEnvelopexdr(txResult.getResponse().getEnvelopeXdr());
 		txmRecord.setResultxdr(txResult.getResponse().getResultXdr());
 		txmRecord.setResultmetaxdr(txResult.getResponse().getResultMetaXdr());
-		txmRecord.setFeepaid(txResult.getResponse().getFeePaid());
+		txmRecord.setFeepaid(txResult.getResponse().getFeeCharged());
 		dslContext.attach(txmRecord);
 		txmRecord.store();
 
@@ -230,7 +230,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarT
 		receiptObj.put("resultXdr", txResult.getResponse().getResultXdr());
 		receiptObj.put("envelopeXdr", txResult.getResponse().getEnvelopeXdr());
 		receiptObj.put("resultMetaXdr", txResult.getResponse().getResultMetaXdr());
-		receiptObj.put("feePaid", txResult.getResponse().getFeePaid());
+		receiptObj.put("feePaid", txResult.getResponse().getFeeCharged());
 		receiptObj.put("sourceAccount", txResult.getResponse().getSourceAccount());
 		receiptObj.put("createdAt", txResult.getResponse().getCreatedAt());
 

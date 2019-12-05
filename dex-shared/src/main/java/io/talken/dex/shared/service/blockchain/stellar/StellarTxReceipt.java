@@ -103,7 +103,8 @@ public class StellarTxReceipt {
 						rcpt.setPagingToken(this.response.getPagingToken());
 						rcpt.setHash(this.response.getHash());
 						rcpt.setSourceAccount(this.response.getSourceAccount());
-						rcpt.setFeePaid(BigInteger.valueOf(this.response.getFeePaid()));
+						if(this.response.getMaxFee() != null) rcpt.setFeeMax(BigInteger.valueOf(this.response.getMaxFee()));
+						rcpt.setFeeCharged(BigInteger.valueOf(this.response.getFeeCharged()));
 						rcpt.setSeq(this.response.getSourceAccountSequence());
 						rcpt.setAssetType(operation.getAsset().getType());
 						rcpt.setTimeStamp(UTCUtil.toTimestamp_s(StellarConverter.toLocalDateTime(this.response.getCreatedAt())));

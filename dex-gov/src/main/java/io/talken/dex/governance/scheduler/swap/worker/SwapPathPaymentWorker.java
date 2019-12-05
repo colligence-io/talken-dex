@@ -17,7 +17,7 @@ import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarSignerTSS;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
-import org.stellar.sdk.PathPaymentOperation;
+import org.stellar.sdk.PathPaymentStrictReceiveOperation;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 import org.stellar.sdk.xdr.OperationResult;
 import org.stellar.sdk.xdr.OperationType;
@@ -67,7 +67,7 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 		try {
 			sctxBuilder = stellarNetworkService.newChannelTxBuilder().setMemo(dexTaskId.getId())
 					.addOperation(
-							new PathPaymentOperation.Builder(
+							new PathPaymentStrictReceiveOperation.Builder(
 									sourceMeta.dexAssetType(),
 									StellarConverter.rawToActualString(record.getSourceamountraw()),
 									record.getSwapperaddr(),
@@ -121,8 +121,8 @@ public class SwapPathPaymentWorker extends SwapTaskWorker {
 		Long spentRaw = null;
 		try {
 			for(OperationResult operationResult : txResponse.getDecodedTransactionResult().get().getResult().getResults()) {
-				if(operationResult.getTr().getDiscriminant() == OperationType.PATH_PAYMENT) {
-					spentRaw = operationResult.getTr().getPathPaymentResult().getSuccess().getOffers()[0].getAmountBought().getInt64();
+				if(operationResult.getTr().getDiscriminant() == OperationType.PATH_PAYMENT_STRICT_RECEIVE) {
+					spentRaw = operationResult.getTr().getPathPaymentStrictReceiveResult().getSuccess().getOffers()[0].getAmountBought().getInt64();
 				}
 			}
 		} catch(Exception ex) {
