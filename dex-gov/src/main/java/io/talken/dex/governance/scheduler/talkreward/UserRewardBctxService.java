@@ -70,34 +70,59 @@ public class UserRewardBctxService {
 
 	private static final int tickLimit = 100;
 
+	private boolean isSuspended = false;
+
 	@PostConstruct
 	private void init() {
 	}
 
-	@Scheduled(fixedDelay = 60000, initialDelay = 4000)
+	public void suspend() {
+		logger.info("UserRewardService SUSPENDED by admin.");
+		isSuspended = true;
+	}
+
+	public void resume() {
+		logger.info("UserRewardService RESUMED by admin.");
+		isSuspended = false;
+	}
+
+	@Scheduled(fixedDelay = 6000, initialDelay = 4000)
 	private void rewardToBctx() {
+		if(isSuspended) return;
 		try {
-			checkRewardAndQueueBctx();
+			// do new rewards first
+			checkRewardAndQueueBctx(
+					dslContext.selectFrom(USER_REWARD)
+					.where(USER_REWARD.APPROVEMENT_FLAG.eq(true)
+							.and(USER_REWARD.CHECK_FLAG.eq(false))
+							.and(USER_REWARD.BCTX_ID.isNull())
+							.and(USER_REWARD.SCHEDULE_TIMESTAMP.isNull())
+					)
+					.limit(tickLimit)
+					.fetchLazy()
+			);
+
+			// check scheduled rewards
+			checkRewardAndQueueBctx(
+					dslContext.selectFrom(USER_REWARD)
+					.where(USER_REWARD.APPROVEMENT_FLAG.eq(true)
+							.and(USER_REWARD.CHECK_FLAG.eq(false))
+							.and(USER_REWARD.BCTX_ID.isNull())
+							.and(USER_REWARD.SCHEDULE_TIMESTAMP.le(UTCUtil.getNow()))
+					)
+					.limit(tickLimit)
+					.fetchLazy()
+			);
+
 		} catch(Exception ex) {
 			alarmService.exception(logger, ex);
 		}
 	}
 
-	private void checkRewardAndQueueBctx() {
+	private void checkRewardAndQueueBctx(Cursor<UserRewardRecord> rewards) {
 		SingleKeyTable<String, DistStatus> dStatus = new SingleKeyTable<>();
 
 		Map<String, AtomicInteger> metaMissing = new HashMap<>();
-
-		Cursor<UserRewardRecord> rewards = dslContext.selectFrom(USER_REWARD)
-				.where(USER_REWARD.APPROVEMENT_FLAG.eq(true)
-						.and(USER_REWARD.CHECK_FLAG.eq(false))
-						.and(USER_REWARD.BCTX_ID.isNull())
-						.and(USER_REWARD.SCHEDULE_TIMESTAMP.isNull()
-								.or(USER_REWARD.SCHEDULE_TIMESTAMP.le(UTCUtil.getNow()))
-						)
-				)
-				.limit(tickLimit)
-				.fetchLazy();
 
 		while(rewards.hasNext()) {
 			UserRewardRecord rewardRecord = rewards.fetchNext();
