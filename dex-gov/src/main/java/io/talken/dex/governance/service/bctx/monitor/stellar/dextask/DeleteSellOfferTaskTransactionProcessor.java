@@ -16,8 +16,8 @@ import java.util.Optional;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_DELETEOFFER;
 
 @Component
-public class DeleteOfferTaskTransactionProcessor implements DexTaskTransactionProcessor {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(DeleteOfferTaskTransactionProcessor.class);
+public class DeleteSellOfferTaskTransactionProcessor implements DexTaskTransactionProcessor {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(DeleteSellOfferTaskTransactionProcessor.class);
 
 	@Autowired
 	private DSLContext dslContext;

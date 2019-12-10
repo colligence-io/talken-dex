@@ -16,9 +16,4 @@ public class CreateOfferRequest {
 	private BigDecimal amount;
 	@NotNull
 	private BigDecimal price;
-	private Boolean feeByTalk;
-
-	public Boolean getFeeByTalk() {
-		return (feeByTalk != null) ? feeByTalk : false;
-	}
 }

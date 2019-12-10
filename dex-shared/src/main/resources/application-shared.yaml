@@ -23,8 +23,7 @@ talken:
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
     task:
       createOffer:
-        feeRate: 0.001
-        feeRateTalkFactor: 0.5
+        feeRatePivot: 0.01
       deanchor:
         feeAmountTalk: 50
       swap:

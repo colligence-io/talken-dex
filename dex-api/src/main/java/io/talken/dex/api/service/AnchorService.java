@@ -183,7 +183,7 @@ public class AnchorService {
 		taskRecord.setFeebytalk(true);
 
 		CalculateFeeResult feeResult;
-		feeResult = feeCalculationService.calculateDeanchorFee(request.getAssetCode(), amount, true);
+		feeResult = feeCalculationService.calculateDeanchorFee(request.getAssetCode(), amount);
 		BigDecimal deancAmount = StellarConverter.rawToActual(feeResult.getSellAmountRaw());
 		BigDecimal feeAmount = StellarConverter.rawToActual(feeResult.getFeeAmountRaw());
 
@@ -205,6 +205,21 @@ public class AnchorService {
 		try {
 			sctxBuilder = stellarNetworkService.newChannelTxBuilder();
 
+			// build deanchor operation
+			sctxBuilder
+					.setMemo(dexTaskId.getId())
+					.addOperation(
+							new PaymentOperation
+									.Builder(
+									issuerAccount.getAccountId(),
+									feeResult.getSellAssetType(),
+									StellarConverter.rawToActualString(feeResult.getSellAmountRaw())
+							).setSourceAccount(tradeWallet.getAccountId())
+									.build()
+					)
+					.addSigner(new StellarSignerAccount(twService.extractKeyPair(tradeWallet)));
+
+
 			// build fee operation
 			if(feeResult.getFeeAmountRaw().compareTo(BigInteger.ZERO) > 0) {
 				sctxBuilder
@@ -219,20 +234,6 @@ public class AnchorService {
 						)
 						.addSigner(new StellarSignerAccount(twService.extractKeyPair(tradeWallet)));
 			}
-
-			// build deanchor operation
-			sctxBuilder
-					.setMemo(dexTaskId.getId())
-					.addOperation(
-							new PaymentOperation
-									.Builder(
-									issuerAccount.getAccountId(),
-									feeResult.getSellAssetType(),
-									StellarConverter.rawToActualString(feeResult.getSellAmountRaw())
-							).setSourceAccount(tradeWallet.getAccountId())
-									.build()
-					)
-					.addSigner(new StellarSignerAccount(twService.extractKeyPair(tradeWallet)));
 		} catch(TalkenException tex) {
 			DexTaskRecord.writeError(taskRecord, position, tex);
 			throw tex;

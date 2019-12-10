@@ -15,4 +15,7 @@ public class DeleteOfferResult {
 	private String sellAssetCode;
 	private String buyAssetCode;
 	private BigDecimal price;
+
+	private String refundAssetCode;
+	private BigDecimal refundAmount;
 }

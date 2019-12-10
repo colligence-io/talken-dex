@@ -16,8 +16,8 @@ import java.util.Optional;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_CREATEOFFER;
 
 @Component
-public class CreateOfferTaskTransactionProcessor implements DexTaskTransactionProcessor {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(CreateOfferTaskTransactionProcessor.class);
+public class CreateSellOfferTaskTransactionProcessor implements DexTaskTransactionProcessor {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(CreateSellOfferTaskTransactionProcessor.class);
 
 	@Autowired
 	private DSLContext dslContext;

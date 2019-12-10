@@ -6,7 +6,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.ApiSettings;
 import io.talken.dex.api.controller.dto.CalculateFeeResult;
 import io.talken.dex.shared.DexSettings;
-import io.talken.dex.shared.exception.AssetConvertException;
+import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.EffectiveAmountIsNegativeException;
 import io.talken.dex.shared.exception.SwapServiceNotAvailableException;
 import io.talken.dex.shared.exception.SwapUnderMinimumAmountException;
@@ -30,73 +30,67 @@ public class FeeCalculationService {
 	private ApiSettings apiSettings;
 
 	@Autowired
-	private TokenMetaService maService;
-
-	@Autowired
-	private AssetConvertService assetConvertService;
+	private TokenMetaService tmService;
 
 	private BigDecimal deanchorFeeAmountTalk;
-	private BigDecimal offerFeeRate;
-	private BigDecimal offerFeeRateTalkFactor;
+	private BigDecimal offerFeeRatePivot;
 	private Map<String, DexSettings._Task._Swap._SwapFee> swapFeeMap;
 
 	private static final BigInteger MINIMUM_FEE_RAW = BigInteger.ONE;
 
+	private static TokenMetaTable.ManagedInfo PIVOT_ASSET_MI;
+
 	@PostConstruct
-	private void init() {
+	private void init() throws TokenMetaNotFoundException, TokenMetaNotManagedException {
 		deanchorFeeAmountTalk = apiSettings.getTask().getDeanchor().getFeeAmountTalk();
-		offerFeeRate = apiSettings.getTask().getCreateOffer().getFeeRate();
-		offerFeeRateTalkFactor = apiSettings.getTask().getCreateOffer().getFeeRateTalkFactor();
+		offerFeeRatePivot = apiSettings.getTask().getCreateOffer().getFeeRatePivot();
 		swapFeeMap = apiSettings.getTask().getSwap().getAsset();
+		PIVOT_ASSET_MI = tmService.getManagedInfo(DexSettings.PIVOT_ASSET_CODE);
 	}
 
-	public CalculateFeeResult calculateOfferFee(boolean isSell, String sellAssetCode, String buyAssetCode, BigDecimal amount, BigDecimal price, boolean feeByTalk) throws TokenMetaNotFoundException, AssetConvertException, EffectiveAmountIsNegativeException, TokenMetaNotManagedException {
+	public CalculateFeeResult calculateSellOfferFee(String sellAssetCode, BigDecimal sellAmount, BigDecimal sellPrice) throws TokenMetaNotFoundException, TokenMetaNotManagedException, EffectiveAmountIsNegativeException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
+		rtn.setSellAssetType(tmService.getAssetType(sellAssetCode));
+		rtn.setBuyAssetType(PIVOT_ASSET_MI.dexAssetType());
+		rtn.setFeeAssetType(PIVOT_ASSET_MI.dexAssetType());
+		rtn.setFeeHolderAccount(PIVOT_ASSET_MI.dexOfferFeeHolderAccount());
 
-		rtn.setSellAssetType(maService.getAssetType(sellAssetCode));
-		rtn.setBuyAssetType(maService.getAssetType(buyAssetCode));
-		rtn.setFeeAssetType((feeByTalk) ? maService.getAssetType("TALK") : rtn.getSellAssetType());
-		rtn.setFeeHolderAccount(maService.getManagedInfo(rtn.getFeeAssetCode()).dexOfferFeeHolderAccount());
+		BigDecimal buyAmount = sellAmount.multiply(sellPrice);
+		BigDecimal feeAmount = buyAmount.multiply(offerFeeRatePivot);
 
-		BigDecimal sellAmount;
-		BigDecimal sellPrice;
-		if(isSell) {
-			sellPrice = price;
-			sellAmount = StellarConverter.scale(amount);
-		} else {
-			sellPrice = BigDecimal.ONE.setScale(18, BigDecimal.ROUND_UP).divide(price, BigDecimal.ROUND_UP);
-			sellAmount = StellarConverter.scale(amount.multiply(price));
-		}
-		BigInteger calculatedSellAmountRaw;
+		if(buyAmount.compareTo(BigDecimal.ZERO) <= 0)
+			throw new EffectiveAmountIsNegativeException(rtn.getBuyAssetCode(), StellarConverter.actualToString(buyAmount));
 
-		// normal fee rate and no discount when selling TALK
-		if(sellAssetCode.equalsIgnoreCase("TALK") || !feeByTalk) {
-			BigInteger feeAmountRaw = StellarConverter.actualToRaw(sellAmount.multiply(offerFeeRate));
-			rtn.setFeeAmountRaw(feeAmountRaw.equals(BigInteger.ZERO) ? MINIMUM_FEE_RAW : feeAmountRaw);
-			calculatedSellAmountRaw = StellarConverter.actualToRaw(sellAmount).subtract(rtn.getFeeAmountRaw());
-		} else {
-			BigDecimal sellAssetFeeAmount = sellAmount.multiply(offerFeeRate).multiply(offerFeeRateTalkFactor);
-			BigDecimal talkFeeAmount = assetConvertService.convert(rtn.getSellAssetType(), sellAssetFeeAmount, rtn.getFeeAssetType());
-			// TODO : handle when fee is zero
-			rtn.setFeeAmountRaw(StellarConverter.actualToRaw(talkFeeAmount));
-			calculatedSellAmountRaw = StellarConverter.actualToRaw(sellAmount);
-		}
-
-		if(calculatedSellAmountRaw.compareTo(BigInteger.ZERO) == 0)
-			throw new EffectiveAmountIsNegativeException(rtn.getFeeAssetCode(), StellarConverter.actualToString(rtn.getFeeAmount()));
-
-		rtn.setSellAmountRaw(calculatedSellAmountRaw);
-		rtn.setBuyAmountRaw(StellarConverter.actualToRaw(StellarConverter.rawToActual(calculatedSellAmountRaw).multiply(sellPrice)));
+		rtn.setSellAmountRaw(StellarConverter.actualToRaw(sellAmount));
+		rtn.setBuyAmountRaw(StellarConverter.actualToRaw(buyAmount));
+		rtn.setFeeAmountRaw(StellarConverter.actualToRaw(feeAmount));
 
 		return rtn;
 	}
 
-	public CalculateFeeResult calculateDeanchorFee(String sellAssetCode, BigDecimal amount, boolean feeByTalk) throws TokenMetaNotFoundException, TokenMetaNotManagedException {
+	public CalculateFeeResult calculateBuyOfferFee(String buyAssetCode, BigDecimal buyAmount, BigDecimal buyPrice) throws TokenMetaNotFoundException, TokenMetaNotManagedException {
+		CalculateFeeResult rtn = new CalculateFeeResult();
+		rtn.setSellAssetType(PIVOT_ASSET_MI.dexAssetType());
+		rtn.setBuyAssetType(tmService.getAssetType(buyAssetCode));
+		rtn.setFeeAssetType(PIVOT_ASSET_MI.dexAssetType());
+		rtn.setFeeHolderAccount(PIVOT_ASSET_MI.dexOfferFeeHolderAccount());
+
+		BigDecimal sellAmount = buyAmount.multiply(buyPrice);
+		BigDecimal feeAmount = sellAmount.multiply(offerFeeRatePivot);
+
+		rtn.setSellAmountRaw(StellarConverter.actualToRaw(sellAmount));
+		rtn.setBuyAmountRaw(StellarConverter.actualToRaw(buyAmount));
+		rtn.setFeeAmountRaw(StellarConverter.actualToRaw(feeAmount));
+
+		return rtn;
+	}
+
+	public CalculateFeeResult calculateDeanchorFee(String sellAssetCode, BigDecimal amount) throws TokenMetaNotFoundException, TokenMetaNotManagedException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 
-		rtn.setSellAssetType(maService.getAssetType(sellAssetCode));
-		rtn.setFeeAssetType(maService.getAssetType("TALK"));
-		rtn.setFeeHolderAccount(maService.getManagedInfo(rtn.getFeeAssetCode()).dexDeanchorFeeHolderAccount());
+		rtn.setSellAssetType(tmService.getAssetType(sellAssetCode));
+		rtn.setFeeAssetType(tmService.getAssetType("TALK"));
+		rtn.setFeeHolderAccount(tmService.getManagedInfo(rtn.getFeeAssetCode()).dexDeanchorFeeHolderAccount());
 
 		rtn.setFeeAmountRaw(StellarConverter.actualToRaw(deanchorFeeAmountTalk));
 		rtn.setSellAmountRaw(StellarConverter.actualToRaw(amount));
@@ -108,10 +102,10 @@ public class FeeCalculationService {
 		DexSettings._Task._Swap._SwapFee swapFeeSetting = swapFeeMap.get(sourceAssetCode);
 
 		CalculateFeeResult rtn = new CalculateFeeResult();
-		rtn.setSellAssetType(maService.getAssetType(sourceAssetCode));
+		rtn.setSellAssetType(tmService.getAssetType(sourceAssetCode));
 		rtn.setSellAmountRaw(StellarConverter.actualToRaw(sourceAmount));
-		rtn.setBuyAssetType(maService.getAssetType(targetAssetCode));
-		rtn.setFeeHolderAccount(maService.getManagedInfo(rtn.getFeeAssetCode()).dexSwapFeeHolderAccount());
+		rtn.setBuyAssetType(tmService.getAssetType(targetAssetCode));
+		rtn.setFeeHolderAccount(tmService.getManagedInfo(rtn.getFeeAssetCode()).dexSwapFeeHolderAccount());
 		rtn.setFeeAssetType(rtn.getSellAssetType());
 
 		// check swap fee settings for source asset

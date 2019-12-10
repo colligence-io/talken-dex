@@ -177,8 +177,6 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarT
 		txmRecord.store();
 
 		try {
-			txmRecord.setOfferidfromresult(txResult.getOfferIdFromResult());
-
 			// run processor
 			if(processors.containsKey(txResult.getTaskId().getType())) {
 

@@ -21,7 +21,7 @@ public class StellarChannel implements Comparable<StellarChannel> {
 
 	@Override
 	public int compareTo(StellarChannel other) {
-		return balance.compareTo(other.balance);
+		return balance.compareTo(other.balance) * -1;
 	}
 
 	public void update(AccountResponse ar) {

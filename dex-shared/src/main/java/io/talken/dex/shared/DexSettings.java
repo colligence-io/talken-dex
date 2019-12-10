@@ -17,6 +17,8 @@ public class DexSettings {
 	@Autowired
 	private VaultSecretReader secretReader;
 
+	public static String PIVOT_ASSET_CODE = "USDT";
+
 	@PostConstruct
 	private void readVaultSecret() {
 		// dex settings
@@ -56,8 +58,7 @@ public class DexSettings {
 		@Getter
 		@Setter
 		public static class _CreateOffer {
-			private BigDecimal feeRate;
-			private BigDecimal feeRateTalkFactor;
+			private BigDecimal feeRatePivot;
 		}
 
 		@Getter

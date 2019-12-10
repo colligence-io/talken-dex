@@ -34,7 +34,7 @@ public class OfferController {
 	@RequestMapping(value = RequestMappings.OFFER_SELL_FEE, method = RequestMethod.POST)
 	public DexResponse<CalculateFeeResult> calculateSellOfferFee(@RequestBody CreateOfferRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(feeCalculationService.calculateOfferFee(true, postBody.getSellAssetCode(), postBody.getBuyAssetCode(), postBody.getAmount(), postBody.getPrice(), postBody.getFeeByTalk()));
+		return DexResponse.buildResponse(feeCalculationService.calculateSellOfferFee(postBody.getSellAssetCode(), postBody.getAmount(), postBody.getPrice()));
 	}
 
 	@AuthRequired
@@ -57,7 +57,7 @@ public class OfferController {
 	@RequestMapping(value = RequestMappings.OFFER_BUY_FEE, method = RequestMethod.POST)
 	public DexResponse<CalculateFeeResult> calculateBuyOfferFee(@RequestBody CreateOfferRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(feeCalculationService.calculateOfferFee(false, postBody.getSellAssetCode(), postBody.getBuyAssetCode(), postBody.getAmount(), postBody.getPrice(), postBody.getFeeByTalk()));
+		return DexResponse.buildResponse(feeCalculationService.calculateBuyOfferFee(postBody.getBuyAssetCode(), postBody.getAmount(), postBody.getPrice()));
 	}
 
 	@AuthRequired
