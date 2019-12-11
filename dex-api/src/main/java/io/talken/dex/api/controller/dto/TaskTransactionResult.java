@@ -35,7 +35,5 @@ public class TaskTransactionResult {
 
 	public Long getFeePaid() {return dexTxmon.getFeepaid();}
 
-	public Long getOfferId() {return dexTxmon.getOfferidfromresult();}
-
 	public Boolean getProcessSuccessFlag() {return dexTxmon.getProcessSuccessFlag();}
 }

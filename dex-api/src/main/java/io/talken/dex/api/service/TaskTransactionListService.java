@@ -33,8 +33,8 @@ public class TaskTransactionListService {
 
 		// common condition step
 		Condition condition = DEX_TXMON.SOURCEACCOUNT.eq(postBody.getSourceAccount());
-		if(postBody.getOfferId() != null)
-			condition = condition.and(DEX_TXMON.OFFERIDFROMRESULT.eq(postBody.getOfferId()));
+//		if(postBody.getOfferId() != null)
+//			condition = condition.and(DEX_TXMON.OFFERIDFROMRESULT.eq(postBody.getOfferId()));
 		if(postBody.getTaskId() != null)
 			condition = condition.and(DEX_TXMON.MEMOTASKID.eq(postBody.getTaskId()));
 		if(postBody.getTxHash() != null)
