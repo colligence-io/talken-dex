@@ -1,6 +1,7 @@
 package io.talken.dex.shared.service.tradewallet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.talken.common.persistence.jooq.tables.pojos.User;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
@@ -15,9 +16,10 @@ import java.math.BigDecimal;
 public final class TradeWalletInfo {
 	private boolean isConfirmed;
 
+	@JsonIgnore
 	@Getter(AccessLevel.PUBLIC)
 	@Setter(AccessLevel.NONE)
-	private String uid;
+	private User user;
 
 	@Getter(AccessLevel.PUBLIC)
 	@Setter(AccessLevel.PACKAGE)
@@ -31,8 +33,12 @@ public final class TradeWalletInfo {
 	@JsonIgnore
 	private AccountResponse accountResponse = null;
 
-	public TradeWalletInfo(String uid) {
-		this.uid = uid;
+	public TradeWalletInfo(User user) {
+		this.user = user;
+	}
+
+	public String getUid() {
+		return user.getUid();
 	}
 
 	public BigDecimal getBalance(Asset asset) {

@@ -26,12 +26,6 @@ talken:
         feeRatePivot: 0.01
       deanchor:
         feeAmountTalk: 50
-      swap:
-        asset:
-          TALK:
-            feeRate: 0.05
-            feeMinimum: 10
-            feeMaximum: 100
     integration:
       relay:
         apiUrl: http://192.168.0.33:3888/graphql

@@ -1,7 +1,10 @@
 package io.talken.dex.shared;
 
 import io.talken.common.persistence.vault.VaultSecretReader;
-import io.talken.common.persistence.vault.data.*;
+import io.talken.common.persistence.vault.data.VaultSecretDataDexSettings;
+import io.talken.common.persistence.vault.data.VaultSecretDataLuniverse;
+import io.talken.common.persistence.vault.data.VaultSecretDataSlack;
+import io.talken.common.persistence.vault.data.VaultSecretDataStellar;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
 
 @Data
 public class DexSettings {
@@ -53,7 +54,6 @@ public class DexSettings {
 	public static class _Task {
 		private _CreateOffer createOffer;
 		private _Deanchor deanchor;
-		private _Swap swap;
 
 		@Getter
 		@Setter
@@ -65,20 +65,6 @@ public class DexSettings {
 		@Setter
 		public static class _Deanchor {
 			private BigDecimal feeAmountTalk;
-		}
-
-		@Getter
-		@Setter
-		public static class _Swap {
-			private Map<String, _SwapFee> asset;
-
-			@Getter
-			@Setter
-			public static class _SwapFee {
-				private BigDecimal feeRate;
-				private BigDecimal feeMaximum;
-				private BigDecimal feeMinimum;
-			}
 		}
 	}
 

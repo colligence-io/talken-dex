@@ -36,13 +36,11 @@ import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 import org.stellar.sdk.xdr.OperationResult;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_CREATEOFFER;
-import static io.talken.common.persistence.jooq.Tables.USER;
 
 @Service
 @Scope("singleton")
@@ -57,36 +55,6 @@ public class OfferService {
 	private final TokenMetaService tmService;
 	private final DSLContext dslContext;
 	private final SignServerService signServerService;
-
-	@PostConstruct
-	private void init() {
-		try {
-			User u = dslContext.selectFrom(USER).where(USER.ID.eq(22L)).fetchOneInto(User.class);
-
-			CreateOfferRequest req = new CreateOfferRequest();
-
-			req.setSellAssetCode("USDT");
-			req.setBuyAssetCode("TALK");
-			req.setAmount(BigDecimal.valueOf(100));
-			req.setPrice(BigDecimal.valueOf(0.01));
-
-
-			CreateOfferResult result = createBuyOffer(u, req);
-
-			logger.logObjectAsJSON(result);
-
-			DeleteOfferRequest dreq = new DeleteOfferRequest();
-			dreq.setSellAssetCode("USDT");
-			dreq.setBuyAssetCode("TALK");
-			dreq.setOfferId(result.getOfferId());
-			dreq.setPrice(BigDecimal.valueOf(0.01));
-
-			logger.logObjectAsJSON(deleteBuyOffer(u, dreq));
-
-		} catch(Exception ex) {
-			logger.exception(ex);
-		}
-	}
 
 	public CreateOfferResult createSellOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException, ParameterViolationException {
 		if(!request.getBuyAssetCode().equalsIgnoreCase(DexSettings.PIVOT_ASSET_CODE))
@@ -135,8 +103,6 @@ public class OfferService {
 			} else {
 				feeResult = feeCalculationService.calculateBuyOfferFee(request.getBuyAssetCode(), amount, price);
 			}
-
-			logger.logObjectAsJSON(feeResult);
 
 			// set amount log
 			taskRecord.setSellamount(feeResult.getSellAmount());

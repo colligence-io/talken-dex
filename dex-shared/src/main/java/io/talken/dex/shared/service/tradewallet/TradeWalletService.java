@@ -39,6 +39,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.talken.common.persistence.jooq.Tables.USER;
 import static io.talken.common.persistence.jooq.Tables.USER_TRADE_WALLET;
 
 @Service
@@ -102,6 +103,17 @@ public class TradeWalletService {
 		}
 	}
 
+	public TradeWalletInfo getTradeWallet(String walletAddr) throws TradeWalletCreateFailedException {
+		User user = dslContext.select(USER.asterisk())
+				.from(USER.leftOuterJoin(USER_TRADE_WALLET).on(USER.ID.eq(USER_TRADE_WALLET.USER_ID)))
+				.where(USER_TRADE_WALLET.ACCOUNTID.eq(walletAddr))
+				.fetchOneInto(User.class);
+
+		if(user == null) throw new TradeWalletCreateFailedException("User trade wallet " + walletAddr + " not found");
+
+		return loadTradeWallet(user, false);
+	}
+
 	public TradeWalletInfo getTradeWallet(User user) throws TradeWalletCreateFailedException {
 		return loadTradeWallet(user, false);
 	}
@@ -112,7 +124,7 @@ public class TradeWalletService {
 
 	private TradeWalletInfo loadTradeWallet(User user, boolean ensure) throws TradeWalletCreateFailedException {
 		UserTradeWalletRecord twRecord = dslContext.selectFrom(USER_TRADE_WALLET).where(USER_TRADE_WALLET.USER_ID.eq(user.getId())).fetchOne();
-		TradeWalletInfo rtn = new TradeWalletInfo(user.getUid());
+		TradeWalletInfo rtn = new TradeWalletInfo(user);
 		rtn.setConfirmed(false);
 
 		String walletString;
