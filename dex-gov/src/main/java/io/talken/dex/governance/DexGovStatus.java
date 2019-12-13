@@ -1,5 +1,6 @@
 package io.talken.dex.governance;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.math.BigInteger;
@@ -10,6 +11,9 @@ public class DexGovStatus {
 	private TxMonitor txMonitor = new TxMonitor();
 
 	private LocalDateTime lastTradeAggrExecutionTime;
+
+	@JsonIgnore
+	public static boolean isStopped = false;
 
 	@Data
 	public static class TxMonitor {

@@ -11,6 +11,7 @@ import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.SingleKeyTable;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -74,6 +75,8 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 
 	@Scheduled(fixedDelay = 60 * 60 * 1000, initialDelay = 5000) // check pending (sent bctx) every one hour
 	private synchronized void checkPending() {
+		if(DexGovStatus.isStopped) return;
+
 		Result<BctxRecord> txQueue = dslContext.selectFrom(BCTX)
 				.where(BCTX.STATUS.eq(BctxStatusEnum.SENT)
 						.and(BCTX.UPDATE_TIMESTAMP.isNotNull().and(BCTX.UPDATE_TIMESTAMP.le(UTCUtil.getNow().minusHours(3))))
@@ -94,6 +97,8 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 
 	@Scheduled(fixedDelay = 1000, initialDelay = 3000)
 	private synchronized void checkQueue() {
+		if(DexGovStatus.isStopped) return;
+
 		Result<BctxRecord> txQueue = dslContext.selectFrom(BCTX)
 				.where(BCTX.STATUS.eq(BctxStatusEnum.QUEUED)
 						.and(BCTX.SCHEDULE_TIMESTAMP.isNull().or(BCTX.SCHEDULE_TIMESTAMP.le(UTCUtil.getNow())))

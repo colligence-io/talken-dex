@@ -98,6 +98,8 @@ public class LuniverseTxMonitor extends AbstractEthereumTxMonitor {
 
 	@Scheduled(fixedDelay = 3000, initialDelay = 5000)
 	private void getBlocks() {
+		if(DexGovStatus.isStopped) return;
+
 		Web3j web3j;
 		try {
 			web3j = luniverseNetworkService.newMainRpcClient();

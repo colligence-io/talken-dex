@@ -103,6 +103,8 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 
 	@Scheduled(fixedDelay = 15000, initialDelay = 5000)
 	private void getBlocks() {
+		if(DexGovStatus.isStopped) return;
+
 		Web3j web3j;
 		try {
 			web3j = ethNetworkService.getLocalClient().newClient();

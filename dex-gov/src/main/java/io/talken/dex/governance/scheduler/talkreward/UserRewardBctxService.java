@@ -13,6 +13,7 @@ import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.collection.SingleKeyTable;
 import io.talken.common.util.integration.slack.AdminAlarmService;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
@@ -84,6 +85,8 @@ public class UserRewardBctxService {
 	@Scheduled(fixedDelay = 6000, initialDelay = 4000)
 	private void rewardToBctx() {
 		if(isSuspended) return;
+		if(DexGovStatus.isStopped) return;
+
 		long ts = UTCUtil.getNowTimestamp_s();
 		try {
 			// do new rewards first

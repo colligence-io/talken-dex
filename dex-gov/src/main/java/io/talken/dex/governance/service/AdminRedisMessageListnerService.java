@@ -3,6 +3,8 @@ package io.talken.dex.governance.service;
 import io.talken.common.persistence.redis.RedisConsts;
 import io.talken.common.util.PostLaunchExecutor;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.integration.slack.AdminAlarmService;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.scheduler.talkreward.UserRewardBctxService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
@@ -26,6 +28,9 @@ public class AdminRedisMessageListnerService implements MessageListener {
 	@Autowired
 	private UserRewardBctxService userRewardBctxService;
 
+	@Autowired
+	private AdminAlarmService adminAlarmService;
+
 	@PostConstruct
 	private void init() {
 		PostLaunchExecutor.addTask(() ->
@@ -44,9 +49,19 @@ public class AdminRedisMessageListnerService implements MessageListener {
 		switch(command.toLowerCase()) {
 			case "stop service userreward":
 				userRewardBctxService.suspend();
+				adminAlarmService.warn(logger,"UserReward Service SUSPENDED.");
 				break;
 			case "start service userreward":
 				userRewardBctxService.resume();
+				adminAlarmService.warn(logger,"UserReward Service RESUMED.");
+				break;
+			case "stop service all":
+				DexGovStatus.isStopped = true;
+				adminAlarmService.warn(logger,"Dex Governance Service SUSPENDED.");
+				break;
+			case "start service all":
+				DexGovStatus.isStopped = false;
+				adminAlarmService.warn(logger,"Dex Governance Service RESUMED.");
 				break;
 		}
 	}

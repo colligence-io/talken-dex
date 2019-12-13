@@ -82,6 +82,8 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarT
 
 	@Scheduled(fixedDelay = 3000, initialDelay = 5000)
 	private void checkTask() {
+		if(DexGovStatus.isStopped) return;
+
 		int processed = -1;
 		do {
 			processed = processNextTransactions();

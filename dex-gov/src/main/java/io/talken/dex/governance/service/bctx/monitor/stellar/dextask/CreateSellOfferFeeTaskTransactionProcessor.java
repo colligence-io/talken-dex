@@ -9,6 +9,7 @@ import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.DexTaskCreateoffer;
 import io.talken.common.persistence.jooq.tables.records.DexTaskCreateoffersellfeeRecord;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.monitor.stellar.DexTaskTransactionProcessError;
 import io.talken.dex.governance.service.bctx.monitor.stellar.DexTaskTransactionProcessResult;
 import io.talken.dex.shared.exception.StellarException;
@@ -72,6 +73,8 @@ public class CreateSellOfferFeeTaskTransactionProcessor extends AbstractCreateOf
 
 	@Scheduled(fixedDelay = 5000, initialDelay = 5000)
 	private void checkFee() {
+		if(DexGovStatus.isStopped) return;
+
 		Result<DexTaskCreateoffersellfeeRecord> feeRecords = dslContext.selectFrom(DEX_TASK_CREATEOFFERSELLFEE)
 				.where(DEX_TASK_CREATEOFFERSELLFEE.TX_STATUS.eq(BctxStatusEnum.QUEUED))
 				.fetch();
