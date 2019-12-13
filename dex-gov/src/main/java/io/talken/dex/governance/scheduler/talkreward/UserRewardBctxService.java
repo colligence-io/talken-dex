@@ -33,7 +33,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -72,10 +71,6 @@ public class UserRewardBctxService {
 
 	private boolean isSuspended = false;
 
-	@PostConstruct
-	private void init() {
-	}
-
 	public void suspend() {
 		logger.info("UserRewardService SUSPENDED by admin.");
 		isSuspended = true;
@@ -89,37 +84,37 @@ public class UserRewardBctxService {
 	@Scheduled(fixedDelay = 6000, initialDelay = 4000)
 	private void rewardToBctx() {
 		if(isSuspended) return;
+		long ts = UTCUtil.getNowTimestamp_s();
 		try {
 			// do new rewards first
 			checkRewardAndQueueBctx(
 					dslContext.selectFrom(USER_REWARD)
-					.where(USER_REWARD.APPROVEMENT_FLAG.eq(true)
-							.and(USER_REWARD.CHECK_FLAG.eq(false))
-							.and(USER_REWARD.BCTX_ID.isNull())
-							.and(USER_REWARD.SCHEDULE_TIMESTAMP.isNull())
-					)
-					.limit(tickLimit)
-					.fetchLazy()
+							.where(USER_REWARD.APPROVEMENT_FLAG.eq(true)
+									.and(USER_REWARD.CHECK_FLAG.eq(false))
+									.and(USER_REWARD.BCTX_ID.isNull())
+									.and(USER_REWARD.SCHEDULE_TIMESTAMP.isNull())
+							)
+							.limit(tickLimit)
+							.fetchLazy(), ts, true
 			);
 
 			// check scheduled rewards
 			checkRewardAndQueueBctx(
 					dslContext.selectFrom(USER_REWARD)
-					.where(USER_REWARD.APPROVEMENT_FLAG.eq(true)
-							.and(USER_REWARD.CHECK_FLAG.eq(false))
-							.and(USER_REWARD.BCTX_ID.isNull())
-							.and(USER_REWARD.SCHEDULE_TIMESTAMP.le(UTCUtil.getNow()))
-					)
-					.limit(tickLimit)
-					.fetchLazy()
+							.where(USER_REWARD.APPROVEMENT_FLAG.eq(true)
+									.and(USER_REWARD.CHECK_FLAG.eq(false))
+									.and(USER_REWARD.BCTX_ID.isNull())
+									.and(USER_REWARD.SCHEDULE_TIMESTAMP.le(UTCUtil.getNow()))
+							)
+							.limit(tickLimit)
+							.fetchLazy(), ts, false
 			);
-
 		} catch(Exception ex) {
 			alarmService.exception(logger, ex);
 		}
 	}
 
-	private void checkRewardAndQueueBctx(Cursor<UserRewardRecord> rewards) {
+	private void checkRewardAndQueueBctx(Cursor<UserRewardRecord> rewards, long timestamp, boolean isPostponed) {
 		SingleKeyTable<String, DistStatus> dStatus = new SingleKeyTable<>();
 
 		Map<String, AtomicInteger> metaMissing = new HashMap<>();
@@ -174,7 +169,7 @@ public class UserRewardBctxService {
 
 		for(DistStatus distStatus : dStatus.select()) {
 			if(distStatus.getCount().get() > 0) {
-				alarmService.info(logger, "Reward Queued : {} {} ({} transaction)", distStatus.getAmount().stripTrailingZeros().toPlainString(), distStatus.getAssetCode(), distStatus.getCount().get());
+				alarmService.info(logger, "Reward Queued [{}]{}: {} {} ({} transaction)", timestamp, isPostponed ? " (Postponed)" : "", distStatus.getAmount().stripTrailingZeros().toPlainString(), distStatus.getAssetCode(), distStatus.getCount().get());
 			}
 		}
 		for(Map.Entry<String, AtomicInteger> missing : metaMissing.entrySet()) {

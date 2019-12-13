@@ -180,11 +180,6 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 								txr.setTo(new Address(log.getTopics().get(2)).toString());
 								txr.setValue(((Uint256) values.get(0)).getValue().toString());
 								txr.setInput("deprecated"); // etherscan mockup
-								Erc20ContractInfoService.Erc20ContractInfo erc20ContractInfo = erc20ContractInfoService.getErc20ContractInfo(web3j, receipt.getTo());
-								txr.setTokenName(erc20ContractInfo.getName());
-								txr.setTokenSymbol(erc20ContractInfo.getSymbol());
-								txr.setTokenDecimal(erc20ContractInfo.getDecimals().toString());
-								logger.trace("[I] {}({}) {} -> {} {} ({} {})", txr.getContractAddress(), tx.getHash(), txr.getFrom(), txr.getTo(), txr.getValue(), erc20ContractInfo.getSymbol(), erc20ContractInfo.getDecimals());
 							}
 						}
 						// erc20 non-standard topics : non-indexed from,to,value
@@ -198,11 +193,18 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 								txr.setTo(((Address) values.get(1)).toString());
 								txr.setValue(((Uint256) values.get(2)).getValue().toString());
 								txr.setInput("deprecated"); // etherscan mockup
+							}
+						}
+
+						if(txr != null) {
+							try {
 								Erc20ContractInfoService.Erc20ContractInfo erc20ContractInfo = erc20ContractInfoService.getErc20ContractInfo(web3j, receipt.getTo());
 								txr.setTokenName(erc20ContractInfo.getName());
 								txr.setTokenSymbol(erc20ContractInfo.getSymbol());
 								txr.setTokenDecimal(erc20ContractInfo.getDecimals().toString());
-								logger.trace("[U] {}({}) {} -> {} {} ({} {})", txr.getContractAddress(), tx.getHash(), txr.getFrom(), txr.getTo(), txr.getValue(), erc20ContractInfo.getSymbol(), erc20ContractInfo.getDecimals());
+								logger.trace("[I] {}({}) {} -> {} {} ({} {})", txr.getContractAddress(), tx.getHash(), txr.getFrom(), txr.getTo(), txr.getValue(), erc20ContractInfo.getSymbol(), erc20ContractInfo.getDecimals());
+							} catch(Exception ex) {
+								logger.exception(ex, "Cannot extract erc20ContractInfo from {}", tx.getHash());
 							}
 						}
 					}
