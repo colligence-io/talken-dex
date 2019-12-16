@@ -57,6 +57,8 @@ public abstract class AbstractStellarTxSender extends TxSender {
 					.Builder(destination.getAccountId(), asset, StellarConverter.actualToString(bctx.getAmount()))
 					.build();
 		} else {
+			if(!bctx.getBctxType().equals(BlockChainPlatformEnum.STELLAR))
+				throw new IllegalStateException("Cannot transfer stellar token to unactivated account");
 			operation = new CreateAccountOperation
 					.Builder(destination.getAccountId(), StellarConverter.actualToString(bctx.getAmount()))
 					.build();
