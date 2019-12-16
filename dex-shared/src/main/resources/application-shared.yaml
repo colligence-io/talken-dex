@@ -6,6 +6,14 @@ spring:
     type: redis
 talken:
   dex:
+    mam:
+      creatorMinBalance: 1000
+      channelMinBalance: 1.1
+      issuerMinBalance: 2
+      netfeeBuffer:
+        ETH: 0.1
+        XLM: 0.001
+        LUK: 1000
     tradeWallet:
       creatorAddress: "GCLTGOKYK7WHPCP6R43FXZZZ7HHUAZJCOQ7H4K6NTQYEUMODYHOLN4XA"
     bcnode:

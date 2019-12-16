@@ -6,6 +6,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.scheduler.talkreward.UserRewardBctxService;
+import io.talken.dex.governance.service.mam.MaMonitorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
@@ -31,6 +32,9 @@ public class AdminRedisMessageListnerService implements MessageListener {
 	@Autowired
 	private AdminAlarmService adminAlarmService;
 
+	@Autowired
+	private MaMonitorService mamService;
+
 	@PostConstruct
 	private void init() {
 		PostLaunchExecutor.addTask(() ->
@@ -54,6 +58,14 @@ public class AdminRedisMessageListnerService implements MessageListener {
 			case "start service userreward":
 				userRewardBctxService.resume();
 				adminAlarmService.warn(logger,"UserReward Service RESUMED.");
+				break;
+			case "stop service mam":
+				mamService.suspend();
+				adminAlarmService.warn(logger,"MaMonitor Service SUSPENDED.");
+				break;
+			case "start service mam":
+				mamService.resume();
+				adminAlarmService.warn(logger,"MaMonitor Service RESUMED.");
 				break;
 			case "stop service all":
 				DexGovStatus.isStopped = true;

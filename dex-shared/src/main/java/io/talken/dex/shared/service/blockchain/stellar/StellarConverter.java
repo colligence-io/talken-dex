@@ -3,6 +3,8 @@ package io.talken.dex.shared.service.blockchain.stellar;
 import io.talken.common.util.collection.ObjectPair;
 import org.stellar.sdk.Asset;
 import org.stellar.sdk.AssetTypeCreditAlphaNum;
+import org.stellar.sdk.AssetTypeNative;
+import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.math.BigDecimal;
@@ -81,5 +83,31 @@ public class StellarConverter {
 		final String errorMessage = (txResponse.getExtras().getResultCodes().getOperationsResultCodes() != null) ? String.join(",", txResponse.getExtras().getResultCodes().getOperationsResultCodes()) : "";
 
 		return new ObjectPair<>(errorCode, errorMessage);
+	}
+
+	public static BigDecimal getAccountBalance(AccountResponse accountResponse, Asset asset) {
+		if(accountResponse == null) return null;
+		for(AccountResponse.Balance _bal : accountResponse.getBalances()) {
+			if(_bal.getAsset().equals(asset)) {
+				return scale(new BigDecimal(_bal.getBalance()));
+			}
+		}
+		return null;
+	}
+
+	public static BigDecimal getAccountNativeBalance(AccountResponse accountResponse) {
+		return getAccountBalance(accountResponse, new AssetTypeNative());
+	}
+
+	public static boolean isAccountBalanceEnough(AccountResponse accountResponse, Asset asset, BigDecimal amount) {
+		final BigDecimal b = getAccountBalance(accountResponse, asset);
+		if(b == null) return false;
+		else return b.compareTo(amount) >= 0;
+	}
+
+	public static boolean isAccountTrusted(AccountResponse accountResponse, Asset asset) {
+		if(accountResponse == null) return false;
+		if(getAccountBalance(accountResponse, asset) == null) return false;
+		else return true;
 	}
 }

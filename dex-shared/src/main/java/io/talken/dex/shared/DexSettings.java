@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Data
 public class DexSettings {
@@ -37,6 +38,17 @@ public class DexSettings {
 
 		// stellar
 		this.getBcnode().getStellar().secret = secretReader.readSecret("stellar", VaultSecretDataStellar.class);
+	}
+
+	private _MaM mam;
+
+	@Getter
+	@Setter
+	public static class _MaM {
+		private BigDecimal creatorMinBalance;
+		private BigDecimal channelMinBalance;
+		private BigDecimal issuerMinBalance;
+		private Map<String, BigDecimal> netfeeBuffer;
 	}
 
 	private _TradeWallet tradeWallet;

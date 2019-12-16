@@ -2,12 +2,12 @@ package io.talken.dex.shared.service.tradewallet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.talken.common.persistence.jooq.tables.pojos.User;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.stellar.sdk.Asset;
-import org.stellar.sdk.AssetTypeNative;
 import org.stellar.sdk.responses.AccountResponse;
 
 import java.math.BigDecimal;
@@ -42,28 +42,18 @@ public final class TradeWalletInfo {
 	}
 
 	public BigDecimal getBalance(Asset asset) {
-		if(accountResponse == null) return null;
-		for(AccountResponse.Balance _bal : accountResponse.getBalances()) {
-			if(_bal.getAsset().equals(asset)) {
-				return new BigDecimal(_bal.getBalance());
-			}
-		}
-		return null;
+		return StellarConverter.getAccountBalance(accountResponse, asset);
 	}
 
 	public BigDecimal getNativeBalance() {
-		return getBalance(new AssetTypeNative());
+		return StellarConverter.getAccountNativeBalance(accountResponse);
 	}
 
 	public boolean isTrusted(Asset asset) {
-		if(accountResponse == null) return false;
-		if(getBalance(asset) == null) return false;
-		else return true;
+		return StellarConverter.isAccountTrusted(accountResponse, asset);
 	}
 
 	public boolean hasEnough(Asset asset, BigDecimal amount) {
-		final BigDecimal b = getBalance(asset);
-		if(b == null) return false;
-		else return b.compareTo(amount) >= 0;
+		return StellarConverter.isAccountBalanceEnough(accountResponse, asset, amount);
 	}
 }
