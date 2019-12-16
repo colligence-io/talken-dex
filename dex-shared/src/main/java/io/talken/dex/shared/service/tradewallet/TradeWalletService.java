@@ -170,7 +170,7 @@ public class TradeWalletService {
 
 		AccountResponse ar = getAccountInfoFromStellar(accountId);
 		if(ar != null) {
-			if(!twRecord.getActivationconfirmed()) { // set confirmed as true if accountResponse is OK and DB status is false
+			if(twRecord.getActivationconfirmed() == null || !twRecord.getActivationconfirmed()) { // set confirmed as true if accountResponse is OK and DB status is false
 				twRecord.setActivationconfirmed(true);
 				twRecord.store();
 			}
