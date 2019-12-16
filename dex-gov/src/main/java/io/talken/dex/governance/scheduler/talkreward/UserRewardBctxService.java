@@ -4,6 +4,7 @@ import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
+import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
@@ -15,6 +16,7 @@ import io.talken.common.util.collection.SingleKeyTable;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.TokenMetaGovService;
+import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.exception.TradeWalletCreateFailedException;
@@ -283,6 +285,24 @@ public class UserRewardBctxService {
 		bctxRecord.setAddressTo(tradeWallet.getAccountId());
 		bctxRecord.setAmount(rewardRecord.getAmount());
 		bctxRecord.setNetfee(BigDecimal.ZERO);
+
+		String rcode = rewardRecord.getRCode().toLowerCase();
+
+		DexTaskId taskId;
+
+		if(rcode.startsWith("event_")) {
+			taskId = DexTaskId.generate_taskId(DexTaskTypeEnum.EVENT);
+		} else if(rcode.startsWith("airdrop_")) {
+			taskId = DexTaskId.generate_taskId(DexTaskTypeEnum.AIRDROP);
+		} else {
+			if(rewardRecord.getCsFlag()) {
+				taskId = DexTaskId.generate_taskId(DexTaskTypeEnum.CUSTOMER_SERVICE);
+			} else {
+				taskId = DexTaskId.generate_taskId(DexTaskTypeEnum.REWARD);
+			}
+		}
+
+		bctxRecord.setTxAux(taskId.getId());
 
 		return bctxRecord;
 	}

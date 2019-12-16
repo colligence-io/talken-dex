@@ -92,6 +92,10 @@ public class StellarChannelTransaction implements Closeable {
 				// check channel account
 				AccountResponse channelAccount = sctx.server.accounts().account(sctx.channel.getAccountId());
 
+				// update channel balance
+				// XXX : it is best to update channel native balance after release, but it requires api call which is not worthy.
+				sctx.channel.update(channelAccount);
+
 				// builder
 				Transaction.Builder txBuilder = new Transaction.Builder(channelAccount, stellarNetworkService.getNetwork())
 						.setOperationFee(stellarNetworkService.getNetworkFee())

@@ -12,7 +12,6 @@ import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.Network;
 import org.stellar.sdk.Server;
 import org.stellar.sdk.responses.AccountResponse;
-import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -21,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static io.talken.common.persistence.redis.RedisConsts.KEY_GOVERNANCE_DEX_CHANNEL;
 
@@ -108,5 +108,9 @@ public class StellarNetworkService {
 			if(released != null && released)
 				logger.debug("Channel release : {}", channelAccount.getAccountId());
 		}
+	}
+
+	public List<String> getChannelList() {
+		return channels.stream().map(StellarChannel::getAccountId).collect(Collectors.toList());
 	}
 }
