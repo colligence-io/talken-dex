@@ -11,11 +11,13 @@ import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
-import org.web3j.abi.datatypes.generated.Uint8;
+import org.web3j.contracts.eip20.generated.ERC20;
+import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -28,11 +30,27 @@ public class Erc20ContractInfoService {
 	// FIXME : THIS CANNOT CHECK CONTRACT IS ERC20 OR ERC721
 	@Cacheable(value = CacheConfig.CacheNames.ETH_ERC20_CONTRACT_INFO, key = "#p1")
 	public Erc20ContractInfo getErc20ContractInfo(Web3j web3j, String contractAddress) throws Exception {
+		ERC20 erc20 = ERC20.load(contractAddress, web3j, Credentials.create("0x0000000000000000000000000000000000000000000000000000000000000000"), new DefaultGasProvider());
+
 		Erc20ContractInfo rtn = new Erc20ContractInfo();
-		rtn.setName(getName(web3j, contractAddress));
-		rtn.setSymbol(getSymbol(web3j, contractAddress));
-		BigInteger decimals = getDecimals(web3j, contractAddress);
-		if(decimals != null) rtn.setDecimals(decimals);
+
+		try {
+			rtn.setSymbol(erc20.symbol().send());
+		} catch(Exception ex) {
+//			logger.exception(ex);
+		}
+
+		try {
+			rtn.setName(erc20.name().send());
+		} catch(Exception ex) {
+//			logger.exception(ex);
+		}
+
+		try {
+			rtn.setDecimals(erc20.decimals().send());
+		} catch(Exception ex) {
+//			logger.exception(ex);
+		}
 		logger.debug("Caching contract EIP20 info : {} ({} / {} / {})", contractAddress, rtn.getName(), rtn.getSymbol(), rtn.getDecimals());
 		return rtn;
 	}
@@ -42,57 +60,6 @@ public class Erc20ContractInfoService {
 		private String name = null;
 		private String symbol = null;
 		private BigInteger decimals = BigInteger.valueOf(18); // default 18 decimals
-	}
-
-	public String getName(Web3j web3j, String contractAddress) throws Exception {
-		Function function = StandardERC20ContractFunctions.name();
-		EthCall response = web3j.ethCall(
-				Transaction.createEthCallTransaction(
-						"0x0000000000000000000000000000000000000000",
-						contractAddress,
-						FunctionEncoder.encode(function)
-				),
-				DefaultBlockParameterName.LATEST
-		).send();
-
-		List<Type> decoded = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
-
-		if(decoded.size() > 0) return decoded.get(0).toString();
-		else return null;
-	}
-
-	public String getSymbol(Web3j web3j, String contractAddress) throws Exception {
-		Function function = StandardERC20ContractFunctions.symbol();
-		EthCall response = web3j.ethCall(
-				Transaction.createEthCallTransaction(
-						"0x0000000000000000000000000000000000000000",
-						contractAddress,
-						FunctionEncoder.encode(function)
-				),
-				DefaultBlockParameterName.LATEST
-		).send();
-
-		List<Type> decoded = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
-
-		if(decoded.size() > 0) return decoded.get(0).toString();
-		else return null;
-	}
-
-	public BigInteger getDecimals(Web3j web3j, String contractAddress) throws Exception {
-		Function function = StandardERC20ContractFunctions.decimals();
-		EthCall response = web3j.ethCall(
-				Transaction.createEthCallTransaction(
-						"0x0000000000000000000000000000000000000000",
-						contractAddress,
-						FunctionEncoder.encode(function)
-				),
-				DefaultBlockParameterName.LATEST
-		).send();
-
-		List<Type> decoded = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
-
-		if(decoded.size() > 0) return ((Uint8) decoded.get(0)).getValue();
-		else return null;
 	}
 
 	public BigInteger getBalanceOf(Web3j web3j, String contractAddress, String owner) throws Exception {
