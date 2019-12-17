@@ -139,13 +139,14 @@ public class MaMonitorService {
 	}
 
 	private void checkManagedAccounts() throws Exception {
-		// accountId, accountResponse
-		Map<String, AccountResponse> ars = new HashMap<>();
-		// dexAssetType, balance
-		Map<Asset, BigDecimal> supplies = new HashMap<>();
-		Map<Asset, BigDecimal> feeBalances = new HashMap<>();
 		// issuer addresses
 		Set<String> issuers = new HashSet<>();
+		// dexAssetType, balance
+		Map<Asset, BigDecimal> supplies = new HashMap<>();
+
+		// accountId, accountResponse
+		Map<String, AccountResponse> ars = new HashMap<>();
+
 		// select unsent rewards
 		Map<String, BigDecimal> unsentRewards = dslContext.select(USER_REWARD.ASSETCODE, DSL.sum(USER_REWARD.AMOUNT))
 				.from(USER_REWARD)
@@ -200,7 +201,7 @@ public class MaMonitorService {
 			if(supply != null) {
 				// if holder has low balance than effective supply (supply - feeTotal)
 				if(holderTotal.compareTo(supply.subtract(feeTotal)) < 0) {
-					adminAlarmService.warn(logger, "Holder balance for {} is lower than effective supply ({} issued - {} fee) : {} < {} {}", assetCode, supply, feeTotal, holderTotal, supply.subtract(feeTotal), assetCode);
+					adminAlarmService.warn(logger, "Holder balance for {} is lower than effective supply ({} issued - {} fee) : {} < {} {}", assetCode, supply.stripTrailingZeros().toPlainString(), feeTotal.stripTrailingZeros().toPlainString(), holderTotal.stripTrailingZeros().toPlainString(), supply.subtract(feeTotal).stripTrailingZeros().toPlainString(), assetCode);
 				}
 			} else {
 				// XXX : never issued? or just error?
