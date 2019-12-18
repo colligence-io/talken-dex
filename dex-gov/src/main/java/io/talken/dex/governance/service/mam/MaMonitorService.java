@@ -132,7 +132,7 @@ public class MaMonitorService {
 
 			if(bal == null) {
 				adminAlarmService.error(logger, "Cannot get channel native balance : {}", chan);
-			} else if(bal.compareTo(govSettings.getMam().getCreatorMinBalance()) <= 0) {
+			} else if(bal.compareTo(govSettings.getMam().getChannelMinBalance()) <= 0) {
 				adminAlarmService.warn(logger, "Stellar channel {} balance is below minumum : {}(<{}) XLM", chan, bal.stripTrailingZeros().toPlainString(), govSettings.getMam().getChannelMinBalance());
 			}
 		}
