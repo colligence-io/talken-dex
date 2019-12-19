@@ -84,7 +84,7 @@ public class UserRewardBctxService {
 		isSuspended = false;
 	}
 
-	@Scheduled(fixedDelay = 6000, initialDelay = 4000)
+	@Scheduled(fixedDelay = 60000, initialDelay = 4000)
 	private void rewardToBctx() {
 		if(isSuspended) return;
 		if(DexGovStatus.isStopped) return;
@@ -100,7 +100,7 @@ public class UserRewardBctxService {
 									.and(USER_REWARD.SCHEDULE_TIMESTAMP.isNull())
 							)
 							.limit(tickLimit)
-							.fetchLazy(), ts, true
+							.fetchLazy(), ts, false
 			);
 
 			// check scheduled rewards
@@ -112,7 +112,7 @@ public class UserRewardBctxService {
 									.and(USER_REWARD.SCHEDULE_TIMESTAMP.le(UTCUtil.getNow()))
 							)
 							.limit(tickLimit)
-							.fetchLazy(), ts, false
+							.fetchLazy(), ts, true
 			);
 		} catch(Exception ex) {
 			alarmService.exception(logger, ex);
