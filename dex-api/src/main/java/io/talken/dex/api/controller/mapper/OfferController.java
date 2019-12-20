@@ -11,10 +11,9 @@ import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.api.service.FeeCalculationService;
 import io.talken.dex.api.service.OfferService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.constraints.NotEmpty;
 
 @RestController
 public class OfferController {
@@ -28,6 +27,12 @@ public class OfferController {
 
 	@Autowired
 	private AuthInfo authInfo;
+
+	// detail
+	@RequestMapping(value = RequestMappings.OFFER_DETAIL, method = RequestMethod.GET)
+	public DexResponse<OfferDetailResultDTO> getOfferDetail(@PathVariable @NotEmpty long offerId) throws TalkenException {
+		return DexResponse.buildResponse(offerService.getOfferDetail(offerId));
+	}
 
 	// sell
 	@AuthRequired

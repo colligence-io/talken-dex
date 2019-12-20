@@ -3,11 +3,13 @@ package io.talken.dex.api.service;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.exception.TalkenException;
+import io.talken.common.exception.common.DataIdNotFoundException;
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.persistence.DexTaskRecord;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
+import io.talken.common.persistence.jooq.tables.pojos.DexTaskCreateoffer;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.DexTaskCreateofferRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskDeleteofferRecord;
@@ -55,6 +57,16 @@ public class OfferService {
 	private final TokenMetaService tmService;
 	private final DSLContext dslContext;
 	private final SignServerService signServerService;
+
+	public OfferDetailResultDTO getOfferDetail(long offerId) throws DataIdNotFoundException {
+		DexTaskCreateofferRecord dexTaskCreateofferRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER).where(DEX_TASK_CREATEOFFER.OFFERID.eq(offerId)).fetchOne();
+		if(dexTaskCreateofferRecord == null) throw new DataIdNotFoundException(DexTaskCreateoffer.class, offerId);
+
+		OfferDetailResultDTO rtn = new OfferDetailResultDTO();
+		rtn.setOfferId(dexTaskCreateofferRecord.getOfferid());
+		rtn.setTxHash(dexTaskCreateofferRecord.getTxHash());
+		return rtn;
+	}
 
 	public CreateOfferResult createSellOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException, ParameterViolationException {
 		if(!request.getBuyAssetCode().equalsIgnoreCase(DexSettings.PIVOT_ASSET_CODE))
