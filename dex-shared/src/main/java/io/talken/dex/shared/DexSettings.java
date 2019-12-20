@@ -48,7 +48,14 @@ public class DexSettings {
 		private BigDecimal creatorMinBalance;
 		private BigDecimal channelMinBalance;
 		private BigDecimal issuerMinBalance;
-		private Map<String, BigDecimal> netfeeBuffer;
+		private _NetworkFeeBuffer netfeeBuffer;
+
+		@Getter
+		@Setter
+		public static class _NetworkFeeBuffer {
+			private Map<String, BigDecimal> holder;
+			private Map<String, BigDecimal> distributor;
+		}
 	}
 
 	private _TradeWallet tradeWallet;

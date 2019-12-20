@@ -190,8 +190,8 @@ public class MaMonitorService {
 				holderTotal = holderTotal.add(hBal.second());
 
 				// check holder native balance
-				ObjectPair<BigDecimal, String> minBal = getNetfeeBuffer(meta);
-				if(hBal.first().compareTo(minBal.first()) < 0) {
+				ObjectPair<BigDecimal, String> minBal = getNetfeeBuffer(meta, "holder");
+				if(hBal.second().compareTo(BigDecimal.ZERO) > 0 && hBal.first().compareTo(minBal.first()) < 0) {
 					adminAlarmService.warn(logger, "Holder for {} {} has low native balance : {} < {} {}", meta.getSymbol(), assetHolderAccount.getAddress(), hBal.first().stripTrailingZeros().toPlainString(), minBal.first().stripTrailingZeros().toPlainString(), minBal.second());
 				}
 			}
@@ -213,7 +213,7 @@ public class MaMonitorService {
 				BigDecimal unsent = unsentRewards.get(meta.getSymbol());
 				if(unsent != null) {
 					ObjectPair<BigDecimal, BigDecimal> accountBalance = getAccountBalance(meta, meta.getManagedInfo().getDistributorAddress());
-					ObjectPair<BigDecimal, String> netfeeBuffer = getNetfeeBuffer(meta);
+					ObjectPair<BigDecimal, String> netfeeBuffer = getNetfeeBuffer(meta, "distributor");
 
 					if(meta.getNativeFlag()) {
 						BigDecimal effBal = accountBalance.first().subtract(netfeeBuffer.first());
@@ -285,7 +285,7 @@ public class MaMonitorService {
 		return new ObjectPair<>(coin, token);
 	}
 
-	private ObjectPair<BigDecimal, String> getNetfeeBuffer(TokenMetaTable.Meta meta) {
+	private ObjectPair<BigDecimal, String> getNetfeeBuffer(TokenMetaTable.Meta meta, String type) {
 		BigDecimal rtn = null;
 		String coinSymbol = null;
 		switch(meta.getBctxType()) {
@@ -306,7 +306,12 @@ public class MaMonitorService {
 				break;
 		}
 
-		rtn = govSettings.getMam().getNetfeeBuffer().get(coinSymbol);
+		if(type.equals("holder")) {
+			rtn = govSettings.getMam().getNetfeeBuffer().getHolder().get(coinSymbol);
+		} else {
+			rtn = govSettings.getMam().getNetfeeBuffer().getDistributor().get(coinSymbol);
+		}
+
 		return new ObjectPair<>(rtn == null ? BigDecimal.ZERO : rtn, coinSymbol);
 	}
 

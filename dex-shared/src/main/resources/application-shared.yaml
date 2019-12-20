@@ -11,9 +11,14 @@ talken:
       channelMinBalance: 1.1
       issuerMinBalance: 2
       netfeeBuffer:
-        ETH: 0.1
-        XLM: 0.001
-        LUK: 1000
+        holder:
+          ETH: 0.05
+          XLM: 0.005
+          LUK: 500
+        distributor:
+          ETH: 0.1
+          XLM: 0.001
+          LUK: 1000
     tradeWallet:
       creatorAddress: "GCLTGOKYK7WHPCP6R43FXZZZ7HHUAZJCOQ7H4K6NTQYEUMODYHOLN4XA"
     bcnode:
