@@ -299,10 +299,26 @@ public class OfferService {
 				.where(DEX_TASK_CREATEOFFER.OFFERID.eq(offerId))
 				.fetchOne();
 
+		// check offer task record
 		if(createOfferRecord == null) {
 			throw new OfferNotValidException(offerId, "Trade record for offerId " + offerId + " not found.");
 		}
 
+		// check offer type
+		if(createOfferRecord.getTasktype().equals(DexTaskTypeEnum.OFFER_CREATE_SELL)) {
+			if(!taskType.equals(DexTaskTypeEnum.OFFER_DELETE_SELL)) {
+				throw new OfferNotValidException(offerId, "Trade record for offerId " + offerId + " is not 'Buying'");
+			}
+		}
+
+		// check offer type
+		if(createOfferRecord.getTasktype().equals(DexTaskTypeEnum.OFFER_CREATE_BUY)) {
+			if(!taskType.equals(DexTaskTypeEnum.OFFER_DELETE_BUY)) {
+				throw new OfferNotValidException(offerId, "Trade record for offerId " + offerId + " is not 'Selling'");
+			}
+		}
+
+		// ownerchip check
 		if(!createOfferRecord.getUserId().equals(user.getId())) {
 			throw new OwnershipMismatchException(offerId + " is not created by you. We WILL INVESTIGATE with this ABNORMAL ATTEMPTION.");
 		}
