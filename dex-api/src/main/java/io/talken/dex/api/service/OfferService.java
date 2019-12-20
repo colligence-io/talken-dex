@@ -279,15 +279,15 @@ public class OfferService {
 	}
 
 
-	public DeleteOfferResult deleteSellOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException, OfferNotValidException {
+	public DeleteOfferResult deleteSellOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException, OfferNotValidException, OwnershipMismatchException {
 		return deleteOffer(user, true, request);
 	}
 
-	public DeleteOfferResult deleteBuyOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException, OfferNotValidException {
+	public DeleteOfferResult deleteBuyOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException, OfferNotValidException, OwnershipMismatchException {
 		return deleteOffer(user, false, request);
 	}
 
-	private DeleteOfferResult deleteOffer(User user, boolean isSell, DeleteOfferRequest request) throws TokenMetaNotFoundException, StellarException, SigningException, TradeWalletCreateFailedException, TokenMetaNotManagedException, OfferNotValidException {
+	private DeleteOfferResult deleteOffer(User user, boolean isSell, DeleteOfferRequest request) throws TokenMetaNotFoundException, StellarException, SigningException, TradeWalletCreateFailedException, TokenMetaNotManagedException, OfferNotValidException, OwnershipMismatchException {
 		final DexTaskTypeEnum taskType = (isSell) ? DexTaskTypeEnum.OFFER_DELETE_SELL : DexTaskTypeEnum.OFFER_DELETE_BUY;
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(taskType);
 		final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
@@ -299,11 +299,13 @@ public class OfferService {
 				.where(DEX_TASK_CREATEOFFER.OFFERID.eq(offerId))
 				.fetchOne();
 
-
 		if(createOfferRecord == null) {
 			throw new OfferNotValidException(offerId, "Trade record for offerId " + offerId + " not found.");
 		}
 
+		if(!createOfferRecord.getUserId().equals(user.getId())) {
+			throw new OwnershipMismatchException(offerId + " is not created by you. We WILL INVESTIGATE with this ABNORMAL ATTEMPTION.");
+		}
 
 		// get offer info from network
 		String cursor = null;

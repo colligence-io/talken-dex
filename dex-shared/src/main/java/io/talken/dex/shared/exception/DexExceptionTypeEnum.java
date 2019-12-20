@@ -21,6 +21,7 @@ public enum DexExceptionTypeEnum implements TalkenException.ExceptionTypeEnum {
 	TRADE_WALLET_REBALANCE_FAILED(20),
 	DUPLICATED_TASK_FOUND(21),
 	OFFER_NOT_VALID(22),
+	OWNERSHIP_MISMATCH(23),
 
 	// FROM MAS
 	CANNOT_UPDATE_HOLDER_STATUS(51),
