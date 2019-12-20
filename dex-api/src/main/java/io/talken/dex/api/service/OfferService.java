@@ -58,13 +58,21 @@ public class OfferService {
 	private final DSLContext dslContext;
 	private final SignServerService signServerService;
 
-	public OfferDetailResultDTO getOfferDetail(long offerId) throws DataIdNotFoundException {
-		DexTaskCreateofferRecord dexTaskCreateofferRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER).where(DEX_TASK_CREATEOFFER.OFFERID.eq(offerId)).fetchOne();
-		if(dexTaskCreateofferRecord == null) throw new DataIdNotFoundException(DexTaskCreateoffer.class, offerId);
+	public OfferDetailResultDTO getOfferDetail(long offerId) throws DataIdNotFoundException, TaskIntegrityCheckFailedException {
+		DexTaskCreateofferRecord offerRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER).where(DEX_TASK_CREATEOFFER.OFFERID.eq(offerId)).fetchOne();
+		if(offerRecord == null) throw new DataIdNotFoundException(DexTaskCreateoffer.class, offerId);
 
 		OfferDetailResultDTO rtn = new OfferDetailResultDTO();
-		rtn.setOfferId(dexTaskCreateofferRecord.getOfferid());
-		rtn.setTxHash(dexTaskCreateofferRecord.getTxHash());
+
+		DexTaskId taskId = DexTaskId.decode_taskId(offerRecord.getTaskid());
+		rtn.setTaskId(taskId.getId());
+		rtn.setTaskType(taskId.getType());
+		rtn.setOfferId(offerRecord.getOfferid());
+		rtn.setTxHash(offerRecord.getTxHash());
+		rtn.setSellAssetCode(offerRecord.getSellassetcode());
+		rtn.setBuyAssetCode(offerRecord.getBuyassetcode());
+		rtn.setAmount(offerRecord.getAmount());
+		rtn.setPrice(offerRecord.getPrice());
 		return rtn;
 	}
 
