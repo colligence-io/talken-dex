@@ -148,10 +148,11 @@ public class MaMonitorService {
 		Map<String, AccountResponse> ars = new HashMap<>();
 
 		// select unsent rewards
-		Map<String, BigDecimal> unsentRewards = dslContext.select(USER_REWARD.ASSETCODE, DSL.sum(USER_REWARD.AMOUNT))
+		Map<String, BigDecimal> unsentPrivateRewards = dslContext.select(USER_REWARD.ASSETCODE, DSL.sum(USER_REWARD.AMOUNT))
 				.from(USER_REWARD)
 				.where(
 						USER_REWARD.APPROVEMENT_FLAG.eq(true)
+								.and(USER_REWARD.PRIVATE_WALLET_FLAG.eq(true))
 								.and(USER_REWARD.BCTX_ID.isNull())
 				)
 				.groupBy(USER_REWARD.ASSETCODE)
@@ -210,7 +211,7 @@ public class MaMonitorService {
 
 
 			if(meta.getManagedInfo().getDistributorAddress() != null) {
-				BigDecimal unsent = unsentRewards.get(meta.getSymbol());
+				BigDecimal unsent = unsentPrivateRewards.get(meta.getSymbol());
 				if(unsent != null) {
 					ObjectPair<BigDecimal, BigDecimal> accountBalance = getAccountBalance(meta, meta.getManagedInfo().getDistributorAddress());
 					ObjectPair<BigDecimal, String> netfeeBuffer = getNetfeeBuffer(meta, "distributor");
