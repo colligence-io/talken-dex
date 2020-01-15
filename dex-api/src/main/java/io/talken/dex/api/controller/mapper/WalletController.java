@@ -75,7 +75,7 @@ public class WalletController {
 
 	@RequestMapping(value = RequestMappings.TRADE_WALLET_TXLIST, method = RequestMethod.GET)
 	public DexResponse<List<StellarOpReceipt>> txList(
-			@RequestParam("address")
+			@RequestParam(value = "address")
 					String address,
 			@RequestParam(value = "operationType", required = false)
 					String operationType,

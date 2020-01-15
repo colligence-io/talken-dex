@@ -18,6 +18,7 @@ import org.stellar.sdk.AssetTypeNative;
 import org.stellar.sdk.responses.AccountResponse;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,11 +55,10 @@ public class WalletService {
 	}
 
 	public List<StellarOpReceipt> getTxList(String address, String operationType, String assetCode, String assetIssuer, Sort.Direction direction, int page, int offset) {
-		Criteria ct = new Criteria();
+		// return empty if address is not given
+		if(address == null) return new ArrayList<>();
 
-		if(address != null) {
-			ct.andOperator(Criteria.where("involvedAccounts").is(address));
-		}
+		Criteria ct = new Criteria().andOperator(Criteria.where("involvedAccounts").is(address));
 
 		if(operationType != null) {
 			ct.andOperator(Criteria.where("operationType").is(operationType));
@@ -70,9 +70,11 @@ public class WalletService {
 						Criteria.where("involvedAssets").is(assetCode + ":" + assetIssuer)
 				);
 			} else {
-				ct.andOperator(
-						Criteria.where("involvedAssets").is("native")
-				);
+				if(assetCode.equalsIgnoreCase("XLM")) {
+					ct.andOperator(
+							Criteria.where("involvedAssets").is("native")
+					);
+				}
 			}
 		}
 
