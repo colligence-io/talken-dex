@@ -13,8 +13,9 @@ import io.talken.dex.governance.service.bctx.monitor.stellar.DexTaskTransactionP
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
-import io.talken.dex.shared.service.blockchain.stellar.StellarTransferReceipt;
+import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarTxReceipt;
+import io.talken.dex.shared.service.blockchain.stellar.opreceipt.PaymentOpReceipt;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -65,14 +66,19 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 			// update task as signed tx catched
 			final String from = taskRecord.getTradeaddr(); // from
 			final String to = taskRecord.getIssueraddr(); // to
-			final BigInteger amountRaw = StellarConverter.actualToRaw(taskRecord.getAmount()); // amount
+			final BigDecimal amount = taskRecord.getAmount(); // amount
 
 			boolean matchFound = false;
-			for(StellarTransferReceipt rcpt : txResult.getPaymentReceipts()) {
-				// found matching payment
-				if(rcpt.getFrom().equalsIgnoreCase(from) && rcpt.getTo().equalsIgnoreCase(to) && rcpt.getAmountRaw().equals(amountRaw)) {
-					logger.info("Transfer to issuer detected : {} -> {} : {} {}({})", rcpt.getFrom(), rcpt.getTo(), taskRecord.getAmount(), rcpt.getTokenSymbol(), rcpt.getTokenIssuer());
-					matchFound = true;
+
+			for(StellarOpReceipt opReceipt : txResult.getOpReceipts()) {
+				if(opReceipt instanceof PaymentOpReceipt) {
+					PaymentOpReceipt paymentReceipt = (PaymentOpReceipt) opReceipt;
+
+					// found matching payment
+					if(paymentReceipt.getFrom().equalsIgnoreCase(from) && paymentReceipt.getTo().equalsIgnoreCase(to) && paymentReceipt.getAmount().equals(amount)) {
+						logger.info("Transfer to issuer detected : {} -> {} : {} {}({})", from, to, taskRecord.getAmount(), taskRecord.getAssetcode(), taskRecord.getIssueraddr());
+						matchFound = true;
+					}
 				}
 			}
 

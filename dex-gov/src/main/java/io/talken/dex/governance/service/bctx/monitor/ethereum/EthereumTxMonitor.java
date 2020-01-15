@@ -54,6 +54,9 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 			ssService.save();
 
 			mongoTemplate.dropCollection(COLLECTION_NAME);
+		}
+
+		if(!mongoTemplate.collectionExists(COLLECTION_NAME)) {
 			mongoTemplate.createCollection(COLLECTION_NAME);
 			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("timeStamp", Sort.Direction.DESC));
 			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("contractAddress", Sort.Direction.ASC));

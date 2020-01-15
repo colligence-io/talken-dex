@@ -11,6 +11,7 @@ public class RequestMappings {
 	public static final String PRIVATE_WALLET_ANCHOR_TASK = PRIVATE_WALLET + "/anchor";
 
 	private static final String TRADE_WALLET = DEX + "/tw";
+	public static final String TRADE_WALLET_TXLIST = TRADE_WALLET + "/txList";
 	public static final String TRADE_WALLET_BALANCE = TRADE_WALLET + "/balance";
 	public static final String TRADE_WALLET_DEANCHOR_TASK = TRADE_WALLET + "/deanchor";
 	public static final String TRADE_WALLET_DEANCHOR_FEE = TRADE_WALLET_DEANCHOR_TASK + "/fee";
@@ -31,7 +32,7 @@ public class RequestMappings {
 	public static final String OFFER_BUY_DELETE_TASK = OFFER_BUY + "/delete";
 
 	// MiscService
-	public static final String TXLIST = DEX + "/txList";
+	public static final String TXLIST = DEX + "/txList"; // dexTask TxList from txMon
 	public static final String CONVERT_ASSET = DEX + "/convert";
 	public static final String EXCHANGE_ASSET = DEX + "/exchange";
 
