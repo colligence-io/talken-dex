@@ -73,8 +73,7 @@ public class WalletController {
 		return DexResponse.buildResponse(feeService.calculateDeanchorFee(postBody.getAssetCode(), postBody.getAmount()));
 	}
 
-	@AuthRequired
-	@RequestMapping(value = RequestMappings.TRADE_WALLET_TXLIST, method = RequestMethod.POST)
+	@RequestMapping(value = RequestMappings.TRADE_WALLET_TXLIST, method = RequestMethod.GET)
 	public DexResponse<List<StellarOpReceipt>> txList(
 			@RequestParam("address")
 					String address,
