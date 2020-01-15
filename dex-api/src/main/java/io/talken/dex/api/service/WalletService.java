@@ -54,7 +54,7 @@ public class WalletService {
 		return rtn;
 	}
 
-	public List<StellarOpReceipt> getTxList(String address, String operationType, String assetCode, String assetIssuer, Sort.Direction direction, int page, int offset) {
+	public List<StellarOpReceipt> getTxList(String address, String operationType, String assetCode, String assetIssuer, boolean includeAll, Sort.Direction direction, int page, int offset) {
 		// return empty if address is not given
 		if(address == null) return new ArrayList<>();
 
@@ -66,16 +66,16 @@ public class WalletService {
 
 		if(assetCode != null) {
 			if(assetIssuer != null) {
-				ct.andOperator(
-						Criteria.where("involvedAssets").is(assetCode + ":" + assetIssuer)
-				);
+				ct.andOperator(Criteria.where("involvedAssets").is(assetCode + ":" + assetIssuer));
 			} else {
 				if(assetCode.equalsIgnoreCase("XLM")) {
-					ct.andOperator(
-							Criteria.where("involvedAssets").is("native")
-					);
+					ct.andOperator(Criteria.where("involvedAssets").is("native"));
 				}
 			}
+		}
+
+		if(!includeAll) {
+			ct.andOperator(Criteria.where("memo").ne(null));
 		}
 
 		Query qry = new Query()

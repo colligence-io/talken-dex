@@ -83,6 +83,8 @@ public class WalletController {
 					String assetCode,
 			@RequestParam(value = "assetIssuer", required = false)
 					String assetIssuer,
+			@RequestParam(value = "include", required = false)
+					String include,
 			@RequestParam(value = "sort", defaultValue = "desc")
 					String sort,
 			@RequestParam(value = "page", defaultValue = "1")
@@ -96,6 +98,10 @@ public class WalletController {
 		if(page == null) page = 1;
 		if(offset == null) offset = 10;
 
-		return DexResponse.buildResponse(walletService.getTxList(address, operationType, assetCode, assetIssuer, direction, page, offset));
+		boolean includeAll = false;
+
+		if(include != null && include.equalsIgnoreCase("all")) includeAll = true;
+
+		return DexResponse.buildResponse(walletService.getTxList(address, operationType, assetCode, assetIssuer, includeAll, direction, page, offset));
 	}
 }
