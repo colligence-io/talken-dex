@@ -75,7 +75,7 @@ public class WalletService {
 		}
 
 		if(!includeAll) {
-			ct.andOperator(Criteria.where("memo").ne(null));
+			ct.andOperator(Criteria.where("taskId").ne(null));
 		}
 
 		Query qry = new Query()

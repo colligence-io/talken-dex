@@ -99,6 +99,7 @@ public class StellarTxReceipt {
 
 				StellarOpReceipt receipt = StellarOpReceipt.fromResponse(this.response, op, result);
 				receipt.setMemo(this.txMemo);
+				if(this.dexTaskId != null) receipt.setTaskId(this.dexTaskId.getId());
 
 				opReceipts.add(receipt);
 			}

@@ -35,6 +35,8 @@ public abstract class StellarOpReceipt<TO extends Operation, TR> {
 	@Indexed
 	private String memo;
 	@Indexed
+	private String taskId;
+	@Indexed
 	private OperationType operationType;
 
 	@Indexed

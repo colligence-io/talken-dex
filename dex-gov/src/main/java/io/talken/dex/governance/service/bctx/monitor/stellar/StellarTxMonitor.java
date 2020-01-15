@@ -77,7 +77,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 			mongoTemplate.createCollection(COLLECTION_NAME);
 			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("timeStamp", Sort.Direction.DESC));
 			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("hash", Sort.Direction.ASC));
-			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("memo", Sort.Direction.ASC));
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("taskId", Sort.Direction.ASC));
 			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("operationType", Sort.Direction.ASC));
 			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("involvedAccounts", Sort.Direction.ASC));
 			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("involvedAssets", Sort.Direction.ASC));
