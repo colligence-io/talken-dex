@@ -75,7 +75,7 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 					PaymentOpReceipt paymentReceipt = (PaymentOpReceipt) opReceipt;
 
 					// found matching payment
-					if(paymentReceipt.getFrom().equalsIgnoreCase(from) && paymentReceipt.getTo().equalsIgnoreCase(to) && paymentReceipt.getAmount().equals(amount)) {
+					if(paymentReceipt.getRequest().getFrom().equalsIgnoreCase(from) && paymentReceipt.getRequest().getTo().equalsIgnoreCase(to) && paymentReceipt.getRequest().getAmount().equals(amount)) {
 						logger.info("Transfer to issuer detected : {} -> {} : {} {}({})", from, to, taskRecord.getAmount(), taskRecord.getAssetcode(), taskRecord.getIssueraddr());
 						matchFound = true;
 					}

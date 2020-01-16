@@ -63,15 +63,20 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 		PaymentOpReceipt opReceipt = (PaymentOpReceipt) receipt;
 
 		// check transfer is to holder
-		if(!checkHolder(opReceipt.getTo())) return;
+		if(!checkHolder(opReceipt.getRequest().getTo())) return;
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
-				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(opReceipt.getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(opReceipt.getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(opReceipt.getAmount())));
+				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(opReceipt.getRequest().getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(opReceipt.getRequest().getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(opReceipt.getRequest().getAmount())));
 
-		if(opReceipt.getAssetIssuer() == null) {
+		if(opReceipt.getRequest().getAsset().equalsIgnoreCase("native")) {
 			condition = condition.and(DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.STELLAR));
 		} else {
-			condition = condition.and(DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.STELLAR_TOKEN).and(DEX_TASK_ANCHOR.PLATFORM_AUX.eq(opReceipt.getAssetIssuer())));
+			String[] assetStr = opReceipt.getRequest().getAsset().split(":", 2);
+			condition = condition.and(
+					DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.STELLAR_TOKEN)
+							.and(DEX_TASK_ANCHOR.ASSETCODE.eq(assetStr[0]))
+							.and(DEX_TASK_ANCHOR.PLATFORM_AUX.eq(assetStr[1]))
+			);
 		}
 
 		DexTaskAnchorRecord taskRecord = dslContext.selectFrom(DEX_TASK_ANCHOR)
@@ -82,10 +87,10 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 
 		// finish if task not found
 		if(taskRecord == null) {
-			logger.error("Transfer to holder detected but no matching anchor task found : [{}] {} -> {} : {} {}({})", receipt.getHash(), opReceipt.getFrom(), opReceipt.getTo(), opReceipt.getAmount(), opReceipt.getAssetCode(), opReceipt.getAssetIssuer());
+			logger.error("Transfer to holder detected but no matching anchor task found : [{}] {} -> {} : {} {}", receipt.getHash(), opReceipt.getRequest().getFrom(), opReceipt.getRequest().getTo(), opReceipt.getRequest().getAmount(), opReceipt.getRequest().getAsset());
 			return;
 		} else {
-			logger.info("Transfer to holder detected : {} -> {} : {} {}({})", opReceipt.getFrom(), opReceipt.getTo(), opReceipt.getAmount(), opReceipt.getAssetCode(), opReceipt.getAssetIssuer());
+			logger.info("Transfer to holder detected : {} -> {} : {} {}", opReceipt.getRequest().getFrom(), opReceipt.getRequest().getTo(), opReceipt.getRequest().getAmount(), opReceipt.getRequest().getAsset());
 		}
 
 		taskRecord.setBcRefId(receipt.getHash());
@@ -100,7 +105,7 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 		bctxRecord.setPlatformAux(tm.getIssuerAddress());
 		bctxRecord.setAddressFrom(tm.getIssuerAddress());
 		bctxRecord.setAddressTo(taskRecord.getTradeaddr());
-		bctxRecord.setAmount(opReceipt.getAmount());
+		bctxRecord.setAmount(opReceipt.getRequest().getAmount());
 		bctxRecord.setNetfee(BigDecimal.ZERO);
 		bctxRecord.setTxAux(taskRecord.getTaskid());
 		dslContext.attach(bctxRecord);

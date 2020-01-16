@@ -2,10 +2,9 @@ package io.talken.dex.shared.service.blockchain.stellar.opreceipt;
 
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.stellar.sdk.AssetTypeCreditAlphaNum;
-import org.stellar.sdk.AssetTypeNative;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.xdr.PaymentResult;
 import org.stellar.sdk.xdr.PaymentResultCode;
@@ -15,34 +14,41 @@ import java.math.BigDecimal;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PaymentOpReceipt extends StellarOpReceipt<PaymentOperation, PaymentResult> {
-	private String from;
-	private String to;
-	private BigDecimal amount;
-	private String asset;
-	private String assetCode;
-	private String assetIssuer;
-	private PaymentResultCode resultCode;
+
+	@Data
+	@Builder
+	public static class Request {
+		private String from;
+		private String to;
+		private BigDecimal amount;
+		private String asset;
+	}
+
+	@Data
+	@Builder
+	public static class Result {
+		private PaymentResultCode resultCode;
+	}
+
+	private Request request;
+	private Result result;
 
 	@Override
 	protected void parse(PaymentOperation op, PaymentResult result) {
-		this.resultCode = result.getDiscriminant();
 
-		this.from = (op.getSourceAccount() != null) ? op.getSourceAccount() : getSourceAccount();
-		this.to = op.getDestination();
-		this.amount = StellarConverter.scale(new BigDecimal(op.getAmount())).stripTrailingZeros();
+		this.request = Request.builder()
+				.from(op.getSourceAccount() != null ? op.getSourceAccount() : getSourceAccount())
+				.to(op.getDestination())
+				.amount(StellarConverter.scale(new BigDecimal(op.getAmount())).stripTrailingZeros())
+				.asset(assetToString(op.getAsset()))
+				.build();
 
-		this.asset = assetToString(op.getAsset());
-		if(op.getAsset() instanceof AssetTypeNative) {
-			this.assetCode = "XLM";
-			this.assetIssuer = null;
-		} else {
-			AssetTypeCreditAlphaNum asset = ((AssetTypeCreditAlphaNum) op.getAsset());
-			this.assetCode = asset.getCode();
-			this.assetIssuer = asset.getIssuer();
-		}
+		this.result = Result.builder()
+				.resultCode(result.getDiscriminant())
+				.build();
 
-		addInvolvedAsset(this.asset);
-		addInvolvedAccount(this.from);
-		addInvolvedAccount(this.to);
+		addInvolvedAsset(this.request.getAsset());
+		addInvolvedAccount(this.request.getFrom());
+		addInvolvedAccount(this.request.getTo());
 	}
 }

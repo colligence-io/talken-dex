@@ -1,8 +1,5 @@
 package io.talken.dex.governance.service.bctx.monitor.stellar;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import io.talken.common.RunningProfile;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
@@ -11,7 +8,10 @@ import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
-import io.talken.dex.shared.service.blockchain.stellar.*;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
+import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
+import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
+import io.talken.dex.shared.service.blockchain.stellar.StellarTxReceipt;
 import org.jooq.DSLContext;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.talken.common.persistence.jooq.Tables.DEX_TXMON;
 
 @Service
 @Scope("singleton")
@@ -183,6 +184,10 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 	public void processDexTask(StellarTxReceipt txResult) {
 		if(txResult.getTaskId() == null) return;
+
+		Integer count = dslContext.selectCount().from(DEX_TXMON).where(DEX_TXMON.TXHASH.eq(txResult.getResponse().getHash())).fetchOneInto(Integer.class);
+
+		if(count > 0) return;
 
 		DexTxmonRecord txmRecord = new DexTxmonRecord();
 		txmRecord.setTxid(txResult.getResponse().getHash());

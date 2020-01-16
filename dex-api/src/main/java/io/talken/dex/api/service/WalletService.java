@@ -58,28 +58,30 @@ public class WalletService {
 		// return empty if address is not given
 		if(address == null) return new ArrayList<>();
 
-		Criteria ct = new Criteria().andOperator(Criteria.where("involvedAccounts").is(address));
+		List<Criteria> criteriaList = new ArrayList<>();
+
+		criteriaList.add(Criteria.where("involvedAccounts").is(address));
 
 		if(operationType != null) {
-			ct.andOperator(Criteria.where("operationType").is(operationType));
+			criteriaList.add(Criteria.where("operationType").is(operationType));
 		}
 
 		if(assetCode != null) {
 			if(assetIssuer != null) {
-				ct.andOperator(Criteria.where("involvedAssets").is(assetCode + ":" + assetIssuer));
+				criteriaList.add(Criteria.where("involvedAssets").is(assetCode + ":" + assetIssuer));
 			} else {
 				if(assetCode.equalsIgnoreCase("XLM")) {
-					ct.andOperator(Criteria.where("involvedAssets").is("native"));
+					criteriaList.add(Criteria.where("involvedAssets").is("native"));
 				}
 			}
 		}
 
 		if(!includeAll) {
-			ct.andOperator(Criteria.where("taskId").ne(null));
+			criteriaList.add(Criteria.where("taskId").ne(null));
 		}
 
 		Query qry = new Query()
-				.addCriteria(ct)
+				.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])))
 				.limit(offset)
 				.skip(Math.max((page - 1), 0) * offset)
 				.with(new Sort(direction, "timeStamp"));

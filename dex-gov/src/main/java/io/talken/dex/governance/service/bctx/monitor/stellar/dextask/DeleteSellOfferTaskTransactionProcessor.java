@@ -37,6 +37,9 @@ public class DeleteSellOfferTaskTransactionProcessor implements DexTaskTransacti
 
 			DexTaskDeleteofferRecord taskRecord = opt_taskRecord.get();
 
+			if(taskRecord.getSignedTxCatchFlag().equals(true))
+				throw new DexTaskTransactionProcessError("DeleteSellOfferAlreadyProcessed");
+
 			// update task as signed tx catched
 			taskRecord.setSignedTxCatchFlag(true);
 			taskRecord.update();

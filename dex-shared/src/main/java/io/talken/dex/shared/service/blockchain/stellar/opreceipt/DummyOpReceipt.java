@@ -1,6 +1,7 @@
 package io.talken.dex.shared.service.blockchain.stellar.opreceipt;
 
 import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.stellar.sdk.Operation;
@@ -10,10 +11,19 @@ import org.stellar.sdk.xdr.OperationResultCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class DummyOpReceipt extends StellarOpReceipt<Operation, OperationResult> {
-	private OperationResultCode resultCode;
+
+	@Data
+	@Builder
+	public static class Result {
+		private OperationResultCode resultCode;
+	}
+
+	private Result result;
 
 	@Override
 	protected void parse(Operation op, OperationResult result) {
-		resultCode = result.getDiscriminant();
+		this.result = Result.builder()
+				.resultCode(result.getDiscriminant())
+				.build();
 	}
 }
