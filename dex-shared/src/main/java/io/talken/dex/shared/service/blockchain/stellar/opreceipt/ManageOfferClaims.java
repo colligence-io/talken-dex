@@ -3,6 +3,7 @@ package io.talken.dex.shared.service.blockchain.stellar.opreceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
 import lombok.Data;
+import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.xdr.ClaimOfferAtom;
 import org.stellar.sdk.xdr.ManageOfferSuccessResult;
 
@@ -17,7 +18,7 @@ public abstract class ManageOfferClaims {
 		for(ClaimOfferAtom claimOfferAtom : success.getOffersClaimed()) {
 			ClaimedOffer claimedOffer = new ClaimedOffer();
 			claimedOffer.setOfferId(claimOfferAtom.getOfferID().getInt64());
-			claimedOffer.setSellerAccount(claimOfferAtom.getSellerID().toString());
+			claimedOffer.setSellerAccount(KeyPair.fromXdrPublicKey(claimOfferAtom.getSellerID().getAccountID()).getAccountId());
 			claimedOffer.setAssetBought(StellarOpReceipt.assetToString(claimOfferAtom.getAssetBought()));
 			claimedOffer.setAmountBought(StellarConverter.rawToActual(claimOfferAtom.getAmountBought().getInt64()));
 			claimedOffer.setAssetSold(StellarOpReceipt.assetToString(claimOfferAtom.getAssetSold()));

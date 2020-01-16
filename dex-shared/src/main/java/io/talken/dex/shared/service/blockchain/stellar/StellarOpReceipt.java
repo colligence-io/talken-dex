@@ -112,15 +112,7 @@ public abstract class StellarOpReceipt<TO extends Operation, TR> {
 	}
 
 	static public String assetToString(org.stellar.sdk.xdr.Asset asset) {
-		switch(asset.getDiscriminant()) {
-			case ASSET_TYPE_NATIVE:
-				return "native";
-			case ASSET_TYPE_CREDIT_ALPHANUM4:
-				return asset.getAlphaNum4().getAssetCode().toString() + ":" + asset.getAlphaNum4().getIssuer().toString();
-			case ASSET_TYPE_CREDIT_ALPHANUM12:
-				return asset.getAlphaNum12().getAssetCode().toString() + ":" + asset.getAlphaNum12().getIssuer().toString();
-		}
-		return "unknown";
+		return assetToString(Asset.fromXdr(asset));
 	}
 
 	static public String assetToString(Asset asset) {
