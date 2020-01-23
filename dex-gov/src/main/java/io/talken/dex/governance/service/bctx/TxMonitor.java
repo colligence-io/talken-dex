@@ -121,15 +121,13 @@ public abstract class TxMonitor<TB, TT, TR> {
 				if(UTCUtil.getNow().isAfter(lastBlockUpdateTime.plusMinutes(10))) {
 					alarmService.warn(logger, "{} stuck at txPagingToken {} for 10 minutes", getClass().getSimpleName(), lastBlockNumber);
 				}
-			}
-			else {
+			} else {
 				// if new paging token is smaller than last (this indicates stellar network reset)
 				if(lastBlockNumber.compareTo(newBlockNumber) > 0) {
 					alarmService.warn(logger, "{} response small txPagingToken {} check stellar-core", getClass().getSimpleName(), newBlockNumber);
 				}
 			}
-		}
-		else {
+		} else {
 			logger.info("{} starts from {}", getClass().getSimpleName(), newBlockNumber);
 		}
 		lastBlockUpdateTime = UTCUtil.getNow();

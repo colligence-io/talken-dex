@@ -6,7 +6,6 @@ import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTxmonRecord;
 import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
