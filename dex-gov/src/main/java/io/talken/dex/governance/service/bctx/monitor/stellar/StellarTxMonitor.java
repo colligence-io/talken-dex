@@ -6,6 +6,8 @@ import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTxmonRecord;
 import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.UTCUtil;
+import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
@@ -32,6 +34,8 @@ import org.stellar.sdk.responses.TransactionResponse;
 import org.stellar.sdk.xdr.OperationType;
 
 import javax.annotation.PostConstruct;
+import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,11 +62,17 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	@Autowired
 	private MongoTemplate mongoTemplate;
 
+	@Autowired
+	private AdminAlarmService adminAlarmService;
+
 	private HashMap<DexTaskTypeEnum, DexTaskTransactionProcessor> processors = new HashMap<>();
 
 	private static final String COLLECTION_NAME = "stellar_opReceipt";
 
 	private static final int TXREQUEST_LIMIT = 200;
+
+	private String lastPagingToken = null;
+	private LocalDateTime lastTokenUpdateTime = null;
 
 	@PostConstruct
 	private void init() {
@@ -168,6 +178,8 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 					mongoTemplate.insert(opReceipt, COLLECTION_NAME);
 				}
+
+				checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
 
 				ssService.status().getTxMonitor().getStellar().setLastPagingToken(txRecord.getPagingToken());
 				ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));

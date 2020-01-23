@@ -66,6 +66,8 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 				return;
 			}
 
+			checkChainNetworkNode(latestBlockNumber);
+
 			// substract latest-CONFIRM_BLOCK_COUNT for block confirmation
 			targetBlockNumber = (RunningProfile.isProduction()) ? latestBlockNumber.subtract(CONFIRM_BLOCK_COUNT) : latestBlockNumber;
 
