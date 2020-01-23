@@ -53,6 +53,10 @@ public class ManageSellOfferOpReceipt extends StellarOpReceipt<ManageSellOfferOp
 		Result.ResultBuilder resultBuilder = Result.builder()
 				.resultCode(result.getDiscriminant());
 
+		addInvolvedAccount(this.request.getOwnerAccount());
+		addInvolvedAsset(this.request.getBuyingAsset());
+		addInvolvedAsset(this.request.getSellingAsset());
+
 		if(result.getSuccess() != null && result.getSuccess().getOffer() != null && result.getSuccess().getOffer().getOffer() != null && result.getSuccess().getOffer().getOffer().getOfferID() != null) {
 			resultBuilder.offerId(result.getSuccess().getOffer().getOffer().getOfferID().getInt64());
 		}
