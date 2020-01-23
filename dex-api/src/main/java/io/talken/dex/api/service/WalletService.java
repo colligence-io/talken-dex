@@ -37,12 +37,16 @@ public class WalletService {
 	public TradeWalletResult getTradeWalletBalances(User user) throws TradeWalletCreateFailedException {
 		TradeWalletInfo tw = twService.getTradeWallet(user);
 		TradeWalletResult rtn = new TradeWalletResult();
-		Map<String, BigDecimal> balances = new HashMap<>();
+		Map<String, TradeWalletResult.Balance> balances = new HashMap<>();
 
 		if(tw.isConfirmed()) {
 			for(AccountResponse.Balance balance : tw.getAccountResponse().getBalances()) {
 				if(!(balance.getAsset() instanceof AssetTypeNative)) {
-					balances.put(balance.getAssetCode(), new BigDecimal(balance.getBalance()).stripTrailingZeros());
+					TradeWalletResult.Balance b = new TradeWalletResult.Balance();
+					b.setBalance(new BigDecimal(balance.getBalance()).stripTrailingZeros());
+					b.setBuyLiability(new BigDecimal(balance.getBuyingLiabilities()));
+					b.setSellLiability(new BigDecimal(balance.getSellingLiabilities()));
+					balances.put(balance.getAssetCode(), b);
 				}
 			}
 		}
