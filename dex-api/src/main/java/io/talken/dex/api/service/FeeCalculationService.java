@@ -39,6 +39,10 @@ public class FeeCalculationService {
 		PIVOT_ASSET_MI = tmService.getManagedInfo(DexSettings.PIVOT_ASSET_CODE);
 	}
 
+	public TokenMetaTable.ManagedInfo getPivotAssetManagedInfo() {
+		return PIVOT_ASSET_MI;
+	}
+
 	public CalculateFeeResult calculateSellOfferFee(String sellAssetCode, BigDecimal sellAmount, BigDecimal sellPrice) throws TokenMetaNotFoundException, TokenMetaNotManagedException, EffectiveAmountIsNegativeException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 		rtn.setSellAssetType(tmService.getAssetType(sellAssetCode));

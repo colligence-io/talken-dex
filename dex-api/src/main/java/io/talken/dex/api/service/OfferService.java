@@ -361,14 +361,16 @@ public class OfferService {
 			throw new OfferNotValidException(offerId, "Offer " + offerId + " not found on network.");
 		}
 
-		BigDecimal remainAmount;
-		CalculateFeeResult refundFeeResult = null;
-		if(isSell) {
-			remainAmount = StellarConverter.scale(new BigDecimal(originalOffer.getAmount()));
-		} else {
-			// calculate fee to refund only for buying
-			remainAmount = StellarConverter.scale(new BigDecimal(originalOffer.getAmount())).multiply(new BigDecimal(originalOffer.getPrice()));
-			refundFeeResult = feeCalculationService.calculateBuyOfferFee(request.getBuyAssetCode(), remainAmount, price);
+		BigDecimal remainAmount = StellarConverter.scale(new BigDecimal(originalOffer.getAmount()));
+		BigDecimal refundAmount = null;
+		if(!isSell) {
+			// createOfferRecord.getFeeamount() : createOfferRecord.getSellamount() = refundAmount : remainAmount
+			// refundAmount * createOfferRecord.getSellamount() = remainAmount * createOfferRecord.getFeeamount()
+			// refundAmount = remainAmount * createOfferRecord.getFeeamount() / createOfferRecord.getSellamount()
+			refundAmount = createOfferRecord.getFeeamount().multiply(remainAmount).divide(createOfferRecord.getSellamount(), BigDecimal.ROUND_FLOOR);
+
+			// zero refund if below zero or zero
+			if(refundAmount.compareTo(BigDecimal.ZERO) <= 0) refundAmount = null;
 		}
 
 		String position;
@@ -385,9 +387,9 @@ public class OfferService {
 		taskRecord.setPrice(price);
 		taskRecord.setCreateofferTaskid(createOfferRecord.getTaskid());
 		taskRecord.setRemainamount(remainAmount);
-		if(refundFeeResult != null) {
-			taskRecord.setRefundassetcode(refundFeeResult.getFeeAssetCode());
-			taskRecord.setRefundamount(refundFeeResult.getFeeAmount());
+		if(refundAmount != null) {
+			taskRecord.setRefundassetcode(createOfferRecord.getFeeassetcode());
+			taskRecord.setRefundamount(refundAmount);
 		}
 		dslContext.attach(taskRecord);
 		taskRecord.store();
@@ -421,13 +423,13 @@ public class OfferService {
 								.build()
 				);
 				// add refund operation
-				if(refundFeeResult != null && refundFeeResult.getFeeAmount().compareTo(BigDecimal.ZERO) > 0) {
+				if(refundAmount != null) {
 					sctxBuilder.addOperation(
 							new PaymentOperation
-									.Builder(tradeWallet.getAccountId(), refundFeeResult.getFeeAssetType(), StellarConverter.actualToString(refundFeeResult.getFeeAmount()))
-									.setSourceAccount(refundFeeResult.getFeeHolderAccountAddress())
+									.Builder(tradeWallet.getAccountId(), feeCalculationService.getPivotAssetManagedInfo().dexAssetType(), StellarConverter.actualToString(refundAmount))
+									.setSourceAccount(feeCalculationService.getPivotAssetManagedInfo().getOfferFeeHolderAddress())
 									.build()
-					).addSigner(new StellarSignerTSS(signServerService, refundFeeResult.getFeeHolderAccountAddress()));
+					).addSigner(new StellarSignerTSS(signServerService, feeCalculationService.getPivotAssetManagedInfo().getOfferFeeHolderAddress()));
 				}
 			}
 		} catch(TalkenException tex) {

@@ -18,3 +18,5 @@ build/
 out/
 temp/
 gradle.properties
+.idea/jarRepositories.xml
+.idea/dictionaries/
