@@ -443,6 +443,8 @@ public class TradeWalletService {
 				logger.exception(ex, "{} {}", ((ErrorResponse) ex).getCode(), ((ErrorResponse) ex).getBody());
 			else
 				logger.exception(ex);
+
+			return false;
 		}
 		return true;
 	}
