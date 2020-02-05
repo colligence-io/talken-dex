@@ -344,4 +344,89 @@ public class TradeWalletService {
 
 		return new ObjectPair<>(added, refillAmount);
 	}
+
+	public void resetTradeWallet(String uid) throws TradeWalletCreateFailedException, SigningException {
+		User user = dslContext.selectFrom(USER).where(USER.UID.eq(uid)).fetchOneInto(User.class);
+
+		if(user == null) throw new TradeWalletCreateFailedException("User " + uid + " does not exists");
+
+		resetTradeWallet(user);
+	}
+
+	public boolean resetTradeWallet(User user) throws TradeWalletCreateFailedException, SigningException {
+
+		TradeWalletInfo tw = loadTradeWallet(user, false);
+
+		KeyPair kp = extractKeyPair(tw);
+
+		Server server = stellarNetworkService.pickServer();
+
+		try {
+			AccountResponse account = server.accounts().account(kp.getAccountId());
+
+			Transaction.Builder txBuilder = new Transaction.Builder(account, stellarNetworkService.getNetwork())
+					.setOperationFee(stellarNetworkService.getNetworkFee())
+					.setTimeout(30);
+
+			boolean sendTx = false;
+
+			for(AccountResponse.Balance balance : account.getBalances()) {
+				if(!(balance.getAsset() instanceof AssetTypeNative)) {
+					sendTx = true;
+					if(new BigDecimal(balance.getBalance()).compareTo(BigDecimal.ZERO) > 0) {
+						txBuilder.addOperation(
+								new PaymentOperation.Builder(balance.getAssetIssuer(), balance.getAsset(), balance.getBalance()).build()
+						);
+					}
+					txBuilder.addOperation(
+							new ChangeTrustOperation.Builder(balance.getAsset(), "0").build()
+					);
+				}
+			}
+
+			if(sendTx) {
+				Transaction tx = txBuilder.build();
+				tx.sign(kp);
+				SubmitTransactionResponse paymentResponse = server.submitTransaction(tx);
+
+				if(!paymentResponse.isSuccess()) {
+					ObjectPair<String, String> resultCodesFromExtra = StellarConverter.getResultCodesFromExtra(paymentResponse);
+					logger.info("Withdraw user {} tradewallet {} failed : {} {}", user.getUid(), kp.getAccountId(), resultCodesFromExtra.first(), resultCodesFromExtra.second());
+					return false;
+				}
+
+				logger.info("Withdraw user {} tradewallet {} : {}", user.getUid(), kp.getAccountId(), paymentResponse.getHash());
+			}
+
+			Transaction mtx = new Transaction.Builder(account, stellarNetworkService.getNetwork())
+					.setOperationFee(stellarNetworkService.getNetworkFee())
+					.setTimeout(30)
+					.addOperation(new AccountMergeOperation.Builder(this.creatorAddress).build())
+					.build();
+
+			mtx.sign(kp);
+			SubmitTransactionResponse mergeResponse = server.submitTransaction(mtx);
+
+			if(!mergeResponse.isSuccess()) {
+				ObjectPair<String, String> resultCodesFromExtra = StellarConverter.getResultCodesFromExtra(mergeResponse);
+				logger.info("Merge user {} tradewallet {} failed : {} {}", user.getUid(), kp.getAccountId(), resultCodesFromExtra.first(), resultCodesFromExtra.second());
+				return false;
+			}
+
+			logger.info("Merge user {} tradewallet {} : {}", user.getUid(), kp.getAccountId(), mergeResponse.getHash());
+
+			int count = dslContext.deleteFrom(USER_TRADE_WALLET).where(USER_TRADE_WALLET.USER_ID.eq(user.getId())).execute();
+
+			if(count > 0) {
+				logger.info("Removed user {} tradewallet {} from db.", user.getUid(), kp.getAccountId());
+			}
+
+		} catch(Exception ex) {
+			if(ex instanceof ErrorResponse)
+				logger.exception(ex, "{} {}", ((ErrorResponse) ex).getCode(), ((ErrorResponse) ex).getBody());
+			else
+				logger.exception(ex);
+		}
+		return true;
+	}
 }
