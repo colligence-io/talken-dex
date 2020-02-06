@@ -9,5 +9,12 @@ import java.util.Map;
 public class TradeWalletResult {
 	private boolean isActive;
 	private String address;
-	private Map<String, BigDecimal> balances;
+	private Map<String, TradeWalletResult.Balance> balances;
+
+	@Data
+	public static class Balance {
+		private BigDecimal balance;
+		private BigDecimal sellLiability;
+		private BigDecimal buyLiability;
+	}
 }

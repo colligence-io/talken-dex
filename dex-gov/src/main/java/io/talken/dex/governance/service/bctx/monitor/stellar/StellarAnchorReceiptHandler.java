@@ -10,9 +10,9 @@ import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.governance.service.bctx.monitor.AbstractAnchorReceiptHandler;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
-import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
-import io.talken.dex.shared.service.blockchain.stellar.StellarTransferReceipt;
+import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarTxReceipt;
+import io.talken.dex.shared.service.blockchain.stellar.opreceipt.PaymentOpReceipt;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
 @Service
 @Scope("singleton")
-public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Void, StellarTxReceipt, StellarTransferReceipt> {
+public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Void, StellarTxReceipt, StellarOpReceipt> {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarAnchorReceiptHandler.class);
 
 	@Autowired
@@ -53,20 +53,30 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 	}
 
 	@Override
-	public void handle(Void _void, StellarTxReceipt txResult, StellarTransferReceipt receipt) throws Exception {
-		// convert amount to stellar raw
-		BigDecimal amount = StellarConverter.rawToActual(receipt.getAmountRaw());
+	public void handle(Void _void, StellarTxReceipt txResult, StellarOpReceipt receipt) throws Exception {
+
+		if(!(receipt instanceof PaymentOpReceipt)) {
+			logger.error("Cannot handle {}", receipt.getOperationType());
+			return;
+		}
+
+		PaymentOpReceipt opReceipt = (PaymentOpReceipt) receipt;
 
 		// check transfer is to holder
-		if(!checkHolder(receipt.getTo())) return;
+		if(!checkHolder(opReceipt.getRequest().getTo())) return;
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
-				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(receipt.getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(receipt.getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)));
+				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(opReceipt.getRequest().getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(opReceipt.getRequest().getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(opReceipt.getRequest().getAmount())));
 
-		if(receipt.getTokenIssuer() == null) {
+		if(opReceipt.getRequest().getAsset().equalsIgnoreCase("native")) {
 			condition = condition.and(DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.STELLAR));
 		} else {
-			condition = condition.and(DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.STELLAR_TOKEN).and(DEX_TASK_ANCHOR.PLATFORM_AUX.eq(receipt.getTokenIssuer())));
+			String[] assetStr = opReceipt.getRequest().getAsset().split(":", 2);
+			condition = condition.and(
+					DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.STELLAR_TOKEN)
+							.and(DEX_TASK_ANCHOR.ASSETCODE.eq(assetStr[0]))
+							.and(DEX_TASK_ANCHOR.PLATFORM_AUX.eq(assetStr[1]))
+			);
 		}
 
 		DexTaskAnchorRecord taskRecord = dslContext.selectFrom(DEX_TASK_ANCHOR)
@@ -77,10 +87,10 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 
 		// finish if task not found
 		if(taskRecord == null) {
-			logger.error("Transfer to holder detected but no matching anchor task found : [{}] {} -> {} : {} {}({})", receipt.getHash(), receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getTokenIssuer());
+			logger.error("Transfer to holder detected but no matching anchor task found : [{}] {} -> {} : {} {}", receipt.getHash(), opReceipt.getRequest().getFrom(), opReceipt.getRequest().getTo(), opReceipt.getRequest().getAmount(), opReceipt.getRequest().getAsset());
 			return;
 		} else {
-			logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getTokenIssuer());
+			logger.info("Transfer to holder detected : {} -> {} : {} {}", opReceipt.getRequest().getFrom(), opReceipt.getRequest().getTo(), opReceipt.getRequest().getAmount(), opReceipt.getRequest().getAsset());
 		}
 
 		taskRecord.setBcRefId(receipt.getHash());
@@ -95,7 +105,7 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 		bctxRecord.setPlatformAux(tm.getIssuerAddress());
 		bctxRecord.setAddressFrom(tm.getIssuerAddress());
 		bctxRecord.setAddressTo(taskRecord.getTradeaddr());
-		bctxRecord.setAmount(amount);
+		bctxRecord.setAmount(opReceipt.getRequest().getAmount());
 		bctxRecord.setNetfee(BigDecimal.ZERO);
 		bctxRecord.setTxAux(taskRecord.getTaskid());
 		dslContext.attach(bctxRecord);

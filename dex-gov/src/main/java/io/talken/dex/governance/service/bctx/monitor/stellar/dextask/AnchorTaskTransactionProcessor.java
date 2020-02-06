@@ -37,6 +37,9 @@ public class AnchorTaskTransactionProcessor implements DexTaskTransactionProcess
 
 			DexTaskAnchorRecord taskRecord = opt_taskRecord.get();
 
+			if(taskRecord.getSignedTxCatchFlag().equals(true))
+				throw new DexTaskTransactionProcessError("AnchorAlreadyProcessed");
+
 			// update task as signed tx catched
 			taskRecord.setSignedTxCatchFlag(true);
 			taskRecord.update();

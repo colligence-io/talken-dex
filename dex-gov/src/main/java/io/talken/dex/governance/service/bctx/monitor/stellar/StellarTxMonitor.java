@@ -6,12 +6,12 @@ import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.records.DexTxmonRecord;
 import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
-import io.talken.dex.shared.exception.TransactionResultProcessingException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
-import io.talken.dex.shared.service.blockchain.stellar.StellarTransferReceipt;
+import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarTxReceipt;
 import org.jooq.DSLContext;
 import org.springframework.beans.BeansException;
@@ -19,6 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -27,16 +30,21 @@ import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.requests.RequestBuilder;
 import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.TransactionResponse;
+import org.stellar.sdk.xdr.OperationType;
 
 import javax.annotation.PostConstruct;
+import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.talken.common.persistence.jooq.Tables.DEX_TXMON;
 
 @Service
 @Scope("singleton")
-public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarTransferReceipt> implements ApplicationContextAware {
+public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarOpReceipt> implements ApplicationContextAware {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarTxMonitor.class);
 
 	private ApplicationContext applicationContext;
@@ -50,15 +58,20 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarT
 	@Autowired
 	private DSLContext dslContext;
 
+	@Autowired
+	private MongoTemplate mongoTemplate;
+
+	@Autowired
+	private AdminAlarmService adminAlarmService;
+
 	private HashMap<DexTaskTypeEnum, DexTaskTransactionProcessor> processors = new HashMap<>();
 
-	public static interface TaskTransactionProcessor {
-		DexTaskTypeEnum getDexTaskType();
-
-		DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt taskTxResponse) throws TransactionResultProcessingException;
-	}
+	private static final String COLLECTION_NAME = "stellar_opReceipt";
 
 	private static final int TXREQUEST_LIMIT = 200;
+
+	private String lastPagingToken = null;
+	private LocalDateTime lastTokenUpdateTime = null;
 
 	@PostConstruct
 	private void init() {
@@ -66,6 +79,18 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarT
 		if(RunningProfile.isLocal()) {
 			ssService.status().getTxMonitor().getStellar().setLastPagingToken(null);
 			ssService.save();
+
+			mongoTemplate.dropCollection(COLLECTION_NAME);
+		}
+
+		if(!mongoTemplate.collectionExists(COLLECTION_NAME)) {
+			mongoTemplate.createCollection(COLLECTION_NAME);
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("timeStamp", Sort.Direction.DESC));
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("hash", Sort.Direction.ASC));
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("taskId", Sort.Direction.ASC));
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("operationType", Sort.Direction.ASC));
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("involvedAccounts", Sort.Direction.ASC));
+			mongoTemplate.indexOps(COLLECTION_NAME).ensureIndex(new Index().on("involvedAssets", Sort.Direction.ASC));
 		}
 
 		Map<String, DexTaskTransactionProcessor> ascBeans = applicationContext.getBeansOfType(DexTaskTransactionProcessor.class);
@@ -143,9 +168,17 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarT
 
 				processDexTask(txResult);
 
-				for(StellarTransferReceipt payment : txResult.getPaymentReceipts()) {
-					callReceiptHandlerStack(null, txResult, payment);
+				List<StellarOpReceipt> opReceipts = txResult.getOpReceipts();
+
+				for(StellarOpReceipt opReceipt : opReceipts) {
+					if(opReceipt.getOperationType().equals(OperationType.PAYMENT)) {
+						callReceiptHandlerStack(null, txResult, opReceipt);
+					}
+
+					mongoTemplate.insert(opReceipt, COLLECTION_NAME);
 				}
+
+				checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
 
 				ssService.status().getTxMonitor().getStellar().setLastPagingToken(txRecord.getPagingToken());
 				ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
@@ -162,6 +195,10 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarT
 
 	public void processDexTask(StellarTxReceipt txResult) {
 		if(txResult.getTaskId() == null) return;
+
+		Integer count = dslContext.selectCount().from(DEX_TXMON).where(DEX_TXMON.TXHASH.eq(txResult.getResponse().getHash())).fetchOneInto(Integer.class);
+
+		if(count > 0) return;
 
 		DexTxmonRecord txmRecord = new DexTxmonRecord();
 		txmRecord.setTxid(txResult.getResponse().getHash());
