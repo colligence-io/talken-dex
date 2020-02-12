@@ -10,6 +10,11 @@ buildscript {
     }
 }
 
+wrapper {
+    gradleVersion = '5.6.4'
+    distributionType = Wrapper.DistributionType.BIN
+}
+
 allprojects {
     gradle.projectsEvaluated {
         tasks.withType(JavaCompile) {
