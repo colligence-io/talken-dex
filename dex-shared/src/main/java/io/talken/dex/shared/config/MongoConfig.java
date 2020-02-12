@@ -1,20 +1,22 @@
 package io.talken.dex.shared.config;
 
-import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import io.talken.common.persistence.vault.VaultSecretReader;
 import io.talken.common.persistence.vault.data.VaultSecretDataMongoDB;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
-public class MongoConfig extends AbstractMongoConfiguration {
+public class MongoConfig extends AbstractMongoClientConfiguration {
 	@Autowired
 	private VaultSecretReader secretReader;
 
@@ -35,7 +37,14 @@ public class MongoConfig extends AbstractMongoConfiguration {
 
 		final MongoCredential credential = MongoCredential.createCredential(secret().getUsername(), secret().getAuthSource(), secret().getPassword().toCharArray());
 		final MongoClientOptions options = MongoClientOptions.builder().build();
-		return new MongoClient(addrs, credential, options);
+
+
+		MongoClientSettings settings = MongoClientSettings.builder()
+				.applyToClusterSettings(builder -> builder.hosts(addrs))
+				.credential(credential)
+				.build();
+
+		return MongoClients.create(settings);
 	}
 
 	@Override

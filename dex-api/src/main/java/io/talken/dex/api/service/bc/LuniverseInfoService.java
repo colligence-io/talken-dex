@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 
 import javax.annotation.PostConstruct;
+import java.util.Collections;
 
 @Service
 @Scope("singleton")
@@ -69,7 +70,7 @@ public class LuniverseInfoService {
 				.addCriteria(ct)
 				.limit(offset)
 				.skip(Math.max((page - 1), 0) * offset)
-				.with(new Sort(direction, "timeStamp"));
+				.with(Sort.by(direction, "timeStamp"));
 
 		rtn.setResult(mongoTemplate.find(qry, EthereumTransferReceipt.class, "luniverse_txReceipt"));
 		return rtn;

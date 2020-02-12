@@ -88,7 +88,7 @@ public class WalletService {
 				.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])))
 				.limit(offset)
 				.skip(Math.max((page - 1), 0) * offset)
-				.with(new Sort(direction, "timeStamp"));
+				.with(Sort.by(direction, "timeStamp"));
 
 
 		return mongoTemplate.find(qry, StellarOpReceipt.class, "stellar_opReceipt");

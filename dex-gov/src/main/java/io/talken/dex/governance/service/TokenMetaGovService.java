@@ -415,7 +415,7 @@ public class TokenMetaGovService extends TokenMetaTableService {
 			}
 		} catch(ErrorResponse er) {
 			try {
-				JsonObject json = new JsonParser().parse(er.getBody()).getAsJsonObject();
+				JsonObject json = JsonParser.parseString(er.getBody()).getAsJsonObject();
 				logger.error("Trustline Check Error {} : {} {}", source.getAccountId(), json.get("status").getAsString(), json.get("title").getAsString());
 			} catch(Exception ex) {
 				logger.error("Trustline Check Error {} : {} {}", source.getAccountId(), er.getBody(), er.getMessage());

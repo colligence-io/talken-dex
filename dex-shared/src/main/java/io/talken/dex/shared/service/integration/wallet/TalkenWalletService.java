@@ -48,7 +48,7 @@ public class TalkenWalletService {
 		if(wallets.isSuccess()) {
 			String jsonString = wallets.getData().getData();
 
-			JsonElement jsonElement = new JsonParser().parse(jsonString);
+			JsonElement jsonElement = JsonParser.parseString(jsonString);
 
 			if(jsonElement.isJsonArray()) {
 				try {
