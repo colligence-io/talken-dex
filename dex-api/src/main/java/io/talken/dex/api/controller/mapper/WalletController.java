@@ -104,4 +104,16 @@ public class WalletController {
 
 		return DexResponse.buildResponse(walletService.getTxList(address, operationType, assetCode, assetIssuer, includeAll, direction, page, offset));
 	}
+
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_PREPARE_LMT_TRANSFER, method = RequestMethod.GET)
+	public DexResponse<Boolean> prepareLmtTransfer() throws TalkenException {
+		return DexResponse.buildResponse(walletService.prepareTransferLuk(authInfo.getUser()));
+	}
+
+	@AuthRequired
+	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_CHECK_LMT_TRANSFER_READY, method = RequestMethod.GET)
+	public DexResponse<Boolean> checkLmtTransferReady(@RequestParam("address") String address) {
+		return DexResponse.buildResponse(walletService.checkTransferLukPrepared(address));
+	}
 }

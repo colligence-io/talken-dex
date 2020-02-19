@@ -9,6 +9,8 @@ public class RequestMappings {
 	private static final String PRIVATE_WALLET = DEX + "/pw";
 	public static final String PRIVATE_WALLET_WITHDRAW_BASE = PRIVATE_WALLET + "/transferBase";
 	public static final String PRIVATE_WALLET_ANCHOR_TASK = PRIVATE_WALLET + "/anchor";
+	public static final String PRIVATE_WALLET_PREPARE_LMT_TRANSFER = PRIVATE_WALLET + "/prepareLmtTransfer";
+	public static final String PRIVATE_WALLET_CHECK_LMT_TRANSFER_READY = PRIVATE_WALLET + "/checkLmtTransferReady";
 
 	private static final String TRADE_WALLET = DEX + "/tw";
 	public static final String TRADE_WALLET_TXLIST = TRADE_WALLET + "/txList";
