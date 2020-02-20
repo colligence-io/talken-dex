@@ -3,6 +3,7 @@ package io.talken.dex.governance.scheduler;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.integration.slack.AdminAlarmService;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,13 @@ public class TradeWalletResetService {
 	@Autowired
 	private AdminAlarmService adminAlarmService;
 
+	/**
+	 * Reset trade wallet if activationHash is marked as 'RESET'
+	 */
 	@Scheduled(fixedDelay = 60000, initialDelay = 4000)
 	private void checkToReset() {
+		if(DexGovStatus.isStopped) return;
+
 		List<User> usersToReset = dslContext.select(USER.asterisk())
 				.from(USER.leftOuterJoin(USER_TRADE_WALLET).on(USER.ID.eq(USER_TRADE_WALLET.USER_ID)))
 				.where(USER_TRADE_WALLET.ACTIVATIONTXHASH.eq("RESET"))

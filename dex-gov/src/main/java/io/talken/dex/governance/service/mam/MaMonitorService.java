@@ -41,6 +41,10 @@ import java.util.stream.Collectors;
 
 import static io.talken.common.persistence.jooq.Tables.USER_REWARD;
 
+/**
+ * Monitor Managed Account status
+ * NOTE this service is very-hard-coded
+ */
 @Service
 @Scope("singleton")
 public class MaMonitorService {
@@ -81,7 +85,6 @@ public class MaMonitorService {
 		logger.info("MaMonitorService RESUMED by admin.");
 		isSuspended = false;
 	}
-
 
 	// check every one hour
 	@Scheduled(fixedDelay = 1000 * 60 * 60, initialDelay = 1000)

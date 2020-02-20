@@ -22,6 +22,15 @@ import java.util.List;
 import static io.talken.common.persistence.jooq.Tables.BCTX;
 import static io.talken.common.persistence.jooq.Tables.BCTX_LOG;
 
+/**
+ * TxMonitor abstraction for handling block, tx, receipt
+ * NOTE : TxMonitor implementation class has it's own singleton bean not like TxSender
+ * this means monitor beans has it's own schedule and not affected by other monitor
+ *
+ * @param <TB>
+ * @param <TT>
+ * @param <TR>
+ */
 public abstract class TxMonitor<TB, TT, TR> {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TxMonitor.class);
 
@@ -54,6 +63,12 @@ public abstract class TxMonitor<TB, TT, TR> {
 		void handle(TB block, TT transaction, TR receipt) throws Exception;
 	}
 
+	/**
+	 * return what platform this is monitoring
+	 * pending check routine uses this method to find proper txMonitor for bctx record
+	 *
+	 * @return
+	 */
 	public abstract BlockChainPlatformEnum[] getBcTypes();
 
 	public void addBlockHandler(BlockHandler<TB> blockHandler) {
@@ -105,15 +120,40 @@ public abstract class TxMonitor<TB, TT, TR> {
 		}
 	}
 
+	/**
+	 * convert TT to TxReceipt
+	 *
+	 * @param tx
+	 * @return
+	 */
 	abstract protected TxReceipt toTxMonitorReceipt(TT tx);
 
+	/**
+	 * get TT from txID
+	 *
+	 * @param txId
+	 * @return
+	 */
 	abstract protected TT getTransactionReceipt(String txId);
 
+	/**
+	 * check txId's status from network and update bctxReceipt
+	 * this is fail safe function for network timeout, unknown error and so on
+	 * see BlockChainTrasactionService.checkPending()
+	 *
+	 * @param txId
+	 * @throws Exception
+	 */
 	public void checkTransactionStatus(String txId) throws Exception {
 		TT tx = getTransactionReceipt(txId);
 		if(tx != null) updateBctxReceiptInfo(tx);
 	}
 
+	/**
+	 * check local monitoring node server is stuck or stopped working
+	 *
+	 * @param newBlockNumber
+	 */
 	protected void checkChainNetworkNode(BigInteger newBlockNumber) {
 		if(lastBlockUpdateTime != null) {
 			// if paging token is not updating for 1000
@@ -134,6 +174,12 @@ public abstract class TxMonitor<TB, TT, TR> {
 		lastBlockNumber = newBlockNumber;
 	}
 
+	/**
+	 * update bctx record with receipt info
+	 *
+	 * @param tx
+	 * @throws Exception
+	 */
 	private void updateBctxReceiptInfo(TT tx) throws Exception {
 
 		TxReceipt receipt = toTxMonitorReceipt(tx);

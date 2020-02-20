@@ -95,6 +95,11 @@ public class TokenMetaGovService extends TokenMetaTableService {
 		lastTradeAggregationUpdatedTimestamp = loadTimestamp;
 	}
 
+	/**
+	 * check trade aggregation data and exchange rate data is updated
+	 *
+	 * @throws TokenMetaLoadException
+	 */
 	@Scheduled(fixedDelay = 5000)
 	public void checkTaExrAndUpdate() throws TokenMetaLoadException {
 		boolean reloaded = false;
@@ -120,6 +125,12 @@ public class TokenMetaGovService extends TokenMetaTableService {
 		}
 	}
 
+	/**
+	 * load and build token meta from db
+	 * put meta to redis
+	 *
+	 * @throws TokenMetaLoadException
+	 */
 	private void load() throws TokenMetaLoadException {
 		try {
 			logger.info("Build TokenMetaData");
@@ -362,6 +373,12 @@ public class TokenMetaGovService extends TokenMetaTableService {
 		}
 	}
 
+	/**
+	 * verify managed accounts trustlines
+	 *
+	 * @param metaTable
+	 * @return
+	 */
 	private boolean verifyManaged(TokenMetaTable metaTable) {
 		boolean trustFailed = false;
 		for(TokenMetaTable.Meta _tm : metaTable.values()) {
@@ -374,6 +391,13 @@ public class TokenMetaGovService extends TokenMetaTableService {
 		return !trustFailed;
 	}
 
+	/**
+	 * check trustline for account
+	 *
+	 * @param source
+	 * @param target
+	 * @return
+	 */
 	private boolean checkTrust(KeyPair source, TokenMetaTable.ManagedInfo target) {
 		TrustedAsset ta = new TrustedAsset(source.getAccountId(), target.dexAssetType());
 		if(checkedTrusts.has(ta)) return true;

@@ -10,6 +10,11 @@ import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.service.integration.signer.SignServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * TxSender abstraction
+ * NOTE : TxSender will be called in one singleton BlockChainTransactionService
+ * this means TxSender of each type will be executed in one linear queue, not separated queue
+ */
 public abstract class TxSender implements SingleKeyObject<BlockChainPlatformEnum> {
 	private BlockChainPlatformEnum platform;
 

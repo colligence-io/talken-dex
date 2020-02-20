@@ -84,6 +84,9 @@ public class UserRewardBctxService {
 		isSuspended = false;
 	}
 
+	/**
+	 * check reward, queue bctx
+	 */
 	@Scheduled(fixedDelay = 60000, initialDelay = 4000)
 	private void rewardToBctx() {
 		if(isSuspended) return;
@@ -119,6 +122,13 @@ public class UserRewardBctxService {
 		}
 	}
 
+	/**
+	 * process reward record, queue bctx, update reward record
+	 *
+	 * @param rewards
+	 * @param timestamp
+	 * @param isPostponed
+	 */
 	private void checkRewardAndQueueBctx(Cursor<UserRewardRecord> rewards, long timestamp, boolean isPostponed) {
 		SingleKeyTable<String, DistStatus> dStatus = new SingleKeyTable<>();
 
@@ -182,6 +192,13 @@ public class UserRewardBctxService {
 		}
 	}
 
+	/**
+	 * user_reward to bctx record for private wallet
+	 *
+	 * @param rewardRecord
+	 * @param meta
+	 * @return
+	 */
 	private BctxRecord getPrivateWalletBctxRecord(UserRewardRecord rewardRecord, TokenMetaTable.Meta meta) {
 		String userWalletAddress;
 		String distributorAddress = meta.getManagedInfo().getDistributorAddress();
@@ -247,6 +264,15 @@ public class UserRewardBctxService {
 		return bctxRecord;
 	}
 
+	/**
+	 * user_reward to bctx record for trade wallet
+	 *
+	 * @param rewardRecord
+	 * @param meta
+	 * @return
+	 * @throws TradeWalletCreateFailedException
+	 * @throws TradeWalletRebalanceException
+	 */
 	private BctxRecord processTradeWalletReward(UserRewardRecord rewardRecord, TokenMetaTable.Meta meta) throws TradeWalletCreateFailedException, TradeWalletRebalanceException {
 		if(!meta.isManaged()) {
 			alarmService.error(logger, "Reward Error : {} is not managed asset", meta.getSymbol());

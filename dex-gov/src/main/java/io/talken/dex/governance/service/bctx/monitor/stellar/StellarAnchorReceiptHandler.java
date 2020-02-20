@@ -25,6 +25,9 @@ import java.math.BigDecimal;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
+/**
+ * TxMonitor.ReceiptHandler for anchoring
+ */
 @Service
 @Scope("singleton")
 public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler implements TxMonitor.ReceiptHandler<Void, StellarTxReceipt, StellarOpReceipt> {
@@ -52,6 +55,17 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 		txMonitor.addReceiptHandler(this);
 	}
 
+	/**
+	 * handle receipt
+	 * 1. check this receipt is anchoring (transfer to holder?)
+	 * 2. check this receipt is anchoring (search DB task)
+	 * 3. insert asset issueing bctx
+	 *
+	 * @param _void
+	 * @param txResult
+	 * @param receipt
+	 * @throws Exception
+	 */
 	@Override
 	public void handle(Void _void, StellarTxReceipt txResult, StellarOpReceipt receipt) throws Exception {
 

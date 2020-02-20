@@ -28,6 +28,15 @@ public abstract class AbstractStellarTxSender extends TxSender {
 		this.logger = logger;
 	}
 
+	/**
+	 * send stellar tx to network
+	 *
+	 * @param asset
+	 * @param bctx
+	 * @param log
+	 * @return
+	 * @throws Exception
+	 */
 	protected boolean sendStellarTx(Asset asset, Bctx bctx, BctxLogRecord log) throws Exception {
 		// pick horizon server
 		Server server = stellarNetworkService.pickServer();

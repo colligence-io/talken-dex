@@ -392,6 +392,14 @@ public class TradeWalletService {
 		resetTradeWallet(user);
 	}
 
+	/**
+	 * claim all assets, merge into issuer, delete from db
+	 *
+	 * @param user
+	 * @return
+	 * @throws TradeWalletCreateFailedException
+	 * @throws SigningException
+	 */
 	public boolean resetTradeWallet(User user) throws TradeWalletCreateFailedException, SigningException {
 
 		TradeWalletInfo tw = loadTradeWallet(user, false);

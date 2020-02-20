@@ -11,6 +11,10 @@ import javax.annotation.PostConstruct;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Anchor Receipt Handler for TxMonitor
+ * holderAddresses have to be updated along TokenMetaTable updated
+ */
 public abstract class AbstractAnchorReceiptHandler implements TokenMetaTableUpdateEventHandler {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AbstractAnchorReceiptHandler.class);
 
@@ -22,9 +26,15 @@ public abstract class AbstractAnchorReceiptHandler implements TokenMetaTableUpda
 
 	@PostConstruct
 	private void attach() {
+		// attach this to tokenMetaTableService
 		tmtService.addUpdateEventHandler(this);
 	}
 
+	/**
+	 * this will be fired from TokenMetaTableService
+	 *
+	 * @param metaTable
+	 */
 	@Override
 	public synchronized void handleTokenMetaTableUpdate(TokenMetaTable metaTable) {
 		holderAddresses = new HashSet<>();

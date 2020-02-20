@@ -41,6 +41,9 @@ public class CreateBuyOfferTaskTransactionProcessor extends AbstractCreateOfferT
 		return DexTaskTypeEnum.OFFER_CREATE_BUY;
 	}
 
+	/**
+	 * update dex_task_createOffer signTxCatchFlag
+	 */
 	@Override
 	public DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt txResult) {
 		try {
@@ -58,6 +61,7 @@ public class CreateBuyOfferTaskTransactionProcessor extends AbstractCreateOfferT
 			taskRecord.setSignedTxCatchFlag(true);
 			taskRecord.update();
 
+			// queue fee tasks
 			queueFeeTasks(txResult);
 		} catch(DexTaskTransactionProcessError error) {
 			return DexTaskTransactionProcessResult.error(error);
@@ -67,6 +71,17 @@ public class CreateBuyOfferTaskTransactionProcessor extends AbstractCreateOfferT
 		return DexTaskTransactionProcessResult.success();
 	}
 
+	/**
+	 * queue fee tasks if needed
+	 * this happens on following situation
+	 * 1. user A create sell offer (fee not collected yet)
+	 * 2. user B claimed user A's offer (B paid buying fee)
+	 * 3. user A gets USDT(pivot)
+	 * 4. collect fee from A's earned USDT
+	 * 5. scheduler at CreateSellOfferFeeTaskTransactionProcessor will process queue
+	 *
+	 * @param txResult
+	 */
 	private void queueFeeTasks(StellarTxReceipt txResult) {
 		try {
 			if(txResult.getResult().getResult().getResults() == null || txResult.getResult().getResult().getResults().length < 1) {

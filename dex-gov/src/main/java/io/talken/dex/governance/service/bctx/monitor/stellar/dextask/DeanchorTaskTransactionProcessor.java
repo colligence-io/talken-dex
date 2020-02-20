@@ -12,7 +12,6 @@ import io.talken.dex.governance.service.bctx.monitor.stellar.DexTaskTransactionP
 import io.talken.dex.governance.service.bctx.monitor.stellar.DexTaskTransactionProcessor;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
-import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.StellarTxReceipt;
 import io.talken.dex.shared.service.blockchain.stellar.opreceipt.PaymentOpReceipt;
@@ -22,7 +21,6 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_DEANCHOR;
@@ -45,6 +43,15 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 		return DexTaskTypeEnum.DEANCHOR;
 	}
 
+	/**
+	 * 1. update dex_task_deanchor signTxCatchFlag
+	 * 2. check payment operations is matched with task
+	 * 3. queue bctx to transfer holded asset to user
+	 *
+	 * @param txmId
+	 * @param txResult
+	 * @return
+	 */
 	@Override
 	public DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt txResult) {
 		try {

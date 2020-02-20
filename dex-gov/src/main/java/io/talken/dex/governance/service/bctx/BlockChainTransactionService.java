@@ -105,6 +105,8 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 				).fetch();
 
 		for(BctxRecord bctxRecord : txQueue) {
+			if(DexGovStatus.isStopped) return;
+
 			// create new logRecord
 			BctxLogRecord logRecord = new BctxLogRecord();
 			try {

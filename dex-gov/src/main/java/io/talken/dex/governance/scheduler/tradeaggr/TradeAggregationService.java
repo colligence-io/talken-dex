@@ -55,6 +55,8 @@ public class TradeAggregationService {
 
 	@Scheduled(cron = "0 */10 * * * *", zone = ZONE_UTC)
 	private void do_schedule() {
+		if(DexGovStatus.isStopped) return;
+
 		if(!lock.isLocked()) {
 			try {
 				lock.lock();
@@ -70,6 +72,12 @@ public class TradeAggregationService {
 		}
 	}
 
+	/**
+	 * aggregate trade OHLCV
+	 *
+	 * @param startTimeLdt
+	 * @param endTimeLdt
+	 */
 	private void aggregate(LocalDateTime startTimeLdt, LocalDateTime endTimeLdt) {
 		long startTime = UTCUtil.toTimestamp_s(startTimeLdt) * 1000;
 		long endTime = UTCUtil.toTimestamp_s(endTimeLdt) * 1000;

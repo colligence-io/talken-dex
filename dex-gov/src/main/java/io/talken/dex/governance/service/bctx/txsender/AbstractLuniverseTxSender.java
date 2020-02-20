@@ -35,6 +35,15 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 		this.logger = logger;
 	}
 
+	/**
+	 * send luniverse tx
+	 *
+	 * @param meta
+	 * @param bctx
+	 * @param log
+	 * @return
+	 * @throws Exception
+	 */
 	@Override
 	public boolean sendTx(TokenMetaTable.Meta meta, Bctx bctx, BctxLogRecord log) throws Exception {
 		String metaCA = null;
@@ -55,6 +64,16 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 		}
 	}
 
+	/**
+	 * send luniverse tx (impl)
+	 *
+	 * @param contractAddr
+	 * @param decimals
+	 * @param bctx
+	 * @param log
+	 * @return
+	 * @throws Exception
+	 */
 	protected boolean sendLuniverseTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
 		Web3j web3j = luniverseNetworkService.newMainRpcClient();
 

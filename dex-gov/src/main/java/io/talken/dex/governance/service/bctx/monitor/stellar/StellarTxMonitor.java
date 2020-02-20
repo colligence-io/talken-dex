@@ -42,6 +42,10 @@ import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TXMON;
 
+/**
+ * Stellar Tx Monitor
+ * NOTE : stellar tx monitor is implemented with transaction, not ledger(block)
+ */
 @Service
 @Scope("singleton")
 public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarOpReceipt> implements ApplicationContextAware {
@@ -64,6 +68,9 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	@Autowired
 	private AdminAlarmService adminAlarmService;
 
+	/**
+	 * hold TaskProcessors for PostProcessing DexTask after receipt arrived
+	 */
 	private HashMap<DexTaskTypeEnum, DexTaskTransactionProcessor> processors = new HashMap<>();
 
 	private static final String COLLECTION_NAME = "stellar_opReceipt";
@@ -105,6 +112,9 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		this.applicationContext = applicationContext;
 	}
 
+	/**
+	 * check new transaction every 3 seconds
+	 */
 	@Scheduled(fixedDelay = 3000, initialDelay = 5000)
 	private void checkTask() {
 		if(DexGovStatus.isStopped) return;
@@ -166,6 +176,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 				StellarTxReceipt txResult = new StellarTxReceipt(txRecord, stellarNetworkService.getNetwork());
 				callTxHandlerStack(null, txResult);
 
+				// call dex task post-processor
 				processDexTask(txResult);
 
 				List<StellarOpReceipt> opReceipts = txResult.getOpReceipts();

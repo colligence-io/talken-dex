@@ -27,6 +27,9 @@ public class AnchorTaskTransactionProcessor implements DexTaskTransactionProcess
 		return DexTaskTypeEnum.ANCHOR;
 	}
 
+	/**
+	 * update dex_task_anchor signTxCatchFlag
+	 */
 	@Override
 	public DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt txResult) {
 		try {

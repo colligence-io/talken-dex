@@ -13,6 +13,9 @@ import javax.annotation.PostConstruct;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
+/**
+ * TxMonitor.ReceiptHandler for anchoring
+ */
 @Service
 @Scope("singleton")
 public class EthereumAnchorReceiptHandler extends AbstractEthereumAnchorReceiptHandler {

@@ -43,6 +43,15 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		this.logger = logger;
 	}
 
+	/**
+	 * send ethereum tx
+	 *
+	 * @param meta
+	 * @param bctx
+	 * @param log
+	 * @return
+	 * @throws Exception
+	 */
 	@Override
 	public boolean sendTx(TokenMetaTable.Meta meta, Bctx bctx, BctxLogRecord log) throws Exception {
 		String metaCA = null;
@@ -63,6 +72,17 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		}
 	}
 
+	/**
+	 * send ethereum tx (impl)
+	 * NOTE use infura, NOT local node
+	 *
+	 * @param contractAddr
+	 * @param decimals
+	 * @param bctx
+	 * @param log
+	 * @return
+	 * @throws Exception
+	 */
 	protected boolean sendEthereumTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
 
 		EthRpcClient infuraClient = ethereumNetworkService.getInfuraClient();

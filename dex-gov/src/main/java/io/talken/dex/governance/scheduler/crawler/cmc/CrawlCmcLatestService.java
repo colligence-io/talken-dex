@@ -18,6 +18,7 @@ import io.talken.common.persistence.redis.AssetExchangeRate;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.slack.AdminAlarmService;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.GovSettings;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import org.jooq.DSLContext;
@@ -69,6 +70,8 @@ public class CrawlCmcLatestService {
 
 	@Scheduled(cron = "0 */10 * * * *", zone = ZONE_UTC)
 	private void crawl() {
+		if(DexGovStatus.isStopped) return;
+
 		counter.incrementAndGet();
 		try {
 			if(RunningProfile.isProduction()) {
@@ -85,6 +88,10 @@ public class CrawlCmcLatestService {
 		}
 	}
 
+	/**
+	 * Crawl CMC latest info
+	 * @throws Exception
+	 */
 	protected void crawlCMCLatest() throws Exception {
 		GenericUrl url = new GenericUrl(govSettings.getIntegration().getCoinMarketCap().getLatestUrl());
 

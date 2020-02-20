@@ -49,6 +49,9 @@ public class CreateSellOfferFeeTaskTransactionProcessor extends AbstractCreateOf
 		return DexTaskTypeEnum.OFFER_CREATE_SELL_FEE;
 	}
 
+	/**
+	 * update dex_task_createOffer signTxCatchFlag
+	 */
 	@Override
 	public DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt txResult) {
 		try {
@@ -74,6 +77,9 @@ public class CreateSellOfferFeeTaskTransactionProcessor extends AbstractCreateOf
 		return DexTaskTransactionProcessResult.success();
 	}
 
+	/**
+	 * Process queued fee tasks at dex_task_createSellOfferFee (queued from CreateBuyOfferTaskTransactionProcessor)
+	 */
 	@Scheduled(fixedDelay = 5000, initialDelay = 5000)
 	private void checkFee() {
 		if(DexGovStatus.isStopped) return;

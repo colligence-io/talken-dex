@@ -27,6 +27,13 @@ public class DeleteBuyOfferTaskTransactionProcessor implements DexTaskTransactio
 		return DexTaskTypeEnum.OFFER_DELETE_BUY;
 	}
 
+	/**
+	 * update dex_task_deleteOffer signTxCatchFlag
+	 *
+	 * @param txmId
+	 * @param txResult
+	 * @return
+	 */
 	@Override
 	public DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt txResult) {
 		try {

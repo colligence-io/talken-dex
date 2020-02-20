@@ -58,6 +58,7 @@ public class CreateSellOfferTaskTransactionProcessor extends AbstractCreateOffer
 			taskRecord.setSignedTxCatchFlag(true);
 			taskRecord.update();
 
+			// queue fee tasks
 			queueFeeTasks(txResult);
 		} catch(DexTaskTransactionProcessError error) {
 			return DexTaskTransactionProcessResult.error(error);
@@ -67,6 +68,11 @@ public class CreateSellOfferTaskTransactionProcessor extends AbstractCreateOffer
 		return DexTaskTransactionProcessResult.success();
 	}
 
+	/**
+	 * NOTE : this will not happens because WE USE ManageSellOffer only for sellng token with USDT(pivot)
+	 *
+	 * @param txResult
+	 */
 	private void queueFeeTasks(StellarTxReceipt txResult) {
 		try {
 			if(txResult.getResult().getResult().getResults() == null || txResult.getResult().getResult().getResults().length < 1) {
