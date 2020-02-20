@@ -25,6 +25,9 @@ public final class TradeWalletInfo {
 	@Setter(AccessLevel.PACKAGE)
 	private String accountId;
 
+	/**
+	 * should not be exported in json
+	 */
 	@JsonIgnore
 	@Getter(AccessLevel.PACKAGE)
 	@Setter(AccessLevel.PACKAGE)

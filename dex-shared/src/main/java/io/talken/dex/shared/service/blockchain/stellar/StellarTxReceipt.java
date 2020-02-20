@@ -14,6 +14,9 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Parsed Stellar Tx Receipt
+ */
 public class StellarTxReceipt {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarTxReceipt.class);
 

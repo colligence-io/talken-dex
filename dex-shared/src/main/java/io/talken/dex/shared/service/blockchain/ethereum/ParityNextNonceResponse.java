@@ -5,6 +5,9 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 
+/**
+ * parity_nextNonce jsonrpc
+ */
 public class ParityNextNonceResponse extends Response<String> {
 	public ParityNextNonceResponse() {
 	}

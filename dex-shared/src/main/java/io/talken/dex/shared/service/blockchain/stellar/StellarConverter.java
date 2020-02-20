@@ -13,6 +13,9 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Convert stellar network values Raw(BigInteger) between Actual(BigDecimal)
+ */
 public class StellarConverter {
 
 	private static final BigDecimal multiplierBD = BigDecimal.valueOf(10000000);

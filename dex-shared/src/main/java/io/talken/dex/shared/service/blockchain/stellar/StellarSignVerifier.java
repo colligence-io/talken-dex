@@ -7,6 +7,9 @@ import org.stellar.sdk.KeyPair;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+/**
+ * Utility class
+ */
 public class StellarSignVerifier {
 	public static boolean verifySignBase64(String accountId, String orgData, String base64Signature) throws SignatureVerificationFailedException {
 		try {

@@ -28,6 +28,16 @@ public class Erc20ContractInfoService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumNetworkService.class);
 
 	// FIXME : THIS CANNOT CHECK CONTRACT IS ERC20 OR ERC721
+
+	/**
+	 * get erc20 standard name, symbol, decimals
+	 * cached in redis
+	 *
+	 * @param web3j
+	 * @param contractAddress
+	 * @return
+	 * @throws Exception
+	 */
 	@Cacheable(value = CacheConfig.CacheNames.ETH_ERC20_CONTRACT_INFO, key = "#p1")
 	public Erc20ContractInfo getErc20ContractInfo(Web3j web3j, String contractAddress) throws Exception {
 		ERC20 erc20 = ERC20.load(contractAddress, web3j, Credentials.create("0x0000000000000000000000000000000000000000000000000000000000000000"), new DefaultGasProvider());
@@ -62,6 +72,15 @@ public class Erc20ContractInfoService {
 		private BigInteger decimals = BigInteger.valueOf(18); // default 18 decimals
 	}
 
+	/**
+	 * get erc20 contract balance from network
+	 *
+	 * @param web3j
+	 * @param contractAddress
+	 * @param owner
+	 * @return
+	 * @throws Exception
+	 */
 	public BigInteger getBalanceOf(Web3j web3j, String contractAddress, String owner) throws Exception {
 		Function function = StandardERC20ContractFunctions.balanceOf(owner);
 

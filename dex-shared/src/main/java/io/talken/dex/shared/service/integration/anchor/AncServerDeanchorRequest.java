@@ -2,6 +2,7 @@ package io.talken.dex.shared.service.integration.anchor;
 
 import lombok.Data;
 
+@Deprecated
 @Data
 public class AncServerDeanchorRequest {
 	private String taskId;

@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collections;
 
+/**
+ * Ethereum RPC Client wrapper
+ */
 public class EthRpcClient {
 	private final String uri;
 	private final String client;
@@ -40,6 +43,15 @@ public class EthRpcClient {
 		return new Web3jHttpService(this.uri);
 	}
 
+	/**
+	 * get proper next nonce from pending block
+	 * if node server is parity, use parity_nextNonce instead of eth_transactionCount for pending block
+	 *
+	 * @param web3jService
+	 * @param address
+	 * @return
+	 * @throws Exception
+	 */
 	public BigInteger getNonce(Web3jService web3jService, String address) throws Exception {
 		if(this.isParity) {
 			Request<?, ParityNextNonceResponse> nonceReq = new Request<>("parity_nextNonce", Collections.singletonList(address), web3jService, ParityNextNonceResponse.class);

@@ -17,6 +17,9 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stellar Operation Receipt
+ */
 @Data
 public abstract class StellarOpReceipt<TO extends Operation, TR> {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarOpReceipt.class);
@@ -46,6 +49,14 @@ public abstract class StellarOpReceipt<TO extends Operation, TR> {
 
 	public StellarOpReceipt() { }
 
+	/**
+	 * build OpReceipt(implement instance) from response, operation, result
+	 *
+	 * @param response
+	 * @param operation
+	 * @param result
+	 * @return
+	 */
 	public static StellarOpReceipt fromResponse(TransactionResponse response, Operation operation, OperationResult result) {
 		switch(result.getTr().getDiscriminant()) {
 			case PAYMENT: {
@@ -88,7 +99,14 @@ public abstract class StellarOpReceipt<TO extends Operation, TR> {
 
 	abstract protected void parse(TO op, TR result);
 
-	public void startImport(TransactionResponse response, TO operation, TR result) {
+	/**
+	 * set common values from response and call parse() for operation specific parsing
+	 *
+	 * @param response
+	 * @param operation
+	 * @param result
+	 */
+	protected void startImport(TransactionResponse response, TO operation, TR result) {
 		this.hash = response.getHash();
 		this.ledger = response.getLedger();
 		this.pagingToken = response.getPagingToken();
@@ -103,10 +121,20 @@ public abstract class StellarOpReceipt<TO extends Operation, TR> {
 		parse(operation, result);
 	}
 
+	/**
+	 * add involved account for search indexing
+	 *
+	 * @param accountId
+	 */
 	public void addInvolvedAccount(String accountId) {
 		if(!involvedAccounts.contains(accountId)) involvedAccounts.add(accountId);
 	}
 
+	/**
+	 * add involved asset for search indexing
+	 *
+	 * @param assetString
+	 */
 	public void addInvolvedAsset(String assetString) {
 		if(!involvedAssets.contains(assetString)) involvedAssets.add(assetString);
 	}

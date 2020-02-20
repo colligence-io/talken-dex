@@ -8,6 +8,7 @@ import shadow.com.google.common.io.BaseEncoding;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+@Deprecated
 public class StellarXdrDecoder {
 
 	public static TransactionResult decodeResultXdr(TransactionResponse response) throws IOException {

@@ -19,7 +19,23 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 
+/**
+ * User trade wallet
+ */
 public class TradeWallet {
+	/**
+	 * Generate trade wallet with keybase
+	 *
+	 * @param keyBase
+	 * @return
+	 * @throws WalletException
+	 * @throws NoSuchPaddingException
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws InvalidKeyException
+	 * @throws BadPaddingException
+	 * @throws IllegalBlockSizeException
+	 */
 	public static String generate(byte[] keyBase) throws WalletException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
 		if(keyBase.length % 32 != 0) throw new IllegalArgumentException("keyBase must be 32*N bytes");
 
@@ -51,6 +67,19 @@ public class TradeWallet {
 		return walletString;
 	}
 
+	/**
+	 * decrypt trade walletString with keybase
+	 *
+	 * @param keyBase
+	 * @param walletString
+	 * @return
+	 * @throws NoSuchPaddingException
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws InvalidKeyException
+	 * @throws BadPaddingException
+	 * @throws IllegalBlockSizeException
+	 */
 	public static KeyPair toKeyPair(byte[] keyBase, String walletString) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
 		if(keyBase.length % 32 != 0) throw new IllegalArgumentException("keyBase must be 32*N bytes");
 

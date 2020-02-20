@@ -4,6 +4,9 @@ import io.talken.dex.shared.exception.SigningException;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.Transaction;
 
+/**
+ * Stellar signer for KeyPair
+ */
 public class StellarSignerAccount implements StellarSigner {
 	private KeyPair kp;
 

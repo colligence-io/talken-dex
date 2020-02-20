@@ -7,6 +7,9 @@ import io.talken.dex.shared.exception.SigningException;
 import io.talken.dex.shared.service.integration.signer.SignServerService;
 import org.stellar.sdk.Transaction;
 
+/**
+ * Stellar Signer for TSS
+ */
 public class StellarSignerTSS implements StellarSigner {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarSignerTSS.class);
 

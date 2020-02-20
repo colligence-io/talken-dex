@@ -32,15 +32,29 @@ public class SignServerAccessToken {
 		return tokenExpires == 0 || getRemainedTTL() <= 0;
 	}
 
+	/**
+	 * check if token need to be updated
+	 *
+	 * @return
+	 */
 	public boolean needsUpdate() {
 		return tokenExpires == 0 || getRemainedTBU() <= 0;
 	}
 
+	/**
+	 * token time to live
+	 *
+	 * @return
+	 */
 	public long getRemainedTTL() {
 		return tokenExpires - UTCUtil.getNowTimestamp_s();
 	}
 
-	// time-before-update
+	/**
+	 * time before update
+	 *
+	 * @return
+	 */
 	public long getRemainedTBU() {
 		return tokenExpires - UTCUtil.getNowTimestamp_s() - updateBefore;
 	}

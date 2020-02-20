@@ -4,6 +4,10 @@ import io.talken.common.util.collection.SingleKeyObject;
 import io.talken.dex.shared.exception.SigningException;
 import org.stellar.sdk.Transaction;
 
+/**
+ * Stellar Signer interface
+ * this interface give abstract way for signing various type of account (KeyPair, TSS...)
+ */
 public interface StellarSigner extends SingleKeyObject<String> {
 	void sign(Transaction tx) throws SigningException;
 }

@@ -83,18 +83,57 @@ public class TradeWalletService {
 		stellarNetworkService.pickServer().accounts().account(creatorAddress);
 	}
 
+	/**
+	 * TradeWallet keyBase(uses signServerKey for convenience and easy maintenance)
+	 *
+	 * @param uid
+	 * @return
+	 */
 	private byte[] getKeyBase(String uid) {
 		return masterKey.sign(uid.getBytes(StandardCharsets.UTF_8));
 	}
 
+	/**
+	 * generate tradeWalletString with user individual key (UID for example, can be any unique string per wallet)
+	 *
+	 * @param individualKey
+	 * @return
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws IllegalBlockSizeException
+	 * @throws WalletException
+	 * @throws BadPaddingException
+	 * @throws InvalidAlgorithmParameterException
+	 */
 	private String generateSecret(String individualKey) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, WalletException, BadPaddingException, InvalidAlgorithmParameterException {
 		return TradeWallet.generate(getKeyBase(individualKey));
 	}
 
+	/**
+	 * decrypt tradeWalletString with user individual key and masterKeyBase
+	 *
+	 * @param individualKey
+	 * @param secret
+	 * @return
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws InvalidAlgorithmParameterException
+	 */
 	private KeyPair decryptSecret(String individualKey, String secret) throws NoSuchPaddingException, InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
 		return TradeWallet.toKeyPair(getKeyBase(individualKey), secret);
 	}
 
+	/**
+	 * extract Stellar keypair from user tradeWalletInfo
+	 *
+	 * @param tradeWallet
+	 * @return
+	 * @throws SigningException
+	 */
 	public KeyPair extractKeyPair(TradeWalletInfo tradeWallet) throws SigningException {
 		try {
 			return decryptSecret(tradeWallet.getUid(), tradeWallet.getSecret());

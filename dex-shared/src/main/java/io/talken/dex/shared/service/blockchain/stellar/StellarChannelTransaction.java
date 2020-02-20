@@ -16,6 +16,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stellar Channel transaction utility
+ */
 public class StellarChannelTransaction implements Closeable {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarChannelTransaction.class);
 
@@ -26,6 +29,9 @@ public class StellarChannelTransaction implements Closeable {
 
 	public static final long TIMEOUT = 30;
 
+	/**
+	 * use builder
+	 */
 	private StellarChannelTransaction() { }
 
 
@@ -41,6 +47,12 @@ public class StellarChannelTransaction implements Closeable {
 		return channel;
 	}
 
+	/**
+	 * submit channel tx
+	 *
+	 * @return
+	 * @throws IOException
+	 */
 	public SubmitTransactionResponse submit() throws IOException {
 		try {
 			// submit
@@ -51,6 +63,9 @@ public class StellarChannelTransaction implements Closeable {
 		}
 	}
 
+	/**
+	 * release stellar channel (locked with redis)
+	 */
 	@Override
 	public void close() {
 		stellarNetworkService.releaseChannel(this.channel);
@@ -66,21 +81,47 @@ public class StellarChannelTransaction implements Closeable {
 			this.stellarNetworkService = stellarNetworkService;
 		}
 
+		/**
+		 * set tx memo
+		 *
+		 * @param memo
+		 * @return
+		 */
 		public Builder setMemo(String memo) {
 			this.memo = memo;
 			return this;
 		}
 
+		/**
+		 * add tx operation
+		 *
+		 * @param op
+		 * @return
+		 */
 		public Builder addOperation(Operation op) {
 			this.operations.add(op);
 			return this;
 		}
 
+		/**
+		 * add signer for transaction
+		 * channel will be added automatically
+		 *
+		 * @param signer
+		 * @return
+		 */
 		public Builder addSigner(StellarSigner signer) {
 			this.signers.insert(signer);
 			return this;
 		}
 
+		/**
+		 * pick available channel, mark it as locked
+		 *
+		 * @return
+		 * @throws IOException
+		 * @throws SigningException
+		 */
 		public StellarChannelTransaction build() throws IOException, SigningException {
 			StellarChannelTransaction sctx = new StellarChannelTransaction();
 			sctx.stellarNetworkService = this.stellarNetworkService;
@@ -128,6 +169,13 @@ public class StellarChannelTransaction implements Closeable {
 			}
 		}
 
+		/**
+		 * shortcut build and submit
+		 *
+		 * @return
+		 * @throws IOException
+		 * @throws SigningException
+		 */
 		public SubmitTransactionResponse buildAndSubmit() throws IOException, SigningException {
 			try(StellarChannelTransaction sctx = build()) {
 				return sctx.submit();

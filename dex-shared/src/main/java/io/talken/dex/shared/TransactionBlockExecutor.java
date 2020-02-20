@@ -5,6 +5,9 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+/**
+ * Database Transaction Block Executor (implicit way)
+ */
 public class TransactionBlockExecutor {
 
 	private DataSourceTransactionManager txMgr;

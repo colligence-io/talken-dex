@@ -9,6 +9,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Web3j HttpService Wrapper for timeout change
+ */
 public class Web3jHttpService extends HttpService {
 	// static block adopted from web3j HttpService
 	private static final CipherSuite[] INFURA_CIPHER_SUITES;

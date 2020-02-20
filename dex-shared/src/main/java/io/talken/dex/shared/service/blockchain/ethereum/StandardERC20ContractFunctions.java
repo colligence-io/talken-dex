@@ -9,7 +9,9 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 
-
+/**
+ * Standard ERC20 ABI Functions
+ */
 public abstract class StandardERC20ContractFunctions {
 	public static Function name() {
 		return new Function(

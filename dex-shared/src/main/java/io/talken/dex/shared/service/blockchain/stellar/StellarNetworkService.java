@@ -75,10 +75,20 @@ public class StellarNetworkService {
 		return BASE_FEE;
 	}
 
+	/**
+	 * shortcut new channel tx builder
+	 *
+	 * @return
+	 */
 	public StellarChannelTransaction.Builder newChannelTxBuilder() {
 		return new StellarChannelTransaction.Builder(this);
 	}
 
+	/**
+	 * pick available channel
+	 *
+	 * @return
+	 */
 	public StellarChannel pickChannel() {
 		synchronized(channels) {
 			Collections.sort(channels);
@@ -102,6 +112,11 @@ public class StellarNetworkService {
 		return null;
 	}
 
+	/**
+	 * release channel
+	 *
+	 * @param channelAccount
+	 */
 	public void releaseChannel(StellarChannel channelAccount) {
 		if(channelAccount != null) {
 			Boolean released = redisTemplate.delete(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channelAccount.getAccountId());
@@ -110,6 +125,11 @@ public class StellarNetworkService {
 		}
 	}
 
+	/**
+	 * get all channel list
+	 *
+	 * @return
+	 */
 	public List<String> getChannelList() {
 		return channels.stream().map(StellarChannel::getAccountId).collect(Collectors.toList());
 	}

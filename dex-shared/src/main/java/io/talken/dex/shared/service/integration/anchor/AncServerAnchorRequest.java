@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+@Deprecated
 @Data
 public class AncServerAnchorRequest {
 	private String taskId;

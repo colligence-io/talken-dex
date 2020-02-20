@@ -40,32 +40,75 @@ public class LuniverseNetworkService {
 		logger.info("Using Luniverse SERVICE Network : {}", apiUri);
 	}
 
+	/**
+	 * Luniverse TxAPI client
+	 *
+	 * @return
+	 */
 	public LuniverseApiClient getClient() {
 		return client;
 	}
 
+	/**
+	 * Luniverse main RPC Client
+	 *
+	 * @return
+	 */
 	public Web3j newMainRpcClient() {
 		return Web3j.build(new HttpService(this.mainRpcUri));
 	}
 
+	/**
+	 * Luniverse side RPC Client
+	 *
+	 * @return
+	 */
 	public Web3j newSideRpcClient() {
 		return Web3j.build(new HttpService(this.sideRpcUri));
 	}
 
+	/**
+	 * get Luniverse gas price
+	 *
+	 * @param web3j
+	 * @return
+	 * @throws IOException
+	 */
 	public BigInteger getGasPrice(Web3j web3j) throws IOException {
 		// recommended from lambda256
 		return web3j.ethGasPrice().send().getGasPrice();
 	}
 
+	/**
+	 * get luniverse gas limit
+	 *
+	 * @param web3j
+	 * @return
+	 */
 	public BigInteger getGasLimit(Web3j web3j) {
 // 3200000 이 권장되지만, 계좌에 77 이상의 LUK가 있어야 하므로 현재 테스트 상황에서 권장값 사용 불가
 		return new BigInteger("100000");
 	}
 
+	/**
+	 * get luniverse balance for asset
+	 *
+	 * @param address
+	 * @param contractAddress null for LUK (native)
+	 * @return
+	 */
 	public BigInteger getBalance(String address, String contractAddress) {
 		return getBalance(newMainRpcClient(), address, contractAddress);
 	}
 
+	/**
+	 * get luniverse balance for asset
+	 *
+	 * @param web3j
+	 * @param address
+	 * @param contractAddress null for LUK (native)
+	 * @return
+	 */
 	public BigInteger getBalance(Web3j web3j, String address, String contractAddress) {
 		try {
 			if(contractAddress != null) {

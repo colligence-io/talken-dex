@@ -4,6 +4,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.integration.IntegrationResult;
 import io.talken.common.util.integration.rest.RestApiClient;
 
+@Deprecated
 public class AnchorServerService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AnchorServerService.class);
 

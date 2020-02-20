@@ -17,6 +17,9 @@ import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.USER;
 
+/**
+ * TalkenWallet (Private Wallet) Service
+ */
 public class TalkenWalletService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TalkenWalletService.class);
 
@@ -29,6 +32,15 @@ public class TalkenWalletService {
 		this.apiUrl = apiUrl;
 	}
 
+	/**
+	 * get wallet address for wallet type/symbol (see BlockChainPlatformEnum.getWalletType() for walletType)
+	 *
+	 * @param userId
+	 * @param type
+	 * @param symbol
+	 * @return
+	 * @throws IntegrationException
+	 */
 	public ObjectPair<Boolean, String> getAddress(long userId, String type, String symbol) throws IntegrationException {
 		Optional<UserRecord> opt_user = dslContext.selectFrom(USER)
 				.where(USER.ID.eq(userId).and(USER.WALLET_TOKEN_ACTIVATE_FLAG.eq(true)))

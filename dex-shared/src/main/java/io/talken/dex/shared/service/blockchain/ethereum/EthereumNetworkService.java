@@ -13,15 +13,11 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.Web3jService;
-import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.Request;
 import org.web3j.utils.Convert;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Collections;
 
 @Service
 @Scope("singleton")
@@ -51,14 +47,29 @@ public class EthereumNetworkService {
 		updateGasPrice();
 	}
 
+	/**
+	 * local network rpc client
+	 * use this for monitoring, not for transaction
+	 *
+	 * @return
+	 */
 	public EthRpcClient getLocalClient() {
 		return this.localClient;
 	}
 
+	/**
+	 * infura network rpc client
+	 * use this for making transaction, not for monitoring
+	 *
+	 * @return
+	 */
 	public EthRpcClient getInfuraClient() {
 		return this.infuraClient;
 	}
 
+	/**
+	 * update gasprice from oracle (ethGasStation Express)
+	 */
 	@Scheduled(fixedDelay = 5000)
 	private void updateGasPrice() {
 		try {
@@ -73,6 +84,12 @@ public class EthereumNetworkService {
 		}
 	}
 
+	/**
+	 * get recommended gasPrice
+	 *
+	 * @param web3j
+	 * @return
+	 */
 	public BigInteger getGasPrice(Web3j web3j) {
 		if(gasPrice != null) {
 			return Convert.toWei(gasPrice.toPlainString(), Convert.Unit.GWEI).toBigInteger();
@@ -81,6 +98,12 @@ public class EthereumNetworkService {
 		}
 	}
 
+	/**
+	 * query oracle for recommended gas price
+	 *
+	 * @return
+	 * @throws IntegrationException
+	 */
 	private GasPriceOracleResult queryGasPrice() throws IntegrationException {
 		IntegrationResult<GasPriceOracleResult> result = RestApiClient.requestGet(this.gasOracleApiUrl, GasPriceOracleResult.class);
 		if(result.isSuccess()) {

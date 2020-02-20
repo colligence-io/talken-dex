@@ -7,6 +7,10 @@ import org.stellar.sdk.responses.AccountResponse;
 
 import java.math.BigDecimal;
 
+/**
+ * Stellar transaction channel
+ * see https://www.stellar.org/developers/guides/channels.html
+ */
 @Data
 public class StellarChannel implements Comparable<StellarChannel> {
 	private KeyPair keyPair;

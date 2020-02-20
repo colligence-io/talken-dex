@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.talken.common.util.integration.rest.RestApiResponseInterface;
 import lombok.Data;
 
+@Deprecated
 @Data
 @JsonIgnoreProperties("message")
 public class AncServerDeanchorResponse implements RestApiResponseInterface {

@@ -27,6 +27,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Talken Sign Server(tss) Service
+ */
 public class SignServerService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(SignServerService.class);
 
@@ -41,6 +44,9 @@ public class SignServerService {
 
 	private SignServerAccessToken accessToken = new SignServerAccessToken();
 
+	/**
+	 * lock for updating sign server access token (token should be singleton)
+	 */
 	private final static Object updateLock = new Object();
 
 	public SignServerService(String serverAddr, String appName, String appKey) {
@@ -66,6 +72,11 @@ public class SignServerService {
 		}
 	}
 
+	/**
+	 * update access token
+	 *
+	 * @return
+	 */
 	private synchronized boolean updateAccessToken() {
 		try {
 			SignServerIntroduceRequest request = new SignServerIntroduceRequest();
@@ -118,6 +129,15 @@ public class SignServerService {
 		}
 	}
 
+	/**
+	 * request sign to tss
+	 *
+	 * @param bc
+	 * @param address
+	 * @param message
+	 * @return
+	 * @throws SigningException
+	 */
 	private IntegrationResult<SignServerSignResponse> requestSign(String bc, String address, byte[] message) throws SigningException {
 		synchronized(updateLock) {
 			if(this.accessToken == null) {
@@ -136,10 +156,24 @@ public class SignServerService {
 		return RestApiClient.requestPost(this.signingUrl, headers, request, SignServerSignResponse.class);
 	}
 
+	/**
+	 * sign stellar tx envelope
+	 * shortcut for simple transaction that tx.getSourceAccount is only account to be signed
+	 *
+	 * @param tx
+	 * @throws SigningException
+	 */
 	public void signStellarTransaction(Transaction tx) throws SigningException {
 		signStellarTransaction(tx, tx.getSourceAccount());
 	}
 
+	/**
+	 * sign stellar tx envelope with given accountId
+	 *
+	 * @param tx
+	 * @param accountId
+	 * @throws SigningException
+	 */
 	public void signStellarTransaction(Transaction tx, String accountId) throws SigningException {
 		IntegrationResult<SignServerSignResponse> signResult = requestSign("XLM", accountId, tx.hash());
 
@@ -171,7 +205,14 @@ public class SignServerService {
 		tx.getSignatures().add(decoratedSignature);
 	}
 
-
+	/**
+	 * sign ethereum raw tx
+	 *
+	 * @param tx
+	 * @param from
+	 * @return
+	 * @throws SigningException
+	 */
 	public byte[] signEthereumTransaction(RawTransaction tx, String from) throws SigningException {
 
 		byte[] encodedTx = TransactionEncoder.encode(tx);

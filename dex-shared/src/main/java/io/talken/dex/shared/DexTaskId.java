@@ -8,6 +8,9 @@ import io.talken.dex.shared.exception.TaskIntegrityCheckFailedException;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
+/**
+ * DexTaskId
+ */
 public class DexTaskId {
 	private DexTaskTypeEnum type;
 	private String id;
@@ -40,7 +43,9 @@ public class DexTaskId {
 	}
 
 
+	//===============================================================================
 	// static parts
+	//===============================================================================
 	private static String symbols;
 	private static char[] sc;
 	private static int sl;
@@ -53,7 +58,12 @@ public class DexTaskId {
 		sl = symbols.length();
 	}
 
-	/* GENERATION & VERIFICATION */
+	/**
+	 * generate new dex task id for given type
+	 *
+	 * @param type
+	 * @return
+	 */
 	public static DexTaskId generate_taskId(DexTaskTypeEnum type) {
 		long genTime = System.currentTimeMillis();
 
@@ -90,6 +100,13 @@ public class DexTaskId {
 		return new DexTaskId(type, head + s, genTime);
 	}
 
+	/**
+	 * decode dex task id string to object
+	 *
+	 * @param taskId
+	 * @return
+	 * @throws TaskIntegrityCheckFailedException
+	 */
 	public static DexTaskId decode_taskId(String taskId) throws TaskIntegrityCheckFailedException {
 		try {
 			if(taskId == null || taskId.length() != 24) throw new TaskIntegrityCheckFailedException(taskId);
