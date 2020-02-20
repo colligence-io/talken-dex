@@ -38,6 +38,13 @@ public class MiscController {
 	@Autowired
 	private TaskTransactionListService txListService;
 
+	/**
+	 * convert value using trade aggregation
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws DexException
+	 */
 	@RequestMapping(value = RequestMappings.CONVERT_ASSET, method = RequestMethod.POST)
 	public DexResponse<BigDecimal> convert(@RequestBody AssetConvertRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
@@ -51,6 +58,13 @@ public class MiscController {
 		}
 	}
 
+	/**
+	 * convert value using coinmarketcap data
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws DexException
+	 */
 	@RequestMapping(value = RequestMappings.EXCHANGE_ASSET, method = RequestMethod.POST)
 	public DexResponse<BigDecimal> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
@@ -64,6 +78,13 @@ public class MiscController {
 		}
 	}
 
+	/**
+	 * get DexTask tx list
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws DexException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.TXLIST, method = RequestMethod.POST)
 	public DexResponse<List<TaskTransactionResult>> txList(@RequestBody TxListRequest postBody) throws DexException {

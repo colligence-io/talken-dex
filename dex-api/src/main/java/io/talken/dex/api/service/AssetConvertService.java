@@ -24,10 +24,31 @@ public class AssetConvertService {
 	// interchange assets, in order
 	private static final String[] INTERCHANGE = new String[]{"BTC", "ETH", "XLM", "CTX"};
 
+	/**
+	 * convert asset using trade aggregation data
+	 *
+	 * @param fromCode
+	 * @param amount
+	 * @param toCode
+	 * @return
+	 * @throws AssetConvertException
+	 * @throws TokenMetaNotFoundException
+	 * @throws TokenMetaNotManagedException
+	 */
 	public BigDecimal convert(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaNotFoundException, TokenMetaNotManagedException {
 		return convert(tmService.getAssetType(fromCode), amount, tmService.getAssetType(toCode));
 	}
 
+	/**
+	 * convert asset using trade aggregation data
+	 *
+	 * @param fromType
+	 * @param amount
+	 * @param toType
+	 * @return
+	 * @throws AssetConvertException
+	 * @throws TokenMetaNotFoundException
+	 */
 	public BigDecimal convert(Asset fromType, BigDecimal amount, Asset toType) throws AssetConvertException, TokenMetaNotFoundException {
 		if(fromType.equals(toType))
 			return StellarConverter.scale(amount);
@@ -62,6 +83,16 @@ public class AssetConvertService {
 		}
 	}
 
+	/**
+	 * calculate exchange value of asset with fiat
+	 *
+	 * @param fromCode
+	 * @param amount
+	 * @param toCode
+	 * @return
+	 * @throws AssetConvertException
+	 * @throws TokenMetaNotFoundException
+	 */
 	public BigDecimal exchange(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaNotFoundException {
 		if(fromCode.equals(toCode))
 			return StellarConverter.scale(amount);
@@ -97,6 +128,14 @@ public class AssetConvertService {
 		}
 	}
 
+	/**
+	 * get close price from trade aggregation data
+	 *
+	 * @param base
+	 * @param counter
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 */
 	private BigDecimal getClosePrice(String base, String counter) throws TokenMetaNotFoundException {
 		TokenMetaTable.Meta baseMeta = tmService.getTokenMeta(base);
 		if(baseMeta.getManagedInfo() == null) return null;
@@ -105,6 +144,14 @@ public class AssetConvertService {
 		return baseMeta.getManagedInfo().getMarketPair().get(counter).getPriceC();
 	}
 
+	/**
+	 * get exchange rate from coinmarketcap data
+	 *
+	 * @param base
+	 * @param counter
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 */
 	private BigDecimal getExchangeRate(String base, String counter) throws TokenMetaNotFoundException {
 		TokenMetaTable.Meta baseMeta = tmService.getTokenMeta(base);
 		if(baseMeta.getExchangeRate() == null) return null;

@@ -21,10 +21,25 @@ public class EthereumInfoService {
 	@Autowired
 	private Erc20ContractInfoService contractInfoService;
 
+	/**
+	 * get eth balance
+	 *
+	 * @param address
+	 * @return
+	 * @throws GeneralException
+	 */
 	public BigInteger getEthBalance(String address) throws GeneralException {
 		return getEthBalance(ethereumNetworkService.getLocalClient().newClient(), address);
 	}
 
+	/**
+	 * get eth balance
+	 *
+	 * @param web3j
+	 * @param address
+	 * @return
+	 * @throws GeneralException
+	 */
 	public BigInteger getEthBalance(Web3j web3j, String address) throws GeneralException {
 		try {
 			return web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send().getBalance();
@@ -33,10 +48,27 @@ public class EthereumInfoService {
 		}
 	}
 
+	/**
+	 * get erc20 balance
+	 *
+	 * @param contract
+	 * @param address
+	 * @return
+	 * @throws GeneralException
+	 */
 	public BigInteger getErc20Balance(String contract, String address) throws GeneralException {
 		return getErc20Balance(ethereumNetworkService.getLocalClient().newClient(), contract, address);
 	}
 
+	/**
+	 * get erc20 balance
+	 *
+	 * @param web3j
+	 * @param contract
+	 * @param address
+	 * @return
+	 * @throws GeneralException
+	 */
 	public BigInteger getErc20Balance(Web3j web3j, String contract, String address) throws GeneralException {
 		try {
 			return contractInfoService.getBalanceOf(web3j, contract, address);

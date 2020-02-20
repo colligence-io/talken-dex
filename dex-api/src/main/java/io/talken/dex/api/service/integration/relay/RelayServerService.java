@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+@Deprecated
 @Service
 public class RelayServerService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(RelayServerService.class);

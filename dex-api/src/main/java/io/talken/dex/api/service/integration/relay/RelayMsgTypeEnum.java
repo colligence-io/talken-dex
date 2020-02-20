@@ -1,5 +1,6 @@
 package io.talken.dex.api.service.integration.relay;
 
+@Deprecated
 public enum RelayMsgTypeEnum {
 	ANCHOR("2003"),
 	DEANCHOR("2004"),

@@ -33,11 +33,28 @@ public class BlockChainInfoController {
 	@Autowired
 	private AuthInfo authInfo;
 
+	/**
+	 * get luniverse gas price and limit
+	 *
+	 * @return
+	 * @throws DexException
+	 */
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_LUNIVERSE_GASPRICE, method = RequestMethod.GET)
 	public DexResponse<LuniverseGasPriceResult> luniverseGasPrice() throws DexException {
 		return DexResponse.buildResponse(luniverseInfoService.getGasPriceAndLimit());
 	}
 
+	/**
+	 * get luniverse tx list
+	 *
+	 * @param address
+	 * @param contractaddress
+	 * @param sort
+	 * @param page
+	 * @param offset
+	 * @return luniverse tx list similar to etherscan.io
+	 * @throws DexException
+	 */
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_LUNIVERSE_TXLIST, method = RequestMethod.GET)
 	public DexResponse<LuniverseTxListResult> luniverseTxList(
 			@RequestParam("address")
@@ -60,6 +77,13 @@ public class BlockChainInfoController {
 		return DexResponse.buildResponse(luniverseInfoService.getTxList(address, contractaddress, direction, page, offset));
 	}
 
+	/**
+	 * get eth balance
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GETETHBALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getEthBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
@@ -67,6 +91,13 @@ public class BlockChainInfoController {
 		return DexResponse.buildResponse(ethereumInfoService.getEthBalance(postBody.getAddress()));
 	}
 
+	/**
+	 * get erc20 balance
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GETERC20BALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getErc20Balance(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {

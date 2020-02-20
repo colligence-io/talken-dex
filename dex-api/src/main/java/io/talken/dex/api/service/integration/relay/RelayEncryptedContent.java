@@ -11,6 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
+@Deprecated
 public class RelayEncryptedContent<T> {
 	private T data;
 	private String key;

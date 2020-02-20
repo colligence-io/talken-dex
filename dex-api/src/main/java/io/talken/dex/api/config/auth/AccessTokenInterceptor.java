@@ -1,7 +1,6 @@
 package io.talken.dex.api.config.auth;
 
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -54,6 +53,16 @@ public class AccessTokenInterceptor implements HandlerInterceptor {
 //		jwtService = new JwtUtil(apiSettings.getAccessToken().getJwtSecret(), apiSettings.getAccessToken().getJwtExpiration());
 	}
 
+	/**
+	 * Parse JWT if exists
+	 * Store UserAuth info to session-scoped bean AuthInfo
+	 *
+	 * @param request
+	 * @param response
+	 * @param handler
+	 * @return
+	 * @throws Exception
+	 */
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 		try {

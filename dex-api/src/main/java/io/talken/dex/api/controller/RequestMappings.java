@@ -1,5 +1,8 @@
 package io.talken.dex.api.controller;
 
+/**
+ * API Endpoint mappings
+ */
 public class RequestMappings {
 	private static final String ROOT = "";
 

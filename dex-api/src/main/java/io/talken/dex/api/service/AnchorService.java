@@ -59,6 +59,27 @@ public class AnchorService {
 	private final PrivateWalletService pwService;
 	private final DSLContext dslContext;
 
+	/**
+	 * Create Anchor task
+	 * 1. rebalance user tradewallet for trustline
+	 * 2. create trustline for requested asset (and USDT)
+	 * 3. insert task to dex_task_anchor
+	 * 4. return transferDTObase to client
+	 * 5. after client(and wallet server) make tx dex-gov will catch tx and issue asset to user trade wallet
+	 *
+	 * @param user
+	 * @param request
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 * @throws ActiveAssetHolderAccountNotFoundException
+	 * @throws BlockChainPlatformNotSupportedException
+	 * @throws TradeWalletRebalanceException
+	 * @throws TradeWalletCreateFailedException
+	 * @throws SigningException
+	 * @throws StellarException
+	 * @throws TokenMetaNotManagedException
+	 * @throws DuplicatedTaskFoundException
+	 */
 	public PrivateWalletTransferDTO anchor(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
@@ -144,6 +165,24 @@ public class AnchorService {
 		return result;
 	}
 
+	/**
+	 * Create deanchor task
+	 * 1. insert deanchor task to dex_task_deanchor
+	 * 2. transfer tradewallet asset to issuer (burn)
+	 * 3. dex-gov will catch tx and transfer holding asset to user private wallet
+	 *
+	 * @param user
+	 * @param request
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 * @throws StellarException
+	 * @throws TradeWalletCreateFailedException
+	 * @throws SigningException
+	 * @throws ActiveAssetHolderAccountNotFoundException
+	 * @throws NotEnoughBalanceException
+	 * @throws TokenMetaNotManagedException
+	 * @throws DuplicatedTaskFoundException
+	 */
 	public DeanchorResult deanchor(User user, DeanchorRequest request) throws TokenMetaNotFoundException, StellarException, TradeWalletCreateFailedException, SigningException, ActiveAssetHolderAccountNotFoundException, NotEnoughBalanceException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);

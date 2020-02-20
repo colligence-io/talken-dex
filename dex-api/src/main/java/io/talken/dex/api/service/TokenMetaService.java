@@ -35,6 +35,11 @@ public class TokenMetaService extends TokenMetaTableService {
 		checkAndReload();
 	}
 
+	/**
+	 * check and reload meta if updated
+	 *
+	 * @throws TokenMetaLoadException
+	 */
 	protected void checkAndReload() throws TokenMetaLoadException {
 		try {
 			Long redisTmUpdated =

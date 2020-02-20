@@ -58,6 +58,14 @@ public class OfferService {
 	private final DSLContext dslContext;
 	private final SignServerService signServerService;
 
+	/**
+	 * get offer detail for given offerId from database, not stellar network
+	 *
+	 * @param offerId
+	 * @return
+	 * @throws DataIdNotFoundException
+	 * @throws TaskIntegrityCheckFailedException
+	 */
 	public OfferDetailResultDTO getOfferDetail(long offerId) throws DataIdNotFoundException, TaskIntegrityCheckFailedException {
 		DexTaskCreateofferRecord offerRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER).where(DEX_TASK_CREATEOFFER.OFFERID.eq(offerId)).fetchOne();
 		if(offerRecord == null) throw new DataIdNotFoundException(DexTaskCreateoffer.class, offerId);
@@ -76,18 +84,68 @@ public class OfferService {
 		return rtn;
 	}
 
+	/**
+	 * create sell offer
+	 *
+	 * @param user
+	 * @param request
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 * @throws SigningException
+	 * @throws StellarException
+	 * @throws EffectiveAmountIsNegativeException
+	 * @throws TradeWalletCreateFailedException
+	 * @throws TradeWalletRebalanceException
+	 * @throws TokenMetaNotManagedException
+	 * @throws ParameterViolationException
+	 */
 	public CreateOfferResult createSellOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException, ParameterViolationException {
 		if(!request.getBuyAssetCode().equalsIgnoreCase(DexSettings.PIVOT_ASSET_CODE))
 			throw new ParameterViolationException("Only " + DexSettings.PIVOT_ASSET_CODE + " is available for buying asset");
 		return createOffer(user, true, request);
 	}
 
+	/**
+	 * create buy offer
+	 *
+	 * @param user
+	 * @param request
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 * @throws SigningException
+	 * @throws StellarException
+	 * @throws EffectiveAmountIsNegativeException
+	 * @throws TradeWalletCreateFailedException
+	 * @throws TradeWalletRebalanceException
+	 * @throws TokenMetaNotManagedException
+	 * @throws ParameterViolationException
+	 */
 	public CreateOfferResult createBuyOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException, ParameterViolationException {
 		if(!request.getSellAssetCode().equalsIgnoreCase(DexSettings.PIVOT_ASSET_CODE))
 			throw new ParameterViolationException("Only " + DexSettings.PIVOT_ASSET_CODE + " is available for selling asset");
 		return createOffer(user, false, request);
 	}
 
+	/**
+	 * create offer
+	 * 1. create task record
+	 * 2. calculate offer fee
+	 * 3. rebalance user trade wallet for offer
+	 * 4. build offer (+ fee if buying) tx and send
+	 * 5. record offer result
+	 *
+	 * @param user
+	 * @param isSell
+	 * @param request
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 * @throws SigningException
+	 * @throws StellarException
+	 * @throws EffectiveAmountIsNegativeException
+	 * @throws TradeWalletCreateFailedException
+	 * @throws TradeWalletRebalanceException
+	 * @throws TokenMetaNotManagedException
+	 */
 	private CreateOfferResult createOffer(User user, boolean isSell, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException {
 		final DexTaskTypeEnum taskType = (isSell) ? DexTaskTypeEnum.OFFER_CREATE_SELL : DexTaskTypeEnum.OFFER_CREATE_BUY;
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(taskType);
@@ -287,14 +345,62 @@ public class OfferService {
 	}
 
 
+	/**
+	 * delete sell offer
+	 *
+	 * @param user
+	 * @param request
+	 * @return
+	 * @throws SigningException
+	 * @throws TokenMetaNotFoundException
+	 * @throws TradeWalletCreateFailedException
+	 * @throws StellarException
+	 * @throws TokenMetaNotManagedException
+	 * @throws OfferNotValidException
+	 * @throws OwnershipMismatchException
+	 */
 	public DeleteOfferResult deleteSellOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException, OfferNotValidException, OwnershipMismatchException {
 		return deleteOffer(user, true, request);
 	}
 
+	/**
+	 * delete buy offer
+	 *
+	 * @param user
+	 * @param request
+	 * @return
+	 * @throws SigningException
+	 * @throws TokenMetaNotFoundException
+	 * @throws TradeWalletCreateFailedException
+	 * @throws StellarException
+	 * @throws TokenMetaNotManagedException
+	 * @throws OfferNotValidException
+	 * @throws OwnershipMismatchException
+	 */
 	public DeleteOfferResult deleteBuyOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException, OfferNotValidException, OwnershipMismatchException {
 		return deleteOffer(user, false, request);
 	}
 
+	/**
+	 * delete offer
+	 * 1. validate request
+	 * 2. get offer from stellar network
+	 * 3. calculate refund amount
+	 * 4. create task
+	 * 5. build delete offer (+ refund if exists) tx and send
+	 *
+	 * @param user
+	 * @param isSell
+	 * @param request
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 * @throws StellarException
+	 * @throws SigningException
+	 * @throws TradeWalletCreateFailedException
+	 * @throws TokenMetaNotManagedException
+	 * @throws OfferNotValidException
+	 * @throws OwnershipMismatchException
+	 */
 	private DeleteOfferResult deleteOffer(User user, boolean isSell, DeleteOfferRequest request) throws TokenMetaNotFoundException, StellarException, SigningException, TradeWalletCreateFailedException, TokenMetaNotManagedException, OfferNotValidException, OwnershipMismatchException {
 		final DexTaskTypeEnum taskType = (isSell) ? DexTaskTypeEnum.OFFER_DELETE_SELL : DexTaskTypeEnum.OFFER_DELETE_BUY;
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(taskType);

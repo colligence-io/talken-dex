@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+@Deprecated
 @Data
 public class RelayAddContentsResponse implements RestApiResponseInterface {
 	private String transId;

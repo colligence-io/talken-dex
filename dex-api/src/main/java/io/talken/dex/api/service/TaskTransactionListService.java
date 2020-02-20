@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.talken.common.persistence.jooq.Tables.*;
+import static io.talken.common.persistence.jooq.Tables.DEX_TXMON;
 
 @Service
 @Scope("singleton")
@@ -23,6 +23,12 @@ public class TaskTransactionListService {
 	@Autowired
 	private DSLContext dslContext;
 
+	/**
+	 * get dex task tx list
+	 *
+	 * @param postBody
+	 * @return
+	 */
 	public List<TaskTransactionResult> getTxList(TxListRequest postBody) {
 		List<TaskTransactionResult> rtn = new ArrayList<>();
 

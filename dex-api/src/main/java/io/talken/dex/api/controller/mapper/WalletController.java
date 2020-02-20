@@ -41,18 +41,38 @@ public class WalletController {
 	@Autowired
 	private AuthInfo authInfo;
 
+	/**
+	 * get user trade wallet info
+	 *
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.TRADE_WALLET_BALANCE, method = RequestMethod.GET)
 	public DexResponse<TradeWalletResult> getTradeWallet() throws TalkenException {
 		return DexResponse.buildResponse(walletService.getTradeWalletBalances(authInfo.getUser()));
 	}
 
+	/**
+	 * build template tx envelope for TalkenWallet Mobile App
+	 *
+	 * @param assetCode
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_WITHDRAW_BASE, method = RequestMethod.GET)
 	public DexResponse<PrivateWalletTransferDTO> withdraw_base(@RequestParam("assetCode") String assetCode) throws TalkenException {
 		return DexResponse.buildResponse(pwService.createTransferDTObase(PrivateWalletMsgTypeEnum.TRANSFER, assetCode));
 	}
 
+	/**
+	 * anchor request
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_ANCHOR_TASK, method = RequestMethod.POST)
 	public DexResponse<PrivateWalletTransferDTO> anchor(@RequestBody AnchorRequest postBody) throws TalkenException {
@@ -60,6 +80,13 @@ public class WalletController {
 		return DexResponse.buildResponse(anchorService.anchor(authInfo.getUser(), postBody));
 	}
 
+	/**
+	 * deanchor request
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.TRADE_WALLET_DEANCHOR_TASK, method = RequestMethod.POST)
 	public DexResponse<DeanchorResult> deanchor(@RequestBody DeanchorRequest postBody) throws TalkenException {
@@ -67,12 +94,33 @@ public class WalletController {
 		return DexResponse.buildResponse(anchorService.deanchor(authInfo.getUser(), postBody));
 	}
 
+	/**
+	 * calculate deanchor fee
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@RequestMapping(value = RequestMappings.TRADE_WALLET_DEANCHOR_FEE, method = RequestMethod.POST)
 	public DexResponse<CalculateFeeResult> deanchorFee(@RequestBody DeanchorRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(feeService.calculateDeanchorFee(postBody.getAssetCode(), postBody.getAmount()));
 	}
 
+	/**
+	 * search tradewallet tx list
+	 *
+	 * @param address
+	 * @param operationType
+	 * @param assetCode
+	 * @param assetIssuer
+	 * @param include
+	 * @param sort
+	 * @param page
+	 * @param offset
+	 * @return
+	 * @throws TalkenException
+	 */
 	@RequestMapping(value = RequestMappings.TRADE_WALLET_TXLIST, method = RequestMethod.GET)
 	public DexResponse<List<StellarOpReceipt>> txList(
 			@RequestParam(value = "address")
@@ -105,12 +153,24 @@ public class WalletController {
 		return DexResponse.buildResponse(walletService.getTxList(address, operationType, assetCode, assetIssuer, includeAll, direction, page, offset));
 	}
 
+	/**
+	 * prepare luniverse transfer (refill gas LUK for user private wallet)
+	 *
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_PREPARE_LMT_TRANSFER, method = RequestMethod.GET)
 	public DexResponse<Boolean> prepareLmtTransfer() throws TalkenException {
 		return DexResponse.buildResponse(walletService.prepareTransferLuk(authInfo.getUser()));
 	}
 
+	/**
+	 * check user private luniverse wallet is ready to transfer asset
+	 *
+	 * @param address
+	 * @return
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_CHECK_LMT_TRANSFER_READY, method = RequestMethod.GET)
 	public DexResponse<Boolean> checkLmtTransferReady(@RequestParam("address") String address) {

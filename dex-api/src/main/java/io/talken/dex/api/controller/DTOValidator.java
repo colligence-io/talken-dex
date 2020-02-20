@@ -11,6 +11,13 @@ import java.util.Set;
 public class DTOValidator {
 	private static final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 
+	/**
+	 * Validate DTO annotations
+	 *
+	 * @param obj
+	 * @param <T>
+	 * @throws ParameterViolationException
+	 */
 	public static <T> void validate(T obj) throws ParameterViolationException {
 		Validator validator = factory.getValidator();
 		Set<ConstraintViolation<T>> violations = validator.validate(obj);

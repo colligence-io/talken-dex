@@ -19,6 +19,15 @@ public class PrivateWalletService {
 	@Autowired
 	private TokenMetaService tmService;
 
+	/**
+	 * build template tx envelope for TalkenWallet Mobile App
+	 *
+	 * @param msgType
+	 * @param assetCode
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 * @throws BlockChainPlatformNotSupportedException
+	 */
 	public PrivateWalletTransferDTO createTransferDTObase(PrivateWalletMsgTypeEnum msgType, String assetCode) throws TokenMetaNotFoundException, BlockChainPlatformNotSupportedException {
 		TokenMetaTable.Meta tokenMeta = tmService.getTokenMeta(assetCode);
 

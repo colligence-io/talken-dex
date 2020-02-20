@@ -4,6 +4,7 @@ import ch.qos.logback.core.encoder.ByteArrayUtil;
 import lombok.Data;
 import org.stellar.sdk.Transaction;
 
+@Deprecated
 @Data
 public class RelayStellarRawTxDTO {
 	private long sequence;

@@ -28,13 +28,25 @@ public class OfferController {
 	@Autowired
 	private AuthInfo authInfo;
 
-	// detail
+	/**
+	 * Get offer detail
+	 *
+	 * @param offerId
+	 * @return
+	 * @throws TalkenException
+	 */
 	@RequestMapping(value = RequestMappings.OFFER_DETAIL, method = RequestMethod.GET)
 	public DexResponse<OfferDetailResultDTO> getOfferDetail(@PathVariable @NotEmpty long offerId) throws TalkenException {
 		return DexResponse.buildResponse(offerService.getOfferDetail(offerId));
 	}
 
-	// sell
+	/**
+	 * calculate Sell asset fee
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.OFFER_SELL_FEE, method = RequestMethod.POST)
 	public DexResponse<CalculateFeeResult> calculateSellOfferFee(@RequestBody CreateOfferRequest postBody) throws TalkenException {
@@ -42,6 +54,13 @@ public class OfferController {
 		return DexResponse.buildResponse(feeCalculationService.calculateSellOfferFee(postBody.getSellAssetCode(), postBody.getAmount(), postBody.getPrice()));
 	}
 
+	/**
+	 * request sell asset
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.OFFER_SELL_CREATE_TASK, method = RequestMethod.POST)
 	public DexResponse<CreateOfferResult> createSellOffer(@RequestBody CreateOfferRequest postBody) throws TalkenException {
@@ -49,6 +68,13 @@ public class OfferController {
 		return DexResponse.buildResponse(offerService.createSellOffer(authInfo.getUser(), postBody));
 	}
 
+	/**
+	 * cancel sell offer
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.OFFER_SELL_DELETE_TASK, method = RequestMethod.POST)
 	public DexResponse<DeleteOfferResult> deleteSellOffer(@RequestBody DeleteOfferRequest postBody) throws TalkenException {
@@ -57,7 +83,13 @@ public class OfferController {
 	}
 
 
-	// buy
+	/**
+	 * calculate buy offer fee
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.OFFER_BUY_FEE, method = RequestMethod.POST)
 	public DexResponse<CalculateFeeResult> calculateBuyOfferFee(@RequestBody CreateOfferRequest postBody) throws TalkenException {
@@ -65,6 +97,13 @@ public class OfferController {
 		return DexResponse.buildResponse(feeCalculationService.calculateBuyOfferFee(postBody.getBuyAssetCode(), postBody.getAmount(), postBody.getPrice()));
 	}
 
+	/**
+	 * request buy offer
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.OFFER_BUY_CREATE_TASK, method = RequestMethod.POST)
 	public DexResponse<CreateOfferResult> createBuyOffer(@RequestBody CreateOfferRequest postBody) throws TalkenException {
@@ -72,6 +111,13 @@ public class OfferController {
 		return DexResponse.buildResponse(offerService.createBuyOffer(authInfo.getUser(), postBody));
 	}
 
+	/**
+	 * cancel buy offer
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.OFFER_BUY_DELETE_TASK, method = RequestMethod.POST)
 	public DexResponse<DeleteOfferResult> deleteBuyOffer(@RequestBody DeleteOfferRequest postBody) throws TalkenException {

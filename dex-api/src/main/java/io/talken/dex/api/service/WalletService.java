@@ -35,12 +35,10 @@ import org.web3j.utils.Convert;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Scope("singleton")
@@ -71,6 +69,13 @@ public class WalletService {
 	private final BigDecimal MINIMUM_LUK_FOR_TRANSFER = BigDecimal.valueOf(2);
 	private final int LUK_TRANSFER_PENDING_TIME = 5;
 
+	/**
+	 * get tradewallet balances
+	 *
+	 * @param user
+	 * @return
+	 * @throws TradeWalletCreateFailedException
+	 */
 	public TradeWalletResult getTradeWalletBalances(User user) throws TradeWalletCreateFailedException {
 		TradeWalletInfo tw = twService.getTradeWallet(user);
 		TradeWalletResult rtn = new TradeWalletResult();
@@ -95,6 +100,19 @@ public class WalletService {
 		return rtn;
 	}
 
+	/**
+	 * get trade wallet tx list
+	 *
+	 * @param address
+	 * @param operationType
+	 * @param assetCode
+	 * @param assetIssuer
+	 * @param includeAll
+	 * @param direction
+	 * @param page
+	 * @param offset
+	 * @return
+	 */
 	public List<StellarOpReceipt> getTxList(String address, String operationType, String assetCode, String assetIssuer, boolean includeAll, Sort.Direction direction, int page, int offset) {
 		// return empty if address is not given
 		if(address == null) return new ArrayList<>();
@@ -131,9 +149,22 @@ public class WalletService {
 		return mongoTemplate.find(qry, StellarOpReceipt.class, "stellar_opReceipt");
 	}
 
+	/**
+	 * prepare luniverse transfer for user private wallet
+	 * (refill LUK)
+	 * user can request this API once in LUK_TRANSFER_PENDING_TIME seconds
+	 *
+	 * @param user
+	 * @return
+	 * @throws IntegrationException
+	 * @throws PrivateWalletNotFoundException
+	 * @throws TokenMetaNotFoundException
+	 * @throws TokenMetaNotManagedException
+	 * @throws PendingLastRequestException
+	 */
 	public synchronized boolean prepareTransferLuk(User user) throws IntegrationException, PrivateWalletNotFoundException, TokenMetaNotFoundException, TokenMetaNotManagedException, PendingLastRequestException {
 
-		final String checkRedisKey = "talken:svc:lukprepare:"+user.getUid();
+		final String checkRedisKey = "talken:svc:lukprepare:" + user.getUid();
 
 		Object check = redisTemplate.opsForValue().get(checkRedisKey);
 
@@ -178,6 +209,12 @@ public class WalletService {
 		return true;
 	}
 
+	/**
+	 * check user private wallet has enough(MINIMUM_LUK_FOR_TRANSFER) LUK for transfer
+	 *
+	 * @param address
+	 * @return
+	 */
 	public boolean checkTransferLukPrepared(String address) {
 		BigInteger balanceRaw = luniverseNetworkService.getBalance(address, null);
 

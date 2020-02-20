@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 
 import javax.annotation.PostConstruct;
-import java.util.Collections;
 
 @Service
 @Scope("singleton")
@@ -36,6 +35,12 @@ public class LuniverseInfoService {
 		this.rpcClient = luniverseNetworkService.newMainRpcClient();
 	}
 
+	/**
+	 * get luniverse gasprice and limit
+	 *
+	 * @return
+	 * @throws InternalServerErrorException
+	 */
 	public LuniverseGasPriceResult getGasPriceAndLimit() throws InternalServerErrorException {
 		try {
 			LuniverseGasPriceResult rtn = new LuniverseGasPriceResult();
@@ -47,6 +52,16 @@ public class LuniverseInfoService {
 		}
 	}
 
+	/**
+	 * get luniverse tx list
+	 *
+	 * @param address
+	 * @param contractaddress
+	 * @param direction
+	 * @param page
+	 * @param offset
+	 * @return
+	 */
 	public LuniverseTxListResult getTxList(String address, String contractaddress, Sort.Direction direction, int page, int offset) {
 		LuniverseTxListResult rtn = new LuniverseTxListResult();
 

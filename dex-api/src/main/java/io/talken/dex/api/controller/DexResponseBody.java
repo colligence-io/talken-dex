@@ -5,6 +5,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 
+/**
+ * General DTO wrapper for JSON Serializing
+ * hide unnecessary fields
+ *
+ * @param <T>
+ */
 @Data
 public class DexResponseBody<T> {
 	private DexResponseHeader status;

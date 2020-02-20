@@ -39,10 +39,26 @@ public class FeeCalculationService {
 		PIVOT_ASSET_MI = tmService.getManagedInfo(DexSettings.PIVOT_ASSET_CODE);
 	}
 
+	/**
+	 * pivot asset info
+	 *
+	 * @return
+	 */
 	public TokenMetaTable.ManagedInfo getPivotAssetManagedInfo() {
 		return PIVOT_ASSET_MI;
 	}
 
+	/**
+	 * calculate sell offer fee
+	 *
+	 * @param sellAssetCode
+	 * @param sellAmount
+	 * @param sellPrice
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 * @throws TokenMetaNotManagedException
+	 * @throws EffectiveAmountIsNegativeException
+	 */
 	public CalculateFeeResult calculateSellOfferFee(String sellAssetCode, BigDecimal sellAmount, BigDecimal sellPrice) throws TokenMetaNotFoundException, TokenMetaNotManagedException, EffectiveAmountIsNegativeException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 		rtn.setSellAssetType(tmService.getAssetType(sellAssetCode));
@@ -63,6 +79,16 @@ public class FeeCalculationService {
 		return rtn;
 	}
 
+	/**
+	 * calculate buy offer fee
+	 *
+	 * @param buyAssetCode
+	 * @param buyAmount
+	 * @param buyPrice
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 * @throws TokenMetaNotManagedException
+	 */
 	public CalculateFeeResult calculateBuyOfferFee(String buyAssetCode, BigDecimal buyAmount, BigDecimal buyPrice) throws TokenMetaNotFoundException, TokenMetaNotManagedException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 		rtn.setSellAssetType(PIVOT_ASSET_MI.dexAssetType());
@@ -80,6 +106,15 @@ public class FeeCalculationService {
 		return rtn;
 	}
 
+	/**
+	 * calculate deanchor fee
+	 *
+	 * @param sellAssetCode
+	 * @param amount
+	 * @return
+	 * @throws TokenMetaNotFoundException
+	 * @throws TokenMetaNotManagedException
+	 */
 	public CalculateFeeResult calculateDeanchorFee(String sellAssetCode, BigDecimal amount) throws TokenMetaNotFoundException, TokenMetaNotManagedException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 

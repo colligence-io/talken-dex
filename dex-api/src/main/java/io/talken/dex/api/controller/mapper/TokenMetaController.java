@@ -21,16 +21,35 @@ public class TokenMetaController {
 	@Autowired
 	private TokenMetaService tmService;
 
+	/**
+	 * managed meta list
+	 *
+	 * @return
+	 * @throws TalkenException
+	 */
 	@RequestMapping(value = RequestMappings.TMS_MI_LIST, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable> managedInfoList() throws TalkenException {
 		return DexResponse.buildResponse(tmService.getTokenMetaManagedList());
 	}
 
+	/**
+	 * single meta
+	 *
+	 * @param symbol
+	 * @return
+	 * @throws TalkenException
+	 */
 	@RequestMapping(value = RequestMappings.TMS_TM_INFO, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable.Meta> tokenMeta(@PathVariable @NotEmpty String symbol) throws TalkenException {
 		return DexResponse.buildResponse(tmService.getTokenMeta(symbol));
 	}
 
+	/**
+	 * all meta list
+	 *
+	 * @return
+	 * @throws TalkenException
+	 */
 	@RequestMapping(value = RequestMappings.TMS_TM_LIST, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable> tokenMetaList() throws TalkenException {
 		return DexResponse.buildResponse(tmService.getTokenMetaList());
