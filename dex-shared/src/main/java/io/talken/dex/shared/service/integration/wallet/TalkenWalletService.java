@@ -77,6 +77,8 @@ public class TalkenWalletService {
 							.filter(_a -> _a != null)
 							.findAny();
 
+					logger.logObjectAsJSON(walletsData);
+
 					return new ObjectPair<>(true, address.orElse(null));
 				} catch(Exception ex) {
 					// FIXME : failed parse json, assume it's error

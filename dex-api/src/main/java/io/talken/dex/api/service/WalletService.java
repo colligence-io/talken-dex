@@ -180,6 +180,7 @@ public class WalletService {
 		ObjectPair<Boolean, String> address = pwService.getAddress(user.getId(), "luk", "LUK");
 
 		if(!address.first()) throw new PrivateWalletNotFoundException(user.getUid(), "luk", "LUK");
+		if(address.second() == null) throw new PrivateWalletNotFoundException(user.getUid(), "luk", "LUK");
 
 		BigDecimal balance = getLukBalance(address.second());
 
