@@ -177,10 +177,10 @@ public class WalletService {
 
 		redisTemplate.opsForValue().set(checkRedisKey, UTCUtil.getNowTimestamp_s(), Duration.ofSeconds(LUK_TRANSFER_PENDING_TIME));
 
-		ObjectPair<Boolean, String> address = pwService.getAddress(user.getId(), "luk", "LUK");
+		ObjectPair<Boolean, String> address = pwService.getAddress(user.getId(), "LUNIVERSE", "LUK");
 
-		if(!address.first()) throw new PrivateWalletNotFoundException(user.getUid(), "luk", "LUK");
-		if(address.second() == null) throw new PrivateWalletNotFoundException(user.getUid(), "luk", "LUK");
+		if(!address.first()) throw new PrivateWalletNotFoundException(user.getUid(), "LUNIVERSE", "LUK");
+		if(address.second() == null) throw new PrivateWalletNotFoundException(user.getUid(), "LUNIVERSE", "LUK");
 
 		BigDecimal balance = getLukBalance(address.second());
 
