@@ -181,9 +181,7 @@ public class WalletService {
 
 		if(!address.first()) throw new PrivateWalletNotFoundException(user.getUid(), "luk", "LUK");
 
-		BigInteger balanceRaw = luniverseNetworkService.getBalance(address.second(), null);
-
-		BigDecimal balance = Convert.fromWei(balanceRaw.toString(), Convert.Unit.ETHER);
+		BigDecimal balance = getLukBalance(address.second());
 
 		// need prepare transfer seed LUK
 		if(MINIMUM_LUK_FOR_TRANSFER.compareTo(balance) > 0) {
@@ -214,10 +212,12 @@ public class WalletService {
 	 * @return
 	 */
 	public boolean checkTransferLukPrepared(String address) {
-		BigInteger balanceRaw = luniverseNetworkService.getBalance(address, null);
-
-		BigDecimal balance = Convert.fromWei(balanceRaw.toString(), Convert.Unit.ETHER);
-
-		return MINIMUM_LUK_FOR_TRANSFER.compareTo(balance) <= 0;
+		return MINIMUM_LUK_FOR_TRANSFER.compareTo(getLukBalance(address)) <= 0;
 	}
+
+	private BigDecimal getLukBalance(String address) {
+		BigInteger balanceRaw = luniverseNetworkService.getBalance(address, null);
+		return (balanceRaw == null) ? BigDecimal.ZERO : Convert.fromWei(balanceRaw.toString(), Convert.Unit.ETHER);
+	}
+
 }
