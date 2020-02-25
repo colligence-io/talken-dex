@@ -168,9 +168,7 @@ public class WalletService {
 
 		Object check = redisTemplate.opsForValue().get(checkRedisKey);
 
-		if(check == null) {
-			throw new PendingLastRequestException();
-		} else {
+		if(check != null) {
 			long lastRequestTime = Long.valueOf(check.toString());
 			if(UTCUtil.getNowTimestamp_s() <= lastRequestTime + LUK_TRANSFER_PENDING_TIME) {
 				throw new PendingLastRequestException();
