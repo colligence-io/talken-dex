@@ -115,7 +115,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	/**
 	 * check new transaction every 3 seconds
 	 */
-	@Scheduled(fixedDelay = 3000, initialDelay = 5000)
+	@Scheduled(fixedDelay = 1000, initialDelay = 5000)
 	private void checkTask() {
 		if(DexGovStatus.isStopped) return;
 
