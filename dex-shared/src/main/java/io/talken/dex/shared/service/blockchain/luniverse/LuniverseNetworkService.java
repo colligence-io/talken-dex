@@ -37,7 +37,7 @@ public class LuniverseNetworkService {
 		this.mainRpcUri = settings.getMainRpcUri();
 		this.sideRpcUri = settings.getSideRpcUri();
 		this.client = new LuniverseApiClient(apiUri, settings.getSecret().getApiKey());
-		logger.info("Using Luniverse SERVICE Network : {}", apiUri);
+		logger.info("Using Luniverse SERVICE Network : {} / {} / {}", apiUri, mainRpcUri, sideRpcUri);
 	}
 
 	/**

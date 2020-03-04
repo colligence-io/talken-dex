@@ -33,7 +33,7 @@ talken:
         infuraUri: "https://ropsten.infura.io/v3/a374b566c26149e2b94cc9bf7bafec50"
       luniverse:
         apiUri: "https://api.luniverse.io"
-        mainRpcUri: "http://133.186.197.245:18545"
+        mainRpcUri: "http://13.125.55.194:8545"
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
     task:
       createOffer:
@@ -86,7 +86,7 @@ talken:
         gasOracleUrl: "http://10.27.27.13:38084/ethgasAPI.json"
       luniverse:
         apiUri: "https://api.luniverse.io"
-        mainRpcUri: "http://10.27.27.13:18545"
+        mainRpcUri: "http://13.125.55.194:8545"
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5151520500809142437"
     integration:
       relay:
