@@ -31,10 +31,8 @@ import org.stellar.sdk.Asset;
 import org.stellar.sdk.ManageBuyOfferOperation;
 import org.stellar.sdk.ManageSellOfferOperation;
 import org.stellar.sdk.PaymentOperation;
-import org.stellar.sdk.requests.OffersRequestBuilder;
-import org.stellar.sdk.requests.RequestBuilder;
+import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.responses.OfferResponse;
-import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 import org.stellar.sdk.xdr.OperationResult;
 
@@ -432,36 +430,23 @@ public class OfferService {
 			}
 		}
 
-		// ownerchip check
+		// ownership check
 		if(!createOfferRecord.getUserId().equals(user.getId())) {
 			throw new OwnershipMismatchException(offerId + " is not created by you. We WILL INVESTIGATE with this ABNORMAL ATTEMPTION.");
 		}
 
-		// get offer info from network
-		String cursor = null;
-
-		boolean more;
+		// get offer Information from network
 		OfferResponse originalOffer = null;
-		do {
-			OffersRequestBuilder builder = stellarNetworkService.pickServer().offers().forAccount(tradeWallet.getAccountId()).limit(200).order(RequestBuilder.Order.ASC);
-			if(cursor != null) builder.cursor(cursor);
-			Page<OfferResponse> offers;
-			try {
-				offers = builder.execute();
-			} catch(IOException ioex) {
-				throw new StellarException(ioex);
-			}
-			more = (offers.getRecords().size() == 200);
-
-			for(OfferResponse offersRecord : offers.getRecords()) {
-				cursor = offersRecord.getPagingToken();
-
-				if(offersRecord.getId().equals(offerId)) {
-					originalOffer = offersRecord;
-					break;
+		try {
+			originalOffer = stellarNetworkService.pickServer().offers().offer(offerId);
+		} catch(Exception ex) {
+			if(ex instanceof ErrorResponse) {
+				if(((ErrorResponse) ex).getCode() == 404) {
+					throw new OfferNotValidException(offerId, "Offer " + offerId + " not found on network.");
 				}
 			}
-		} while(originalOffer != null && more);
+			throw new StellarException(ex);
+		}
 
 		if(originalOffer == null) {
 			throw new OfferNotValidException(offerId, "Offer " + offerId + " not found on network.");

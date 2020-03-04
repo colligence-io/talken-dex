@@ -28,6 +28,7 @@ talken:
       ethereum:
         network: test
         rpcUri: "http://192.168.0.37:8545"
+        #rpcUri: "http://tn.henesis.io/ethereum/ropsten?clientId=be774503e333c688b2acee1b37de702d"
         gasOracleUrl: "http://192.168.0.37:38084/ethgasAPI.json"
         infuraUri: "https://ropsten.infura.io/v3/a374b566c26149e2b94cc9bf7bafec50"
       luniverse:
