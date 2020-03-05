@@ -155,6 +155,11 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 			}
 
 			try {
+				// force lowercase of ref_id (mostly txHash) for search
+				if(logRecord.getBcRefId() != null) {
+					logRecord.setBcRefId(logRecord.getBcRefId().toLowerCase());
+				}
+
 				if(logRecord.getStatus().equals(BctxStatusEnum.SENT)) {
 					logger.info("[BCTX#{}] BcTx Successfully sent, bcRef = {}", bctxRecord.getId(), logRecord.getBcRefId());
 					bctxRecord.setStatus(BctxStatusEnum.SENT);

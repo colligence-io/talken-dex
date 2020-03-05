@@ -185,7 +185,7 @@ public abstract class TxMonitor<TB, TT, TR> {
 		TxReceipt receipt = toTxMonitorReceipt(tx);
 
 		BctxLogRecord logRecord = dslContext.selectFrom(BCTX_LOG)
-				.where(BCTX_LOG.BC_REF_ID.equalIgnoreCase(receipt.txRefId).and(BCTX_LOG.STATUS.eq(BctxStatusEnum.SENT)))
+				.where(BCTX_LOG.BC_REF_ID.eq(receipt.txRefId.toLowerCase()).and(BCTX_LOG.STATUS.eq(BctxStatusEnum.SENT)))
 				.orderBy(BCTX_LOG.ID.desc())
 				.limit(1)
 				.fetchOne();
