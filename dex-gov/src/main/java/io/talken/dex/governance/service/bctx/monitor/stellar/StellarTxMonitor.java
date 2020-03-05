@@ -122,7 +122,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		int processed = -1;
 		do {
 			processed = processNextTransactions();
-		} while(processed == TXREQUEST_LIMIT);
+		} while(processed == TXREQUEST_LIMIT && !DexGovStatus.isStopped);
 	}
 
 	@Override
