@@ -262,11 +262,11 @@ public class MaMonitorService {
 				coin = StellarConverter.getAccountNativeBalance(stellarNetworkService.pickServer().accounts().account(address));
 				break;
 			case ETHEREUM_ERC20_TOKEN:
-				BigInteger rawErc20Bal = contractInfoService.getBalanceOf(ethereumNetworkService.getLocalClient().newClient(), meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString(), address);
+				BigInteger rawErc20Bal = contractInfoService.getBalanceOf(ethereumNetworkService.getInfuraClient().newClient(), meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString(), address);
 				if(rawErc20Bal != null)
 					token = new BigDecimal(rawErc20Bal).divide(BigDecimal.TEN.pow(meta.getUnitDecimals() != null ? meta.getUnitDecimals() : 18), RoundingMode.FLOOR);
 			case ETHEREUM:
-				BigInteger rawEthBal = ethereumNetworkService.getLocalClient().newClient().ethGetBalance(address, DefaultBlockParameterName.LATEST).send().getBalance();
+				BigInteger rawEthBal = ethereumNetworkService.getInfuraClient().newClient().ethGetBalance(address, DefaultBlockParameterName.LATEST).send().getBalance();
 				if(rawEthBal != null)
 					coin = Convert.fromWei(rawEthBal.toString(), Convert.Unit.ETHER);
 				break;
