@@ -33,10 +33,7 @@ import org.web3j.utils.Convert;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.talken.common.persistence.jooq.Tables.USER_REWARD;
@@ -189,14 +186,16 @@ public class MaMonitorService {
 
 			// get holder balances
 			BigDecimal holderTotal = BigDecimal.ZERO;
+			StringJoiner holderAddresses = new StringJoiner(",");
 			for(TokenMetaTable.HolderAccountInfo assetHolderAccount : meta.getManagedInfo().getAssetHolderAccounts()) {
 				ObjectPair<BigDecimal, BigDecimal> hBal = getAccountBalance(meta, assetHolderAccount.getAddress());
 				holderTotal = holderTotal.add(hBal.second());
+				holderAddresses.add(assetHolderAccount.getAddress());
 
 				// check holder native balance
 				ObjectPair<BigDecimal, String> minBal = getNetfeeBuffer(meta, "holder");
 				if(hBal.second().compareTo(BigDecimal.ZERO) > 0 && hBal.first().compareTo(minBal.first()) < 0) {
-					adminAlarmService.warn(logger, "Holder for {} {} has low native balance : {} < {} {}", meta.getSymbol(), assetHolderAccount.getAddress(), hBal.first().stripTrailingZeros().toPlainString(), minBal.first().stripTrailingZeros().toPlainString(), minBal.second());
+					adminAlarmService.warn(logger, "MAM : {} Holder( {} ) low native balance for network fee : {} < {} {}", meta.getSymbol(), assetHolderAccount.getAddress(), hBal.first().stripTrailingZeros().toPlainString(), minBal.first().stripTrailingZeros().toPlainString(), minBal.second());
 				}
 			}
 
@@ -205,7 +204,7 @@ public class MaMonitorService {
 			if(supply != null) {
 				// if holder has low balance than effective supply (supply - feeTotal)
 				if(holderTotal.compareTo(supply.subtract(feeTotal)) < 0) {
-					adminAlarmService.warn(logger, "Holder balance for {} is lower than effective supply ({} issued - {} fee) : {} < {} {}", assetCode, supply.stripTrailingZeros().toPlainString(), feeTotal.stripTrailingZeros().toPlainString(), holderTotal.stripTrailingZeros().toPlainString(), supply.subtract(feeTotal).stripTrailingZeros().toPlainString(), assetCode);
+					adminAlarmService.warn(logger, "MAM : {} Holder( {} ) lower balance than effective supply ({} issued - {} fee) : {} < {} {}", assetCode, holderAddresses.toString(), supply.stripTrailingZeros().toPlainString(), feeTotal.stripTrailingZeros().toPlainString(), holderTotal.stripTrailingZeros().toPlainString(), supply.subtract(feeTotal).stripTrailingZeros().toPlainString(), assetCode);
 				}
 			} else {
 				// XXX : never issued? or just error?
@@ -222,14 +221,14 @@ public class MaMonitorService {
 					if(meta.getNativeFlag()) {
 						BigDecimal effBal = accountBalance.first().subtract(netfeeBuffer.first());
 						if(effBal.compareTo(unsent) < 0) {
-							adminAlarmService.warn(logger, "Distributor for {} {} has lower balance than unsent rewards : {} < {} (+{}) {}", assetCode, meta.getManagedInfo().getDistributorAddress(), accountBalance.first().stripTrailingZeros().toPlainString(), unsent.stripTrailingZeros().toPlainString(), netfeeBuffer.first().stripTrailingZeros().toPlainString(), netfeeBuffer.second());
+							adminAlarmService.warn(logger, "MAM : {} Distributor( {} ) lower balance than unsent rewards : {} < {} (+{}) {}", assetCode, meta.getManagedInfo().getDistributorAddress(), accountBalance.first().stripTrailingZeros().toPlainString(), unsent.stripTrailingZeros().toPlainString(), netfeeBuffer.first().stripTrailingZeros().toPlainString(), netfeeBuffer.second());
 						}
 					} else {
 						if(accountBalance.first().compareTo(netfeeBuffer.first()) < 0) {
-							adminAlarmService.warn(logger, "Distributor for {} {} has low native balance : {} < {} {}", assetCode, meta.getManagedInfo().getDistributorAddress(), accountBalance.first().stripTrailingZeros().toPlainString(), netfeeBuffer.first().stripTrailingZeros().toPlainString(), netfeeBuffer.second());
+							adminAlarmService.warn(logger, "MAN : {} Distributor( {} ) low native balance for network fee : {} < {} {}", assetCode, meta.getManagedInfo().getDistributorAddress(), accountBalance.first().stripTrailingZeros().toPlainString(), netfeeBuffer.first().stripTrailingZeros().toPlainString(), netfeeBuffer.second());
 						}
 						if(unsent.compareTo(accountBalance.second()) > 0) {
-							adminAlarmService.warn(logger, "Distributor for {} {} has lower balance than unsent rewards : {} < {} {}", assetCode, meta.getManagedInfo().getDistributorAddress(), accountBalance.second().stripTrailingZeros().toPlainString(), unsent.stripTrailingZeros().toPlainString(), assetCode);
+							adminAlarmService.warn(logger, "MAM : {} Distributor( {} ) lower balance than unsent rewards : {} < {} {}", assetCode, meta.getManagedInfo().getDistributorAddress(), accountBalance.second().stripTrailingZeros().toPlainString(), unsent.stripTrailingZeros().toPlainString(), assetCode);
 						}
 					}
 				}
@@ -245,7 +244,7 @@ public class MaMonitorService {
 			} else {
 				BigDecimal issuerBal = StellarConverter.getAccountNativeBalance(ars.get(issuer));
 				if(issuerBal.compareTo(govSettings.getMam().getIssuerMinBalance()) <= 0) {
-					adminAlarmService.warn(logger, "Issuer {} balance is below minumum : {}(<{}) XLM ", issuer, issuerBal.stripTrailingZeros().toPlainString(), govSettings.getMam().getIssuerMinBalance());
+					adminAlarmService.warn(logger, "MAM : Issuer( {} ) native balance is below minumum : {}(<{}) XLM ", issuer, issuerBal.stripTrailingZeros().toPlainString(), govSettings.getMam().getIssuerMinBalance());
 				}
 			}
 		}
