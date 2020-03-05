@@ -171,29 +171,59 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	private int processTransactionPage(Page<TransactionResponse> txPage) {
 		int processed = 0;
 
+
 		for(TransactionResponse txRecord : txPage.getRecords()) {
+			long ms = System.currentTimeMillis();
+			long ms2;
 			try {
+				logger.info("Start Page {} ", txRecord.getPagingToken());
 				StellarTxReceipt txResult = new StellarTxReceipt(txRecord, stellarNetworkService.getNetwork());
+				ms2 = System.currentTimeMillis();
+				logger.info("Fetching stellar receipts : {} ms", ms2 - ms);
+				ms = ms2;
+
+
 				callTxHandlerStack(null, txResult);
+				ms2 = System.currentTimeMillis();
+				logger.info("call TxHandlerStack : {} ms", ms2 - ms);
+				ms = ms2;
 
 				// call dex task post-processor
 				processDexTask(txResult);
+				ms2 = System.currentTimeMillis();
+				logger.info("call processDexTask : {} ms", ms2 - ms);
+				ms = ms2;
 
 				List<StellarOpReceipt> opReceipts = txResult.getOpReceipts();
 
+
 				for(StellarOpReceipt opReceipt : opReceipts) {
 					if(opReceipt.getOperationType().equals(OperationType.PAYMENT)) {
-						callReceiptHandlerStack(null, txResult, opReceipt);
-					}
 
-					mongoTemplate.insert(opReceipt, COLLECTION_NAME);
+						callReceiptHandlerStack(null, txResult, opReceipt);
+						ms2 = System.currentTimeMillis();
+						logger.info("call ReceiptHandlerStack : {} ms", ms2 - ms);
+						ms = ms2;
+					}
 				}
 
+				mongoTemplate.insert(opReceipts, COLLECTION_NAME);
+				ms2 = System.currentTimeMillis();
+				logger.info("mongo insert receipt : {} ms", ms2 - ms);
+				ms = ms2;
+
+
 				checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
+				ms2 = System.currentTimeMillis();
+				logger.info("check chanin network node : {} ms", ms2 - ms);
+				ms = ms2;
 
 				ssService.status().getTxMonitor().getStellar().setLastPagingToken(txRecord.getPagingToken());
 				ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
 				ssService.save();
+				ms2 = System.currentTimeMillis();
+				logger.info("save state : {} ms", ms2 - ms);
+				ms = ms2;
 
 				processed++;
 			} catch(Exception ex) {
