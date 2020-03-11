@@ -1,29 +1,32 @@
 package io.talken.dex.governance.scheduler.crawler.cg;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.mongodb.BasicDBObject;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.result.DeleteResult;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.UTCUtil;
+import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.io.InputStreamReader;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static io.talken.dex.governance.scheduler.crawler.cg.CoinGeckoMarketCapResult.dataListBuilder;
 
 @Service
 @Scope("singleton")
@@ -42,8 +45,13 @@ public class CrawlCoinGeckoService {
 
     private static final int RATE_LIMIT = 100;
 
+    private static final String COLLECTION_NAME = "coin_gecko";
+
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private AdminAlarmService alarmService;
 
     private static final String apiUrl = "https://api.coingecko.com/api/v3";
     private Map<String, String> apis = new HashMap<>();
@@ -55,8 +63,8 @@ public class CrawlCoinGeckoService {
         this.apis.put("global", "/global");
     }
 
-    // 10 min = 1000 * 60 * 10
-    @Scheduled(fixedDelay = 1000 * 10, initialDelay = 1000)
+    // 60 min = 1000 * 60 * 60
+    @Scheduled(fixedDelay = 1000 * 60 * 60, initialDelay = 1000)
     private void crawl() {
         if(DexGovStatus.isStopped) return;
         try {
@@ -74,29 +82,46 @@ public class CrawlCoinGeckoService {
      */
     private void getMarketCapData(String rest) throws Exception {
         String api = apis.getOrDefault(rest, "global");
-        CoinGeckoMarketCapResult result = new CoinGeckoMarketCapResult();
 
-        logger.debug("Request CoinGecko marketCap data API.");
+//        logger.debug("Request CoinGecko marketCap data API.");
         HttpResponse response = requestFactory
                 .buildGetRequest(new GenericUrl(apiUrl+api))
                 .execute();
 
-        JsonObject data = JsonParser.parseReader(new InputStreamReader(response.getContent())).getAsJsonObject().getAsJsonObject("data");
-        logger.debug("Response CoinGecko marketCap data as JsonParseStream {}", data);
+        if(response.getStatusCode() != 200) {
+            alarmService.error(logger, "CoinGecko API call error : {} - {}", response.getStatusCode(), response.getStatusMessage());
+            return;
+        }
 
-        JsonObject totalMarketCaps = data.getAsJsonObject("total_market_cap");
-        JsonObject totalVolumes = data.getAsJsonObject("total_volume");
-        JsonObject marketCapPercentage = data.getAsJsonObject("market_cap_percentage");
-        BigDecimal marketCapChangePercentage24hUsd = data.get("market_cap_change_percentage_24h_usd").getAsBigDecimal();
-        long updatedAt = data.get("updated_at").getAsLong();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        CoinGeckoMarketCapResult cgmcr = mapper.readValue(response.parseAsString(), CoinGeckoMarketCapResult.class);
+//        logger.debug("Response CoinGecko marketCap data as ParseStream {}", cgmcr);
 
-        result.setTotalMarketCap(dataListBuilder(totalMarketCaps));
-        result.setTotalVolume(dataListBuilder(totalVolumes));
-        result.setMarketCapPercentage(dataListBuilder(marketCapPercentage));
-        result.setMarketCapChangePer24hUSD(marketCapChangePercentage24hUsd);
-        result.setUpdatedAt(UTCUtil.ts2ldt(updatedAt));
+        try {
+            if (mongoTemplate.getCollection(COLLECTION_NAME).countDocuments() == 0) {
+                mongoTemplate.save(cgmcr.getData(), COLLECTION_NAME);
+            } else {
+                LinkedHashMap currentDoc = (LinkedHashMap) cgmcr.getData();
+                MongoCollection<Document> collection = mongoTemplate.getCollection(COLLECTION_NAME);
+                Document lastDoc = collection.find().sort(new BasicDBObject("_id", -1)).first();
 
-        logger.debug("Response CoinGecko marketCap data parse result {}", result);
+                int currentUpdatedAt = (int) currentDoc.get("updated_at");
+                int lastUpdatedAt = (int) lastDoc.get("updated_at");
+
+                if (lastUpdatedAt < currentUpdatedAt) {
+                    BasicDBObject bObject = new BasicDBObject();
+                    bObject.put("updated_at", new BasicDBObject("$lt", currentUpdatedAt));
+                    DeleteResult dResult = collection.deleteMany(bObject);
+                    logger.debug("Cleanup Documents {}", dResult);
+                    mongoTemplate.save(cgmcr.getData(), COLLECTION_NAME);
+                }
+            }
+        } catch(Exception ex) {
+            logger.exception(ex);
+        }
 
         if (response != null) {
             response.disconnect();
