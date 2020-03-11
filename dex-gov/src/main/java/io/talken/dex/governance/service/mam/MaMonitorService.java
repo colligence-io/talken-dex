@@ -189,7 +189,14 @@ public class MaMonitorService {
 			StringJoiner holderAddresses = new StringJoiner(",");
 			for(TokenMetaTable.HolderAccountInfo assetHolderAccount : meta.getManagedInfo().getAssetHolderAccounts()) {
 				ObjectPair<BigDecimal, BigDecimal> hBal = getAccountBalance(meta, assetHolderAccount.getAddress());
-				holderTotal = holderTotal.add(hBal.second());
+
+				if(meta.getNativeFlag()) {
+					holderTotal = holderTotal.add(hBal.first());
+				}
+				else {
+					holderTotal = holderTotal.add(hBal.second());
+				}
+
 				holderAddresses.add(assetHolderAccount.getAddress());
 
 				// check holder native balance
