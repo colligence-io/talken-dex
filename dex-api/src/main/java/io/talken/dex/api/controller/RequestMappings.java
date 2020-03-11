@@ -56,6 +56,7 @@ public class RequestMappings {
 	public static final String TMS_TM_LIST = TMS + "/list";
 	public static final String TMS_TM_INFO = TMS + "/info/{symbol}";
 	public static final String TMS_MI_LIST = TMS + "/listManaged";
+    public static final String TMS_TMC_INFO = TMS + "/totalMarketCapInfo";
 
 	// Not Implemented Yet
 	private static final String ADM = "/adm";
