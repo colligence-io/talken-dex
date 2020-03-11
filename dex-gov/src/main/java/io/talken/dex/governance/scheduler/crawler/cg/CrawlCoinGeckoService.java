@@ -12,6 +12,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.DeleteResult;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
 import org.bson.Document;
@@ -100,7 +101,6 @@ public class CrawlCoinGeckoService {
         CoinGeckoMarketCapResult cgmcr = mapper.readValue(response.parseAsString(), CoinGeckoMarketCapResult.class);
 //        logger.debug("Response CoinGecko marketCap data as ParseStream {}", cgmcr);
 
-        // TODO: document 어제, 오늘 두개 만들어서 24h per 계산.
         try {
             if (mongoTemplate.getCollection(COLLECTION_NAME).countDocuments() == 0) {
                 mongoTemplate.save(cgmcr.getData(), COLLECTION_NAME);
@@ -109,14 +109,24 @@ public class CrawlCoinGeckoService {
                 MongoCollection<Document> collection = mongoTemplate.getCollection(COLLECTION_NAME);
                 Document lastDoc = collection.find().sort(new BasicDBObject("_id", -1)).first();
 
-                int currentUpdatedAt = (int) currentDoc.get("updated_at");
-                int lastUpdatedAt = (int) lastDoc.get("updated_at");
+                long currentUpdatedAt = (int) currentDoc.get("updated_at");
+                long lastUpdatedAt = (int) lastDoc.get("updated_at");
 
                 if (lastUpdatedAt < currentUpdatedAt) {
+                    LocalDateTime curr = UTCUtil.ts2ldt(currentUpdatedAt);
+                    LocalDateTime last = UTCUtil.ts2ldt(lastUpdatedAt);
+                    // TODO: document 어제, 오늘 두개 만들어서 24h per 계산.
+//                    if (ChronoUnit.DAYS.between(curr, last) == 0) {
+//                        BasicDBObject bObject = new BasicDBObject();
+//                        bObject.put("updated_at", new BasicDBObject("$lt", currentUpdatedAt));
+//                        DeleteResult dResult = collection.deleteMany(bObject);
+//                        logger.debug("Cleanup Documents Every 24h {}", dResult);
+//                    }
                     BasicDBObject bObject = new BasicDBObject();
                     bObject.put("updated_at", new BasicDBObject("$lt", currentUpdatedAt));
                     DeleteResult dResult = collection.deleteMany(bObject);
                     logger.debug("Cleanup Documents {}", dResult);
+
                     mongoTemplate.save(cgmcr.getData(), COLLECTION_NAME);
                 }
             }
