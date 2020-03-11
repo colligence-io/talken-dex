@@ -100,6 +100,7 @@ public class CrawlCoinGeckoService {
         CoinGeckoMarketCapResult cgmcr = mapper.readValue(response.parseAsString(), CoinGeckoMarketCapResult.class);
 //        logger.debug("Response CoinGecko marketCap data as ParseStream {}", cgmcr);
 
+        // TODO: document 어제, 오늘 두개 만들어서 24h per 계산.
         try {
             if (mongoTemplate.getCollection(COLLECTION_NAME).countDocuments() == 0) {
                 mongoTemplate.save(cgmcr.getData(), COLLECTION_NAME);
