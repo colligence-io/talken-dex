@@ -27,10 +27,9 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt, EthereumTransferReceipt> {
@@ -39,13 +38,22 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 	@Autowired
 	private Erc20ContractInfoService erc20ContractInfoService;
 
+	@Autowired
+	private EthereumReceiptCollector receiptCollector;
+
 	private static final int MAXIMUM_LOOP = 10; // get 1000 blocks per loop, for reduce crawl load.
 	private final String networkName;
 	private static final BigInteger CONFIRM_BLOCK_COUNT = BigInteger.valueOf(10);
 
+	private static final int ETA_BLOCKS = 100;
+	private int[] receiptsPerBlock = new int[ETA_BLOCKS];
+
 	public AbstractEthereumTxMonitor(PrefixedLogger logger, String networkName) {
 		this.logger = logger;
 		this.networkName = networkName;
+		for(int i = 0; i < ETA_BLOCKS; i++) {
+			receiptsPerBlock[i] = 1;
+		}
 	}
 
 	abstract protected BigInteger getServiceStatusLastBlock();
@@ -93,6 +101,9 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 			for(int i = 0; i < MAXIMUM_LOOP && targetBlockNumber.compareTo(cursor) > 0; i++) {
 				cursor = cursor.add(BigInteger.ONE);
 
+				// for ETA
+				final long started = System.currentTimeMillis();
+
 				// get block of cursor
 				EthBlock.Block block = web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(cursor), true).send().getBlock();
 
@@ -103,12 +114,15 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 				List<ObjectPair<TransactionReceipt, List<EthereumTransferReceipt>>> allReceipts = new ArrayList<>();
 
+				List<Transaction> txs = new ArrayList<>();
+
 				if(block.getTransactions().size() > 0) {
 					for(EthBlock.TransactionResult _txResult : block.getTransactions()) {
 						Transaction transaction = null;
 
 						if(_txResult instanceof EthBlock.TransactionHash) {
-							transaction = web3j.ethGetTransactionByHash((String) _txResult.get()).send().getTransaction().orElse(null);
+							throw new AssertionError(networkName + " returned EthBlock.TransactionHash, required EthBlock.TransactionObject");
+							//transaction = web3j.ethGetTransactionByHash((String) _txResult.get()).send().getTransaction().orElse(null);
 						} else if(_txResult instanceof EthBlock.TransactionObject) {
 							transaction = (Transaction) _txResult.get();
 						}
@@ -116,18 +130,23 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 						if(transaction == null)
 							throw new BctxException("ExtractTransactionFailed", "Cannot extract tx from block response, cancel monitoring");
 
-						Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(transaction.getHash()).send().getTransactionReceipt();
-
-						if(!opt_receipt.isPresent())
-							throw new BctxException("ReceiptNotNound", "Cannot get tx receipt from network, cancel monitoring");
-
-						allReceipts.add(new ObjectPair<>(opt_receipt.get(), getTransfers(web3j, block, transaction, opt_receipt.get())));
+						txs.add(transaction);
 					}
 				}
 
-				// call handlerStacks
+				Map<String, TransactionReceipt> receipts = receiptCollector.collect(networkName, web3j, txs);
 
+				for(Transaction transaction : txs) {
+					TransactionReceipt transactionReceipt = receipts.get(transaction.getHash());
+					if(transactionReceipt == null)
+						throw new BctxException("ReceiptNotCollected", "Cannot get tx receipt from receipt collection, cancel monitoring");
+
+					allReceipts.add(new ObjectPair<>(transactionReceipt, getTransfers(web3j, block, transaction, transactionReceipt)));
+				}
+
+				// call handlerStacks
 				callBlockHandlerStack(block);
+
 				for(ObjectPair<TransactionReceipt, List<EthereumTransferReceipt>> txReceipt : allReceipts) {
 					callTxHandlerStack(block, txReceipt.first());
 					for(EthereumTransferReceipt rcpt : txReceipt.second()) {
@@ -138,7 +157,28 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 				saveServiceStatusLastBlock(block.getNumber(), UTCUtil.ts2ldt(block.getTimestamp().longValue()));
 				saveReceiptDocuments(allReceipts.stream().flatMap(_op -> _op.second().stream()).collect(Collectors.toList()));
 
-				logger.info("{} : BLOCKNUMDER = {}, RECEIPTS = {}", networkName, cursor, allReceipts.size());
+				// for ETA
+				long takes = System.currentTimeMillis() - started;
+
+				int eta_slot = (int) (cursor.longValueExact() % ETA_BLOCKS);
+				receiptsPerBlock[eta_slot] = allReceipts.size();
+				long blocksToGo = latestBlockNumber.subtract(cursor).longValueExact();
+				String eta = "";
+
+				try {
+					double receiptsPerBlockAvg = Arrays.stream(receiptsPerBlock).average().orElse(Double.NaN);
+					double takesPerReceipt = takes / receipts.size();
+					long etams = (long) ((receiptsPerBlockAvg * blocksToGo) / takesPerReceipt);
+					if(etams > 0) {
+						eta = ", catchup ETA : " + blocksToGo + " blocks in " + Duration.ofMillis(etams).toString();
+					}
+				} catch(Exception ex) {
+					// do nothing
+				}
+
+				// log process if receipts processed
+				if(allReceipts.size() > 0)
+					logger.info("{} : BLOCKNUMBER = {}, RECEIPTS = {} ({} ms){}", networkName, cursor, allReceipts.size(), takes, eta);
 			}
 		} catch(Exception ex) {
 			logger.exception(ex, "Exception while processing {} block {}", networkName, cursor);

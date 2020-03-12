@@ -211,7 +211,8 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 			}
 		}
 
-		logger.info("{} : PROCESSED = {}, PAGINGTOKEN = {} ~ {}, RECEIPTS = {}", "Stellar", processed, firstToken, lastToken, receipts);
+		if(processed > 0)
+			logger.info("{} : PROCESSED = {}, PAGINGTOKEN = {} ~ {}, RECEIPTS = {}", "Stellar", processed, firstToken, lastToken, receipts);
 
 		return processed;
 	}
