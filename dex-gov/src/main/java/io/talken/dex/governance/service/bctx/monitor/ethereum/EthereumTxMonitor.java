@@ -104,7 +104,7 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 		ssService.save();
 	}
 
-	@Scheduled(fixedDelay = 15000, initialDelay = 5000)
+	@Scheduled(fixedDelay = 3000, initialDelay = 5000)
 	private void getBlocks() {
 		if(DexGovStatus.isStopped) return;
 
