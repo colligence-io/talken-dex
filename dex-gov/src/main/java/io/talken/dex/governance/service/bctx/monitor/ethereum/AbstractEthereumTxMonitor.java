@@ -46,13 +46,15 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 	private static final BigInteger CONFIRM_BLOCK_COUNT = BigInteger.valueOf(10);
 
 	private static final int ETA_BLOCKS = 100;
-	private int[] receiptsPerBlock = new int[ETA_BLOCKS];
+	private long[] receiptsPerBlock = new long[ETA_BLOCKS];
+	private long[] takesPerBlock = new long[ETA_BLOCKS];
 
 	public AbstractEthereumTxMonitor(PrefixedLogger logger, String networkName) {
 		this.logger = logger;
 		this.networkName = networkName;
 		for(int i = 0; i < ETA_BLOCKS; i++) {
-			receiptsPerBlock[i] = 1;
+			receiptsPerBlock[i] = 0;
+			takesPerBlock[i] = 0;
 		}
 	}
 
@@ -161,14 +163,18 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 				long takes = System.currentTimeMillis() - started;
 
 				int eta_slot = (int) (cursor.longValueExact() % ETA_BLOCKS);
+				takesPerBlock[eta_slot] = takes;
 				receiptsPerBlock[eta_slot] = allReceipts.size();
-				long blocksToGo = latestBlockNumber.subtract(cursor).longValueExact();
+				long blocksToGo = targetBlockNumber.subtract(cursor).longValueExact();
 				String eta = "";
 
 				try {
-					double receiptsPerBlockAvg = Arrays.stream(receiptsPerBlock).average().orElse(Double.NaN);
-					double takesPerReceipt = takes / receipts.size();
-					long etams = (long) ((receiptsPerBlockAvg * blocksToGo) / takesPerReceipt);
+					long receiptsPerBlockSum = Arrays.stream(receiptsPerBlock).sum();
+					long takesPerBlockSum = Arrays.stream(takesPerBlock).sum();
+					// ((receiptsPerBlockSum / ETA_BLOCKS) * blocksToGo) = receipts to go
+					// (takesPerBlockSum / receiptsPerBlockSum) = takes per receipt
+					// etams = receipts to go * takes per receipts
+					long etams =  ((receiptsPerBlockSum / ETA_BLOCKS) * blocksToGo) * (takesPerBlockSum / receiptsPerBlockSum);
 					if(etams > 0) {
 						eta = ", catchup ETA : " + blocksToGo + " blocks in " + Duration.ofMillis(etams).toString();
 					}
