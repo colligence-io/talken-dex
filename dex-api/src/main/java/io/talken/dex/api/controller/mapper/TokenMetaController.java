@@ -4,13 +4,11 @@ import io.talken.common.exception.TalkenException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
+import io.talken.dex.api.controller.dto.TotalMarketCapResult;
 import io.talken.dex.api.service.TokenMetaService;
 import io.talken.dex.shared.TokenMetaTable;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotEmpty;
 
@@ -54,4 +52,22 @@ public class TokenMetaController {
 	public DexResponse<TokenMetaTable> tokenMetaList() throws TalkenException {
 		return DexResponse.buildResponse(tmService.getTokenMetaList());
 	}
+
+    /**
+     * market cap info
+     *
+     * @return
+     * @throws TalkenException
+     */
+    @RequestMapping(value = RequestMappings.TMS_TMC_INFO, method = RequestMethod.POST)
+    public DexResponse<TotalMarketCapResult> totalMarketCapInfo(
+            @RequestParam(defaultValue = "usd")
+                    String marketCapSymbol,
+            @RequestParam(defaultValue = "usd")
+                    String marketVolSymbol,
+            @RequestParam(defaultValue = "btc")
+                    String marketPerSymbol
+    ) throws TalkenException {
+        return DexResponse.buildResponse(tmService.getTotalMarketCapInfo(marketCapSymbol, marketVolSymbol, marketPerSymbol));
+    }
 }
