@@ -203,13 +203,15 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 				ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
 				ssService.save();
 
+				receipts += opReceipts.size();
+
 				processed++;
 			} catch(Exception ex) {
 				logger.exception(ex, "Unidentified exception occured.");
 			}
 		}
 
-		logger.info("{} : PAGINGTOKEN {} = {} ~ {}, RECEIPTS = {}", "Stellar", processed, firstToken, lastToken, receipts);
+		logger.info("{} : PROCESSED = {}, PAGINGTOKEN = {} ~ {}, RECEIPTS = {}", "Stellar", processed, firstToken, lastToken, receipts);
 
 		return processed;
 	}
