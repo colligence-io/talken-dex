@@ -198,6 +198,8 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 				ssService.save();
 
 				processed++;
+
+				logger.info("{} : LEDGER = {}, PAGINGTOKEN = {}, RECEIPTS = {}", "Stellar", txRecord.getLedger(), txRecord.getPagingToken(), opReceipts.size());
 			} catch(Exception ex) {
 				logger.exception(ex, "Unidentified exception occured.");
 			}

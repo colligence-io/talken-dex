@@ -83,7 +83,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 			// stop if targetBlockNumber is not higher then cursor
 			if(targetBlockNumber.compareTo(cursor) <= 0) return;
 
-			logger.trace("{} : LATEST = {}, CONFIRMED = {}, CURSOR = {}", networkName, latestBlockNumber, targetBlockNumber, cursor);
+			logger.info("{} : LATEST = {}, CONFIRMED = {}, CURSOR = {}", networkName, latestBlockNumber, targetBlockNumber, cursor);
 		} catch(Exception ex) {
 			logger.exception(ex, "Cannot determine {} block cursor.", networkName);
 			return;
@@ -137,6 +137,8 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 				saveServiceStatusLastBlock(block.getNumber(), UTCUtil.ts2ldt(block.getTimestamp().longValue()));
 				saveReceiptDocuments(allReceipts.stream().flatMap(_op -> _op.second().stream()).collect(Collectors.toList()));
+
+				logger.info("{} : BLOCKNUMDER = {}, RECEIPTS = {}", networkName, cursor, allReceipts.size());
 			}
 		} catch(Exception ex) {
 			logger.exception(ex, "Exception while processing {} block {}", networkName, cursor);
