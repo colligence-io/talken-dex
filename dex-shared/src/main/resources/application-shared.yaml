@@ -80,8 +80,8 @@ talken:
         rpcUri: "http://10.27.27.13:8000"
       ethereum:
         network: main
-        rpcUri: "http://10.27.27.13:8545"
-        #rpcUri: "http://tn.henesis.io/ethereum/mainnet?clientId=be774503e333c688b2acee1b37de702d"
+        #rpcUri: "http://10.27.27.13:8545"
+        rpcUri: "http://tn.henesis.io/ethereum/mainnet?clientId=be774503e333c688b2acee1b37de702d"
         infuraUri: "https://mainnet.infura.io/v3/357ea85d151c49629867ec111c9eccd7"
         gasOracleUrl: "http://10.27.27.13:38084/ethgasAPI.json"
       luniverse:
