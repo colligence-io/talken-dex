@@ -17,7 +17,7 @@ import java.util.concurrent.*;
 public class EthereumReceiptCollector {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumReceiptCollector.class);
 
-	private static final int COLLECT_THREAD = 5;
+	private static final int COLLECT_THREAD = 10;
 
 	public Map<String, TransactionReceipt> collect(String networkName, Web3j web3j, List<Transaction> txs) throws BctxException, IOException, ExecutionException, InterruptedException {
 		ExecutorService executor = Executors.newFixedThreadPool(COLLECT_THREAD);
