@@ -32,8 +32,8 @@ public class EthereumAnchorReceiptHandler extends AbstractEthereumAnchorReceiptH
 
 	@PostConstruct
 	private void init() {
-
-		txMonitor.addReceiptHandler(this);
+		// disabled temporary
+		// txMonitor.addReceiptHandler(this);
 	}
 
 	@Override

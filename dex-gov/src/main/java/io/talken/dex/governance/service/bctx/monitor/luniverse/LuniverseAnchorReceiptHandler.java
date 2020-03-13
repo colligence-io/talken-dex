@@ -32,7 +32,8 @@ public class LuniverseAnchorReceiptHandler extends AbstractEthereumAnchorReceipt
 
 	@PostConstruct
 	private void init() {
-		txMonitor.addReceiptHandler(this);
+		// disabled temporary
+		// txMonitor.addReceiptHandler(this);
 	}
 
 	@Override

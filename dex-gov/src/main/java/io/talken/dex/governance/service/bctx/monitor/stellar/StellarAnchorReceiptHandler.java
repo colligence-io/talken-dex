@@ -52,7 +52,8 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 
 	@PostConstruct
 	private void init() {
-		txMonitor.addReceiptHandler(this);
+		// disabled temporary
+		// txMonitor.addReceiptHandler(this);
 	}
 
 	/**
