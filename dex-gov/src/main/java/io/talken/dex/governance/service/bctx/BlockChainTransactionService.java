@@ -73,13 +73,13 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 		});
 	}
 
-	@Scheduled(fixedDelay = 60 * 60 * 1000, initialDelay = 5000) // check pending (sent bctx) every one hour
-	private synchronized void checkPending() {
+	@Scheduled(fixedDelay = 30 * 1000, initialDelay = 5000) // check sent tx every 30 seconds
+	private synchronized void checkSent() {
 		if(DexGovStatus.isStopped) return;
 
 		Result<BctxRecord> txQueue = dslContext.selectFrom(BCTX)
 				.where(BCTX.STATUS.eq(BctxStatusEnum.SENT)
-						.and(BCTX.UPDATE_TIMESTAMP.isNotNull().and(BCTX.UPDATE_TIMESTAMP.le(UTCUtil.getNow().minusHours(3))))
+						.and(BCTX.UPDATE_TIMESTAMP.isNotNull().and(BCTX.UPDATE_TIMESTAMP.le(UTCUtil.getNow().minusSeconds(30))))
 				).fetch();
 
 		if(txQueue.isNotEmpty()) {

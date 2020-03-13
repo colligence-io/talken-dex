@@ -98,7 +98,8 @@ public abstract class TxMonitor<TB, TT, TR> {
 	}
 
 	protected void callTxHandlerStack(TB block, TT tx) throws Exception {
-		updateBctxReceiptInfo(tx);
+		// uncomment this to check receipt in realtime (very slow)
+		//updateBctxReceiptInfo(tx);
 		for(TransactionHandler<TB, TT> txHandler : txHandlers) {
 			try {
 				txHandler.handle(block, tx);
