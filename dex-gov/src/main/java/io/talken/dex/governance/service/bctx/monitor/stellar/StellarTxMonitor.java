@@ -135,7 +135,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		Server server = stellarNetworkService.pickServer();
 
 		try {
-			new StellarTxReceipt(server.transactions().transaction(txId), stellarNetworkService.getNetwork());
+			return new StellarTxReceipt(server.transactions().transaction(txId), stellarNetworkService.getNetwork());
 		} catch(ErrorResponse ex) {
 			if(ex.getCode() == 404) logger.debug("Stellar Tx {} is not found.", txId);
 			else logger.exception(ex);
