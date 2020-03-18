@@ -133,7 +133,9 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 					}
 				}
 
+				final long startCollect = System.currentTimeMillis();
 				Map<String, TransactionReceipt> receipts = collector.collect(networkName, web3j, txs);
+				final long collectTakes = System.currentTimeMillis() - startCollect;
 
 				if(receipts.size() != txs.size()) {
 					throw new BctxException("FailedToCollectReceipts", networkName + " : collected receipts number " + receipts.size() + " is not match with tx number " + txs.size());
@@ -185,7 +187,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 				// log process if receipts processed
 				if(allReceipts.size() > 0)
-					logger.info("{} : BLOCKNUMBER = {}, RECEIPTS = {} ({} ms){}", networkName, cursor, allReceipts.size(), takes, eta);
+					logger.info("{} : BLOCKNUMBER = {}, RECEIPTS = {} ({}({}) ms){}", networkName, cursor, allReceipts.size(), takes, collectTakes, eta);
 			}
 		} catch(Exception ex) {
 			logger.exception(ex, "Exception while processing {} block {}", networkName, cursor);
