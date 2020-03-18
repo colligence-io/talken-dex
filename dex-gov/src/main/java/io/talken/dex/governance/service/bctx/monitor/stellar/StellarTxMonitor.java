@@ -8,7 +8,10 @@ import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
+import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.bctx.TxMonitor;
+import io.talken.dex.shared.TokenMetaTable;
+import io.talken.dex.shared.TokenMetaTableUpdateEventHandler;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
 import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
@@ -44,7 +47,7 @@ import static io.talken.common.persistence.jooq.Tables.DEX_TXMON;
  */
 @Service
 @Scope("singleton")
-public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarOpReceipt> implements ApplicationContextAware {
+public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarOpReceipt> implements ApplicationContextAware, TokenMetaTableUpdateEventHandler {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarTxMonitor.class);
 
 	private ApplicationContext applicationContext;
@@ -64,6 +67,9 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	@Autowired
 	private AdminAlarmService adminAlarmService;
 
+	@Autowired
+	private TokenMetaGovService tmService;
+
 	/**
 	 * hold TaskProcessors for PostProcessing DexTask after receipt arrived
 	 */
@@ -72,6 +78,8 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	private static final String COLLECTION_NAME = "stellar_opReceipt";
 
 	private static final int TXREQUEST_LIMIT = 200;
+
+	private Set<String> assetsToSave = new HashSet<>();
 
 	@PostConstruct
 	private void init() {
@@ -98,6 +106,19 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 			processors.put(_asc.getDexTaskType(), _asc);
 			logger.info("DexTaskTransactionProcessor for [{}] registered.", _asc.getDexTaskType());
 		});
+
+		tmService.addUpdateEventHandler(this);
+	}
+
+	@Override
+	public void handleTokenMetaTableUpdate(TokenMetaTable metaTable) {
+		Set<String> newAssetToSave = new HashSet<>();
+		for(TokenMetaTable.Meta meta : metaTable.values()) {
+			if(meta.isManaged()) {
+				newAssetToSave.add(StellarOpReceipt.assetToString(meta.getManagedInfo().dexAssetType()));
+			}
+		}
+		this.assetsToSave = newAssetToSave;
 	}
 
 	@Override
@@ -222,9 +243,10 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 	private int processTransactionPage(Page<TransactionResponse> txPage) {
 		int processed = 0;
+		int numReceipts = 0;
 
 		TransactionResponse lastSuccessTransaction = null;
-		List<StellarOpReceipt> allReceipts = new ArrayList<>();
+		List<StellarOpReceipt> receiptsToSave = new ArrayList<>();
 
 		final long started = System.currentTimeMillis();
 		try {
@@ -239,10 +261,14 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 				List<StellarOpReceipt> opReceipts = txResult.getOpReceipts();
 
 				for(StellarOpReceipt opReceipt : opReceipts) {
+					numReceipts++;
 					if(opReceipt.getOperationType().equals(OperationType.PAYMENT)) {
 						callReceiptHandlerStack(null, txResult, opReceipt);
 					}
-					allReceipts.add(opReceipt);
+
+					// reduce receipts to save
+					if(haveToSave(opReceipt))
+						receiptsToSave.add(opReceipt);
 				}
 
 				checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
@@ -256,7 +282,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		}
 
 		final long saveStarted = System.currentTimeMillis();
-		mongoTemplate.insert(allReceipts, COLLECTION_NAME);
+		mongoTemplate.insert(receiptsToSave, COLLECTION_NAME);
 		final long saveTakes = System.currentTimeMillis() - saveStarted;
 
 		if(lastSuccessTransaction != null) {
@@ -268,11 +294,23 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		final long takes = System.currentTimeMillis() - started;
 
 		if(processed > 0)
-			logger.info("{} : LEDGER={}, PAGINGTOKEN = {}, RECEIPTS = {} ({} ms / save {} ms)", "Stellar", lastSuccessTransaction.getLedger(), lastSuccessTransaction.getPagingToken(), allReceipts.size(), takes, saveTakes);
+			logger.info("{} : LEDGER={}, PAGINGTOKEN = {}, RECEIPTS = {} ({} ms), SAVED = {} ({} ms)", "Stellar", lastSuccessTransaction.getLedger(), lastSuccessTransaction.getPagingToken(), numReceipts, takes, receiptsToSave.size(), saveTakes);
 
 		return processed;
 	}
 
+	private boolean haveToSave(StellarOpReceipt<?, ?> receipt) {
+		// save if have dex task id
+		if(receipt.getTaskId() != null) return true;
+
+		// save if involved asset is managed
+		for(String involvedAsset : receipt.getInvolvedAssets()) {
+			//if(involvedAsset.equals("native")) return true;
+			if(assetsToSave.contains(involvedAsset)) return true;
+		}
+
+		return false;
+	}
 
 	public void processDexTask(StellarTxReceipt txResult) {
 		if(txResult.getTaskId() == null) return;
