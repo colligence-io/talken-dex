@@ -38,9 +38,6 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 	@Autowired
 	private Erc20ContractInfoService erc20ContractInfoService;
 
-	@Autowired
-	private EthereumReceiptCollector receiptCollector;
-
 	private static final int MAXIMUM_LOOP = 10; // get 1000 blocks per loop, for reduce crawl load.
 	private final String networkName;
 	private static final BigInteger CONFIRM_BLOCK_COUNT = BigInteger.valueOf(10);
@@ -64,7 +61,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 	abstract protected void saveReceiptDocuments(List<EthereumTransferReceipt> documents);
 
-	protected void crawlBlocks(Web3j web3j) {
+	protected void crawlBlocks(Web3j web3j, EthereumReceiptCollector collector) {
 		BigInteger latestBlockNumber = null;
 		BigInteger targetBlockNumber = null;
 		BigInteger cursor = null;
@@ -136,7 +133,11 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 					}
 				}
 
-				Map<String, TransactionReceipt> receipts = receiptCollector.collect(networkName, web3j, txs);
+				Map<String, TransactionReceipt> receipts = collector.collect(networkName, web3j, txs);
+
+				if(receipts.size() != txs.size()) {
+					throw new BctxException("FailedToCollectReceipts", networkName + " : collected receipts number " + receipts.size() + " is not match with tx number " + txs.size());
+				}
 
 				for(Transaction transaction : txs) {
 					TransactionReceipt transactionReceipt = receipts.get(transaction.getHash());
@@ -174,7 +175,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 					// ((receiptsPerBlockSum / ETA_BLOCKS) * blocksToGo) = receipts to go
 					// (takesPerBlockSum / receiptsPerBlockSum) = takes per receipt
 					// etams = receipts to go * takes per receipts
-					long etams =  ((receiptsPerBlockSum / ETA_BLOCKS) * blocksToGo) * (takesPerBlockSum / receiptsPerBlockSum);
+					long etams = ((receiptsPerBlockSum / ETA_BLOCKS) * blocksToGo) * (takesPerBlockSum / receiptsPerBlockSum);
 					if(etams > 0) {
 						eta = ", catchup ETA : " + blocksToGo + " blocks in " + Duration.ofMillis(etams).toString();
 					}

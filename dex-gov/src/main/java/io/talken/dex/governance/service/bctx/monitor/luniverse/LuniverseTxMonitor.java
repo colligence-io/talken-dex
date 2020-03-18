@@ -6,6 +6,7 @@ import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.monitor.ethereum.AbstractEthereumTxMonitor;
+import io.talken.dex.governance.service.bctx.monitor.ethereum.EthereumReceiptCollector;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,6 +112,6 @@ public class LuniverseTxMonitor extends AbstractEthereumTxMonitor {
 			return;
 		}
 
-		crawlBlocks(web3j);
+		crawlBlocks(web3j, new EthereumReceiptCollector(1));
 	}
 }
