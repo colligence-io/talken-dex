@@ -19,9 +19,9 @@ public class EthereumReceiptCollector {
 
 	private static final int COLLECT_THREAD = 10;
 
-	public Map<String, TransactionReceipt> collect(String networkName, Web3j web3j, List<Transaction> txs) throws BctxException, IOException, ExecutionException, InterruptedException {
-		ExecutorService executor = Executors.newFixedThreadPool(COLLECT_THREAD);
+	private static final ExecutorService executor = Executors.newFixedThreadPool(COLLECT_THREAD);
 
+	public Map<String, TransactionReceipt> collect(String networkName, Web3j web3j, List<Transaction> txs) throws BctxException, IOException, ExecutionException, InterruptedException {
 		Queue<String> tq = new ConcurrentLinkedQueue<>();
 
 		// if queue capacity is not enough Queue.add will throw exception
