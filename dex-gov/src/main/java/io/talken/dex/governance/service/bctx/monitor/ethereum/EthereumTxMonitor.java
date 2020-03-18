@@ -87,9 +87,12 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 
 	@Override
 	protected void saveReceiptDocuments(List<EthereumTransferReceipt> documents) {
-		for(EthereumTransferReceipt document : documents) {
-			mongoTemplate.save(document, COLLECTION_NAME);
-		}
+		// ethereum receipt collection disabled
+		// FIXME : if ethereum receipt needed some point, consider enable this
+		// NOTE : THIS IS EXTREMELY SLOW
+//		for(EthereumTransferReceipt document : documents) {
+//			mongoTemplate.save(document, COLLECTION_NAME);
+//		}
 	}
 
 	@Override
