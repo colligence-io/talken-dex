@@ -72,6 +72,11 @@ public abstract class StellarOpReceipt<TO extends Operation, TR> {
 				return rcpt;
 			}
 			case MANAGE_SELL_OFFER: {
+				// FIXME : stellar sdk might have bug about passive sell offer
+				if(operation instanceof org.stellar.sdk.CreatePassiveSellOfferOperation) {
+					return toDummyReceipt(response, operation, result);
+				}
+
 				ManageSellOfferOpReceipt rcpt = new ManageSellOfferOpReceipt();
 				rcpt.setOperationType(result.getTr().getDiscriminant());
 				rcpt.startImport(response, (ManageSellOfferOperation) operation, result.getTr().getManageSellOfferResult());
@@ -88,13 +93,16 @@ public abstract class StellarOpReceipt<TO extends Operation, TR> {
 			case INFLATION:
 			case MANAGE_DATA:
 			case BUMP_SEQUENCE:
-			default: {
-				DummyOpReceipt rcpt = new DummyOpReceipt();
-				rcpt.setOperationType(result.getTr().getDiscriminant());
-				rcpt.startImport(response, operation, result);
-				return rcpt;
-			}
+			default:
+				return toDummyReceipt(response, operation, result);
 		}
+	}
+
+	private static StellarOpReceipt toDummyReceipt(TransactionResponse response, Operation operation, OperationResult result) {
+		DummyOpReceipt rcpt = new DummyOpReceipt();
+		rcpt.setOperationType(result.getTr().getDiscriminant());
+		rcpt.startImport(response, operation, result);
+		return rcpt;
 	}
 
 	abstract protected void parse(TO op, TR result);
