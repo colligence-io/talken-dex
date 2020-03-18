@@ -34,11 +34,7 @@ import org.stellar.sdk.xdr.OperationType;
 
 import javax.annotation.PostConstruct;
 import java.math.BigInteger;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TXMON;
 
@@ -76,9 +72,6 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	private static final String COLLECTION_NAME = "stellar_opReceipt";
 
 	private static final int TXREQUEST_LIMIT = 200;
-
-	private String lastPagingToken = null;
-	private LocalDateTime lastTokenUpdateTime = null;
 
 	@PostConstruct
 	private void init() {
@@ -122,6 +115,8 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		int processed = -1;
 		do {
 			processed = processNextTransactions();
+
+			if(processed < 0) break; // break if error occured while processing
 		} while(processed == TXREQUEST_LIMIT && !DexGovStatus.isStopped);
 	}
 
@@ -167,23 +162,73 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 		return processTransactionPage(txPage);
 	}
+//
+//	private int processTransactionPage(Page<TransactionResponse> txPage) {
+//		int processed = 0;
+//
+//		String firstToken = null;
+//		String lastToken = null;
+//		long lastLedger = 0;
+//		Long receipts = 0L;
+//
+//		long saveTakes = 0;
+//		final long started = System.currentTimeMillis();
+//
+//		for(TransactionResponse txRecord : txPage.getRecords()) {
+//			try {
+//				lastToken = txRecord.getPagingToken();
+//				lastLedger = txRecord.getLedger();
+//				if(firstToken == null) firstToken = lastToken;
+//
+//				StellarTxReceipt txResult = new StellarTxReceipt(txRecord, stellarNetworkService.getNetwork());
+//
+//				callTxHandlerStack(null, txResult);
+//
+//				// call dex task post-processor
+//				processDexTask(txResult);
+//
+//				List<StellarOpReceipt> opReceipts = txResult.getOpReceipts();
+//
+//				for(StellarOpReceipt opReceipt : opReceipts) {
+//					if(opReceipt.getOperationType().equals(OperationType.PAYMENT)) {
+//						callReceiptHandlerStack(null, txResult, opReceipt);
+//					}
+//				}
+//
+//				final long saveStarted = System.currentTimeMillis();
+//				mongoTemplate.insert(opReceipts, COLLECTION_NAME);
+//				saveTakes += System.currentTimeMillis() - saveStarted;
+//
+//				checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
+//
+//				ssService.status().getTxMonitor().getStellar().setLastPagingToken(txRecord.getPagingToken());
+//				ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
+//				ssService.save();
+//
+//				receipts += opReceipts.size();
+//
+//				processed++;
+//			} catch(Exception ex) {
+//				logger.exception(ex, "Unidentified exception occured.");
+//			}
+//		}
+//		final long takes = System.currentTimeMillis() - started;
+//
+//		if(processed > 0)
+//			logger.info("{} : LEDGER={}, PAGINGTOKEN = {}, RECEIPTS = {} ({} ms / save {} ms)", "Stellar", lastLedger, lastToken, receipts, takes, saveTakes);
+//
+//		return processed;
+//	}
 
 	private int processTransactionPage(Page<TransactionResponse> txPage) {
 		int processed = 0;
 
-		String firstToken = null;
-		String lastToken = null;
-		long lastLedger = 0;
-		Long receipts = 0L;
+		TransactionResponse lastSuccessTransaction = null;
+		List<StellarOpReceipt> allReceipts = new ArrayList<>();
 
-		long saveTakes = 0;
 		final long started = System.currentTimeMillis();
-		for(TransactionResponse txRecord : txPage.getRecords()) {
-			try {
-				lastToken = txRecord.getPagingToken();
-				lastLedger = txRecord.getLedger();
-				if(firstToken == null) firstToken = lastToken;
-
+		try {
+			for(TransactionResponse txRecord : txPage.getRecords()) {
 				StellarTxReceipt txResult = new StellarTxReceipt(txRecord, stellarNetworkService.getNetwork());
 
 				callTxHandlerStack(null, txResult);
@@ -199,30 +244,36 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 					}
 				}
 
-				final long saveStarted = System.currentTimeMillis();
-				mongoTemplate.insert(opReceipts, COLLECTION_NAME);
-				saveTakes += System.currentTimeMillis() - saveStarted;
+				allReceipts.addAll(opReceipts);
 
 				checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
 
-				ssService.status().getTxMonitor().getStellar().setLastPagingToken(txRecord.getPagingToken());
-				ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
-				ssService.save();
-
-				receipts += opReceipts.size();
-
+				lastSuccessTransaction = txRecord;
 				processed++;
-			} catch(Exception ex) {
-				logger.exception(ex, "Unidentified exception occured.");
 			}
+		} catch(Exception ex) {
+			processed = processed * -1; // mark error occured
+			adminAlarmService.exception(logger, ex, "Error occured while monitor processing stellar transaction");
 		}
+
+		final long saveStarted = System.currentTimeMillis();
+		mongoTemplate.insert(allReceipts, COLLECTION_NAME);
+		final long saveTakes = System.currentTimeMillis() - saveStarted;
+
+		if(lastSuccessTransaction != null) {
+			ssService.status().getTxMonitor().getStellar().setLastPagingToken(lastSuccessTransaction.getPagingToken());
+			ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(lastSuccessTransaction.getCreatedAt()));
+			ssService.save();
+		}
+
 		final long takes = System.currentTimeMillis() - started;
 
 		if(processed > 0)
-			logger.info("{} : LEDGER={}, PAGINGTOKEN = {}, RECEIPTS = {} ({} ms / save {} ms)", "Stellar", lastLedger, lastToken, receipts, takes, saveTakes);
+			logger.info("{} : LEDGER={}, PAGINGTOKEN = {}, RECEIPTS = {} ({} ms / save {} ms)", "Stellar", lastSuccessTransaction.getLedger(), lastSuccessTransaction.getPagingToken(), allReceipts.size(), takes, saveTakes);
 
 		return processed;
 	}
+
 
 	public void processDexTask(StellarTxReceipt txResult) {
 		if(txResult.getTaskId() == null) return;
