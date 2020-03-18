@@ -303,9 +303,9 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		// save if have dex task id
 		if(receipt.getTaskId() != null) return true;
 
-		// save if involved asset is managed
+		// save if involved asset is managed or native XLM
 		for(String involvedAsset : receipt.getInvolvedAssets()) {
-			//if(involvedAsset.equals("native")) return true;
+			if(involvedAsset.equals("native")) return true;
 			if(assetsToSave.contains(involvedAsset)) return true;
 		}
 
