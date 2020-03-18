@@ -77,13 +77,14 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 	private synchronized void checkSent() {
 		if(DexGovStatus.isStopped) return;
 
+		// check 30sec old ~ 7 days old sent txs
 		Result<BctxRecord> txQueue = dslContext.selectFrom(BCTX)
 				.where(BCTX.STATUS.eq(BctxStatusEnum.SENT)
-						.and(BCTX.UPDATE_TIMESTAMP.isNotNull().and(BCTX.UPDATE_TIMESTAMP.le(UTCUtil.getNow().minusSeconds(30))))
+						.and(BCTX.UPDATE_TIMESTAMP.isNotNull().and(BCTX.UPDATE_TIMESTAMP.le(UTCUtil.getNow().minusSeconds(30))).and(BCTX.UPDATE_TIMESTAMP.gt(UTCUtil.getNow().minusDays(7))))
 				).fetch();
 
 		if(txQueue.isNotEmpty()) {
-			logger.info("Checking sent(pending) txs...");
+			logger.info("Checking {} sent(pending) txs...", txQueue.size());
 			for(BctxRecord bctxRecord : txQueue) {
 				try {
 					if(txMonitors.containsKey(bctxRecord.getBctxType()))
