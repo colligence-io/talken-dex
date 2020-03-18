@@ -241,8 +241,8 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 				for(StellarOpReceipt opReceipt : opReceipts) {
 					if(opReceipt.getOperationType().equals(OperationType.PAYMENT)) {
 						callReceiptHandlerStack(null, txResult, opReceipt);
-						allReceipts.add(opReceipt);
 					}
+					allReceipts.add(opReceipt);
 				}
 
 				checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
