@@ -173,11 +173,14 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 		String firstToken = null;
 		String lastToken = null;
+		long lastLedger = 0;
 		Long receipts = 0L;
 
+		final long started = System.currentTimeMillis();
 		for(TransactionResponse txRecord : txPage.getRecords()) {
 			try {
 				lastToken = txRecord.getPagingToken();
+				lastLedger = txRecord.getLedger();
 				if(firstToken == null) firstToken = lastToken;
 
 				StellarTxReceipt txResult = new StellarTxReceipt(txRecord, stellarNetworkService.getNetwork());
@@ -210,9 +213,10 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 				logger.exception(ex, "Unidentified exception occured.");
 			}
 		}
+		final long takes = System.currentTimeMillis() - started;
 
 		if(processed > 0)
-			logger.info("{} : PROCESSED = {}, PAGINGTOKEN = {} ~ {}, RECEIPTS = {}", "Stellar", processed, firstToken, lastToken, receipts);
+			logger.info("{} : LEDGER={}, PROCESSED = {}, PAGINGTOKEN = {} ~ {}, RECEIPTS = {} ({} ms)", "Stellar", lastLedger, processed, firstToken, lastToken, receipts, takes);
 
 		return processed;
 	}
