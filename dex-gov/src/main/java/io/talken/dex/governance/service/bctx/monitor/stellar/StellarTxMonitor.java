@@ -176,6 +176,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		long lastLedger = 0;
 		Long receipts = 0L;
 
+		long saveTakes = 0;
 		final long started = System.currentTimeMillis();
 		for(TransactionResponse txRecord : txPage.getRecords()) {
 			try {
@@ -198,7 +199,9 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 					}
 				}
 
+				final long saveStarted = System.currentTimeMillis();
 				mongoTemplate.insert(opReceipts, COLLECTION_NAME);
+				saveTakes += System.currentTimeMillis() - saveStarted;
 
 				checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
 
@@ -216,7 +219,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		final long takes = System.currentTimeMillis() - started;
 
 		if(processed > 0)
-			logger.info("{} : LEDGER={}, PROCESSED = {}, PAGINGTOKEN = {} ~ {}, RECEIPTS = {} ({} ms)", "Stellar", lastLedger, processed, firstToken, lastToken, receipts, takes);
+			logger.info("{} : LEDGER={}, PAGINGTOKEN = {}, RECEIPTS = {} ({} ms / save {} ms)", "Stellar", lastLedger, lastToken, receipts, takes, saveTakes);
 
 		return processed;
 	}

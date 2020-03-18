@@ -63,11 +63,8 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 			DexTaskDeanchorRecord taskRecord = opt_taskRecord.get();
 
 			if(taskRecord.getDeanchorBctxId() != null || taskRecord.getSignedTxCatchFlag().equals(true))
-				throw new DexTaskTransactionProcessError("DeanchorAlreadyProcessed");
+				return DexTaskTransactionProcessResult.success();
 
-			// mark signed tx catch flag to true
-			taskRecord.setSignedTxCatchFlag(true);
-			taskRecord.update();
 
 			// check payments ops matching for deanchortask
 			// update task as signed tx catched
@@ -126,6 +123,10 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 				taskRecord.setErrormessage("Matching payment not found in tx");
 				taskRecord.update();
 			}
+
+			// mark signed tx catch flag to true
+			taskRecord.setSignedTxCatchFlag(true);
+			taskRecord.update();
 		} catch(DexTaskTransactionProcessError error) {
 			return DexTaskTransactionProcessResult.error(error);
 		} catch(Exception ex) {

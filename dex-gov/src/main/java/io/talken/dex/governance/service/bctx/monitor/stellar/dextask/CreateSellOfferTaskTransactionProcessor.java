@@ -52,14 +52,15 @@ public class CreateSellOfferTaskTransactionProcessor extends AbstractCreateOffer
 			DexTaskCreateofferRecord taskRecord = opt_taskRecord.get();
 
 			if(taskRecord.getSignedTxCatchFlag().equals(true))
-				throw new DexTaskTransactionProcessError("CreateSellOfferAlreadyProcessed");
+				return DexTaskTransactionProcessResult.success();
+
+			// queue fee tasks
+			queueFeeTasks(txResult);
 
 			// update task as signed tx catched
 			taskRecord.setSignedTxCatchFlag(true);
 			taskRecord.update();
 
-			// queue fee tasks
-			queueFeeTasks(txResult);
 		} catch(DexTaskTransactionProcessError error) {
 			return DexTaskTransactionProcessResult.error(error);
 		} catch(Exception ex) {
