@@ -89,8 +89,6 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 			// stop if targetBlockNumber is not higher then cursor
 			if(targetBlockNumber.compareTo(cursor) <= 0) return;
-
-			logger.info("{} : LATEST = {}, CONFIRMED = {}, CURSOR = {}", networkName, latestBlockNumber, targetBlockNumber, cursor);
 		} catch(Exception ex) {
 			logger.exception(ex, "Cannot determine {} block cursor.", networkName);
 			return;
@@ -187,7 +185,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 				// log process if receipts processed
 				if(allReceipts.size() > 0)
-					logger.info("{} : BLOCKNUMBER = {}, RECEIPTS = {} ({}({}) ms){}", networkName, cursor, allReceipts.size(), takes, collectTakes, eta);
+					logger.info("{} : BLOCKNUMBER = {}/{}, RECEIPTS = {} ({}({}) ms){}", networkName, cursor, latestBlockNumber, allReceipts.size(), takes, collectTakes, eta);
 			}
 		} catch(Exception ex) {
 			logger.exception(ex, "Exception while processing {} block {}", networkName, cursor);
