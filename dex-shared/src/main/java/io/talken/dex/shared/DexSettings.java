@@ -102,6 +102,7 @@ public class DexSettings {
 	public static class _Stellar {
 		private String network;
 		private String rpcUri;
+		private String publicRpcUri;
 		private VaultSecretDataStellar secret;
 	}
 

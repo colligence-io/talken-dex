@@ -40,6 +40,8 @@ public class StellarNetworkService {
 
 	private String serverUri;
 
+	private String publicServerUri;
+
 	private static final int BASE_FEE = 100;
 
 	private static final int PICK_CHANNEL_TMIEOUT = 10000;
@@ -54,7 +56,10 @@ public class StellarNetworkService {
 	private void init() throws IOException {
 		this.network = dexSettings.getBcnode().getStellar().getNetwork().equalsIgnoreCase("test") ? Network.TESTNET : Network.PUBLIC;
 		this.serverUri = dexSettings.getBcnode().getStellar().getRpcUri();
+		this.publicServerUri = dexSettings.getBcnode().getStellar().getPublicRpcUri();
+
 		logger.info("Using Stellar {} Network : {}", this.network, this.serverUri);
+		logger.info("Using Stellar Public {} Network : {}", this.network, this.publicServerUri);
 
 		for(Map.Entry<String, String> _ch : dexSettings.getBcnode().getStellar().getSecret().getChannels().entrySet()) {
 			KeyPair chkp = KeyPair.fromSecretSeed(_ch.getValue());
@@ -70,6 +75,10 @@ public class StellarNetworkService {
 
 	public Server pickServer() {
 		return new Server(this.serverUri);
+	}
+
+	public Server pickPublicServer() {
+		return new Server(this.publicServerUri);
 	}
 
 	public Network getNetwork() {
@@ -141,6 +150,7 @@ public class StellarNetworkService {
 
 	/**
 	 * Send Stellar Transaction to network, if timeout occurred, retry MAXIMUM_SUBMIT_RETRY times
+	 *
 	 * @param server
 	 * @param tx
 	 * @return
@@ -153,10 +163,9 @@ public class StellarNetworkService {
 				return server.submitTransaction(tx);
 			} catch(Exception ex) {
 				if(ex instanceof SubmitTransactionTimeoutResponseException) {
-					rtn = (SubmitTransactionTimeoutResponseException)ex;
+					rtn = (SubmitTransactionTimeoutResponseException) ex;
 					logger.warn("Stellar TX submit timeout occured, trial = {}", i + 1);
-				}
-				else {
+				} else {
 					throw ex;
 				}
 			}

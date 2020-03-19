@@ -14,24 +14,19 @@ import java.util.Collections;
  */
 public class EthRpcClient {
 	private final String uri;
-	private final String client;
-	private final boolean isParity;
+	private String client = null;
+	private Boolean isParity = null;
 
-	public EthRpcClient(String uri) throws IOException {
+	public EthRpcClient(String uri) {
 		this.uri = uri;
-		this.client = newClient().web3ClientVersion().send().getWeb3ClientVersion();
-		this.isParity = client.startsWith("Parity-Ethereum");
-	}
-
-	public boolean isParity() {
-		return isParity;
 	}
 
 	public String getUri() {
 		return uri;
 	}
 
-	public String getClientVersion() {
+	public String getClientVersion() throws IOException {
+		if(this.client == null) this.client = newClient().web3ClientVersion().send().getWeb3ClientVersion();
 		return client;
 	}
 
@@ -53,6 +48,11 @@ public class EthRpcClient {
 	 * @throws Exception
 	 */
 	public BigInteger getNonce(Web3jService web3jService, String address) throws Exception {
+		if(this.isParity == null) {
+			getClientVersion();
+			this.isParity = client.startsWith("Parity-Ethereum");
+		}
+
 		if(this.isParity) {
 			Request<?, ParityNextNonceResponse> nonceReq = new Request<>("parity_nextNonce", Collections.singletonList(address), web3jService, ParityNextNonceResponse.class);
 			return nonceReq.send().getNextNonce();

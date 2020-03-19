@@ -6,7 +6,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.scheduler.talkreward.UserRewardBctxService;
-import io.talken.dex.governance.service.mam.MaMonitorService;
+import io.talken.dex.governance.service.management.MaMonitorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;

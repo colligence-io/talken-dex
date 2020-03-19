@@ -33,7 +33,6 @@ import org.stellar.sdk.responses.TransactionResponse;
 import org.stellar.sdk.xdr.OperationType;
 
 import javax.annotation.PostConstruct;
-import java.math.BigInteger;
 import java.util.*;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TXMON;
@@ -214,13 +213,6 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 					// reduce receipts to save
 					if(haveToSave(opReceipt))
 						receiptsToSave.add(opReceipt);
-				}
-
-				try {
-					checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
-				} catch(Exception ex) {
-					logger.exception(ex);
-					// just log exception
 				}
 
 				lastSuccessTransaction = txRecord;

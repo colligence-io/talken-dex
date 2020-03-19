@@ -5,7 +5,6 @@ import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.util.GSONWriter;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.exception.BctxException;
@@ -14,8 +13,6 @@ import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
-import java.math.BigInteger;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,10 +43,6 @@ public abstract class TxMonitor<TB, TT, TR> {
 	private List<BlockHandler<TB>> blockHandlers = new ArrayList<>();
 	private List<TransactionHandler<TB, TT>> txHandlers = new ArrayList<>();
 	private List<ReceiptHandler<TB, TT, TR>> receiptHandlers = new ArrayList<>();
-
-	private BigInteger lastBlockNumber = null;
-	private LocalDateTime lastBlockUpdateTime = null;
-
 
 	public interface BlockHandler<TB> {
 		void handle(TB block) throws Exception;
@@ -148,31 +141,6 @@ public abstract class TxMonitor<TB, TT, TR> {
 	public void checkTransactionStatus(String txId) throws Exception {
 		TT tx = getTransactionReceipt(txId);
 		if(tx != null) updateBctxReceiptInfo(tx);
-	}
-
-	/**
-	 * check local monitoring node server is stuck or stopped working
-	 *
-	 * @param newBlockNumber
-	 */
-	protected void checkChainNetworkNode(BigInteger newBlockNumber) {
-		if(lastBlockUpdateTime != null) {
-			// if paging token is not updating for 1000
-			if(lastBlockNumber.equals(newBlockNumber)) {
-				if(UTCUtil.getNow().isAfter(lastBlockUpdateTime.plusMinutes(10))) {
-					alarmService.warn(logger, "{} stuck at txPagingToken {} for 10 minutes", getClass().getSimpleName(), lastBlockNumber);
-				}
-			} else {
-				// if new paging token is smaller than last (this indicates stellar network reset)
-				if(lastBlockNumber.compareTo(newBlockNumber) > 0) {
-					alarmService.warn(logger, "{} response small txPagingToken {} check stellar-core", getClass().getSimpleName(), newBlockNumber);
-				}
-			}
-		} else {
-			logger.info("{} starts from {}", getClass().getSimpleName(), newBlockNumber);
-		}
-		lastBlockUpdateTime = UTCUtil.getNow();
-		lastBlockNumber = newBlockNumber;
 	}
 
 	/**

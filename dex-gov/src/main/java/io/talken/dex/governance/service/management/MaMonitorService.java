@@ -1,4 +1,4 @@
-package io.talken.dex.governance.service.mam;
+package io.talken.dex.governance.service.management;
 
 
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
