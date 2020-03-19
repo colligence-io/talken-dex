@@ -2,6 +2,7 @@ package io.talken.dex.governance.service.management;
 
 
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
@@ -19,6 +20,7 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.time.LocalDate;
 
 /**
  * Monitor BC Node Server status
@@ -43,35 +45,46 @@ public class NodeMonitorService {
 
 	BigInteger luniverseLastBlockNumber = null;
 
+	LocalDate lastAnnounce = null;
+
 	// check every 10 minutes
 	@Scheduled(fixedDelay = 1000 * 60 * 10, initialDelay = 1000)
 	private void checkAll() {
 		if(DexGovStatus.isStopped) return;
 
+		StringBuilder sb = new StringBuilder("Node Service Status\n");
+
 		try {
-			checkEthereumNodes();
+			checkEthereumNodes(sb);
 		} catch(Exception ex) {
 			adminAlarmService.exception(logger, ex);
 		}
 		try {
-			checkStellarNodes();
+			checkStellarNodes(sb);
 		} catch(Exception ex) {
 			adminAlarmService.exception(logger, ex);
 		}
 		try {
-			checkLuniverseNodes();
+			checkLuniverseNodes(sb);
 		} catch(Exception ex) {
 			adminAlarmService.exception(logger, ex);
 		}
+
+		LocalDate today = UTCUtil.getNow().toLocalDate();
+		if(lastAnnounce == null || today.compareTo(lastAnnounce) != 0) {
+			adminAlarmService.info(logger, sb.toString());
+		}
+		lastAnnounce = today;
 	}
 
-	private void checkEthereumNodes() throws IOException {
+	private void checkEthereumNodes(StringBuilder sb) throws IOException {
 		ObjectPair<String, BigInteger> localInfo = getEthereumNodeInfo(ethereumNetworkService.getLocalClient());
 		ObjectPair<String, BigInteger> infuraInfo = getEthereumNodeInfo(ethereumNetworkService.getInfuraClient());
 
-		logger.info("Checking Ethereum node server status");
-		logger.info("Local  : {} - {}", localInfo.second(), localInfo.first());
-		logger.info("Infura : {} - {}", infuraInfo.second(), infuraInfo.first());
+		sb.append("Ethereum node server status").append("\n");
+		sb.append(" - Local  : ").append(localInfo.second()).append(" - ").append(localInfo.first()).append("\n");
+		sb.append(" - Infura  : ").append(infuraInfo.second()).append(" - ").append(infuraInfo.first()).append("\n");
+		sb.append("\n");
 
 		long diff = infuraInfo.second().subtract(localInfo.second()).abs().longValueExact();
 
@@ -86,13 +99,14 @@ public class NodeMonitorService {
 		return new ObjectPair<>(version, number);
 	}
 
-	private void checkStellarNodes() throws IOException {
+	private void checkStellarNodes(StringBuilder sb) throws IOException {
 		RootResponse localInfo = stellarNetworkService.pickServer().root();
 		RootResponse publicInfo = stellarNetworkService.pickPublicServer().root();
 
-		logger.info("Checking Stellar node server status");
-		logger.info("Local  : {}/{} - {} / {}", localInfo.getHistoryLatestLedger(), localInfo.getCoreLatestLedger(), localInfo.getStellarCoreVersion(), localInfo.getHorizonVersion());
-		logger.info("Public : {}/{} - {} / {}", publicInfo.getHistoryLatestLedger(), publicInfo.getCoreLatestLedger(), publicInfo.getStellarCoreVersion(), publicInfo.getHorizonVersion());
+		sb.append("Stellar node server status").append("\n");
+		sb.append(" - Local  : ").append(localInfo.getHistoryLatestLedger()).append("/").append(localInfo.getCoreLatestLedger()).append(" - ").append(localInfo.getStellarCoreVersion()).append(" - ").append(localInfo.getHorizonVersion()).append("\n");
+		sb.append(" - Public  : ").append(publicInfo.getHistoryLatestLedger()).append("/").append(publicInfo.getCoreLatestLedger()).append(" - ").append(publicInfo.getStellarCoreVersion()).append(" - ").append(publicInfo.getHorizonVersion()).append("\n");
+		sb.append("\n");
 
 		int coreDiff = publicInfo.getCoreLatestLedger() - localInfo.getCoreLatestLedger();
 		int localStale = Math.abs(localInfo.getCoreLatestLedger() - localInfo.getHistoryLatestLedger());
@@ -110,14 +124,15 @@ public class NodeMonitorService {
 		}
 	}
 
-	private void checkLuniverseNodes() throws IOException {
+	private void checkLuniverseNodes(StringBuilder sb) throws IOException {
 		Web3j web3j = luniverseNetworkService.newMainRpcClient();
 
 		String version = web3j.web3ClientVersion().send().getWeb3ClientVersion();
 		BigInteger number = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock().getNumber();
 
-		logger.info("Checking Luniverse node server status");
-		logger.info("Lambda256 : {} - {}", number, version);
+		sb.append("Luniverse node server status").append("\n");
+		sb.append(" - Lambda256 : ").append(number).append(" - ").append(version).append("\n");
+		sb.append("\n");
 
 		if(luniverseLastBlockNumber != null && number.compareTo(luniverseLastBlockNumber) == 0) {
 			adminAlarmService.warn(logger, "Luniverse node might be stuck at {}, node is maintained by lambda256. ask for help.", number);
