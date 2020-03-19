@@ -161,6 +161,8 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	private int processNextTransactions() {
 		Optional<String> opt_status = Optional.ofNullable(ssService.status().getTxMonitor().getStellar().getLastPagingToken());
 
+		final long started = System.currentTimeMillis();
+
 		Server server = stellarNetworkService.pickServer();
 
 		Page<TransactionResponse> txPage;
@@ -178,74 +180,14 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 			return -1;
 		}
 
-		return processTransactionPage(txPage);
-	}
-//
-//	private int processTransactionPage(Page<TransactionResponse> txPage) {
-//		int processed = 0;
-//
-//		String firstToken = null;
-//		String lastToken = null;
-//		long lastLedger = 0;
-//		Long receipts = 0L;
-//
-//		long saveTakes = 0;
-//		final long started = System.currentTimeMillis();
-//
-//		for(TransactionResponse txRecord : txPage.getRecords()) {
-//			try {
-//				lastToken = txRecord.getPagingToken();
-//				lastLedger = txRecord.getLedger();
-//				if(firstToken == null) firstToken = lastToken;
-//
-//				StellarTxReceipt txResult = new StellarTxReceipt(txRecord, stellarNetworkService.getNetwork());
-//
-//				callTxHandlerStack(null, txResult);
-//
-//				// call dex task post-processor
-//				processDexTask(txResult);
-//
-//				List<StellarOpReceipt> opReceipts = txResult.getOpReceipts();
-//
-//				for(StellarOpReceipt opReceipt : opReceipts) {
-//					if(opReceipt.getOperationType().equals(OperationType.PAYMENT)) {
-//						callReceiptHandlerStack(null, txResult, opReceipt);
-//					}
-//				}
-//
-//				final long saveStarted = System.currentTimeMillis();
-//				mongoTemplate.insert(opReceipts, COLLECTION_NAME);
-//				saveTakes += System.currentTimeMillis() - saveStarted;
-//
-//				checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
-//
-//				ssService.status().getTxMonitor().getStellar().setLastPagingToken(txRecord.getPagingToken());
-//				ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(txRecord.getCreatedAt()));
-//				ssService.save();
-//
-//				receipts += opReceipts.size();
-//
-//				processed++;
-//			} catch(Exception ex) {
-//				logger.exception(ex, "Unidentified exception occured.");
-//			}
-//		}
-//		final long takes = System.currentTimeMillis() - started;
-//
-//		if(processed > 0)
-//			logger.info("{} : LEDGER={}, PAGINGTOKEN = {}, RECEIPTS = {} ({} ms / save {} ms)", "Stellar", lastLedger, lastToken, receipts, takes, saveTakes);
-//
-//		return processed;
-//	}
-
-	private int processTransactionPage(Page<TransactionResponse> txPage) {
+		// start processing
 		int processed = 0;
 		int numReceipts = 0;
 
 		TransactionResponse lastSuccessTransaction = null;
 		List<StellarOpReceipt> receiptsToSave = new ArrayList<>();
 
-		final long started = System.currentTimeMillis();
+
 		try {
 			for(TransactionResponse txRecord : txPage.getRecords()) {
 				StellarTxReceipt txResult;
