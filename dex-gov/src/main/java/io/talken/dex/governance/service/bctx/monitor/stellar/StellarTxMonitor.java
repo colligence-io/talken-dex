@@ -75,7 +75,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	 */
 	private HashMap<DexTaskTypeEnum, DexTaskTransactionProcessor> processors = new HashMap<>();
 
-	private static final String COLLECTION_NAME = "stellar_opReceipt";
+	private static final String COLLECTION_NAME = "stellar_txReceipt";
 
 	private static final int TXREQUEST_LIMIT = 200;
 
@@ -271,7 +271,12 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 						receiptsToSave.add(opReceipt);
 				}
 
-				checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
+				try {
+					checkChainNetworkNode(new BigInteger(txRecord.getPagingToken()));
+				} catch(Exception ex) {
+					logger.exception(ex);
+					// just log exception
+				}
 
 				lastSuccessTransaction = txRecord;
 				processed++;
@@ -305,7 +310,6 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 		// save if involved asset is managed or native XLM
 		for(String involvedAsset : receipt.getInvolvedAssets()) {
-			if(involvedAsset.equals("native")) return true;
 			if(assetsToSave.contains(involvedAsset)) return true;
 		}
 
