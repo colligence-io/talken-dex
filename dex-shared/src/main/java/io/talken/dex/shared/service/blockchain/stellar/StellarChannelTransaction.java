@@ -57,7 +57,7 @@ public class StellarChannelTransaction implements Closeable {
 		try {
 			// submit
 			logger.debug("Sending TX {} to stellar network.", ByteArrayUtil.toHexString(tx.hash()));
-			return this.server.submitTransaction(tx);
+			return stellarNetworkService.sendTransaction(this.server, tx);
 		} finally {
 			close();
 		}

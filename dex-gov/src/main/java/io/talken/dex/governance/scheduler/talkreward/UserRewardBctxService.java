@@ -299,7 +299,7 @@ public class UserRewardBctxService {
 		} catch(TradeWalletRebalanceException ex) {
 			throw ex;
 		} catch(Exception ex) {
-			throw new TradeWalletRebalanceException(ex, "Cannot rebalance trade wallet.");
+			throw new TradeWalletRebalanceException(ex, "Cannot rebalance trade wallet. : " + ex.getClass().getName());
 		}
 
 		BctxRecord bctxRecord = new BctxRecord();

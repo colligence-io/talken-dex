@@ -98,7 +98,7 @@ public abstract class AbstractStellarTxSender extends TxSender {
 		signServer().signStellarTransaction(tx);
 
 		logger.info("[BCTX#{}] Sending TX to stellar network.", bctx.getId());
-		SubmitTransactionResponse txResponse = server.submitTransaction(tx);
+		SubmitTransactionResponse txResponse = stellarNetworkService.sendTransaction(server, tx);
 
 		if(txResponse.isSuccess()) {
 			log.setBcRefId(txResponse.getHash());

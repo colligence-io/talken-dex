@@ -450,7 +450,7 @@ public class TradeWalletService {
 				if(sendTx) {
 					Transaction tx = txBuilder.build();
 					tx.sign(kp);
-					SubmitTransactionResponse paymentResponse = server.submitTransaction(tx);
+					SubmitTransactionResponse paymentResponse = stellarNetworkService.sendTransaction(server, tx);
 
 					if(!paymentResponse.isSuccess()) {
 						ObjectPair<String, String> resultCodesFromExtra = StellarConverter.getResultCodesFromExtra(paymentResponse);
@@ -468,7 +468,7 @@ public class TradeWalletService {
 						.build();
 
 				mtx.sign(kp);
-				SubmitTransactionResponse mergeResponse = server.submitTransaction(mtx);
+				SubmitTransactionResponse mergeResponse = stellarNetworkService.sendTransaction(server, mtx);
 
 				if(!mergeResponse.isSuccess()) {
 					ObjectPair<String, String> resultCodesFromExtra = StellarConverter.getResultCodesFromExtra(mergeResponse);

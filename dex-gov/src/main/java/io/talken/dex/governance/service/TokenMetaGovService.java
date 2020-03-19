@@ -427,7 +427,7 @@ public class TokenMetaGovService extends TokenMetaTableService {
 
 				signServerService.signStellarTransaction(tx);
 
-				SubmitTransactionResponse txResponse = server.submitTransaction(tx);
+				SubmitTransactionResponse txResponse = stellarNetworkService.sendTransaction(server, tx);
 
 				if(txResponse.isSuccess()) {
 					logger.info("Trustline made on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.dexIssuerAccount().getAccountId());

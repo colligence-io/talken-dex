@@ -11,7 +11,10 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.Network;
 import org.stellar.sdk.Server;
+import org.stellar.sdk.Transaction;
 import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.responses.SubmitTransactionResponse;
+import org.stellar.sdk.responses.SubmitTransactionTimeoutResponseException;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -44,6 +47,8 @@ public class StellarNetworkService {
 	private Network network;
 
 	private final List<StellarChannel> channels = new ArrayList<>();
+
+	private static final int MAXIMUM_SUBMIT_RETRY = 5;
 
 	@PostConstruct
 	private void init() throws IOException {
@@ -132,5 +137,30 @@ public class StellarNetworkService {
 	 */
 	public List<String> getChannelList() {
 		return channels.stream().map(StellarChannel::getAccountId).collect(Collectors.toList());
+	}
+
+	/**
+	 * Send Stellar Transaction to network, if timeout occurred, retry MAXIMUM_SUBMIT_RETRY times
+	 * @param server
+	 * @param tx
+	 * @return
+	 * @throws IOException
+	 */
+	public SubmitTransactionResponse sendTransaction(Server server, Transaction tx) throws IOException {
+		SubmitTransactionTimeoutResponseException rtn = null;
+		for(int i = 0; i < MAXIMUM_SUBMIT_RETRY; i++) {
+			try {
+				return server.submitTransaction(tx);
+			} catch(Exception ex) {
+				if(ex instanceof SubmitTransactionTimeoutResponseException) {
+					rtn = (SubmitTransactionTimeoutResponseException)ex;
+					logger.warn("Stellar TX submit timeout occured, trial = {}", i + 1);
+				}
+				else {
+					throw ex;
+				}
+			}
+		}
+		throw rtn;
 	}
 }
