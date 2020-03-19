@@ -187,7 +187,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 				}
 
 				// log process if receipts processed
-				if(allReceipts.size() > 0)
+				if((allReceipts.size() > 0) || (cursor.longValueExact() % 30 == 0))
 					logger.info("{} : BLOCKNUMBER = {}/{}, RECEIPTS = {} ({}({}) ms){}", networkName, cursor, latestBlockNumber, allReceipts.size(), takes, collectTakes, eta);
 			}
 		} catch(Exception ex) {
