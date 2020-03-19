@@ -146,7 +146,7 @@ public class WalletService {
 				.with(Sort.by(direction, "timeStamp"));
 
 
-		return mongoTemplate.find(qry, StellarOpReceipt.class, "stellar_opReceipt");
+		return mongoTemplate.find(qry, StellarOpReceipt.class, "stellar_txReceipt");
 	}
 
 	/**
