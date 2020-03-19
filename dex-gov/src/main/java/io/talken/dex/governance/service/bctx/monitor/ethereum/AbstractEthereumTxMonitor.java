@@ -5,6 +5,7 @@ import io.talken.common.util.BeanCopier;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
+import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.exception.BctxException;
 import io.talken.dex.shared.service.blockchain.ethereum.Erc20ContractInfoService;
@@ -96,6 +97,8 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 		try {
 			for(int i = 0; i < MAXIMUM_LOOP && targetBlockNumber.compareTo(cursor) > 0; i++) {
+				if(DexGovStatus.isStopped) break;
+
 				cursor = cursor.add(BigInteger.ONE);
 
 				// for ETA
