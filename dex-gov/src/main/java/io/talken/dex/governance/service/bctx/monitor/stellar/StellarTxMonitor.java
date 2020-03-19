@@ -12,10 +12,7 @@ import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TokenMetaTableUpdateEventHandler;
-import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
-import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
-import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
-import io.talken.dex.shared.service.blockchain.stellar.StellarTxReceipt;
+import io.talken.dex.shared.service.blockchain.stellar.*;
 import org.jooq.DSLContext;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -251,7 +248,13 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		final long started = System.currentTimeMillis();
 		try {
 			for(TransactionResponse txRecord : txPage.getRecords()) {
-				StellarTxReceipt txResult = new StellarTxReceipt(txRecord, stellarNetworkService.getNetwork());
+				StellarTxReceipt txResult;
+				try {
+					txResult = new StellarTxReceipt(txRecord, stellarNetworkService.getNetwork());
+				} catch(StellarTxResultParsingError error) {
+					adminAlarmService.exception(logger, error, "Decode XDR failed, THIS CANNOT BE RECOVERED, skip tx {}", txRecord.getHash());
+					continue;
+				}
 
 				callTxHandlerStack(null, txResult);
 
