@@ -10,6 +10,7 @@ import io.talken.common.util.UTCUtil;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.service.TokenMetaGovService;
 import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
+import lombok.Data;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -49,9 +50,14 @@ public class TradeAggregationService {
 	private DSLContext dslContext;
 
 	@Autowired
-	private ServiceStatusService<DexGovStatus> ssService;
+	private ServiceStatusService ssService;
 
 	private ReentrantLock lock = new ReentrantLock();
+
+	@Data
+	public static class TradeAggregatorStatus {
+		private LocalDateTime lastAggregation;
+	}
 
 	@Scheduled(cron = "0 */10 * * * *", zone = ZONE_UTC)
 	private void do_schedule() {
@@ -166,8 +172,9 @@ public class TradeAggregationService {
 		}
 
 		try {
-			ssService.status().setLastTradeAggrExecutionTime(endTimeLdt);
-			ssService.save();
+			ssService.of(TradeAggregatorStatus.class).update((s) -> {
+				s.setLastAggregation(endTimeLdt);
+			});
 		} catch(Exception ex) {
 			logger.exception(ex, "Cannot update dex_status.tradeAggrLastTimestamp", ex.getMessage());
 		}

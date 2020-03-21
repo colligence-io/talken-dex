@@ -4,7 +4,6 @@ import io.talken.common.CommonConsts;
 import io.talken.common.service.MessageService;
 import io.talken.common.service.ServiceStatusService;
 import io.talken.common.util.PostLaunchExecutor;
-import io.talken.dex.governance.DexGovStatus;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -32,8 +31,8 @@ public class DGovRootConfig {
 	}
 
 	@Bean
-	public ServiceStatusService<DexGovStatus> serviceStatusService() {
-		return new ServiceStatusService<>("tkn-dex-gov", DexGovStatus.class);
+	public ServiceStatusService serviceStatusService() {
+		return new ServiceStatusService();
 	}
 
 	@Bean

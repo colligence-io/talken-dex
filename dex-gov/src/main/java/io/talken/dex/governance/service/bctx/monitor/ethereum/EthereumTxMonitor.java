@@ -7,6 +7,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
+import lombok.Data;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -39,7 +40,7 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 	private DSLContext dslContext;
 
 	@Autowired
-	private ServiceStatusService<DexGovStatus> ssService;
+	private ServiceStatusService ssService;
 
 	private static final String COLLECTION_NAME = "ethereum_txReceipt";
 
@@ -47,11 +48,18 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 		super(logger, "Ethereum");
 	}
 
+	@Data
+	public static class EthereumTxMonitorStatus {
+		private BigInteger lastBlock;
+		private LocalDateTime lastBlockTimestamp;
+	}
+
 	@PostConstruct
 	private void init() {
 		if(RunningProfile.isLocal()) { // destroy log db at localhost
-			ssService.status().getTxMonitor().getEthereum().setLastBlock(null);
-			ssService.save();
+			ssService.of(EthereumTxMonitorStatus.class).update((s) -> {
+				s.setLastBlock(null);
+			});
 
 			mongoTemplate.dropCollection(COLLECTION_NAME);
 		}
@@ -97,14 +105,15 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 
 	@Override
 	protected BigInteger getServiceStatusLastBlock() {
-		return ssService.status().getTxMonitor().getEthereum().getLastBlock();
+		return ssService.of(EthereumTxMonitorStatus.class).read().getLastBlock();
 	}
 
 	@Override
 	protected void saveServiceStatusLastBlock(BigInteger blockNumber, LocalDateTime timestamp) {
-		ssService.status().getTxMonitor().getEthereum().setLastBlock(blockNumber);
-		ssService.status().getTxMonitor().getEthereum().setLastBlockTimestamp(timestamp);
-		ssService.save();
+		ssService.of(EthereumTxMonitorStatus.class).update((s) -> {
+			s.setLastBlock(blockNumber);
+			s.setLastBlockTimestamp(timestamp);
+		});
 	}
 
 	@Scheduled(fixedDelay = 3000, initialDelay = 5000)

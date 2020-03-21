@@ -88,8 +88,8 @@ public class NodeMonitorService {
 
 		long diff = infuraInfo.second().subtract(localInfo.second()).abs().longValueExact();
 
-		if(diff >= 30) {
-			adminAlarmService.warn(logger, "Local ethereum node is {} blocks behind than infura node.", diff);
+		if(diff >= 20) {
+			adminAlarmService.warn(logger, "Local ethereum node is {} blocks behind from infura node.", diff);
 		}
 	}
 
@@ -111,11 +111,11 @@ public class NodeMonitorService {
 		int coreDiff = publicInfo.getCoreLatestLedger() - localInfo.getCoreLatestLedger();
 		int localStale = Math.abs(localInfo.getCoreLatestLedger() - localInfo.getHistoryLatestLedger());
 
-		if(coreDiff > 100) {
-			adminAlarmService.warn(logger, "Local stellar node is {} ledgers behind than public node.", coreDiff);
+		if(coreDiff > 50) {
+			adminAlarmService.warn(logger, "Local stellar node is {} ledgers behind from public node.", coreDiff);
 		}
 
-		if(localStale > 50) {
+		if(localStale > 20) {
 			adminAlarmService.warn(logger, "Local stellar node cannot ingest {} history ledgers. GAP check needed ASAP!", localStale);
 		}
 
@@ -126,13 +126,13 @@ public class NodeMonitorService {
 
 	private String normalizeStellarVersion(RootResponse root) {
 		String coreVersion = root.getStellarCoreVersion()
-				.replaceAll("^(v|stellar-core)","")
-				.replaceAll("\\([0-9abcdefABCDEF]{40}\\)","")
+				.replaceAll("^(v|stellar-core)", "")
+				.replaceAll("\\([0-9abcdefABCDEF]{40}\\)", "")
 				.trim();
 
 		String horizonVersion = root.getHorizonVersion()
-				.replaceAll("^(v)","")
-				.replaceAll("-.?[0-9abcdefABCDEF]{40}","")
+				.replaceAll("^(v)", "")
+				.replaceAll("-.?[0-9abcdefABCDEF]{40}", "")
 				.trim();
 
 		return coreVersion + " - " + horizonVersion + " (SCP current: " + root.getCurrentProtocolVersion() + ", support: " + root.getCoreSupportedProtocolVersion() + ")";

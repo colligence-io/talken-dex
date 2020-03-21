@@ -9,6 +9,7 @@ import io.talken.dex.governance.service.bctx.monitor.ethereum.AbstractEthereumTx
 import io.talken.dex.governance.service.bctx.monitor.ethereum.EthereumReceiptCollector;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumTransferReceipt;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Sort;
@@ -37,7 +38,13 @@ public class LuniverseTxMonitor extends AbstractEthereumTxMonitor {
 	private MongoTemplate mongoTemplate;
 
 	@Autowired
-	private ServiceStatusService<DexGovStatus> ssService;
+	private ServiceStatusService ssService;
+
+	@Data
+	public static class LuniverseTxMonitorStatus {
+		private BigInteger lastBlock;
+		private LocalDateTime lastBlockTimestamp;
+	}
 
 	private static final String COLLECTION_NAME = "luniverse_txReceipt";
 
@@ -48,8 +55,9 @@ public class LuniverseTxMonitor extends AbstractEthereumTxMonitor {
 	@PostConstruct
 	private void init() {
 		if(RunningProfile.isLocal()) { // destroy log db at localhost
-			ssService.status().getTxMonitor().getLuniverse().setLastBlock(null);
-			ssService.save();
+			ssService.of(LuniverseTxMonitorStatus.class).update((s) -> {
+				s.setLastBlock(null);
+			});
 
 			mongoTemplate.dropCollection(COLLECTION_NAME);
 		}
@@ -90,14 +98,15 @@ public class LuniverseTxMonitor extends AbstractEthereumTxMonitor {
 
 	@Override
 	protected BigInteger getServiceStatusLastBlock() {
-		return ssService.status().getTxMonitor().getLuniverse().getLastBlock();
+		return ssService.of(LuniverseTxMonitorStatus.class).read().getLastBlock();
 	}
 
 	@Override
 	protected void saveServiceStatusLastBlock(BigInteger blockNumber, LocalDateTime timestamp) {
-		ssService.status().getTxMonitor().getLuniverse().setLastBlock(blockNumber);
-		ssService.status().getTxMonitor().getLuniverse().setLastBlockTimestamp(timestamp);
-		ssService.save();
+		ssService.of(LuniverseTxMonitorStatus.class).update((s) -> {
+			s.setLastBlock(blockNumber);
+			s.setLastBlockTimestamp(timestamp);
+		});
 	}
 
 	@Scheduled(fixedDelay = 3000, initialDelay = 5000)

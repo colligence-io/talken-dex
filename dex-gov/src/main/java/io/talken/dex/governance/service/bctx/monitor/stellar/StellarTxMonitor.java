@@ -13,6 +13,7 @@ import io.talken.dex.governance.service.bctx.TxMonitor;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TokenMetaTableUpdateEventHandler;
 import io.talken.dex.shared.service.blockchain.stellar.*;
+import lombok.Data;
 import org.jooq.DSLContext;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ import org.stellar.sdk.responses.TransactionResponse;
 import org.stellar.sdk.xdr.OperationType;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TXMON;
@@ -52,7 +54,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	private StellarNetworkService stellarNetworkService;
 
 	@Autowired
-	private ServiceStatusService<DexGovStatus> ssService;
+	private ServiceStatusService ssService;
 
 	@Autowired
 	private DSLContext dslContext;
@@ -77,12 +79,19 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 	private Set<String> assetsToSave = new HashSet<>();
 
+	@Data
+	public static class StellarTxMonitorStatus {
+		private String lastPagingToken;
+		private LocalDateTime lastTokenTimestamp;
+	}
+
 	@PostConstruct
 	private void init() {
 		// reset status if local
 		if(RunningProfile.isLocal()) {
-			ssService.status().getTxMonitor().getStellar().setLastPagingToken(null);
-			ssService.save();
+			ssService.of(StellarTxMonitorStatus.class).update((status) -> {
+				status.setLastPagingToken(null);
+			});
 
 			mongoTemplate.dropCollection(COLLECTION_NAME);
 		}
@@ -158,7 +167,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 	}
 
 	private int processNextTransactions() {
-		Optional<String> opt_status = Optional.ofNullable(ssService.status().getTxMonitor().getStellar().getLastPagingToken());
+		Optional<String> opt_status = Optional.ofNullable(ssService.of(StellarTxMonitorStatus.class).read().getLastPagingToken());
 
 		final long started = System.currentTimeMillis();
 
@@ -228,9 +237,12 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		final long saveTakes = System.currentTimeMillis() - saveStarted;
 
 		if(lastSuccessTransaction != null) {
-			ssService.status().getTxMonitor().getStellar().setLastPagingToken(lastSuccessTransaction.getPagingToken());
-			ssService.status().getTxMonitor().getStellar().setLastTokenTimestamp(StellarConverter.toLocalDateTime(lastSuccessTransaction.getCreatedAt()));
-			ssService.save();
+			final String lpt = lastSuccessTransaction.getPagingToken();
+			final LocalDateTime ltt = StellarConverter.toLocalDateTime(lastSuccessTransaction.getCreatedAt());
+			ssService.of(StellarTxMonitorStatus.class).update((s) -> {
+				s.setLastPagingToken(lpt);
+				s.setLastTokenTimestamp(ltt);
+			});
 		}
 
 		final long takes = System.currentTimeMillis() - started;
