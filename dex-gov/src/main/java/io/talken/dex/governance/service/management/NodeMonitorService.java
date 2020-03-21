@@ -104,8 +104,8 @@ public class NodeMonitorService {
 		RootResponse publicInfo = stellarNetworkService.pickPublicServer().root();
 
 		sb.append("Stellar node server status").append("\n");
-		sb.append(" - Local  : ").append(localInfo.getHistoryLatestLedger()).append("/").append(localInfo.getCoreLatestLedger()).append(" - ").append(localInfo.getStellarCoreVersion()).append(" - ").append(localInfo.getHorizonVersion()).append("\n");
-		sb.append(" - Public  : ").append(publicInfo.getHistoryLatestLedger()).append("/").append(publicInfo.getCoreLatestLedger()).append(" - ").append(publicInfo.getStellarCoreVersion()).append(" - ").append(publicInfo.getHorizonVersion()).append("\n");
+		sb.append(" - Local  : ").append(localInfo.getHistoryLatestLedger()).append("/").append(localInfo.getCoreLatestLedger()).append(" - ").append(normalizeStellarVersion(localInfo)).append("\n");
+		sb.append(" - Public  : ").append(publicInfo.getHistoryLatestLedger()).append("/").append(publicInfo.getCoreLatestLedger()).append(" - ").append(normalizeStellarVersion(publicInfo)).append("\n");
 		sb.append("\n");
 
 		int coreDiff = publicInfo.getCoreLatestLedger() - localInfo.getCoreLatestLedger();
@@ -122,6 +122,20 @@ public class NodeMonitorService {
 		if(publicInfo.getCoreSupportedProtocolVersion() != localInfo.getCoreSupportedProtocolVersion()) {
 			adminAlarmService.warn(logger, "Local stellar node support protocol(={}, public={}) is old, may not able to perform correctly.", localInfo.getCoreSupportedProtocolVersion(), publicInfo.getCoreSupportedProtocolVersion());
 		}
+	}
+
+	private String normalizeStellarVersion(RootResponse root) {
+		String coreVersion = root.getStellarCoreVersion()
+				.replaceAll("^(v|stellar-core)","")
+				.replaceAll("\\([0-9abcdefABCDEF]{40}\\)","")
+				.trim();
+
+		String horizonVersion = root.getHorizonVersion()
+				.replaceAll("^(v)","")
+				.replaceAll("-.?[0-9abcdefABCDEF]{40}","")
+				.trim();
+
+		return coreVersion + " - " + horizonVersion + " (SCP current: " + root.getCurrentProtocolVersion() + ", support: " + root.getCoreSupportedProtocolVersion() + ")";
 	}
 
 	private void checkLuniverseNodes(StringBuilder sb) throws IOException {
