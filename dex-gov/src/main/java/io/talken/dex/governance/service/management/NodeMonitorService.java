@@ -89,7 +89,7 @@ public class NodeMonitorService {
 		long diff = infuraInfo.second().subtract(localInfo.second()).abs().longValueExact();
 
 		if(diff >= 20) {
-			adminAlarmService.warn(logger, "Local ethereum node is {} blocks behind from infura node.", diff);
+			adminAlarmService.warn(logger, "Local ethereum node is {} blocks behind infura node.", diff);
 		}
 	}
 
@@ -112,7 +112,7 @@ public class NodeMonitorService {
 		int localStale = Math.abs(localInfo.getCoreLatestLedger() - localInfo.getHistoryLatestLedger());
 
 		if(coreDiff > 50) {
-			adminAlarmService.warn(logger, "Local stellar node is {} ledgers behind from public node.", coreDiff);
+			adminAlarmService.warn(logger, "Local stellar node is {} ledgers behind public node.", coreDiff);
 		}
 
 		if(localStale > 20) {
