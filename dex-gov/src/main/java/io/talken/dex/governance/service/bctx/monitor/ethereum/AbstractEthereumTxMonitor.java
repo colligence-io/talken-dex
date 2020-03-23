@@ -39,6 +39,9 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 	@Autowired
 	private Erc20ContractInfoService erc20ContractInfoService;
 
+	@Autowired
+	private EthereumReceiptCollector collector;
+
 	private static final int MAXIMUM_LOOP = 10; // get 1000 blocks per loop, for reduce crawl load.
 	private final String networkName;
 	private static final BigInteger CONFIRM_BLOCK_COUNT = BigInteger.valueOf(10);
@@ -62,7 +65,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 	abstract protected void saveReceiptDocuments(List<EthereumTransferReceipt> documents);
 
-	protected void crawlBlocks(Web3j web3j, EthereumReceiptCollector collector) {
+	protected void crawlBlocks(Web3j web3j, int collectionThreadNum) {
 		BigInteger latestBlockNumber = null;
 		BigInteger targetBlockNumber = null;
 		BigInteger cursor = null;
@@ -133,7 +136,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 				}
 
 				final long startCollect = System.currentTimeMillis();
-				Map<String, TransactionReceipt> receipts = collector.collect(networkName, web3j, txs);
+				Map<String, TransactionReceipt> receipts = collector.collect(collectionThreadNum, networkName, web3j, txs);
 				final long collectTakes = System.currentTimeMillis() - startCollect;
 
 				if(receipts.size() != txs.size()) {
@@ -186,7 +189,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 				// log process if receipts processed
 				if((allReceipts.size() > 0) || (cursor.longValueExact() % 30 == 0))
-					logger.info("{} : BLOCKNUMBER = {}/{}, RECEIPTS = {} ({}({}) ms){}", networkName, cursor, latestBlockNumber, allReceipts.size(), takes, collectTakes, eta);
+					logger.info("{} : BLOCKNUMBER = {}/{}, RECEIPTS = {} ({} ms, collect {} ms){}", networkName, cursor, latestBlockNumber, allReceipts.size(), takes, collectTakes, eta);
 			}
 		} catch(Exception ex) {
 			logger.exception(ex, "Exception while processing {} block {}", networkName, cursor);

@@ -128,6 +128,6 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 			return;
 		}
 
-		crawlBlocks(web3j, new EthereumReceiptCollector(10));
+		crawlBlocks(web3j, 5);
 	}
 }
