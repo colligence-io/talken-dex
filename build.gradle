@@ -33,7 +33,7 @@ subprojects {
     targetCompatibility = 1.8
 
     group = "io.talken"
-    version = "1.4.9"
+    version = "1.5.1"
 
     bootJar {
         baseName = "talken-" + project.name
@@ -67,7 +67,7 @@ subprojects {
     }
 
     dependencies {
-        compile('io.talken:java-common:20200321-1') { changing = true }
+        compile('io.talken:java-common:20200403-1') { changing = true }
 
         annotationProcessor('org.projectlombok:lombok:1.18.8')
         compileOnly('org.projectlombok:lombok:1.18.8')
