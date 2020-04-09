@@ -38,7 +38,7 @@ talken:
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
     task:
       createOffer:
-        feeRatePivot: 0.01
+        feeRatePivot: 0.005
       deanchor:
         feeAmountTalk: 50
     integration:
