@@ -4,10 +4,7 @@ import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.collection.SingleKeyTable;
 import io.talken.dex.shared.exception.SigningException;
-import org.stellar.sdk.Memo;
-import org.stellar.sdk.Operation;
-import org.stellar.sdk.Server;
-import org.stellar.sdk.Transaction;
+import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
@@ -53,7 +50,7 @@ public class StellarChannelTransaction implements Closeable {
 	 * @return
 	 * @throws IOException
 	 */
-	public SubmitTransactionResponse submit() throws IOException {
+	public SubmitTransactionResponse submit() throws IOException, AccountRequiresMemoException {
 		try {
 			// submit
 			logger.debug("Sending TX {} to stellar network.", ByteArrayUtil.toHexString(tx.hash()));
@@ -139,7 +136,7 @@ public class StellarChannelTransaction implements Closeable {
 
 				// builder
 				Transaction.Builder txBuilder = new Transaction.Builder(channelAccount, stellarNetworkService.getNetwork())
-						.setOperationFee(stellarNetworkService.getNetworkFee())
+						.setBaseFee(stellarNetworkService.getNetworkFee())
 						.setTimeout(TIMEOUT);
 
 				// add memo if exists
@@ -176,7 +173,7 @@ public class StellarChannelTransaction implements Closeable {
 		 * @throws IOException
 		 * @throws SigningException
 		 */
-		public SubmitTransactionResponse buildAndSubmit() throws IOException, SigningException {
+		public SubmitTransactionResponse buildAndSubmit() throws IOException, SigningException, AccountRequiresMemoException {
 			try(StellarChannelTransaction sctx = build()) {
 				return sctx.submit();
 			}

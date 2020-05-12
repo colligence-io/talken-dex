@@ -75,7 +75,7 @@ public abstract class AbstractStellarTxSender extends TxSender {
 
 		Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount, stellarNetworkService.getNetwork())
 				.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-				.setOperationFee(stellarNetworkService.getNetworkFee())
+				.setBaseFee(stellarNetworkService.getNetworkFee())
 				.addOperation(
 						operation
 				);

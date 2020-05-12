@@ -27,10 +27,7 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.Asset;
-import org.stellar.sdk.ManageBuyOfferOperation;
-import org.stellar.sdk.ManageSellOfferOperation;
-import org.stellar.sdk.PaymentOperation;
+import org.stellar.sdk.*;
 import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.responses.OfferResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
@@ -212,7 +209,7 @@ public class OfferService {
 					taskRecord.setRebalanceamount(rebalanced.second());
 					taskRecord.setRebalancetxhash(rebalanceResponse.getHash());
 					taskRecord.store();
-				} catch(IOException e) {
+				} catch(IOException | AccountRequiresMemoException e) {
 					throw new StellarException(e);
 				}
 			}
@@ -285,7 +282,7 @@ public class OfferService {
 		} catch(TalkenException tex) {
 			DexTaskRecord.writeError(taskRecord, position, tex);
 			throw tex;
-		} catch(IOException ioex) {
+		} catch(IOException | AccountRequiresMemoException ioex) {
 			StellarException ex = new StellarException(ioex);
 			DexTaskRecord.writeError(taskRecord, position, ex);
 			throw ex;
@@ -545,7 +542,7 @@ public class OfferService {
 		} catch(TalkenException tex) {
 			DexTaskRecord.writeError(taskRecord, position, tex);
 			throw tex;
-		} catch(IOException ioex) {
+		} catch(IOException | AccountRequiresMemoException ioex) {
 			StellarException ex = new StellarException(ioex);
 			DexTaskRecord.writeError(taskRecord, position, ex);
 			throw ex;

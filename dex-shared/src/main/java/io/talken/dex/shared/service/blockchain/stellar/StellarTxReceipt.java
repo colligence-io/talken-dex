@@ -37,7 +37,13 @@ public class StellarTxReceipt {
 	private void parse() throws StellarTxResultParsingError {
 		try {
 			// decode tx
-			this.tx = Transaction.fromEnvelopeXdr(response.getEnvelopeXdr(), this.network);
+			AbstractTransaction atx = Transaction.fromEnvelopeXdr(response.getEnvelopeXdr(), this.network);
+
+			if(atx instanceof FeeBumpTransaction) {
+				this.tx = ((FeeBumpTransaction) atx).getInnerTransaction();
+			} else {
+				this.tx = (Transaction) atx;
+			}
 		} catch(Exception ex) {
 			throw new StellarTxResultParsingError("EnvelopeDecodeError", ex);
 		}

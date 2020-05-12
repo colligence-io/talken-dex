@@ -260,6 +260,8 @@ public class TradeWalletService {
 				throw new TradeWalletCreateFailedException(e, "IO Error");
 			} catch(SigningException e) {
 				throw new TradeWalletCreateFailedException(e, "TSS Error");
+			} catch(AccountRequiresMemoException e) {
+				throw new TradeWalletCreateFailedException(e, "STELLAR MEMO REQUIRED");
 			}
 		}
 
@@ -428,7 +430,7 @@ public class TradeWalletService {
 			// merge account if account is created at stellar network
 			if(account != null) {
 				Transaction.Builder txBuilder = new Transaction.Builder(account, stellarNetworkService.getNetwork())
-						.setOperationFee(stellarNetworkService.getNetworkFee())
+						.setBaseFee(stellarNetworkService.getNetworkFee())
 						.setTimeout(30);
 
 				boolean sendTx = false;
@@ -462,7 +464,7 @@ public class TradeWalletService {
 				}
 
 				Transaction mtx = new Transaction.Builder(account, stellarNetworkService.getNetwork())
-						.setOperationFee(stellarNetworkService.getNetworkFee())
+						.setBaseFee(stellarNetworkService.getNetworkFee())
 						.setTimeout(30)
 						.addOperation(new AccountMergeOperation.Builder(this.creatorAddress).build())
 						.build();

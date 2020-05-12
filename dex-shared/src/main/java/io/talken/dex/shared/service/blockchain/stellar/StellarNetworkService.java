@@ -8,10 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.KeyPair;
-import org.stellar.sdk.Network;
-import org.stellar.sdk.Server;
-import org.stellar.sdk.Transaction;
+import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 import org.stellar.sdk.responses.SubmitTransactionTimeoutResponseException;
@@ -156,7 +153,7 @@ public class StellarNetworkService {
 	 * @return
 	 * @throws IOException
 	 */
-	public SubmitTransactionResponse sendTransaction(Server server, Transaction tx) throws IOException {
+	public SubmitTransactionResponse sendTransaction(Server server, Transaction tx) throws IOException, AccountRequiresMemoException {
 		SubmitTransactionTimeoutResponseException rtn = null;
 		for(int i = 0; i < MAXIMUM_SUBMIT_RETRY; i++) {
 			try {

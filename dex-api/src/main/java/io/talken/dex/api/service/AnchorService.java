@@ -33,6 +33,7 @@ import org.jooq.DatePart;
 import org.jooq.impl.DSL;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.stellar.sdk.AccountRequiresMemoException;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
@@ -147,7 +148,7 @@ public class AnchorService {
 					taskRecord.setRebalanceamount(rebalanced.second());
 					taskRecord.setRebalancetxhash(rebalanceResponse.getHash());
 					taskRecord.store();
-				} catch(IOException e) {
+				} catch(IOException | AccountRequiresMemoException e) {
 					throw new StellarException(e);
 				}
 			}
@@ -295,7 +296,7 @@ public class AnchorService {
 		} catch(TalkenException tex) {
 			DexTaskRecord.writeError(taskRecord, position, tex);
 			throw tex;
-		} catch(IOException ioex) {
+		} catch(IOException | AccountRequiresMemoException ioex) {
 			StellarException ex = new StellarException(ioex);
 			DexTaskRecord.writeError(taskRecord, position, ex);
 			throw ex;

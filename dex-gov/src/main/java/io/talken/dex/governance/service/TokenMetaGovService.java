@@ -416,7 +416,7 @@ public class TokenMetaGovService extends TokenMetaTableService {
 				logger.info("No trust on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.dexIssuerAccount().getAccountId());
 				Transaction tx = new Transaction.Builder(sourceAccount, stellarNetworkService.getNetwork())
 						.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-						.setOperationFee(stellarNetworkService.getNetworkFee())
+						.setBaseFee(stellarNetworkService.getNetworkFee())
 						.addOperation(
 								new ChangeTrustOperation.Builder(
 										target.dexAssetType(),
