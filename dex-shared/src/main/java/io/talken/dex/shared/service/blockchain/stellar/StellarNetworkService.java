@@ -16,10 +16,7 @@ import org.stellar.sdk.responses.SubmitTransactionTimeoutResponseException;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.talken.common.persistence.redis.RedisConsts.KEY_GOVERNANCE_DEX_CHANNEL;
@@ -107,10 +104,15 @@ public class StellarNetworkService {
 			while(System.currentTimeMillis() < until) {
 				for(StellarChannel channel : channels) {
 					// set redis as channel is picked, and set expiration as 31 seconds
-					Boolean set = redisTemplate.opsForValue().setIfAbsent(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channel.getAccountId(), "1", Duration.ofSeconds(StellarChannelTransaction.TIMEOUT + 1));
+					String uuid = UUID.randomUUID().toString();
+					String redisKey = KEY_GOVERNANCE_DEX_CHANNEL + ":" + channel.getAccountId();
+					Boolean set = redisTemplate.opsForValue().setIfAbsent(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channel.getAccountId(), uuid, Duration.ofSeconds(StellarChannelTransaction.TIMEOUT + 1));
 					if(set != null && set) {
-						logger.debug("Channel pick : {}", channel.getAccountId());
-						return channel;
+						String check = redisTemplate.opsForValue().get(redisKey);
+						if(check != null && check.equals(uuid)) {
+							logger.debug("Channel pick : {}", channel.getAccountId());
+							return channel;
+						}
 					}
 				}
 				try {
