@@ -24,7 +24,7 @@ public class StellarChannelTransaction implements Closeable {
 	private Transaction tx = null;
 	private StellarChannel channel = null;
 
-	public static final long TIMEOUT = 30;
+	public static final long TIMEOUT = 10;
 
 	/**
 	 * use builder
