@@ -33,7 +33,9 @@ public class TradeWalletResetService {
 	/**
 	 * Reset trade wallet if activationHash is marked as 'RESET'
 	 */
-	@Scheduled(fixedDelay = 60000, initialDelay = 4000)
+
+	// FIXME : RESET is too dangerous, enable this service ONLY IF RESET NEEDED
+	//	@Scheduled(fixedDelay = 60000, initialDelay = 4000)
 	private void checkToReset() {
 		if(DexGovStatus.isStopped) return;
 

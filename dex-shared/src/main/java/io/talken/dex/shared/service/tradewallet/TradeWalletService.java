@@ -8,6 +8,7 @@ import io.talken.common.persistence.jooq.tables.records.UserTradeWalletRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.shared.DexSettings;
+import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TokenMetaTableService;
 import io.talken.dex.shared.exception.SigningException;
 import io.talken.dex.shared.exception.TradeWalletCreateFailedException;
@@ -495,6 +496,121 @@ public class TradeWalletService {
 
 			return false;
 		}
+		return true;
+	}
+
+
+	/**
+	 * Rebalance user tradewallet asset balance (not for native XLM)
+	 *
+	 * @param user
+	 * @param assetCode
+	 * @param targetBalance targetBalance, (untrust if negative)
+	 * @return
+	 * @throws TradeWalletCreateFailedException
+	 * @throws TradeWalletRebalanceException
+	 * @throws SigningException
+	 * @throws TokenMetaNotFoundException
+	 * @throws TokenMetaNotManagedException
+	 */
+	public boolean rebalanceIssuedAsset(User user, String assetCode, BigDecimal targetBalance) throws TradeWalletCreateFailedException, TradeWalletRebalanceException, SigningException, TokenMetaNotFoundException, TokenMetaNotManagedException {
+		TradeWalletInfo tw = loadTradeWallet(user, false);
+
+		KeyPair kp = extractKeyPair(tw);
+
+		Server server = stellarNetworkService.pickServer();
+
+		AccountResponse account = null;
+
+		try {
+			account = server.accounts().account(kp.getAccountId());
+		} catch(Exception ex) {
+			if(ex instanceof ErrorResponse) {
+				if(((ErrorResponse) ex).getCode() != 404) {
+					logger.exception(ex, "{} {}", ((ErrorResponse) ex).getCode(), ((ErrorResponse) ex).getBody());
+					return false;
+				}
+			} else {
+				logger.exception(ex);
+				return false;
+			}
+		}
+
+		if(account == null) throw new TradeWalletRebalanceException("Cannot get target account from stellar network");
+
+		TokenMetaTable.ManagedInfo managedInfo = tmService.getManagedInfo(assetCode);
+
+		BigDecimal adjustAmount = null;
+
+		boolean untrust = false;
+		if(targetBalance.compareTo(BigDecimal.ZERO) < 0) {
+			untrust = true;
+			targetBalance = BigDecimal.ZERO;
+		}
+
+		for(AccountResponse.Balance balance : account.getBalances()) {
+			if(!(balance.getAsset() instanceof AssetTypeNative)) {
+				if(balance.getAsset().equals(managedInfo.dexAssetType())) {
+					BigDecimal remainBalance = StellarConverter.scale(new BigDecimal(balance.getBalance()));
+					adjustAmount = targetBalance.subtract(remainBalance);
+				}
+			}
+		}
+
+		if(adjustAmount == null)
+			throw new TradeWalletRebalanceException(tw.getAccountId() + " does not have " + managedInfo.getAssetCode());
+
+
+		try {
+			StellarChannelTransaction.Builder sctxBuilder = stellarNetworkService.newChannelTxBuilder();
+
+			if(adjustAmount.compareTo(BigDecimal.ZERO) > 0) {
+				sctxBuilder.addOperation(
+						new PaymentOperation.Builder(tw.getAccountId(), managedInfo.dexAssetType(), StellarConverter.actualToString(adjustAmount))
+								.setSourceAccount(managedInfo.getIssuerAddress())
+								.build()
+				);
+
+				sctxBuilder.addSigner(new StellarSignerTSS(signServerService, managedInfo.getIssuerAddress()));
+			} else {
+				if(adjustAmount.compareTo(BigDecimal.ZERO) < 0) {
+					sctxBuilder.addOperation(
+							new PaymentOperation.Builder(managedInfo.getIssuerAddress(), managedInfo.dexAssetType(), StellarConverter.actualToString(adjustAmount.abs()))
+									.setSourceAccount(tw.getAccountId())
+									.build()
+					);
+				}
+
+				if(untrust) {
+					sctxBuilder.addOperation(
+							new ChangeTrustOperation.Builder(managedInfo.dexAssetType(), "0")
+									.setSourceAccount(tw.getAccountId())
+									.build()
+					);
+				}
+
+				sctxBuilder.addSigner(new StellarSignerAccount(extractKeyPair(tw)));
+			}
+
+			SubmitTransactionResponse response = sctxBuilder.buildAndSubmit();
+
+			if(!response.isSuccess()) {
+				ObjectPair<String, String> resultCodesFromExtra = StellarConverter.getResultCodesFromExtra(response);
+				logger.info("Rebalance user {} tradewallet {} {} failed : {} {}", user.getUid(), kp.getAccountId(), assetCode, resultCodesFromExtra.first(), resultCodesFromExtra.second());
+				return false;
+			}
+
+			logger.info("Rebalance user {} tradewallet {} -> {} {}{} : {}", user.getUid(), kp.getAccountId(), targetBalance, assetCode, (untrust) ? " (untrust)" : "", response.getHash());
+
+		} catch(Exception ex) {
+			if(ex instanceof ErrorResponse)
+				logger.exception(ex, "{} {}", ((ErrorResponse) ex).getCode(), ((ErrorResponse) ex).getBody());
+			else
+				logger.exception(ex);
+
+			return false;
+		}
+
 		return true;
 	}
 }
