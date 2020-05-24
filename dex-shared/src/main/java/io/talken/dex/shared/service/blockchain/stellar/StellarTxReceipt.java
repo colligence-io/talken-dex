@@ -26,6 +26,7 @@ public class StellarTxReceipt {
 	private TransactionResult result = null;
 	private DexTaskId dexTaskId = null;
 	private List<StellarOpReceipt> opReceipts = null;
+	private boolean isFeeBump = false;
 	private String txMemo = null;
 
 	public StellarTxReceipt(TransactionResponse response, Network network) {
@@ -40,6 +41,7 @@ public class StellarTxReceipt {
 			AbstractTransaction atx = Transaction.fromEnvelopeXdr(response.getEnvelopeXdr(), this.network);
 
 			if(atx instanceof FeeBumpTransaction) {
+				this.isFeeBump = true;
 				this.tx = ((FeeBumpTransaction) atx).getInnerTransaction();
 			} else {
 				this.tx = (Transaction) atx;
@@ -100,7 +102,12 @@ public class StellarTxReceipt {
 			opReceipts = new ArrayList<>();
 
 			Operation[] operations = this.tx.getOperations();
-			OperationResult[] results = this.result.getResult().getResults();
+			OperationResult[] results;
+			if(isFeeBump) {
+				results = this.result.getResult().getInnerResultPair().getResult().getResult().getResults();
+			} else {
+				results = this.result.getResult().getResults();
+			}
 
 			for(int i = 0; i < operations.length; i++) {
 				Operation op = operations[i];
