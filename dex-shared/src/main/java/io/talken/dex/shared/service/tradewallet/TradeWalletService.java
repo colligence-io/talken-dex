@@ -513,7 +513,7 @@ public class TradeWalletService {
 	 * @throws TokenMetaNotFoundException
 	 * @throws TokenMetaNotManagedException
 	 */
-	public boolean rebalanceIssuedAsset(User user, String assetCode, BigDecimal targetBalance) throws TradeWalletCreateFailedException, TradeWalletRebalanceException, SigningException, TokenMetaNotFoundException, TokenMetaNotManagedException {
+	public String rebalanceIssuedAsset(User user, String assetCode, BigDecimal targetBalance) throws TradeWalletCreateFailedException, TradeWalletRebalanceException, SigningException, TokenMetaNotFoundException, TokenMetaNotManagedException {
 		TradeWalletInfo tw = loadTradeWallet(user, false);
 
 		KeyPair kp = extractKeyPair(tw);
@@ -524,44 +524,31 @@ public class TradeWalletService {
 
 		try {
 			account = server.accounts().account(kp.getAccountId());
-		} catch(Exception ex) {
-			if(ex instanceof ErrorResponse) {
-				if(((ErrorResponse) ex).getCode() != 404) {
-					logger.exception(ex, "{} {}", ((ErrorResponse) ex).getCode(), ((ErrorResponse) ex).getBody());
-					return false;
-				}
-			} else {
-				logger.exception(ex);
-				return false;
+
+			if(account == null) throw new TradeWalletRebalanceException("Cannot get target account from stellar network");
+
+			TokenMetaTable.ManagedInfo managedInfo = tmService.getManagedInfo(assetCode);
+
+			BigDecimal adjustAmount = null;
+
+			boolean untrust = false;
+			if(targetBalance.compareTo(BigDecimal.ZERO) < 0) {
+				untrust = true;
+				targetBalance = BigDecimal.ZERO;
 			}
-		}
 
-		if(account == null) throw new TradeWalletRebalanceException("Cannot get target account from stellar network");
-
-		TokenMetaTable.ManagedInfo managedInfo = tmService.getManagedInfo(assetCode);
-
-		BigDecimal adjustAmount = null;
-
-		boolean untrust = false;
-		if(targetBalance.compareTo(BigDecimal.ZERO) < 0) {
-			untrust = true;
-			targetBalance = BigDecimal.ZERO;
-		}
-
-		for(AccountResponse.Balance balance : account.getBalances()) {
-			if(!(balance.getAsset() instanceof AssetTypeNative)) {
-				if(balance.getAsset().equals(managedInfo.dexAssetType())) {
-					BigDecimal remainBalance = StellarConverter.scale(new BigDecimal(balance.getBalance()));
-					adjustAmount = targetBalance.subtract(remainBalance);
+			for(AccountResponse.Balance balance : account.getBalances()) {
+				if(!(balance.getAsset() instanceof AssetTypeNative)) {
+					if(balance.getAsset().equals(managedInfo.dexAssetType())) {
+						BigDecimal remainBalance = StellarConverter.scale(new BigDecimal(balance.getBalance()));
+						adjustAmount = targetBalance.subtract(remainBalance);
+					}
 				}
 			}
-		}
 
-		if(adjustAmount == null)
-			throw new TradeWalletRebalanceException(tw.getAccountId() + " does not have " + managedInfo.getAssetCode());
+			if(adjustAmount == null)
+				throw new TradeWalletRebalanceException(tw.getAccountId() + " does not have " + managedInfo.getAssetCode());
 
-
-		try {
 			StellarChannelTransaction.Builder sctxBuilder = stellarNetworkService.newChannelTxBuilder();
 
 			if(adjustAmount.compareTo(BigDecimal.ZERO) > 0) {
@@ -597,20 +584,20 @@ public class TradeWalletService {
 			if(!response.isSuccess()) {
 				ObjectPair<String, String> resultCodesFromExtra = StellarConverter.getResultCodesFromExtra(response);
 				logger.info("Rebalance user {} tradewallet {} {} failed : {} {}", user.getUid(), kp.getAccountId(), assetCode, resultCodesFromExtra.first(), resultCodesFromExtra.second());
-				return false;
+				throw new TradeWalletRebalanceException(resultCodesFromExtra.first() + " " + resultCodesFromExtra.second());
 			}
 
 			logger.info("Rebalance user {} tradewallet {} -> {} {}{} : {}", user.getUid(), kp.getAccountId(), targetBalance, assetCode, (untrust) ? " (untrust)" : "", response.getHash());
-
+			return response.getHash();
+		} catch(TradeWalletRebalanceException ex) {
+			throw ex;
 		} catch(Exception ex) {
-			if(ex instanceof ErrorResponse)
+			if(ex instanceof ErrorResponse) {
 				logger.exception(ex, "{} {}", ((ErrorResponse) ex).getCode(), ((ErrorResponse) ex).getBody());
-			else
-				logger.exception(ex);
-
-			return false;
+				throw new TradeWalletRebalanceException(ex, ((ErrorResponse) ex).getCode() + " " + ((ErrorResponse) ex).getBody());
+			} else {
+				throw new TradeWalletRebalanceException(ex, ex.getMessage());
+			}
 		}
-
-		return true;
 	}
 }

@@ -1,5 +1,6 @@
 package io.talken.dex.governance.service;
 
+import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.redis.RedisConsts;
 import io.talken.common.util.PostLaunchExecutor;
 import io.talken.common.util.PrefixedLogger;
@@ -7,6 +8,8 @@ import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.scheduler.talkreward.UserRewardBctxService;
 import io.talken.dex.governance.service.management.MaMonitorService;
+import io.talken.dex.shared.service.tradewallet.TradeWalletService;
+import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
@@ -15,7 +18,10 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+
+import static io.talken.common.persistence.jooq.Tables.USER;
 
 @Service
 public class AdminRedisMessageListnerService implements MessageListener {
@@ -30,10 +36,16 @@ public class AdminRedisMessageListnerService implements MessageListener {
 	private UserRewardBctxService userRewardBctxService;
 
 	@Autowired
+	private TradeWalletService twService;
+
+	@Autowired
 	private AdminAlarmService adminAlarmService;
 
 	@Autowired
 	private MaMonitorService mamService;
+
+	@Autowired
+	private DSLContext dslContext;
 
 	@PostConstruct
 	private void init() {
@@ -53,28 +65,50 @@ public class AdminRedisMessageListnerService implements MessageListener {
 		switch(command.toLowerCase()) {
 			case "stop service userreward":
 				userRewardBctxService.suspend();
-				adminAlarmService.warn(logger,"UserReward Service SUSPENDED.");
+				adminAlarmService.warn(logger, "UserReward Service SUSPENDED.");
 				break;
 			case "start service userreward":
 				userRewardBctxService.resume();
-				adminAlarmService.warn(logger,"UserReward Service RESUMED.");
+				adminAlarmService.warn(logger, "UserReward Service RESUMED.");
 				break;
 			case "stop service mam":
 				mamService.suspend();
-				adminAlarmService.warn(logger,"MaMonitor Service SUSPENDED.");
+				adminAlarmService.warn(logger, "MaMonitor Service SUSPENDED.");
 				break;
 			case "start service mam":
 				mamService.resume();
-				adminAlarmService.warn(logger,"MaMonitor Service RESUMED.");
+				adminAlarmService.warn(logger, "MaMonitor Service RESUMED.");
 				break;
 			case "stop service all":
 				DexGovStatus.isStopped = true;
-				adminAlarmService.warn(logger,"Dex Governance Service SUSPENDED.");
+				adminAlarmService.warn(logger, "Dex Governance Service SUSPENDED.");
 				break;
 			case "start service all":
 				DexGovStatus.isStopped = false;
-				adminAlarmService.warn(logger,"Dex Governance Service RESUMED.");
+				adminAlarmService.warn(logger, "Dex Governance Service RESUMED.");
 				break;
+		}
+
+		if(command.startsWith("rebalance trade wallet ")) {
+			rebalanceTradeWallet(command.replaceFirst("rebalance trade wallet ", ""));
+		}
+	}
+
+	private void rebalanceTradeWallet(String cmd) {
+		String[] args = cmd.split(" ");
+
+		if(args.length < 3)
+			adminAlarmService.warn(logger, "ADMIN TRADE WALLET REBALANCE : not enough args, usage = rebalance trade wallet [UID] [ASSETCODE] [TARGET BALANCE]");
+
+		User u = dslContext.selectFrom(USER).where(USER.UID.eq(args[0])).fetchOneInto(User.class);
+
+		if(u == null) adminAlarmService.warn(logger, "ADMIN TRADE WALLET REBALANCE : user " + args[0] + " not found");
+
+		try {
+			String txHash = twService.rebalanceIssuedAsset(u, args[1], new BigDecimal(args[2]));
+			adminAlarmService.info(logger, "ADMIN TRADE WALLET REBALANCE : Sent TX = " + txHash);
+		} catch(Exception ex) {
+			adminAlarmService.error(logger, "ADMIN TRADE WALLET REBALANCE : Exception = ", ex.getClass().getSimpleName() + " " + ex.getMessage());
 		}
 	}
 }
