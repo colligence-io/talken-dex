@@ -106,7 +106,7 @@ public class AdminRedisMessageListnerService implements MessageListener {
 
 		try {
 			String txHash = twService.rebalanceIssuedAsset(u, args[1], new BigDecimal(args[2]));
-			adminAlarmService.info(logger, "ADMIN TRADE WALLET REBALANCE : Sent TX = " + txHash);
+			adminAlarmService.info(logger, "ADMIN TRADE WALLET REBALANCE : " + args[0] + " " + args[1] + " " + args[2] + " : " + txHash);
 		} catch(Exception ex) {
 			adminAlarmService.error(logger, "ADMIN TRADE WALLET REBALANCE : Exception = ", ex.getClass().getSimpleName() + " " + ex.getMessage());
 		}
