@@ -68,6 +68,7 @@ public class CrawlCoinGeckoService {
     @Scheduled(fixedDelay = 1000 * 60 * 60, initialDelay = 1000)
     private void crawl() {
         if(DexGovStatus.isStopped) return;
+        logger.debug("CoinGecko CrawlerService started at : {}", UTCUtil.getNow());
         try {
             if (checkRateLimit()) {
                 getMarketCapData("global");
@@ -98,7 +99,7 @@ public class CrawlCoinGeckoService {
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        CoinGeckoMarketCapResult cgmcr = mapper.readValue(response.parseAsString(), CoinGeckoMarketCapResult.class);
+        CoinGeckoResult cgmcr = mapper.readValue(response.parseAsString(), CoinGeckoResult.class);
 //        logger.debug("Response CoinGecko marketCap data as ParseStream {}", cgmcr);
 
         try {

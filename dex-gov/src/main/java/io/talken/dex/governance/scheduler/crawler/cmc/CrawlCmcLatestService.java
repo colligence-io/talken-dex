@@ -71,17 +71,17 @@ public class CrawlCmcLatestService {
 	@Scheduled(cron = "0 */10 * * * *", zone = ZONE_UTC)
 	private void crawl() {
 		if(DexGovStatus.isStopped) return;
-
+        logger.debug("CMC CrawlerService started at : {}", UTCUtil.getNow());
 		counter.incrementAndGet();
 		try {
 			if(RunningProfile.isProduction()) {
 				crawlCMCLatest();
 			} else { // for saving CMC credit, run every 4 hours only when it's not production environment
-				if(counter.get() % 24 == 0) {
+//				if(counter.get() % 24 == 0) {
 					crawlCMCLatest();
-				} else {
-					logger.trace("Skip CMC crawler task for saving credit.");
-				}
+//				} else {
+					logger.debug("Skip CMC crawler task for saving credit.");
+//				}
 			}
 		} catch(Exception ex) {
 			logger.exception(ex);

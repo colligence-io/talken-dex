@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class CoinGeckoMarketCapResult<T> {
+public class CoinGeckoResult<T> {
     private T data;
     private LocalDateTime lastUpdated;
 }
