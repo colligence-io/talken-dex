@@ -273,6 +273,8 @@ public class UserRewardBctxService {
 	 * @throws TradeWalletCreateFailedException
 	 * @throws TradeWalletRebalanceException
 	 */
+
+	// TODO : fix exception or make retried exception rows fetch scheduler
 	private BctxRecord processTradeWalletReward(UserRewardRecord rewardRecord, TokenMetaTable.Meta meta) throws TradeWalletCreateFailedException, TradeWalletRebalanceException {
 		if(!meta.isManaged()) {
 			alarmService.error(logger, "Reward Error : {} is not managed asset", meta.getSymbol());

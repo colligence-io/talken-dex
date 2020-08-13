@@ -112,6 +112,7 @@ public class TradeAggregationService {
 				try {
 					Server server = stellarNetworkService.pickServer();
 					logger.debug("execute trade aggregation for {}/{} {}~{}", counterAsset, baseAsset, startTime, endTime);
+					// TODO : exception
 					Page<TradeAggregationResponse> aggrPage = server.tradeAggregations(baseAssetType, counterAssetType, startTime, endTime, 86400000, 0).execute();
 					if(aggrPage.getRecords().size() > 0)
 						aggr = aggrPage.getRecords().get(0);
