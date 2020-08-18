@@ -33,7 +33,7 @@ subprojects {
     targetCompatibility = 1.8
 
     group = "io.talken"
-    version = "1.5.4"
+    version = "1.5.5"
 
     bootJar {
         baseName = "talken-" + project.name
@@ -89,7 +89,7 @@ subprojects {
         compile('org.springframework.boot:spring-boot-starter-data-mongodb')
 
         // stellar sdk
-        compile('com.github.stellar:java-stellar-sdk:0.16.0')
+        compile('com.github.stellar:java-stellar-sdk:0.18.0')
 
         // ethereum web3j sdk
         compile('org.web3j:core:4.5.10')
