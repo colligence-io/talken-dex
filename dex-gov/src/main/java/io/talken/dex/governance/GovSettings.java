@@ -2,7 +2,6 @@ package io.talken.dex.governance;
 
 import io.talken.common.persistence.vault.VaultSecretReader;
 import io.talken.common.persistence.vault.data.VaultSecretDataCoinMarketCap;
-import io.talken.common.persistence.vault.data.VaultSecretDataSlack;
 import io.talken.dex.shared.DexSettings;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,6 +27,7 @@ public class GovSettings extends DexSettings {
 	}
 
 	private _Scheduler scheduler;
+
 
 	@Getter
 	@Setter

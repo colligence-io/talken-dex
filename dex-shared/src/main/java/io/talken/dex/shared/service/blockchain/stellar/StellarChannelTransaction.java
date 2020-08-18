@@ -24,7 +24,8 @@ public class StellarChannelTransaction implements Closeable {
 	private Transaction tx = null;
 	private StellarChannel channel = null;
 
-	public static final long TIMEOUT = 10;
+	public static final long TIMEOUT = 30;
+    public static final long TIME_BOUND = 30;
 
 	/**
 	 * use builder
@@ -136,8 +137,9 @@ public class StellarChannelTransaction implements Closeable {
 
 				// builder
 				Transaction.Builder txBuilder = new Transaction.Builder(channelAccount, stellarNetworkService.getNetwork())
-						.setBaseFee(stellarNetworkService.getNetworkFee())
-						.setTimeout(TIMEOUT);
+                        .addTimeBounds(TimeBounds.expiresAfter(TIME_BOUND))
+						.setBaseFee(stellarNetworkService.getNetworkFee());
+//						.setTimeout(Transaction.Builder.TIMEOUT_INFINITE);
 
 				// add memo if exists
 				if(this.memo != null)

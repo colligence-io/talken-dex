@@ -4,6 +4,9 @@
 spring:
   cache:
     type: redis
+  application:
+    name: TKN-DEX
+
 talken:
   dex:
     mam:

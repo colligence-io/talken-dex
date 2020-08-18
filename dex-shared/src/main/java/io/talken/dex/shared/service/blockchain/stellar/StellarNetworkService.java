@@ -1,17 +1,19 @@
 package io.talken.dex.shared.service.blockchain.stellar;
 
-
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.DexSettings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 import org.stellar.sdk.responses.SubmitTransactionTimeoutResponseException;
+import shadow.okhttp3.OkHttpClient;
+import shadow.okhttp3.Request;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -27,6 +29,9 @@ import static io.talken.common.persistence.redis.RedisConsts.KEY_GOVERNANCE_DEX_
 public class StellarNetworkService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarNetworkService.class);
 
+    @Autowired
+    private Environment env;
+
 	@Autowired
 	private StringRedisTemplate redisTemplate;
 
@@ -38,7 +43,7 @@ public class StellarNetworkService {
 
 	private static final int BASE_FEE = 100;
 
-	private static final int PICK_CHANNEL_TMIEOUT = 10000;
+	private static final int PICK_CHANNEL_TIMEOUT = 10000;
 
 	private Network network;
 
@@ -46,14 +51,21 @@ public class StellarNetworkService {
 
 	private static final int MAXIMUM_SUBMIT_RETRY = 5;
 
+    String appName;
+    String appVersion;
+
 	@PostConstruct
 	private void init() throws IOException {
 		this.network = dexSettings.getBcnode().getStellar().getNetwork().equalsIgnoreCase("test") ? Network.TESTNET : Network.PUBLIC;
 		this.serverUri = dexSettings.getBcnode().getStellar().getRpcUri();
 		this.publicServerUri = dexSettings.getBcnode().getStellar().getPublicRpcUri();
+        this.appName = env.getProperty("spring.application.name");
+        this.appVersion = env.getProperty("spring.application.version");
 
 		logger.info("Using Stellar {} Network : {}", this.network, this.serverUri);
 		logger.info("Using Stellar Public {} Network : {}", this.network, this.publicServerUri);
+//        app_name	Value of X-App-Name HTTP header representing app name
+//        app_version	Value of X-App-Version HTTP header representing app version
 
 		for(Map.Entry<String, String> _ch : dexSettings.getBcnode().getStellar().getSecret().getChannels().entrySet()) {
 			KeyPair chkp = KeyPair.fromSecretSeed(_ch.getValue());
@@ -68,12 +80,46 @@ public class StellarNetworkService {
 	}
 
 	public Server pickServer() {
+	    if (this.appName != null && this.appVersion != null)
+            return pickServer(this.appName, this.appVersion);
 		return new Server(this.serverUri);
 	}
 
-	public Server pickPublicServer() {
+    public Server pickServer(String appName, String appVersion) {
+        Server server = new Server(this.serverUri);
+        return getServer(appName, appVersion, server);
+    }
+
+    public Server pickPublicServer() {
+        if (this.appName != null && this.appVersion != null)
+            return pickPublicServer(this.appName, this.appVersion);
 		return new Server(this.publicServerUri);
 	}
+
+    public Server pickPublicServer(String appName, String appVersion) {
+        Server server = new Server(this.publicServerUri);
+        return getServer(appName, appVersion, server);
+    }
+
+    private Server getServer(String appName, String appVersion, Server server) {
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.addInterceptor(chain -> {
+            Request original = chain.request();
+            Request request = original.newBuilder()
+                    .header("X-App-Name", appName)
+                    .header("X-App-Version", appVersion)
+                    .method(original.method(), original.body())
+                    .build();
+            return chain.proceed(request);
+        });
+
+        OkHttpClient client = httpClient.build();
+
+        server.setHttpClient(client);
+        server.setSubmitHttpClient(client);
+
+        return server;
+    }
 
 	public Network getNetwork() {
 		return this.network;
@@ -100,13 +146,13 @@ public class StellarNetworkService {
 	public StellarChannel pickChannel() {
 		synchronized(channels) {
 			Collections.sort(channels);
-			long until = System.currentTimeMillis() + PICK_CHANNEL_TMIEOUT;
+			long until = System.currentTimeMillis() + PICK_CHANNEL_TIMEOUT;
 			while(System.currentTimeMillis() < until) {
 				for(StellarChannel channel : channels) {
 					// set redis as channel is picked, and set expiration as 31 seconds
 					String uuid = UUID.randomUUID().toString();
 					String redisKey = KEY_GOVERNANCE_DEX_CHANNEL + ":" + channel.getAccountId();
-					Boolean set = redisTemplate.opsForValue().setIfAbsent(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channel.getAccountId(), uuid, Duration.ofSeconds(StellarChannelTransaction.TIMEOUT + 1));
+					Boolean set = redisTemplate.opsForValue().setIfAbsent(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channel.getAccountId(), uuid, Duration.ofSeconds(StellarChannelTransaction.TIME_BOUND + 1));
 					if(set != null && set) {
 						String check = redisTemplate.opsForValue().get(redisKey);
 						if(check != null && check.equals(uuid)) {

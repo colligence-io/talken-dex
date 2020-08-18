@@ -23,6 +23,8 @@ spring:
     dbcp2:
       test-on-borrow: true
       validation-query: SELECT 1
+  application:
+    version: gov-1.5.5
 
 talken:
   dex:
