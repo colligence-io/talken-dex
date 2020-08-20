@@ -17,6 +17,8 @@ import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
+import static io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction.TIME_BOUND;
+
 public abstract class AbstractStellarTxSender extends TxSender {
 	private final PrefixedLogger logger;
 
@@ -74,8 +76,9 @@ public abstract class AbstractStellarTxSender extends TxSender {
 		}
 
 		Transaction.Builder txBuilder = new Transaction.Builder(sourceAccount, stellarNetworkService.getNetwork())
-				.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+                .addTimeBounds(TimeBounds.expiresAfter(TIME_BOUND))
 				.setBaseFee(stellarNetworkService.getNetworkFee())
+//                .setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
 				.addOperation(
 						operation
 				);
