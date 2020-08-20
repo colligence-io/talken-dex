@@ -434,20 +434,28 @@ public class OfferService {
 
 		// get offer Information from network
 		OfferResponse originalOffer = null;
+        ErrorResponse offerErrorResponse = null;
+
+        // for local node
 		try {
 			originalOffer = stellarNetworkService.pickServer().offers().offer(offerId);
 		} catch(Exception ex) {
-			if(ex instanceof ErrorResponse) {
-				if(((ErrorResponse) ex).getCode() == 404) {
-					throw new OfferNotValidException(offerId, "Offer " + offerId + " not found on network.");
-				}
-			}
-			throw new StellarException(ex);
+			if(ex instanceof ErrorResponse && ((ErrorResponse) ex).getCode() == 404) {
+                offerErrorResponse = (ErrorResponse) ex;
+            }
 		}
 
-		if(originalOffer == null) {
-			throw new OfferNotValidException(offerId, "Offer " + offerId + " not found on network.");
-		}
+		// retry for public node
+		if (offerErrorResponse != null) {
+            try {
+                originalOffer = stellarNetworkService.pickPublicServer().offers().offer(offerId);
+            } catch (Exception ex) {
+                if(ex instanceof ErrorResponse && ((ErrorResponse) ex).getCode() == 404) {
+                    throw new OfferNotValidException(offerId, "Offer " + offerId + " not found on network.");
+                }
+                throw new StellarException(ex);
+            }
+        }
 
 		BigDecimal remainAmount = StellarConverter.scale(new BigDecimal(originalOffer.getAmount()));
 		BigDecimal refundAmount = null;
