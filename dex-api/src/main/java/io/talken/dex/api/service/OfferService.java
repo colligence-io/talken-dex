@@ -445,6 +445,7 @@ public class OfferService {
             }
 		}
 
+		// TODO : make common request retry
 		// retry for public node
 		if (offerErrorResponse != null) {
             try {
