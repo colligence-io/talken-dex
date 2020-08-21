@@ -141,8 +141,10 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		int processed = -1;
 		do {
 			processed = processNextTransactions();
-
-			if(processed < 0) break; // break if error occured while processing
+			if(processed < 0) {
+                adminAlarmService.error(logger, "Stopped Scheduler while monitor processing stellar transaction pId : {}", processed);
+			    break; // break if error occured while processing
+            }
 		} while(processed == TXREQUEST_LIMIT && !DexGovStatus.isStopped);
 	}
 

@@ -18,6 +18,7 @@ import org.web3j.utils.Convert;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Optional;
 
 @Service
 @Scope("singleton")
@@ -32,7 +33,7 @@ public class EthereumNetworkService {
 
 	private String gasOracleApiUrl;
 
-	private static final BigDecimal defaultGasPrice = BigDecimal.valueOf(20); // default 20GWEI
+	private static final BigDecimal defaultGasPrice = BigDecimal.valueOf(100); // default 20 -> 100 GWEI
 	private BigDecimal gasPrice = defaultGasPrice;
 
 	@PostConstruct
@@ -74,8 +75,9 @@ public class EthereumNetworkService {
 	private void updateGasPrice() {
 		try {
 			GasPriceOracleResult result = queryGasPrice();
-			if(this.gasPrice.compareTo(result.getStandard()) != 0) {
-				this.gasPrice = result.getStandard();
+			BigDecimal standard = GasPriceOracleResult.convert(result.getStandard());
+			if(this.gasPrice.compareTo(standard) != 0) {
+				this.gasPrice = standard;
 				logger.info("Ethereum gasPrice updated : using STANDARD = {}", this.gasPrice.toPlainString());
 			}
 		} catch(Exception ex) {
@@ -115,12 +117,24 @@ public class EthereumNetworkService {
 
 	@Data
 	public static class GasPriceOracleResult implements RestApiResponseInterface {
-		private BigDecimal safeLow;
-		private BigDecimal standard;
-		private BigDecimal fast;
-		private BigDecimal fastest;
-		private BigDecimal block_time;
-		private BigInteger blockNum;
+		private String safeLow;
+		private String standard;
+		private String fast;
+		private String fastest;
+		private String block_time;
+		private String blockNum;
+
+		public static BigDecimal convert(String strNum) {
+            if (strNum == null) {
+                return BigDecimal.ZERO;
+            }
+            try {
+                Double.parseDouble(strNum);
+                return new BigDecimal(strNum);
+            } catch (NumberFormatException nfe) {
+                return BigDecimal.ZERO;
+            }
+        }
 
 		@Override
 		public boolean checkHttpResponse(int httpStatus) {
