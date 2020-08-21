@@ -18,7 +18,6 @@ import org.web3j.utils.Convert;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Optional;
 
 @Service
 @Scope("singleton")
@@ -73,16 +72,32 @@ public class EthereumNetworkService {
 	 */
 	@Scheduled(fixedDelay = 5000)
 	private void updateGasPrice() {
+        this.gasPrice = defaultGasPrice;
+        String using = "DEFAULT_GAS_PRICE";
 		try {
 			GasPriceOracleResult result = queryGasPrice();
 			BigDecimal standard = GasPriceOracleResult.convert(result.getStandard());
-			if(this.gasPrice.compareTo(standard) != 0) {
-				this.gasPrice = standard;
-				logger.info("Ethereum gasPrice updated : using STANDARD = {}", this.gasPrice.toPlainString());
+            BigDecimal fast = GasPriceOracleResult.convert(result.getFast());
+            BigDecimal fastest = GasPriceOracleResult.convert(result.getFastest());
+            BigDecimal tempGasPrice = BigDecimal.ZERO;
+
+			if (standard.compareTo(tempGasPrice) > 0) {
+                tempGasPrice = standard;
+                using = "STANDARD";
+            } else if (fast.compareTo(tempGasPrice) > 0) {
+                tempGasPrice = fast;
+                using = "FAST";
+            } else if (fastest.compareTo(tempGasPrice) > 0) {
+                tempGasPrice = fastest;
+                using = "FASTEST";
+            }
+
+			if(this.gasPrice.compareTo(tempGasPrice) < 0) {
+				this.gasPrice = tempGasPrice;
+				logger.info("Ethereum gasPrice updated : using GasPriceOracleResult [{}] = {}", using, this.gasPrice.toPlainString());
 			}
 		} catch(Exception ex) {
-			this.gasPrice = defaultGasPrice;
-			logger.error("Cannot query gasprice oracle service, use 20 GWEI as gasPrice");
+			logger.error("Cannot query gasprice oracle service, use 100 GWEI as gasPrice");
 		}
 	}
 
