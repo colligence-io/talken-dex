@@ -113,6 +113,7 @@ public class DexSettings {
 		private String rpcUri;
 		private String infuraUri;
 		private String gasOracleUrl;
+        private String gasEtherscanUrl;
 	}
 
 	@Getter
