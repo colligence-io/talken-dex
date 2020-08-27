@@ -70,7 +70,7 @@ public class CrawlCmcLatestService {
 
 	public static class CoinMarketCapLatestResult extends CoinMarketCapResult<CMCLatestData> {}
 
-	@Scheduled(cron = "0 */12 * * * *", zone = ZONE_UTC)
+	@Scheduled(cron = "0 */12 * * * *", zone = ZONE_UTC, initialDelay = 1000)
 	private void crawl() {
 		if(DexGovStatus.isStopped) return;
         logger.debug("CMC CrawlerService started at : {}", UTCUtil.getNow());
