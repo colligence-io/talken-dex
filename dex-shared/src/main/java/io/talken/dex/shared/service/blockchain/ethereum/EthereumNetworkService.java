@@ -78,7 +78,8 @@ public class EthereumNetworkService {
 	/**
 	 * update gasprice from oracle (ethGasStation Express)
 	 */
-	@Scheduled(fixedDelay = 8000)
+    // 60 min = 1000 * 60 * 60
+    @Scheduled(fixedDelay = 1000 * 60 * 60, initialDelay = 1000)
 	private void updateGasPrice() {
 	    boolean isProd = Arrays.asList(environment.getActiveProfiles()).contains("production");
         this.gasPrice = defaultGasPrice;
@@ -100,12 +101,8 @@ public class EthereumNetworkService {
                     using = "FAST";
                 }
 
-                if(this.gasPrice.compareTo(tempGasPrice) < 0) {
-                    this.gasPrice = tempGasPrice;
-                    logger.info("Ethereum gasPrice updated : using GasPriceEtherscanResult [{}] = {}", using, this.gasPrice.toPlainString());
-                } else {
-                    using = "DEFAULT";
-                }
+                this.gasPrice = tempGasPrice;
+//                logger.info("Ethereum gasPrice updated : using GasPriceEtherscanResult [{}] = {}", using, this.gasPrice.toPlainString());
                 logger.info("tempGasPrice [{}] {} = gasPrice {}", using, this.gasPrice.toPlainString(), gasPrice);
 
             } catch (IntegrationException e) {
@@ -145,6 +142,7 @@ public class EthereumNetworkService {
             } catch(Exception ex) {
                 logger.error("Cannot query gasprice oracle service, use Default({} GWEI) as gasPrice", defaultGasP);
             }
+            logger.info("env : {} / gasPrice {} = gasPrice {}", isProd, this.gasPrice.toPlainString(), gasPrice);
         }
 	}
 

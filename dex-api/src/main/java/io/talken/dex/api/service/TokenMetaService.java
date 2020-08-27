@@ -1,7 +1,9 @@
 package io.talken.dex.api.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import io.talken.common.util.PrefixedLogger;
@@ -10,6 +12,10 @@ import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TokenMetaTableService;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
 import org.bson.Document;
+import org.bson.json.Converter;
+import org.bson.json.JsonWriterSettings;
+import org.bson.json.StrictJsonWriter;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -19,6 +25,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 
@@ -73,21 +83,39 @@ public class TokenMetaService extends TokenMetaTableService {
 		}
 	}
 
-    public TotalMarketCapResult getTotalMarketCapInfo(String marketCapSymbol, String marketVolSymbol, String marketPerSymbol) {
-        TotalMarketCapResult totalMarketCapResult = new TotalMarketCapResult();
+    public TotalMarketCapResult getTotalMarketCapInfo() {
         MongoCollection<Document> collection = mongoTemplate.getCollection(COLLECTION_NAME);
-        Document lastDoc = collection.find().sort(new BasicDBObject("_id", -1)).first();
+        Document lastDoc = collection.find().sort(new BasicDBObject("updated_at", -1)).first();
 
-        Double tmc = lastDoc.get("total_market_cap", Document.class).get(marketCapSymbol, Double.class);
-        Double tv = lastDoc.get("total_volume", Document.class).get(marketVolSymbol, Double.class);
-        Double mcp = lastDoc.get("market_cap_percentage", Document.class).get(marketPerSymbol, Double.class);
-        Double mccPer24 = lastDoc.get("market_cap_change_percentage_24h_usd", Double.class);
+        if (lastDoc != null) {
+            Gson gson = new Gson();
+            JsonWriterSettings settings = JsonWriterSettings.builder()
+                    .objectIdConverter((value, writer) -> writer.writeString(value.toHexString()))
+                    .dateTimeConverter(new JsonDateTimeConverter())
+                    .int64Converter((value, writer) -> writer.writeNumber(value.toString()))
+                    .build();
 
-        totalMarketCapResult.setTotalMarketCap(String.format("%1$,.6f", tmc));
-        totalMarketCapResult.setTotalVolume(String.format("%1$,.6f", tv));
-        totalMarketCapResult.setMarketCapPer(String.format("%1$,.6f", mcp));
-        totalMarketCapResult.setMarketCapChangePercentage24hUsd(String.format("%1$,.6f", mccPer24));
+            String json = lastDoc.toJson(settings);
+            TotalMarketCapResult totalMarketCapResult = gson.fromJson(json, TotalMarketCapResult.class);
+            return totalMarketCapResult;
+        } else {
+            return null;
+        }
+    }
 
-        return totalMarketCapResult;
+    public static class JsonDateTimeConverter implements Converter<Long> {
+        static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_INSTANT
+                .withZone(ZoneId.of("UTC"));
+
+        @Override
+        public void convert(Long value, StrictJsonWriter writer) {
+            try {
+                Instant instant = new Date(value).toInstant();
+                String s = DATE_TIME_FORMATTER.format(instant);
+                writer.writeString(s);
+            } catch (Exception e) {
+                logger.error(String.format("Fail to convert offset %d to JSON date", value), e);
+            }
+        }
     }
 }

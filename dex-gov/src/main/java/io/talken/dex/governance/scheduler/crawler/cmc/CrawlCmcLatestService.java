@@ -64,25 +64,28 @@ public class CrawlCmcLatestService {
 	@Autowired
 	private DataSourceTransactionManager txMgr;
 
+    private static final String COLLECTION_NAME = "cmc";
+
 	private static AtomicLong counter = new AtomicLong(0);
 
 	public static class CoinMarketCapLatestResult extends CoinMarketCapResult<CMCLatestData> {}
 
-	@Scheduled(cron = "0 */10 * * * *", zone = ZONE_UTC)
+	@Scheduled(cron = "0 */12 * * * *", zone = ZONE_UTC)
 	private void crawl() {
 		if(DexGovStatus.isStopped) return;
         logger.debug("CMC CrawlerService started at : {}", UTCUtil.getNow());
 		counter.incrementAndGet();
 		try {
-			if(RunningProfile.isProduction()) {
-				crawlCMCLatest();
-			} else { // for saving CMC credit, run every 4 hours only when it's not production environment
-//				if(counter.get() % 24 == 0) {
-					crawlCMCLatest();
-//				} else {
-					logger.debug("Skip CMC crawler task for saving credit.");
-//				}
-			}
+            crawlCMCLatest();
+//			if(RunningProfile.isProduction()) {
+//				crawlCMCLatest();
+//			} else { // for saving CMC credit, run every 4 hours only when it's not production environment
+////				if(counter.get() % 24 == 0) {
+//					crawlCMCLatest();
+////				} else {
+//					logger.debug("Skip CMC crawler task for saving credit.");
+////				}
+//			}
 		} catch(Exception ex) {
 			logger.exception(ex);
 		}
@@ -202,6 +205,8 @@ public class CrawlCmcLatestService {
 							String quote = _qkv.getKey().toUpperCase();
 							CMCQuoteData cqd = _qkv.getValue();
 
+							// TODO :add cqd.getVolume_24h();
+
 							dslContext.insertInto(CRAWL_CMC_QUOTE,
 									CRAWL_CMC_QUOTE.ID,
 									CRAWL_CMC_QUOTE.CURRENCY,
@@ -248,7 +253,7 @@ public class CrawlCmcLatestService {
 
 				// store history in mongodb
 				try {
-					mongoTemplate.save(cmcr.getData(), "cmc");
+					mongoTemplate.save(cmcr.getData(), COLLECTION_NAME);
 				} catch(Exception ex) {
 					logger.exception(ex);
 				}

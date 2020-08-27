@@ -8,7 +8,10 @@ import io.talken.dex.api.controller.dto.TotalMarketCapResult;
 import io.talken.dex.api.service.TokenMetaService;
 import io.talken.dex.shared.TokenMetaTable;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.NotEmpty;
 
@@ -26,7 +29,7 @@ public class TokenMetaController {
 	 * @throws TalkenException
 	 */
 	@RequestMapping(value = RequestMappings.TMS_MI_LIST, method = RequestMethod.GET)
-	public DexResponse<TokenMetaTable> managedInfoList() throws TalkenException {
+	public DexResponse<TokenMetaTable> managedInfoList() {
 		return DexResponse.buildResponse(tmService.getTokenMetaManagedList());
 	}
 
@@ -49,7 +52,7 @@ public class TokenMetaController {
 	 * @throws TalkenException
 	 */
 	@RequestMapping(value = RequestMappings.TMS_TM_LIST, method = RequestMethod.GET)
-	public DexResponse<TokenMetaTable> tokenMetaList() throws TalkenException {
+	public DexResponse<TokenMetaTable> tokenMetaList() {
 		return DexResponse.buildResponse(tmService.getTokenMetaList());
 	}
 
@@ -59,15 +62,8 @@ public class TokenMetaController {
      * @return
      * @throws TalkenException
      */
-    @RequestMapping(value = RequestMappings.TMS_TMC_INFO, method = RequestMethod.POST)
-    public DexResponse<TotalMarketCapResult> totalMarketCapInfo(
-            @RequestParam(defaultValue = "usd")
-                    String marketCapSymbol,
-            @RequestParam(defaultValue = "usd")
-                    String marketVolSymbol,
-            @RequestParam(defaultValue = "btc")
-                    String marketPerSymbol
-    ) throws TalkenException {
-        return DexResponse.buildResponse(tmService.getTotalMarketCapInfo(marketCapSymbol, marketVolSymbol, marketPerSymbol));
+    @RequestMapping(value = RequestMappings.TMS_TMC_INFO, method = RequestMethod.GET)
+    public DexResponse<TotalMarketCapResult> totalMarketCapInfo() {
+        return DexResponse.buildResponse(tmService.getTotalMarketCapInfo());
     }
 }
