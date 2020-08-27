@@ -77,15 +77,15 @@ public class CrawlCmcLatestService {
 		counter.incrementAndGet();
 		try {
             crawlCMCLatest();
-//			if(RunningProfile.isProduction()) {
-//				crawlCMCLatest();
-//			} else { // for saving CMC credit, run every 4 hours only when it's not production environment
-////				if(counter.get() % 24 == 0) {
-//					crawlCMCLatest();
-////				} else {
-//					logger.debug("Skip CMC crawler task for saving credit.");
-////				}
-//			}
+			if(RunningProfile.isProduction()) {
+				crawlCMCLatest();
+			} else { // for saving CMC credit, run every 4 hours only when it's not production environment
+				if(counter.get() % 24 == 0) {
+					crawlCMCLatest();
+				} else {
+					logger.debug("Skip CMC crawler task for saving credit.");
+				}
+			}
 		} catch(Exception ex) {
 			logger.exception(ex);
 		}

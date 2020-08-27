@@ -10,7 +10,6 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.result.DeleteResult;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.slack.AdminAlarmService;
@@ -30,10 +29,11 @@ import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static io.talken.common.CommonConsts.ZONE_UTC;
 
 @Service
 @Scope("singleton")
@@ -71,14 +71,19 @@ public class CrawlCoinGeckoService {
     }
 
     // 60 min = 1000 * 60 * 60
-//    @Scheduled(fixedDelay = 1000 * 60 * 60, initialDelay = 1000)
     @Scheduled(fixedDelay = 1000 * 60 * 60 * 12, initialDelay = 1000)
     private void crawl() {
         if(DexGovStatus.isStopped) return;
         logger.debug("CoinGecko CrawlerService started at : {}", UTCUtil.getNow());
+        counter.incrementAndGet();
         try {
             if (checkRateLimit()) {
                 getMarketCapData("global");
+                if(counter.get() % 24 == 0) {
+                    getMarketCapData("global");
+                } else {
+                    logger.debug("Skip CMC crawler task for saving credit.");
+                }
             }
         } catch(Exception ex) {
             logger.exception(ex);

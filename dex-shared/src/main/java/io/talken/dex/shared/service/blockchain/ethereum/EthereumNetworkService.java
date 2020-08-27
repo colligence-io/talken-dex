@@ -1,6 +1,7 @@
 package io.talken.dex.shared.service.blockchain.ethereum;
 
 
+import io.talken.common.RunningProfile;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.integration.IntegrationResult;
@@ -10,7 +11,6 @@ import io.talken.dex.shared.DexSettings;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
-import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
@@ -19,15 +19,12 @@ import org.web3j.utils.Convert;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
 
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
 public class EthereumNetworkService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumNetworkService.class);
-
-    private final Environment environment;
 
 	private final DexSettings dexSettings;
 
@@ -81,12 +78,11 @@ public class EthereumNetworkService {
     // 60 min = 1000 * 60 * 60
     @Scheduled(fixedDelay = 1000 * 60 * 60, initialDelay = 1000)
 	private void updateGasPrice() {
-	    boolean isProd = Arrays.asList(environment.getActiveProfiles()).contains("production");
         this.gasPrice = defaultGasPrice;
         String using = "DEFAULT";
 
 	    // TODO : web3 gas staion api is unstable for prod
-        if (isProd) {
+        if (RunningProfile.isProduction()) {
             try {
                 GasPriceEtherscanResult.Result etscResult = queryEtscGasPrice().getResult();
                 BigDecimal proposal = gasConvert(etscResult.getProposeGasPrice());
@@ -102,9 +98,7 @@ public class EthereumNetworkService {
                 }
 
                 this.gasPrice = tempGasPrice;
-//                logger.info("Ethereum gasPrice updated : using GasPriceEtherscanResult [{}] = {}", using, this.gasPrice.toPlainString());
-                logger.info("tempGasPrice [{}] {} = gasPrice {}", using, this.gasPrice.toPlainString(), gasPrice);
-
+                logger.info("Ethereum gasPrice updated : using GasPriceOracleResult [{}] = {}", using, this.gasPrice.toPlainString());
             } catch (IntegrationException e) {
                 logger.error("Cannot query gasprice oracle service, use Default({} GWEI) as gasPrice", defaultGasP);
             }
@@ -127,14 +121,8 @@ public class EthereumNetworkService {
                     using = "FASTEST";
                 }
 
-                if(this.gasPrice.compareTo(tempGasPrice) < 0) {
-                    this.gasPrice = tempGasPrice;
-                    logger.info("Ethereum gasPrice updated : using GasPriceOracleResult [{}] = {}", using, this.gasPrice.toPlainString());
-                } else {
-                    using = "DEFAULT";
-                }
-
-                logger.info("tempGasPrice [{}] {} = gasPrice {}", using, this.gasPrice.toPlainString(), gasPrice);
+                this.gasPrice = tempGasPrice;
+                logger.info("Ethereum gasPrice updated : using GasPriceOracleResult [{}] = {}", using, this.gasPrice.toPlainString());
 
                 // TODO : for dev or local
                 this.gasPrice = BigDecimal.ONE;
@@ -142,7 +130,7 @@ public class EthereumNetworkService {
             } catch(Exception ex) {
                 logger.error("Cannot query gasprice oracle service, use Default({} GWEI) as gasPrice", defaultGasP);
             }
-            logger.info("env : {} / gasPrice {} = gasPrice {}", isProd, this.gasPrice.toPlainString(), gasPrice);
+            logger.info("gasPrice.toPlainString() {} = gasPrice {}", this.gasPrice.toPlainString(), gasPrice);
         }
 	}
 
