@@ -27,6 +27,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static io.talken.common.CommonConsts.ZONE_UTC;
+
 @Service
 @Scope("singleton")
 public class CrawlCoinGeckoService {
@@ -63,8 +65,8 @@ public class CrawlCoinGeckoService {
     }
 
     // 10 min = 1000 * 60 * 10
-    @Scheduled(fixedDelay = 10000)
-//    @Scheduled(cron = "*/5 * * * * ?", zone = ZONE_UTC)
+//    @Scheduled(fixedDelay = 10000)
+    @Scheduled(cron = "* */5 * * * *", zone = ZONE_UTC)
     private void crawl() {
         if(DexGovStatus.isStopped) return;
         logger.debug("CoinGecko CrawlerService started at : {}", UTCUtil.getNow());
@@ -118,16 +120,17 @@ public class CrawlCoinGeckoService {
     }
 
     private boolean checkRateLimit() {
-        long minutes = ChronoUnit.MINUTES.between(lastUpdated, LocalDateTime.now());
-        if (minutes < 10) {
-            if (counter.intValue() < RATE_LIMIT) {
-                counter.incrementAndGet();
-                return true;
-            } else {
-                counter.set(0);
+        long diff = ChronoUnit.MINUTES.between(lastUpdated, LocalDateTime.now());
+        // 1분 미만이면,
+        if (diff < 1) {
+            counter.incrementAndGet();
+            // RATE_LIMIT 초과하면?
+            if (counter.intValue() > RATE_LIMIT) {
                 logger.debug("CoinGecko API call Rate limit has been reached");
                 return false;
             }
+            logger.debug("CoinGecko API call Rate limit count : {}", counter);
+            return true;
         } else {
             counter.set(0);
             logger.debug("CoinGecko API call Rate limit reset");
