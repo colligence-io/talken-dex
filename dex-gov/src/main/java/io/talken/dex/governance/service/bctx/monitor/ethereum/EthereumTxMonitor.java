@@ -57,9 +57,7 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 	@PostConstruct
 	private void init() {
 		if(RunningProfile.isLocal()) { // destroy log db at localhost
-			ssService.of(EthereumTxMonitorStatus.class).update((s) -> {
-				s.setLastBlock(null);
-			});
+			ssService.of(EthereumTxMonitorStatus.class).update((s) -> s.setLastBlock(null));
 
 			mongoTemplate.dropCollection(COLLECTION_NAME);
 		}

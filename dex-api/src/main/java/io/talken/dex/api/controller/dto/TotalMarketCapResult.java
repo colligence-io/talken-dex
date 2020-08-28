@@ -17,8 +17,5 @@ public class TotalMarketCapResult {
     private Map market_cap_percentage;
     private BigDecimal market_cap_change_percentage_24h_usd;
     private long updated_at;
-    private Map total_market_cap_per;
-    private Map total_volume_per;
-    private int update_count;
-    private String last_update;
+    private String last_updated;
 }

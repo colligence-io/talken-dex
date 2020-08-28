@@ -25,12 +25,15 @@ import org.jooq.DSLContext;
 import org.jooq.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -70,13 +73,20 @@ public class CrawlCmcLatestService {
 
 	public static class CoinMarketCapLatestResult extends CoinMarketCapResult<CMCLatestData> {}
 
-	@Scheduled(cron = "0 */12 * * * *", zone = ZONE_UTC)
+    @PostConstruct
+    private void init() throws Exception {
+        if (mongoTemplate.getCollection(COLLECTION_NAME).countDocuments() == 0) {
+            mongoTemplate.createCollection(COLLECTION_NAME);
+        }
+    }
+
+	@Scheduled(cron = "0 */6 * * * *", zone = ZONE_UTC)
 	private void crawl() {
 		if(DexGovStatus.isStopped) return;
         logger.debug("CMC CrawlerService started at : {}", UTCUtil.getNow());
 		counter.incrementAndGet();
 		try {
-            crawlCMCLatest();
+//            crawlCMCLatest();
 			if(RunningProfile.isProduction()) {
 				crawlCMCLatest();
 			} else { // for saving CMC credit, run every 4 hours only when it's not production environment
