@@ -167,7 +167,8 @@ public class DexSettings {
 		@Setter
 		public static class _CoinMarketCap {
 			private String apiKey;
-			private String latestUrl;
+			private String cryptoCurrencyUrl;
+            private String globalMetricUrl;
 		}
 	}
 }

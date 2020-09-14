@@ -53,7 +53,8 @@ talken:
       anchor:
         apiUrl: http://192.168.0.35:3480
       coinMarketCap:
-        latestUrl: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest
+        cryptoCurrencyUrl: https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest
+        globalMetricUrl: https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/historical
 
 ################################################################################
 ## LOCAL Profile                                                               #

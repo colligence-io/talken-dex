@@ -42,8 +42,8 @@ import static io.talken.common.persistence.jooq.Tables.*;
 
 @Service
 @Scope("singleton")
-public class CrawlCmcLatestService {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(CrawlCmcLatestService.class);
+public class CrawlCmcGlobalMetricService {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(CrawlCmcGlobalMetricService.class);
 
 	private static HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
 
@@ -66,6 +66,7 @@ public class CrawlCmcLatestService {
 	private DataSourceTransactionManager txMgr;
 
     private static final String COLLECTION_NAME = "cmc";
+    private static final String API_NAME = "globalmetric";
 
 	private static AtomicLong counter = new AtomicLong(0);
 
@@ -81,7 +82,7 @@ public class CrawlCmcLatestService {
 	@Scheduled(cron = "0 */6 * * * *", zone = ZONE_UTC)
 	private void crawl() {
 		if(DexGovStatus.isStopped) return;
-        logger.debug("CMC CrawlerService started at : {}", UTCUtil.getNow());
+        logger.debug("CMC CrawlerService ["+API_NAME+"] started at : {}", UTCUtil.getNow());
 		counter.incrementAndGet();
 		try {
 //            crawlCMCLatest();
@@ -104,7 +105,7 @@ public class CrawlCmcLatestService {
 	 * @throws Exception
 	 */
 	protected void crawlCMCLatest() throws Exception {
-		GenericUrl url = new GenericUrl(govSettings.getIntegration().getCoinMarketCap().getLatestUrl());
+		GenericUrl url = new GenericUrl(govSettings.getIntegration().getCoinMarketCap().getGlobalMetricUrl());
 
 		Result<TokenMetaRecord> tmList = dslContext.selectFrom(TOKEN_META)
 				.where(TOKEN_META.CMC_ID.isNotNull())
@@ -264,7 +265,7 @@ public class CrawlCmcLatestService {
 
 				// store history in mongodb
 				try {
-					mongoTemplate.save(cmcr.getData(), COLLECTION_NAME);
+					mongoTemplate.save(cmcr.getData(), COLLECTION_NAME + "_" + API_NAME);
 				} catch(Exception ex) {
 					logger.exception(ex);
 				}
