@@ -220,6 +220,7 @@ public class CrawlCmcLatestService {
 									CRAWL_CMC_QUOTE.CURRENCY,
 									CRAWL_CMC_QUOTE.PRICE,
 									CRAWL_CMC_QUOTE.MARKET_CAP,
+                                    CRAWL_CMC_QUOTE.VOLUME_24H,
 									CRAWL_CMC_QUOTE.PERCENT_CHANGE_1H,
 									CRAWL_CMC_QUOTE.PERCENT_CHANGE_24H,
 									CRAWL_CMC_QUOTE.PERCENT_CHANGE_7D,
@@ -229,6 +230,7 @@ public class CrawlCmcLatestService {
 											quote,
 											cqd.getPrice(),
 											cqd.getMarket_cap(),
+											cqd.getVolume_24h(),
 											cqd.getPercent_change_1h(),
 											cqd.getPercent_change_24h(),
 											cqd.getPercent_change_7d(),
@@ -237,6 +239,7 @@ public class CrawlCmcLatestService {
 									.onDuplicateKeyUpdate()
 									.set(CRAWL_CMC_QUOTE.PRICE, cqd.getPrice())
 									.set(CRAWL_CMC_QUOTE.MARKET_CAP, cqd.getMarket_cap())
+                                    .set(CRAWL_CMC_QUOTE.VOLUME_24H, cqd.getVolume_24h())
 									.set(CRAWL_CMC_QUOTE.PERCENT_CHANGE_1H, cqd.getPercent_change_1h())
 									.set(CRAWL_CMC_QUOTE.PERCENT_CHANGE_24H, cqd.getPercent_change_24h())
 									.set(CRAWL_CMC_QUOTE.PERCENT_CHANGE_7D, cqd.getPercent_change_7d())
