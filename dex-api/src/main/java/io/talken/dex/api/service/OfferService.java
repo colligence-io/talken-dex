@@ -167,7 +167,6 @@ public class OfferService {
 		taskRecord.store();
 		logger.info("{} generated. userId = {}", dexTaskId, userId);
 
-
 		position = "calc_fee";
 		CalculateFeeResult feeResult;
 		try {

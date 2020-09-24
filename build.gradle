@@ -67,7 +67,7 @@ subprojects {
     }
 
     dependencies {
-        compile('io.talken:java-common:20200923-1') { changing = true }
+        compile('io.talken:java-common:20200924-1') { changing = true }
 
         annotationProcessor('org.projectlombok:lombok:1.18.8')
         compileOnly('org.projectlombok:lombok:1.18.8')

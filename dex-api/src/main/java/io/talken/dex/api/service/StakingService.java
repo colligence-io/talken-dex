@@ -93,7 +93,7 @@ public class StakingService {
         final Asset stakingAssetType = tmService.getAssetType(stakingEventAssetCode);
 
         BigDecimal userAssetBalance = tradeWallet.getBalance(stakingAssetType);
-        long stakingEventId = checkAvailable(userId, stakingEventCode, stakingEventAssetCode, userAssetBalance, stakingAmount, isStaking);
+        StakingEventRecord stakingEventRecord = checkAvailable(userId, stakingEventCode, stakingEventAssetCode, userAssetBalance, stakingAmount, isStaking);
 
         String position;
 
@@ -102,7 +102,8 @@ public class StakingService {
         taskRecord.setUserId(userId);
         taskRecord.setTasktype(taskType);
         taskRecord.setTradeaddr(tradeWallet.getAccountId());
-        taskRecord.setStakingEventId(stakingEventId);
+        taskRecord.setHolderaddr(stakingEventRecord.getHolderaddr());
+        taskRecord.setStakingEventId(stakingEventRecord.getId());
         taskRecord.setAssetcode(stakingEventAssetCode);
         taskRecord.setAmount(stakingAmount);
         dslContext.attach(taskRecord);
@@ -239,7 +240,7 @@ public class StakingService {
 //        return checkAvailable(user.getId(), request.getStakingCode(), request.getStakingAssetCode(), userAssetBalance, stakingAmount, true) > 0;
     }
 
-    private long checkAvailable(long userId, String stakingEventCode, String stakingEventAssetCode, BigDecimal userAssetBalance, BigDecimal stakingAmount, boolean isStaking)
+    private StakingEventRecord checkAvailable(long userId, String stakingEventCode, String stakingEventAssetCode, BigDecimal userAssetBalance, BigDecimal stakingAmount, boolean isStaking)
             throws StakingEventNotFoundException, StakingAmountEnoughException, StakingUserEnoughException, StakingAlreadyExistsException, UnStakingAfterStakingException, UnStakingBeforeExpireException, StakingAfterEndException, StakingBeforeStartException, StakingBalanceNotEnoughException, StakingTooLittleAmountException, StakingTooMuchAmountException, UnStakingDisabledException, StakingTooOverAmountException, UnStakingTooOverAmountException {
         StakingEventRecord stakingEventRecord = dslContext.selectFrom(STAKING_EVENT)
                 .where(STAKING_EVENT.STAKING_CODE.eq(stakingEventCode)
@@ -349,6 +350,6 @@ public class StakingService {
         if (UTCUtil.getNow().isBefore(start)) throw new StakingBeforeStartException(stakingEventCode, stakingEventAssetCode, start);
         else if (UTCUtil.getNow().isAfter(end)) throw new StakingAfterEndException(stakingEventCode, stakingEventAssetCode, end);
 
-        return stakingEventId;
+        return stakingEventRecord;
     }
 }
