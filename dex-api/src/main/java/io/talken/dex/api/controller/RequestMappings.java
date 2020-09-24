@@ -40,6 +40,9 @@ public class RequestMappings {
     public static final String STAKING = DEX + "/staking";
     public static final String UNSTAKING = DEX + "/unstaking";
     public static final String STAKING_AVAILABLE = STAKING + "/available";
+    public static final String STAKING_LIST = STAKING + "/list";
+    public static final String STAKING_CODE = STAKING + "/code/{stakingCode}";
+    public static final String STAKING_DETAIL = STAKING + "/detail/{stakingId}";
 
 	// MiscService
 	public static final String TXLIST = DEX + "/txList"; // dexTask TxList from txMon

@@ -6,6 +6,7 @@ import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.persistence.DexTaskRecord;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
+import io.talken.common.persistence.jooq.tables.pojos.StakingEvent;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.DexTaskStakingRecord;
 import io.talken.common.persistence.jooq.tables.records.StakingEventRecord;
@@ -14,6 +15,7 @@ import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.api.controller.dto.CreateStakingRequest;
 import io.talken.dex.api.controller.dto.CreateStakingResult;
+import io.talken.dex.api.controller.dto.StakingEventDTO;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.exception.*;
 import io.talken.dex.shared.service.blockchain.stellar.*;
@@ -92,8 +94,13 @@ public class StakingService {
         final KeyPair issuerAccount = tmService.getManagedInfo(stakingEventAssetCode).dexIssuerAccount();
         final Asset stakingAssetType = tmService.getAssetType(stakingEventAssetCode);
 
+
         BigDecimal userAssetBalance = tradeWallet.getBalance(stakingAssetType);
         StakingEventRecord stakingEventRecord = checkAvailable(userId, stakingEventCode, stakingEventAssetCode, userAssetBalance, stakingAmount, isStaking);
+
+        // TODO : !!! Create Holder for Staking
+        final String holderAddr = stakingEventRecord.getHolderaddr();
+        final KeyPair holderAccount = tmService.getManagedInfo(stakingEventAssetCode).dexIssuerAccount();
 
         String position;
 
@@ -207,12 +214,8 @@ public class StakingService {
     }
 
     public boolean checkAvailable(User user, CreateStakingRequest request) {
-//        final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
-//        final BigDecimal stakingAmount = StellarConverter.scale(request.getAmount());
         final String stakingEventCode = request.getStakingCode();
         final String stakingEventAssetCode = request.getStakingAssetCode();
-//        final Asset stakingAssetType = tmService.getAssetType(stakingEventAssetCode);
-//        BigDecimal userAssetBalance = tradeWallet.getBalance(stakingAssetType);
 
         StakingEventRecord stakingEventRecord = dslContext.selectFrom(STAKING_EVENT)
                 .where(STAKING_EVENT.STAKING_CODE.eq(stakingEventCode)
@@ -222,22 +225,13 @@ public class StakingService {
         // Staking Event Check
         if (stakingEventRecord == null) return false;
 
-        long stakingEventId = stakingEventRecord.getId();
         // 모집금액 제약
         BigDecimal totalAmountLimit = stakingEventRecord.getTotalAmountLimit();
-        BigDecimal sumUserAmount = dslContext.select(sum(DEX_TASK_STAKING.AMOUNT))
-                .from(DEX_TASK_STAKING)
-                .where(DEX_TASK_STAKING.STAKING_EVENT_ID.eq(stakingEventId)
-                        .and(DEX_TASK_STAKING.ASSETCODE.eq(stakingEventAssetCode))
-                        .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.STAKING))
-                )
-                .fetchOneInto(BigDecimal.class);
-        if (sumUserAmount == null) sumUserAmount = BigDecimal.ZERO;
+        BigDecimal sumUserStakingAmount  = getSumUserStakingAmount(stakingEventRecord);
 
-        if (totalAmountLimit.compareTo(BigDecimal.ZERO) > 0 && totalAmountLimit.compareTo(sumUserAmount) <= 0)
+        if (totalAmountLimit.compareTo(BigDecimal.ZERO) > 0 && totalAmountLimit.compareTo(sumUserStakingAmount) <= 0)
             return false;
         return true;
-//        return checkAvailable(user.getId(), request.getStakingCode(), request.getStakingAssetCode(), userAssetBalance, stakingAmount, true) > 0;
     }
 
     private StakingEventRecord checkAvailable(long userId, String stakingEventCode, String stakingEventAssetCode, BigDecimal userAssetBalance, BigDecimal stakingAmount, boolean isStaking)
@@ -266,28 +260,14 @@ public class StakingService {
 
         // 모집금액 제약
         BigDecimal totalAmountLimit = stakingEventRecord.getTotalAmountLimit();
-        BigDecimal sumUserAmount = dslContext.select(sum(DEX_TASK_STAKING.AMOUNT))
-                .from(DEX_TASK_STAKING)
-                .where(DEX_TASK_STAKING.STAKING_EVENT_ID.eq(stakingEventId)
-                        .and(DEX_TASK_STAKING.ASSETCODE.eq(stakingEventAssetCode))
-                        .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.STAKING))
-                )
-                .fetchOneInto(BigDecimal.class);
-        if (sumUserAmount == null) sumUserAmount = BigDecimal.ZERO;
+        BigDecimal sumUserStakingAmount = getSumUserStakingAmount(stakingEventRecord);
 
-        if (totalAmountLimit.compareTo(BigDecimal.ZERO) > 0 && totalAmountLimit.compareTo(sumUserAmount) <= 0)
-            throw new StakingAmountEnoughException(totalAmountLimit, sumUserAmount);
+        if (totalAmountLimit.compareTo(BigDecimal.ZERO) > 0 && totalAmountLimit.compareTo(sumUserStakingAmount) <= 0)
+            throw new StakingAmountEnoughException(totalAmountLimit, sumUserStakingAmount);
 
         // 모집인원 제약
         int totalUserLimit = stakingEventRecord.getTotalUserLimit();
-        Integer sumUserCount = dslContext.select(count(DEX_TASK_STAKING.ID))
-                .from(DEX_TASK_STAKING)
-                .where(DEX_TASK_STAKING.STAKING_EVENT_ID.eq(stakingEventId)
-                        .and(DEX_TASK_STAKING.ASSETCODE.eq(stakingEventAssetCode))
-                        .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.STAKING))
-                )
-                .fetchOneInto(Integer.class);
-        if (sumUserCount == null) sumUserCount = 0;
+        Integer sumUserCount = getSumUserStakingCount(stakingEventRecord);
 
         if (totalUserLimit > 0 && totalUserLimit <= sumUserCount)
             throw new StakingUserEnoughException(totalUserLimit, sumUserCount);
@@ -320,8 +300,8 @@ public class StakingService {
             if (dupParticipate.equals(Boolean.FALSE) && sumUserTotalStakingAmount.compareTo(BigDecimal.ZERO) > 0)
                 throw new StakingAlreadyExistsException(stakingEventCode, stakingEventAssetCode);
             // 참여 금액 오버
-            if (totalAmountLimit.compareTo(sumUserAmount.add(currentTotalStakingAmount)) < 0)
-                throw new StakingTooOverAmountException(totalAmountLimit.subtract(sumUserAmount.add(currentTotalStakingAmount)));
+            if (totalAmountLimit.compareTo(sumUserStakingAmount.add(currentTotalStakingAmount)) < 0)
+                throw new StakingTooOverAmountException(totalAmountLimit.subtract(sumUserStakingAmount.add(currentTotalStakingAmount)));
         }
 
         // unstaking 제약
@@ -351,5 +331,108 @@ public class StakingService {
         else if (UTCUtil.getNow().isAfter(end)) throw new StakingAfterEndException(stakingEventCode, stakingEventAssetCode, end);
 
         return stakingEventRecord;
+    }
+
+    public StakingEventDTO getStakingEvent(long stakingId) throws StakingEventNotFoundException {
+        StakingEventDTO dto = new StakingEventDTO();
+        StakingEventRecord stakingEventRecord = dslContext.selectFrom(STAKING_EVENT)
+                .where(STAKING_EVENT.ID.eq(stakingId))
+                .fetchAny();
+        if (stakingEventRecord == null) throw new StakingEventNotFoundException(stakingId);
+
+        dto.setStakingEvent(stakingEventRecord.into(STAKING_EVENT).into(StakingEvent.class));
+
+        BigDecimal sumUserStakingAmount = getSumUserStakingAmount(stakingEventRecord);
+        dto.setTotalUserAmount(sumUserStakingAmount);
+
+        BigDecimal totalAmountLimit = stakingEventRecord.getTotalAmountLimit();
+        if (totalAmountLimit.compareTo(BigDecimal.ZERO) > 0 && sumUserStakingAmount.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal amountRate = sumUserStakingAmount.divide(totalAmountLimit)
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(2, BigDecimal.ROUND_HALF_UP);
+            dto.setAmountRate(amountRate);
+        } else {
+            dto.setAmountRate(BigDecimal.ZERO);
+        }
+
+        Integer sumUserCount = getSumUserStakingCount(stakingEventRecord);
+        dto.setTotalUserCount(sumUserCount);
+
+        Integer totalUserCountLimit = stakingEventRecord.getTotalUserLimit();
+        if (totalUserCountLimit > 0 && sumUserCount > 0) {
+            BigDecimal userRate = BigDecimal.valueOf(sumUserCount).divide(BigDecimal.valueOf(totalUserCountLimit))
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(2, BigDecimal.ROUND_HALF_UP);
+            dto.setUserRate(userRate);
+        } else {
+            dto.setUserRate(BigDecimal.ZERO);
+        }
+
+        LocalDateTime start = stakingEventRecord.getStartTimestamp();
+        LocalDateTime end = stakingEventRecord.getEndTimestamp();
+        LocalDateTime expr = stakingEventRecord.getExprTimestamp();
+        LocalDateTime now = UTCUtil.getNow();
+
+        StakingEventDTO.StakingStateEnum stateEnum = StakingEventDTO.StakingStateEnum.PREFARE;
+        if (now.isAfter(start) && now.isBefore(end)) stateEnum = StakingEventDTO.StakingStateEnum.OPEN;
+        else if (now.isAfter(end)) stateEnum = StakingEventDTO.StakingStateEnum.CLOSE;
+        // TODO : expr
+//        else if (now.isAfter(expr)) stateEnum = StakingEventDTO.StakingStateEnum.COMPLETE;
+        dto.setStakingState(stateEnum);
+
+        return dto;
+    }
+
+    private BigDecimal getSumUserStakingAmount(StakingEventRecord stakingEventRecord) {
+        long stakingEventId = stakingEventRecord.getId();
+        String stakingEventAssetCode = stakingEventRecord.getAssetCode();
+
+        BigDecimal sumUserStakingAmount = dslContext.select(sum(DEX_TASK_STAKING.AMOUNT))
+                .from(DEX_TASK_STAKING)
+                .where(DEX_TASK_STAKING.STAKING_EVENT_ID.eq(stakingEventId)
+                        .and(DEX_TASK_STAKING.ASSETCODE.eq(stakingEventAssetCode))
+                        .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.STAKING))
+                )
+                .fetchOneInto(BigDecimal.class);
+        if (sumUserStakingAmount == null) sumUserStakingAmount = BigDecimal.ZERO;
+
+        BigDecimal sumUserUnStakingAmount = dslContext.select(sum(DEX_TASK_STAKING.AMOUNT))
+                .from(DEX_TASK_STAKING)
+                .where(DEX_TASK_STAKING.STAKING_EVENT_ID.eq(stakingEventId)
+                        .and(DEX_TASK_STAKING.ASSETCODE.eq(stakingEventAssetCode))
+                        .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.UNSTAKING))
+                )
+                .fetchOneInto(BigDecimal.class);
+        if (sumUserUnStakingAmount == null) sumUserUnStakingAmount = BigDecimal.ZERO;
+
+        return sumUserStakingAmount.subtract(sumUserUnStakingAmount);
+    }
+
+    // TODO : !!! 수정 필요. group by user. user별 staking/unstaking 총량 mapping 하여 소거.
+    private Integer getSumUserStakingCount(StakingEventRecord stakingEventRecord) {
+        long stakingEventId = stakingEventRecord.getId();
+        String stakingEventAssetCode = stakingEventRecord.getAssetCode();
+
+        Integer sumStakingUserCount = dslContext.select(count(DEX_TASK_STAKING.ID))
+                .from(DEX_TASK_STAKING)
+                .where(DEX_TASK_STAKING.STAKING_EVENT_ID.eq(stakingEventId)
+                        .and(DEX_TASK_STAKING.ASSETCODE.eq(stakingEventAssetCode))
+                        .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.STAKING))
+                )
+                .groupBy(DEX_TASK_STAKING.USER_ID)
+                .fetchOneInto(Integer.class);
+        if (sumStakingUserCount == null) sumStakingUserCount = 0;
+
+        Integer sumUnStakingUserCount = dslContext.select(count(DEX_TASK_STAKING.ID))
+                .from(DEX_TASK_STAKING)
+                .where(DEX_TASK_STAKING.STAKING_EVENT_ID.eq(stakingEventId)
+                        .and(DEX_TASK_STAKING.ASSETCODE.eq(stakingEventAssetCode))
+                        .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.UNSTAKING))
+                )
+                .groupBy(DEX_TASK_STAKING.USER_ID)
+                .fetchOneInto(Integer.class);
+        if (sumUnStakingUserCount == null) sumUnStakingUserCount = 0;
+
+        return sumStakingUserCount - sumUnStakingUserCount;
     }
 }
