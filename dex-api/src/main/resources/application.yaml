@@ -26,6 +26,8 @@ talken:
 ---
 spring:
   profiles: local
+server:
+  port: 8081
 vault:
   uri: "http://192.168.0.30:8200"
   app-role: "tkn-dex-api"

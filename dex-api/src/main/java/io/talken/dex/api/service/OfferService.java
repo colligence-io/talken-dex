@@ -141,7 +141,8 @@ public class OfferService {
 	 * @throws TradeWalletRebalanceException
 	 * @throws TokenMetaNotManagedException
 	 */
-	private CreateOfferResult createOffer(User user, boolean isSell, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException {
+	private CreateOfferResult createOffer(User user, boolean isSell, CreateOfferRequest request)
+            throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException {
 		final DexTaskTypeEnum taskType = (isSell) ? DexTaskTypeEnum.OFFER_CREATE_SELL : DexTaskTypeEnum.OFFER_CREATE_BUY;
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(taskType);
 		final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);

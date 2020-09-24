@@ -36,6 +36,11 @@ public class RequestMappings {
 	public static final String OFFER_BUY_CREATE_TASK = OFFER_BUY + "/create";
 	public static final String OFFER_BUY_DELETE_TASK = OFFER_BUY + "/delete";
 
+    // StakingService
+    public static final String STAKING = DEX + "/staking";
+    public static final String UNSTAKING = DEX + "/unstaking";
+    public static final String STAKING_AVAILABLE = STAKING + "/available";
+
 	// MiscService
 	public static final String TXLIST = DEX + "/txList"; // dexTask TxList from txMon
 	public static final String CONVERT_ASSET = DEX + "/convert";

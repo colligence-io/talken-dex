@@ -224,7 +224,7 @@ public class UserRewardBctxService {
 			if(userWalletAddress == null) {
 				// Luniverse address not found
 				// Postpone reward for 24 hours.
-				logger.warn("User {} wallet does not containes {} wallet address. postpone reward action for 24 hours", rewardRecord.getUserId(), meta.getSymbol());
+				logger.warn("User {} wallet does not contain {} wallet address. postpone reward action for 24 hours", rewardRecord.getUserId(), meta.getSymbol());
 				rewardRecord.setScheduleTimestamp(UTCUtil.getNow().plusHours(24));
 				rewardRecord.store();
 				return null;
