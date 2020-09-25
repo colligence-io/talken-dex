@@ -347,9 +347,9 @@ public class StakingService {
 
         BigDecimal totalAmountLimit = stakingEventRecord.getTotalAmountLimit();
         if (totalAmountLimit.compareTo(BigDecimal.ZERO) > 0 && sumUserStakingAmount.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal amountRate = sumUserStakingAmount.divide(totalAmountLimit)
+            BigDecimal amountRate = sumUserStakingAmount
                     .multiply(BigDecimal.valueOf(100))
-                    .setScale(2, BigDecimal.ROUND_HALF_UP);
+                    .divide(totalAmountLimit, 2, BigDecimal.ROUND_HALF_UP);
             dto.setAmountRate(amountRate);
         } else {
             dto.setAmountRate(BigDecimal.ZERO);
@@ -360,9 +360,9 @@ public class StakingService {
 
         Integer totalUserCountLimit = stakingEventRecord.getTotalUserLimit();
         if (totalUserCountLimit > 0 && sumUserCount > 0) {
-            BigDecimal userRate = BigDecimal.valueOf(sumUserCount).divide(BigDecimal.valueOf(totalUserCountLimit))
+            BigDecimal userRate = BigDecimal.valueOf(sumUserCount)
                     .multiply(BigDecimal.valueOf(100))
-                    .setScale(2, BigDecimal.ROUND_HALF_UP);
+                    .divide(BigDecimal.valueOf(totalUserCountLimit), 2, BigDecimal.ROUND_HALF_UP);
             dto.setUserRate(userRate);
         } else {
             dto.setUserRate(BigDecimal.ZERO);
