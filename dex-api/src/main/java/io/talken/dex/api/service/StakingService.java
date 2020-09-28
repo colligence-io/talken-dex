@@ -426,16 +426,13 @@ public class StakingService {
         long stakingEventId = stakingEventRecord.getId();
         String stakingEventAssetCode = stakingEventRecord.getAssetCode();
 
-        logger.error("{}, {}", stakingEventId, stakingEventAssetCode);
-
-
         Integer sumStakingUserCount = dslContext.select(count(DEX_TASK_STAKING.ID))
                 .from(DEX_TASK_STAKING)
                 .where(DEX_TASK_STAKING.STAKING_EVENT_ID.eq(stakingEventId)
                         .and(DEX_TASK_STAKING.ASSETCODE.eq(stakingEventAssetCode))
                         .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.STAKING))
                 )
-//                .groupBy(DEX_TASK_STAKING.USER_ID)
+                .groupBy(DEX_TASK_STAKING.USER_ID)
                 .fetchOneInto(Integer.class);
         if (sumStakingUserCount == null) sumStakingUserCount = 0;
 
