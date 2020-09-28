@@ -260,7 +260,7 @@ public class StakingService {
         long stakingEventId = stakingEventRecord.getId();
 
         // 참여 금액 제약
-        if (userAssetBalance.compareTo(stakingAmount) < 0)
+        if (userAssetBalance == null || userAssetBalance.compareTo(stakingAmount) < 0)
             throw new StakingBalanceNotEnoughException(userAssetBalance, stakingAmount);
         // 참여 금액 제약(min)
         final BigDecimal minUserAmountLimit = stakingEventRecord.getMinUserAmountLimit();
