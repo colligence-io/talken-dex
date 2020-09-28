@@ -292,7 +292,7 @@ public class StakingService {
                         .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.STAKING))
                         .and(DEX_TASK_STAKING.USER_ID.eq(userId))
                 )
-                .fetchOneInto(BigDecimal.class);
+                .fetchAnyInto(BigDecimal.class);
         if (sumUserTotalStakingAmount == null) sumUserTotalStakingAmount = BigDecimal.ZERO;
 
         BigDecimal sumUserTotalUnStakingAmount = dslContext.selectFrom(DEX_TASK_STAKING)
@@ -301,7 +301,7 @@ public class StakingService {
                         .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.UNSTAKING))
                         .and(DEX_TASK_STAKING.USER_ID.eq(userId))
                 )
-                .fetchOneInto(BigDecimal.class);
+                .fetchAnyInto(BigDecimal.class);
         if (sumUserTotalUnStakingAmount == null) sumUserTotalUnStakingAmount = BigDecimal.ZERO;
 
         BigDecimal currentTotalStakingAmount = sumUserTotalStakingAmount.subtract(sumUserTotalUnStakingAmount);
@@ -406,7 +406,7 @@ public class StakingService {
                         .and(DEX_TASK_STAKING.ASSETCODE.eq(stakingEventAssetCode))
                         .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.STAKING))
                 )
-                .fetchOneInto(BigDecimal.class);
+                .fetchAnyInto(BigDecimal.class);
         if (sumUserStakingAmount == null) sumUserStakingAmount = BigDecimal.ZERO;
 
         BigDecimal sumUserUnStakingAmount = dslContext.select(sum(DEX_TASK_STAKING.AMOUNT))
@@ -415,7 +415,7 @@ public class StakingService {
                         .and(DEX_TASK_STAKING.ASSETCODE.eq(stakingEventAssetCode))
                         .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.UNSTAKING))
                 )
-                .fetchOneInto(BigDecimal.class);
+                .fetchAnyInto(BigDecimal.class);
         if (sumUserUnStakingAmount == null) sumUserUnStakingAmount = BigDecimal.ZERO;
 
         return sumUserStakingAmount.subtract(sumUserUnStakingAmount);
@@ -433,7 +433,7 @@ public class StakingService {
                         .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.STAKING))
                 )
                 .groupBy(DEX_TASK_STAKING.USER_ID)
-                .fetchOneInto(Integer.class);
+                .fetchAnyInto(Integer.class);
         if (sumStakingUserCount == null) sumStakingUserCount = 0;
 
         Integer sumUnStakingUserCount = dslContext.select(count(DEX_TASK_STAKING.ID))
@@ -443,7 +443,7 @@ public class StakingService {
                         .and(DEX_TASK_STAKING.TASKTYPE.eq(DexTaskTypeEnum.UNSTAKING))
                 )
                 .groupBy(DEX_TASK_STAKING.USER_ID)
-                .fetchOneInto(Integer.class);
+                .fetchAnyInto(Integer.class);
         if (sumUnStakingUserCount == null) sumUnStakingUserCount = 0;
 
         return sumStakingUserCount - sumUnStakingUserCount;
