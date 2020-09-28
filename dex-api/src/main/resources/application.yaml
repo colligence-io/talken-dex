@@ -49,7 +49,7 @@ vault:
 logging:
   level:
     io.colligence: INFO
-#    org.jooq.tools.LoggerListener: DEBUG
+    org.jooq.tools.LoggerListener: DEBUG
 
 ###############################################################################
 # PRODUCTION Profile                                                          #
