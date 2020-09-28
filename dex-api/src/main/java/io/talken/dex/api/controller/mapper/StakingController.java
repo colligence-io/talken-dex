@@ -42,7 +42,7 @@ public class StakingController {
 	@AuthRequired
 	@RequestMapping(value = RequestMappings.STAKING_AVAILABLE, method = RequestMethod.POST)
 	public DexResponse<Boolean> checkAvailable(@RequestBody CreateStakingRequest postBody) {
-		return DexResponse.buildResponse(stakingService.checkAvailable(authInfo.getUser(), postBody));
+		return DexResponse.buildResponse(stakingService.checkStakingAvailable(authInfo.getUser(), postBody));
 	}
 
 //    @RequestMapping(value = RequestMappings.STAKING_LIST, method = RequestMethod.GET)

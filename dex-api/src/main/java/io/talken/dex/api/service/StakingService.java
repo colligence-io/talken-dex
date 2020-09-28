@@ -213,11 +213,12 @@ public class StakingService {
         return result;
     }
 
-    public boolean checkAvailable(User user, CreateStakingRequest request) {
+    public boolean checkStakingAvailable(User user, CreateStakingRequest request) {
         final String stakingEventCode = request.getStakingCode();
         final String stakingEventAssetCode = request.getStakingAssetCode();
 
-        StakingEventRecord stakingEventRecord = dslContext.selectFrom(STAKING_EVENT)
+        StakingEventRecord stakingEventRecord = dslContext
+                .selectFrom(STAKING_EVENT)
                 .where(STAKING_EVENT.STAKING_CODE.eq(stakingEventCode)
                         .and(STAKING_EVENT.ASSET_CODE.eq(stakingEventAssetCode)))
                 .fetchAny();
@@ -225,9 +226,21 @@ public class StakingService {
         // Staking Event Check
         if (stakingEventRecord == null) return false;
 
+        // 중복참여
+        Boolean dupParticipate = stakingEventRecord.getDupParticipate();
+        if (dupParticipate.equals(Boolean.FALSE)) {
+            DexTaskStakingRecord dexTaskStakingRecord = dslContext.selectFrom(DEX_TASK_STAKING)
+                    .where(DEX_TASK_STAKING.STAKING_EVENT_ID.eq(stakingEventRecord.getId())
+                            .and(DEX_TASK_STAKING.USER_ID.eq(user.getId()))
+                    )
+                    .fetchAny();
+            if (dexTaskStakingRecord != null)
+                return false;
+        }
+
         // 모집금액 제약
         BigDecimal totalAmountLimit = stakingEventRecord.getTotalAmountLimit();
-        BigDecimal sumUserStakingAmount  = getSumUserStakingAmount(stakingEventRecord);
+        BigDecimal sumUserStakingAmount = getSumUserStakingAmount(stakingEventRecord);
 
         if (totalAmountLimit.compareTo(BigDecimal.ZERO) > 0 && totalAmountLimit.compareTo(sumUserStakingAmount) <= 0)
             return false;
