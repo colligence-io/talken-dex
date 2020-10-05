@@ -25,8 +25,7 @@ public abstract class TokenMetaTableService {
 	public void updateStorage(TokenMetaTable tmTable) {
 		TokenMetaTable newMiTable = new TokenMetaTable();
 
-		for(
-				Map.Entry<String, TokenMetaTable.Meta> _kv : tmTable.entrySet()) {
+		for(Map.Entry<String, TokenMetaTable.Meta> _kv : tmTable.entrySet()) {
 			if(_kv.getValue().isManaged()) {
 				_kv.getValue().getManagedInfo().prepareCache();
 				newMiTable.put(_kv.getKey(), _kv.getValue());
