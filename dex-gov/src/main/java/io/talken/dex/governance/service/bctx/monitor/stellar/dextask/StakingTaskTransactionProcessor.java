@@ -1,7 +1,6 @@
 package io.talken.dex.governance.service.bctx.monitor.stellar.dextask;
 
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
-import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskStakingRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.monitor.stellar.DexTaskTransactionProcessError;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_STAKING;
 
 @Component
@@ -30,7 +28,7 @@ public class StakingTaskTransactionProcessor implements DexTaskTransactionProces
 	}
 
 	/**
-	 * update dex_task_anchor signTxCatchFlag
+	 * update dex_task_staking signTxCatchFlag
 	 */
 	@Override
 	public DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt txResult) {

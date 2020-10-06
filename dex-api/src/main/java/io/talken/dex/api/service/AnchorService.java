@@ -54,7 +54,7 @@ public class AnchorService {
 
 	// constructor injections
 	private final StellarNetworkService stellarNetworkService;
-	private final TokenMetaService tmService;
+	private final TokenMetaApiService tmService;
 	private final FeeCalculationService feeCalculationService;
 	private final TradeWalletService twService;
 	private final PrivateWalletService pwService;
@@ -109,7 +109,6 @@ public class AnchorService {
 		if(sameRequest.isPresent()) {
 			throw new DuplicatedTaskFoundException(sameRequest.get().getTaskid());
 		}
-
 
 		String position;
 

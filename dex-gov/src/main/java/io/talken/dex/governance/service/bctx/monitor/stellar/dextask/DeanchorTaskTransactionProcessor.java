@@ -65,7 +65,6 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 			if(taskRecord.getDeanchorBctxId() != null || taskRecord.getSignedTxCatchFlag().equals(true))
 				return DexTaskTransactionProcessResult.success();
 
-
 			// check payments ops matching for deanchortask
 			// update task as signed tx catched
 			final String from = taskRecord.getTradeaddr(); // from

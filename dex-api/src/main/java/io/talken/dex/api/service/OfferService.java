@@ -49,7 +49,7 @@ public class OfferService {
 	private final FeeCalculationService feeCalculationService;
 	private final StellarNetworkService stellarNetworkService;
 	private final TradeWalletService twService;
-	private final TokenMetaService tmService;
+	private final TokenMetaApiService tmService;
 	private final DSLContext dslContext;
 	private final SignServerService signServerService;
 

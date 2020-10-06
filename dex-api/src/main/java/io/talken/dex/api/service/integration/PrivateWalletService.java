@@ -4,7 +4,7 @@ import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.service.TokenMetaService;
+import io.talken.dex.api.service.TokenMetaApiService;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.BlockChainPlatformNotSupportedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ public class PrivateWalletService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(PrivateWalletService.class);
 
 	@Autowired
-	private TokenMetaService tmService;
+	private TokenMetaApiService tmService;
 
 	/**
 	 * build template tx envelope for TalkenWallet Mobile App

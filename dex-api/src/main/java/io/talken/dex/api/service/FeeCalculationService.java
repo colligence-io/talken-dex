@@ -25,7 +25,7 @@ public class FeeCalculationService {
 	private ApiSettings apiSettings;
 
 	@Autowired
-	private TokenMetaService tmService;
+	private TokenMetaApiService tmService;
 
 	private BigDecimal deanchorFeeAmountTalk;
 	private BigDecimal offerFeeRatePivot;

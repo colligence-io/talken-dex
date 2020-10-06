@@ -16,7 +16,7 @@ import io.talken.common.util.integration.IntegrationResult;
 import io.talken.dex.api.ApiSettings;
 import io.talken.dex.api.graphql.relay.RelayAddContentsMutation;
 import io.talken.dex.api.graphql.relay.type.CustomType;
-import io.talken.dex.api.service.TokenMetaService;
+import io.talken.dex.api.service.TokenMetaApiService;
 import io.talken.dex.api.service.integration.relay.dto.RelayTransferDTO;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.TokenMetaTable;
@@ -42,7 +42,7 @@ public class RelayServerService {
 	private ApiSettings apiSettings;
 
 	@Autowired
-	private TokenMetaService tmService;
+	private TokenMetaApiService tmService;
 
 	private static ApolloClient apolloClient;
 	private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");

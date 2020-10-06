@@ -50,7 +50,7 @@ public class StakingService {
     private final DSLContext dslContext;
     private final TradeWalletService twService;
     private final StellarNetworkService stellarNetworkService;
-    private final TokenMetaService tmService;
+    private final TokenMetaApiService tmService;
     private final SignServerService signServerService;
 
     public CreateStakingResult createStaking(User user, CreateStakingRequest request)
@@ -93,7 +93,6 @@ public class StakingService {
 
         final KeyPair issuerAccount = tmService.getManagedInfo(stakingEventAssetCode).dexIssuerAccount();
         final Asset stakingAssetType = tmService.getAssetType(stakingEventAssetCode);
-
 
         BigDecimal userAssetBalance = tradeWallet.getBalance(stakingAssetType);
         StakingEventRecord stakingEventRecord = checkAvailable(userId, stakingEventCode, stakingEventAssetCode, userAssetBalance, stakingAmount, isStaking);
@@ -149,10 +148,9 @@ public class StakingService {
 
         position = "build_tx";
         StellarChannelTransaction.Builder sctxBuilder;
-        try {
-            sctxBuilder = stellarNetworkService.newChannelTxBuilder()
-                    .setMemo(dexTaskId.getId());
+        sctxBuilder = stellarNetworkService.newChannelTxBuilder().setMemo(dexTaskId.getId());
 
+        try {
             if(isStaking) {
                 sctxBuilder.addOperation(
                         new PaymentOperation

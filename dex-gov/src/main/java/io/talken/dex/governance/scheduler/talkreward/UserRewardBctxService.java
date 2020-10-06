@@ -59,7 +59,7 @@ public class UserRewardBctxService {
 	private AdminAlarmService alarmService;
 
 	@Autowired
-	private TokenMetaGovService metaService;
+	private TokenMetaGovService tmService;
 
 	@Autowired
 	private TalkenWalletService pwService;
@@ -74,13 +74,15 @@ public class UserRewardBctxService {
 
 	private boolean isSuspended = false;
 
+    private final String _CLAZZ_NAME = this.getClass().getSimpleName();
+
 	public void suspend() {
-		logger.info("UserRewardService SUSPENDED by admin.");
+		logger.info("{} SUSPENDED by admin.", _CLAZZ_NAME);
 		isSuspended = true;
 	}
 
 	public void resume() {
-		logger.info("UserRewardService RESUMED by admin.");
+		logger.info("{} RESUMED by admin.", _CLAZZ_NAME);
 		isSuspended = false;
 	}
 
@@ -140,7 +142,7 @@ public class UserRewardBctxService {
 			final String assetCode = rewardRecord.getAssetcode();
 			TokenMetaTable.Meta meta;
 			try {
-				meta = metaService.getTokenMeta(assetCode);
+				meta = tmService.getTokenMeta(assetCode);
 			} catch(TokenMetaNotFoundException ex) {
 				if(!metaMissing.containsKey(assetCode)) {
 					metaMissing.put(assetCode, new AtomicInteger());

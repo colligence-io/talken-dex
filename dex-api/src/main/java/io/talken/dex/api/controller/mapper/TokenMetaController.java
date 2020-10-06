@@ -5,7 +5,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
 import io.talken.dex.api.controller.dto.TotalMarketCapResult;
-import io.talken.dex.api.service.TokenMetaService;
+import io.talken.dex.api.service.TokenMetaApiService;
 import io.talken.dex.shared.TokenMetaTable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +20,7 @@ public class TokenMetaController {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaController.class);
 
 	@Autowired
-	private TokenMetaService tmService;
+	private TokenMetaApiService tmService;
 
 	/**
 	 * managed meta list

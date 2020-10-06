@@ -30,8 +30,8 @@ import java.util.Optional;
 
 @Service
 @Scope("singleton")
-public class TokenMetaService extends TokenMetaTableService {
-	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaService.class);
+public class TokenMetaApiService extends TokenMetaTableService {
+	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaApiService.class);
 
     private static final String COLLECTION_NAME = "coin_gecko";
 

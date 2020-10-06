@@ -19,7 +19,7 @@ public class AssetConvertService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AssetConvertService.class);
 
 	@Autowired
-	private TokenMetaService tmService;
+	private TokenMetaApiService tmService;
 
 	// interchange assets, in order
 	private static final String[] INTERCHANGE = new String[]{"BTC", "ETH", "XLM", "CTX"};

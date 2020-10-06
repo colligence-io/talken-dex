@@ -61,7 +61,7 @@ public class WalletService {
 	private DSLContext dslContext;
 
 	@Autowired
-	private TokenMetaService tmService;
+	private TokenMetaApiService tmService;
 
 	@Autowired
 	private RedisTemplate<String, Object> redisTemplate;
