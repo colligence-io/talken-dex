@@ -24,7 +24,7 @@ spring:
       test-on-borrow: true
       validation-query: SELECT 1
   application:
-    version: gov-1.5.5
+    version: gov-1.5.6
 
 talken:
   dex:

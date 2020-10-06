@@ -13,7 +13,7 @@ spring:
       enabled: true
       force: true
   application:
-    version: api-1.5.5
+    version: api-1.5.6
 
 talken:
   dex:
