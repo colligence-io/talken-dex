@@ -85,14 +85,15 @@ public class StakingRetryService {
     }
 
     /**
-     * check reward, queue bctx
+     * retry missed staking, queue
      */
     @Scheduled(fixedDelay = 60000, initialDelay = 4000)
-    private void rewardToBctx() {
+    private void stakingRetry() {
         if(isSuspended) return;
         if(DexGovStatus.isStopped) return;
 
         long ts = UTCUtil.getNowTimestamp_s();
+        logger.debug("stakingRetry Scheduled...{}", ts);
 
         // unuse
         // Condition cond = DEX_TASK_STAKING.SIGNED_TX_CATCH_FLAG.isNull().or(DEX_TASK_STAKING.ERRORCODE.isNotNull());
