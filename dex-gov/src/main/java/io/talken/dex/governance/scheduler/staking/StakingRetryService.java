@@ -1,4 +1,4 @@
-package io.talken.dex.governance.scheduler.talkreward;
+package io.talken.dex.governance.scheduler.staking;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.exception.TalkenException;

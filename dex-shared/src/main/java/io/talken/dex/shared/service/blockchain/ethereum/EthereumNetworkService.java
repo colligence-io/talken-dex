@@ -83,19 +83,23 @@ public class EthereumNetworkService {
 
 	    // TODO : web3 gas staion api is unstable for prod
         if (RunningProfile.isProduction()) {
+            // use ethescan
             try {
                 GasPriceEtherscanResult.Result etscResult = queryEtscGasPrice().getResult();
-                BigDecimal proposal = gasConvert(etscResult.getProposeGasPrice());
+//                BigDecimal proposal = gasConvert(etscResult.getProposeGasPrice());
                 BigDecimal fast = gasConvert(etscResult.getFastGasPrice());
                 BigDecimal tempGasPrice = BigDecimal.ZERO;
+//                if (proposal.compareTo(tempGasPrice) > 0) {
+//                    tempGasPrice = proposal;
+//                    using = "PROPOSAL";
+//                } else if (fast.compareTo(tempGasPrice) > 0) {
+//                    tempGasPrice = fast;
+//                    using = "FAST";
+//                }
 
-                if (proposal.compareTo(tempGasPrice) > 0) {
-                    tempGasPrice = proposal;
-                    using = "PROPOSAL";
-                } else if (fast.compareTo(tempGasPrice) > 0) {
-                    tempGasPrice = fast;
-                    using = "FAST";
-                }
+                // use only fast
+                tempGasPrice = fast;
+                using = "FAST";
 
                 this.gasPrice = tempGasPrice;
                 logger.info("Ethereum gasPrice updated : using GasPriceOracleResult [{}] = {}", using, this.gasPrice.toPlainString());
@@ -103,6 +107,7 @@ public class EthereumNetworkService {
                 logger.error("Cannot query gasprice oracle service, use Default({} GWEI) as gasPrice", defaultGasP);
             }
         } else {
+            // use oracle
             try {
                 GasPriceOracleResult result = queryGasPrice();
                 BigDecimal standard = gasConvert(result.getStandard());
