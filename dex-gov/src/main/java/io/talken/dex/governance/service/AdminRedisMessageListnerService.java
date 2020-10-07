@@ -4,10 +4,12 @@ import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.redis.RedisConsts;
 import io.talken.common.util.PostLaunchExecutor;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.scheduler.talkreward.UserRewardBctxService;
 import io.talken.dex.governance.service.management.MaMonitorService;
+import io.talken.dex.governance.service.management.NodeMonitorService;
 import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,9 @@ public class AdminRedisMessageListnerService implements MessageListener {
 
 	@Autowired
 	private MaMonitorService mamService;
+
+    @Autowired
+    private NodeMonitorService nmService;
 
 	@Autowired
 	private DSLContext dslContext;
@@ -87,6 +92,10 @@ public class AdminRedisMessageListnerService implements MessageListener {
 				DexGovStatus.isStopped = false;
 				adminAlarmService.warn(logger, "Dex Governance Service RESUMED.");
 				break;
+            case "node status":
+                StringBuilder sb = nmService.alarmNodeStatus(UTCUtil.getNow());
+                adminAlarmService.info(logger, sb.toString());
+                break;
 		}
 
 		if(command.startsWith("rebalance trade wallet ")) {

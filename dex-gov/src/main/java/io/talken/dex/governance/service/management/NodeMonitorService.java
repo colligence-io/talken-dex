@@ -20,6 +20,8 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Monitor BC Node Server status
@@ -51,30 +53,42 @@ public class NodeMonitorService {
 	private void checkAll() {
 		if(DexGovStatus.isStopped) return;
 
-		StringBuilder sb = new StringBuilder("Node Service Status\n");
+		LocalDateTime now = UTCUtil.getNow();
+		LocalDate today = now.toLocalDate();
 
-		try {
-			checkEthereumNodes(sb);
-		} catch(Exception ex) {
-			adminAlarmService.exception(logger, ex);
-		}
-		try {
-			checkStellarNodes(sb);
-		} catch(Exception ex) {
-			adminAlarmService.exception(logger, ex);
-		}
-		try {
-			checkLuniverseNodes(sb);
-		} catch(Exception ex) {
-			adminAlarmService.exception(logger, ex);
-		}
+        StringBuilder sb = alarmNodeStatus(now);
 
-		LocalDate today = UTCUtil.getNow().toLocalDate();
 		if(lastAnnounce == null || today.compareTo(lastAnnounce) != 0) {
 			adminAlarmService.info(logger, sb.toString());
 		}
 		lastAnnounce = today;
 	}
+
+	public StringBuilder alarmNodeStatus(LocalDateTime now) {
+	    logger.info("Show Node Service Status");
+        StringBuilder sb = new StringBuilder("Node Service Status\n");
+        sb.append("Now : ")
+                .append(now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                .append("\n");
+
+        try {
+            checkEthereumNodes(sb);
+        } catch(Exception ex) {
+            adminAlarmService.exception(logger, ex);
+        }
+        try {
+            checkStellarNodes(sb);
+        } catch(Exception ex) {
+            adminAlarmService.exception(logger, ex);
+        }
+        try {
+            checkLuniverseNodes(sb);
+        } catch(Exception ex) {
+            adminAlarmService.exception(logger, ex);
+        }
+
+        return sb;
+    }
 
 	private void checkEthereumNodes(StringBuilder sb) throws IOException {
 		ObjectPair<String, BigInteger> localInfo = getEthereumNodeInfo(ethereumNetworkService.getLocalClient());
