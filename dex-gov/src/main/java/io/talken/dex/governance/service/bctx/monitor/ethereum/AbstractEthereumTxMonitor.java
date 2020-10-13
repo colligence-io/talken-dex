@@ -44,7 +44,7 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 
 	private static final int MAXIMUM_LOOP = 10; // get 1000 blocks per loop, for reduce crawl load.
 	private final String networkName;
-	private static final BigInteger CONFIRM_BLOCK_COUNT = BigInteger.valueOf(10);
+	private static final BigInteger CONFIRM_BLOCK_COUNT = BigInteger.valueOf(2);
 
 	private static final int ETA_BLOCKS = 100;
 	private long[] receiptsPerBlock = new long[ETA_BLOCKS];
