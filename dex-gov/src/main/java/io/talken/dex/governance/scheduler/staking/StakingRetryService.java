@@ -39,6 +39,7 @@ import org.stellar.sdk.responses.SubmitTransactionResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
 
+import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_STAKING;
 import static io.talken.common.persistence.jooq.Tables.USER;
 
@@ -87,7 +88,9 @@ public class StakingRetryService {
     /**
      * retry missed staking, queue
      */
-    @Scheduled(fixedDelay = 60000, initialDelay = 4000)
+    // 60sec...
+//    @Scheduled(fixedDelay = 60000, initialDelay = 4000)
+    @Scheduled(cron = "0 0/30 * * * *", zone = ZONE_UTC)
     private void stakingRetry() {
         if(isSuspended) return;
         if(DexGovStatus.isStopped) return;
