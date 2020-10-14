@@ -1,10 +1,7 @@
 package io.talken.dex.api.service;
 
-import ch.qos.logback.core.encoder.ByteArrayUtil;
-import io.talken.common.exception.TalkenException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.exception.common.TokenMetaNotManagedException;
-import io.talken.common.persistence.DexTaskRecord;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.StakingEvent;
 import io.talken.common.persistence.jooq.tables.pojos.User;
@@ -12,27 +9,21 @@ import io.talken.common.persistence.jooq.tables.records.DexTaskStakingRecord;
 import io.talken.common.persistence.jooq.tables.records.StakingEventRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
-import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.api.controller.dto.CreateStakingRequest;
 import io.talken.dex.api.controller.dto.CreateStakingResult;
 import io.talken.dex.api.controller.dto.StakingEventDTO;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.exception.*;
-import io.talken.dex.shared.service.blockchain.stellar.*;
-import io.talken.dex.shared.service.integration.signer.SignServerService;
+import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
 import io.talken.dex.shared.service.tradewallet.TradeWalletInfo;
 import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.AccountRequiresMemoException;
 import org.stellar.sdk.Asset;
 import org.stellar.sdk.KeyPair;
-import org.stellar.sdk.PaymentOperation;
-import org.stellar.sdk.responses.SubmitTransactionResponse;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -49,13 +40,11 @@ public class StakingService {
 
     private final DSLContext dslContext;
     private final TradeWalletService twService;
-    private final StellarNetworkService stellarNetworkService;
     private final TokenMetaApiService tmService;
-    private final SignServerService signServerService;
 
     public CreateStakingResult createStaking(User user, CreateStakingRequest request)
-            throws TokenMetaNotFoundException, SigningException, StellarException, TradeWalletCreateFailedException,
-            TradeWalletRebalanceException, TokenMetaNotManagedException, StakingEventNotFoundException,
+            throws TokenMetaNotFoundException, TradeWalletCreateFailedException,
+            TokenMetaNotManagedException, StakingEventNotFoundException,
             StakingBalanceNotEnoughException, StakingAmountEnoughException, StakingBeforeStartException,
             UnStakingBeforeExpireException, UnStakingAfterStakingException, StakingUserEnoughException,
             StakingAlreadyExistsException, StakingAfterEndException, StakingTooLittleAmountException,
@@ -65,8 +54,8 @@ public class StakingService {
     }
 
     public CreateStakingResult createUnStaking(User user, CreateStakingRequest request)
-            throws TokenMetaNotFoundException, SigningException, StellarException, TradeWalletCreateFailedException,
-            TradeWalletRebalanceException, TokenMetaNotManagedException, StakingEventNotFoundException,
+            throws TokenMetaNotFoundException, TradeWalletCreateFailedException,
+            TokenMetaNotManagedException, StakingEventNotFoundException,
             StakingBalanceNotEnoughException, StakingAmountEnoughException, StakingBeforeStartException,
             UnStakingBeforeExpireException, UnStakingAfterStakingException, StakingUserEnoughException,
             StakingAlreadyExistsException, StakingAfterEndException, StakingTooLittleAmountException,
@@ -76,7 +65,7 @@ public class StakingService {
     }
 
     private synchronized CreateStakingResult createStaking(User user, boolean isStaking, CreateStakingRequest request)
-            throws TokenMetaNotFoundException, SigningException, StellarException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException,
+            throws TokenMetaNotFoundException, TradeWalletCreateFailedException, TokenMetaNotManagedException,
             StakingEventNotFoundException, StakingBalanceNotEnoughException, UnStakingBeforeExpireException,
             StakingAmountEnoughException, StakingBeforeStartException, StakingAlreadyExistsException,
             UnStakingAfterStakingException, StakingUserEnoughException, StakingAfterEndException,

@@ -205,7 +205,7 @@ public class StakingRetryService {
                                 .setSourceAccount(tradeWallet.getAccountId())
                                 .build()
                 )
-                        .addSigner(new StellarSignerAccount(twService.extractKeyPair(tradeWallet)));
+                .addSigner(new StellarSignerAccount(twService.extractKeyPair(tradeWallet)));
             } else if(DexTaskTypeEnum.UNSTAKING.equals(taskType)) {
                 sctxBuilder.addOperation(
                         new PaymentOperation
@@ -213,7 +213,7 @@ public class StakingRetryService {
                                 .setSourceAccount(issuerAccount.getAccountId())
                                 .build()
                 )
-                        .addSigner(new StellarSignerTSS(signServerService, issuerAccount.getAccountId()));
+                .addSigner(new StellarSignerTSS(signServerService, issuerAccount.getAccountId()));
             }
 
             // TODO : if need to pre-paid fee for staking or unstaking
@@ -250,8 +250,6 @@ public class StakingRetryService {
     }
 
     private User getUser(long userId) {
-        return dslContext.selectFrom(USER)
-                .where(USER.ID.eq(userId))
-                .fetchAnyInto(User.class);
+        return dslContext.selectFrom(USER).where(USER.ID.eq(userId)).fetchAnyInto(User.class);
     }
 }
