@@ -111,7 +111,6 @@ public class StakingRetryService {
         }
     }
 
-
     // TODO : merge dup and optimize code with API
     private void checkMissedStaking(Cursor<DexTaskStakingRecord> missedStakings, long timestamp) {
         while(missedStakings.hasNext()) {

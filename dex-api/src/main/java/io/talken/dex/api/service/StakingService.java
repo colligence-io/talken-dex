@@ -75,7 +75,7 @@ public class StakingService {
         return createStaking(user, false, request);
     }
 
-    private CreateStakingResult createStaking(User user, boolean isStaking, CreateStakingRequest request)
+    private synchronized CreateStakingResult createStaking(User user, boolean isStaking, CreateStakingRequest request)
             throws TokenMetaNotFoundException, SigningException, StellarException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException,
             StakingEventNotFoundException, StakingBalanceNotEnoughException, UnStakingBeforeExpireException,
             StakingAmountEnoughException, StakingBeforeStartException, StakingAlreadyExistsException,
@@ -83,6 +83,7 @@ public class StakingService {
             StakingTooMuchAmountException, UnStakingDisabledException, StakingTooLittleAmountException, StakingTooOverAmountException, UnStakingTooOverAmountException {
         final DexTaskTypeEnum taskType = (isStaking) ? DexTaskTypeEnum.STAKING : DexTaskTypeEnum.UNSTAKING;
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(taskType);
+
         final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
 
         final long userId = user.getId();
@@ -101,8 +102,6 @@ public class StakingService {
         final String holderAddr = stakingEventRecord.getHolderaddr();
         final KeyPair holderAccount = tmService.getManagedInfo(stakingEventAssetCode).dexIssuerAccount();
 
-        String position;
-
         DexTaskStakingRecord taskRecord = new DexTaskStakingRecord();
         taskRecord.setTaskid(dexTaskId.getId());
         taskRecord.setUserId(userId);
@@ -115,92 +114,6 @@ public class StakingService {
         dslContext.attach(taskRecord);
         taskRecord.store();
         logger.info("{} generated. userId = {}", dexTaskId, userId);
-
-        // Adjust native balance before offer
-        position = "rebalance";
-        try {
-            StellarChannelTransaction.Builder sctxBuilder = stellarNetworkService.newChannelTxBuilder();
-
-            ObjectPair<Boolean, BigDecimal> rebalanced;
-            rebalanced = twService.addNativeBalancingOperation(sctxBuilder, tradeWallet, true, stakingEventAssetCode);
-
-            if(rebalanced.first()) {
-                try {
-                    logger.debug("Rebalance trade wallet {} (#{}) for offer task.", tradeWallet.getAccountId(), userId);
-                    SubmitTransactionResponse rebalanceResponse = sctxBuilder.buildAndSubmit();
-                    if(!rebalanceResponse.isSuccess()) {
-                        ObjectPair<String, String> errorInfo = StellarConverter.getResultCodesFromExtra(rebalanceResponse);
-                        logger.error("Cannot rebalance trade wallet {} {} : {} {}", user.getId(), tradeWallet.getAccountId(), errorInfo.first(), errorInfo.second());
-                        throw new TradeWalletRebalanceException(errorInfo.first());
-                    }
-
-                    taskRecord.setRebalanceamount(rebalanced.second());
-                    taskRecord.setRebalancetxhash(rebalanceResponse.getHash());
-                    taskRecord.store();
-                } catch(IOException | AccountRequiresMemoException e) {
-                    throw new StellarException(e);
-                }
-            }
-        } catch(TalkenException tex) {
-            DexTaskRecord.writeError(taskRecord, position, tex);
-            throw tex;
-        }
-
-        position = "build_tx";
-        StellarChannelTransaction.Builder sctxBuilder;
-        sctxBuilder = stellarNetworkService.newChannelTxBuilder().setMemo(dexTaskId.getId());
-
-        try {
-            if(isStaking) {
-                sctxBuilder.addOperation(
-                        new PaymentOperation
-                                .Builder(issuerAccount.getAccountId(), stakingAssetType, StellarConverter.actualToString(stakingAmount))
-                                .setSourceAccount(tradeWallet.getAccountId())
-                                .build()
-                )
-                .addSigner(new StellarSignerAccount(twService.extractKeyPair(tradeWallet)));
-            } else {
-                sctxBuilder.addOperation(
-                        new PaymentOperation
-                                .Builder(tradeWallet.getAccountId(), stakingAssetType, StellarConverter.actualToString(stakingAmount))
-                                .setSourceAccount(issuerAccount.getAccountId())
-                                .build()
-                )
-                .addSigner(new StellarSignerTSS(signServerService, issuerAccount.getAccountId()));
-            }
-
-            // TODO : if need to pre-paid fee for staking or unstaking
-
-        } catch(TalkenException tex) {
-            DexTaskRecord.writeError(taskRecord, position, tex);
-            throw tex;
-        }
-
-        position = "build_sctx";
-        SubmitTransactionResponse txResponse;
-        // put tx info and submit tx
-        try(StellarChannelTransaction sctx = sctxBuilder.build()) {
-            taskRecord.setTxSeq(sctx.getTx().getSequenceNumber());
-            taskRecord.setTxHash(ByteArrayUtil.toHexString(sctx.getTx().hash()));
-            taskRecord.setTxXdr(sctx.getTx().toEnvelopeXdrBase64());
-            taskRecord.store();
-
-            position = "submit_sctx";
-            txResponse = sctx.submit();
-
-            if(!txResponse.isSuccess()) {
-                throw StellarException.from(txResponse);
-            }
-        } catch(TalkenException tex) {
-            DexTaskRecord.writeError(taskRecord, position, tex);
-            throw tex;
-        } catch(IOException | AccountRequiresMemoException ioex) {
-            StellarException ex = new StellarException(ioex);
-            DexTaskRecord.writeError(taskRecord, position, ex);
-            throw ex;
-        }
-
-        logger.info("{} complete. userId = {}", dexTaskId, userId);
 
         CreateStakingResult result = new CreateStakingResult();
         result.setTaskId(dexTaskId.getId());
