@@ -209,7 +209,9 @@ public class StellarNetworkService {
 			} catch(Exception ex) {
 				if(ex instanceof SubmitTransactionTimeoutResponseException) {
 					rtn = (SubmitTransactionTimeoutResponseException) ex;
-					logger.warn("Stellar TX submit timeout occured, trial = {}", i + 1);
+					logger.warn("Stellar TX submit timeout occured, trial = {}, tx = {}", i + 1, tx.toString());
+                    logger.warn("TX timeout seq = {}, srcAccount = {}, memo = {}"
+                            , tx.getSequenceNumber(), tx.getSourceAccount(), tx.getMemo());
 				} else {
 					throw ex;
 				}
