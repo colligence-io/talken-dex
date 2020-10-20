@@ -89,8 +89,8 @@ public class StakingRetryService {
      * retry missed staking, queue
      */
     // 60sec...
-//    @Scheduled(fixedDelay = 60000, initialDelay = 4000)
-    @Scheduled(cron = "0 0/30 * * * *", zone = ZONE_UTC)
+    @Scheduled(fixedDelay = 60 * 1000 * 10, initialDelay = 4000)
+//    @Scheduled(cron = "0 0/30 * * * *", zone = ZONE_UTC)
     private void stakingRetry() {
         if(isSuspended) return;
         if(DexGovStatus.isStopped) return;
