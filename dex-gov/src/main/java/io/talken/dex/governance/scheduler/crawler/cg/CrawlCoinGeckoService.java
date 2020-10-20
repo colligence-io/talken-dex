@@ -83,6 +83,7 @@ public class CrawlCoinGeckoService {
      * Crawl CG global api
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     private void getMarketCapData(String rest) throws Exception {
         String api = apis.getOrDefault(rest, "global");
 
@@ -102,7 +103,9 @@ public class CrawlCoinGeckoService {
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         CoinGeckoResult cgmcr = mapper.readValue(response.parseAsString(), CoinGeckoResult.class);
-        LinkedHashMap currentDoc = (LinkedHashMap) cgmcr.getData();
+        ObjectMapper objectMapper = new ObjectMapper();
+        LinkedHashMap<String, LocalDateTime> currentDoc = objectMapper.convertValue(cgmcr.getData(), LinkedHashMap.class);
+//        LinkedHashMap<String, LocalDateTime> currentDoc = (LinkedHashMap<String, LocalDateTime>) cgmcr.getData();
 //        logger.debug("Response CoinGecko marketCap data as ParseStream {}", cgmcr);
 
         MongoCollection collection = mongoTemplate.getCollection(COLLECTION_NAME);

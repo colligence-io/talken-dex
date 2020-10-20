@@ -64,7 +64,7 @@ public class StakingService {
         return createStaking(user, false, request);
     }
 
-    private synchronized CreateStakingResult createStaking(User user, boolean isStaking, CreateStakingRequest request)
+    protected synchronized CreateStakingResult createStaking(User user, boolean isStaking, CreateStakingRequest request)
             throws TokenMetaNotFoundException, TradeWalletCreateFailedException, TokenMetaNotManagedException,
             StakingEventNotFoundException, StakingBalanceNotEnoughException, UnStakingBeforeExpireException,
             StakingAmountEnoughException, StakingBeforeStartException, StakingAlreadyExistsException,

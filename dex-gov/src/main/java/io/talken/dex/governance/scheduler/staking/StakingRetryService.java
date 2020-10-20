@@ -39,7 +39,6 @@ import org.stellar.sdk.responses.SubmitTransactionResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
 
-import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_STAKING;
 import static io.talken.common.persistence.jooq.Tables.USER;
 
@@ -69,7 +68,7 @@ public class StakingRetryService {
     @Autowired
     private StellarNetworkService stellarNetworkService;
 
-    private static final int tickLimit = 100;
+    private static final int tickLimit = 15;
 
     private boolean isSuspended = false;
 
@@ -88,8 +87,8 @@ public class StakingRetryService {
     /**
      * retry missed staking, queue
      */
-    // 60sec...
-    @Scheduled(fixedDelay = 60 * 1000 * 10, initialDelay = 4000)
+
+    @Scheduled(fixedDelay = 60 * 1000 * 5, initialDelay = 4000)
 //    @Scheduled(cron = "0 0/30 * * * *", zone = ZONE_UTC)
     private void stakingRetry() {
         if(isSuspended) return;
@@ -105,6 +104,7 @@ public class StakingRetryService {
             checkMissedStaking(
                     dslContext.selectFrom(DEX_TASK_STAKING)
                             .where(DEX_TASK_STAKING.SIGNED_TX_CATCH_FLAG.isFalse())
+                            .orderBy(DEX_TASK_STAKING.CREATE_TIMESTAMP)
                             .limit(tickLimit)
                             .fetchLazy()
                     , ts

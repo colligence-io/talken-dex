@@ -1,5 +1,6 @@
 package io.talken.dex.governance.service.bctx.monitor.ethereum;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.exception.BctxException;
 import org.springframework.context.annotation.Scope;
@@ -21,6 +22,7 @@ public class EthereumReceiptCollector {
 
 	private final long collectionTimeout = 30;
 
+    @SuppressWarnings("unchecked")
 	public synchronized Map<String, TransactionReceipt> collect(int collectThreads, String networkName, Web3j web3j, List<Transaction> txs) throws ExecutionException, InterruptedException, TimeoutException, BctxException, IOException {
 		Map<String, TransactionReceipt> receipts = new HashMap<>();
 		if(txs.size() > 0) {
@@ -39,7 +41,9 @@ public class EthereumReceiptCollector {
 			try {
 				// wait for all collectors finished
 				for(Future collector : collectors) {
-					Map<String, TransactionReceipt> t_receipts = (Map<String, TransactionReceipt>) collector.get(collectionTimeout, TimeUnit.SECONDS);
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    HashMap<String, TransactionReceipt> t_receipts = objectMapper.convertValue(collector.get(collectionTimeout, TimeUnit.SECONDS), HashMap.class);
+//					HashMap<String, TransactionReceipt> t_receipts = (HashMap) collector.get(collectionTimeout, TimeUnit.SECONDS);
 					receipts.putAll(t_receipts);
 				}
 			} catch(TimeoutException ex) {
