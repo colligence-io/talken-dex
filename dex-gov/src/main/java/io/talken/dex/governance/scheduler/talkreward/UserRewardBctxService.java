@@ -89,7 +89,7 @@ public class UserRewardBctxService {
 	/**
 	 * check reward, queue bctx
 	 */
-	@Scheduled(fixedDelay = 60000, initialDelay = 4000)
+	@Scheduled(fixedDelay = 60 * 1000, initialDelay = 4000)
 	private void rewardToBctx() {
 		if(isSuspended) return;
 		if(DexGovStatus.isStopped) return;

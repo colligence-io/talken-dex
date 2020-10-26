@@ -44,8 +44,8 @@ import static io.talken.common.persistence.jooq.Tables.USER;
 
 @Service
 @Scope("singleton")
-public class StakingRetryService {
-    private static final PrefixedLogger logger = PrefixedLogger.getLogger(StakingRetryService.class);
+public class StakingScheduledService {
+    private static final PrefixedLogger logger = PrefixedLogger.getLogger(StakingScheduledService.class);
 
     @Autowired
     private DSLContext dslContext;
@@ -68,7 +68,7 @@ public class StakingRetryService {
     @Autowired
     private StellarNetworkService stellarNetworkService;
 
-    private static final int tickLimit = 15;
+    private int tickLimit = 15;
 
     private boolean isSuspended = false;
 
