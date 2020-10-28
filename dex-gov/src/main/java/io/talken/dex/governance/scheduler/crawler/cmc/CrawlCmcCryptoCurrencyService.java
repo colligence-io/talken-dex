@@ -79,7 +79,7 @@ public class CrawlCmcCryptoCurrencyService {
         }
     }
 
-	@Scheduled(cron = "0 */6 * * * *", zone = ZONE_UTC)
+	@Scheduled(cron = "0 */5 * * * *", zone = ZONE_UTC)
 	private void crawl() {
 		if(DexGovStatus.isStopped) return;
         logger.debug("CMC CrawlerService ["+API_NAME+"] started at : {}", UTCUtil.getNow());

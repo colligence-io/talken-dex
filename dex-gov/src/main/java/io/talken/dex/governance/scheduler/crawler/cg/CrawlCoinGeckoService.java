@@ -64,9 +64,7 @@ public class CrawlCoinGeckoService {
         this.apis.put("global", "/global");
     }
 
-    // 10 min = 1000 * 60 * 10
-//    @Scheduled(fixedDelay = 10000)
-    @Scheduled(cron = "* */5 * * * *", zone = ZONE_UTC)
+    @Scheduled(cron = "0 */5 * * * *", zone = ZONE_UTC)
     private void crawl() {
         if(DexGovStatus.isStopped) return;
         logger.debug("CoinGecko CrawlerService started at : {}", UTCUtil.getNow());
