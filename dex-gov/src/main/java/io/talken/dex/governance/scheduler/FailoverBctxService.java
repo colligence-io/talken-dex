@@ -23,6 +23,7 @@ import org.stellar.sdk.responses.AccountResponse;
 
 import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.*;
+import static org.jooq.impl.DSL.any;
 
 @Service
 @Scope("singleton")
@@ -71,12 +72,7 @@ public class FailoverBctxService {
 
         Cursor<BctxRecord> bctxRecords = dslContext.selectFrom(BCTX)
                 .where(BCTX.STATUS.eq(BctxStatusEnum.FAILED)
-                .and(
-                    (BCTX.TX_AUX.startsWith("TALKENH")
-                    .or(BCTX.TX_AUX.startsWith("TALKENI"))
-                    .or(BCTX.TX_AUX.startsWith("TALKENJ"))
-                    .or(BCTX.TX_AUX.startsWith("TALKENL")))
-                ))
+                .and(BCTX.TX_AUX.like(any("TALKENH%","TALKENI%","TALKENJ%","TALKENL%"))))
                 .limit(tickLimit)
                 .fetchLazy();
 
