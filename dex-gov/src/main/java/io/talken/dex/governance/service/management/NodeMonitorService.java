@@ -61,6 +61,7 @@ public class NodeMonitorService {
 		if(lastAnnounce == null || today.compareTo(lastAnnounce) != 0) {
 			adminAlarmService.info(logger, sb.toString());
 		}
+
 		lastAnnounce = today;
 	}
 

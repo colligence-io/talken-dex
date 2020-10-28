@@ -4,13 +4,12 @@ import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.persistence.jooq.tables.records.UserRewardRecord;
+import io.talken.common.persistence.jooq.tables.records.UserTradeWalletRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
-import io.talken.dex.governance.service.TokenMetaGovService;
-import io.talken.dex.shared.service.blockchain.stellar.StellarNetworkService;
-import io.talken.dex.shared.service.integration.signer.SignServerService;
+import io.talken.dex.shared.exception.TradeWalletCreateFailedException;
 import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import org.jooq.Cursor;
 import org.jooq.DSLContext;
@@ -20,14 +19,14 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.stellar.sdk.responses.AccountResponse;
 
-import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.*;
 
 @Service
 @Scope("singleton")
-public class FailedRetryService {
-    private static final PrefixedLogger logger = PrefixedLogger.getLogger(FailedRetryService.class);
+public class FailoverBctxService {
+    private static final PrefixedLogger logger = PrefixedLogger.getLogger(FailoverBctxService.class);
 
     @Autowired
     private DSLContext dslContext;
@@ -39,16 +38,8 @@ public class FailedRetryService {
     private AdminAlarmService alarmService;
 
     @Autowired
-    private TokenMetaGovService tmService;
-
-    @Autowired
     private TradeWalletService twService;
 
-    @Autowired
-    private SignServerService signServerService;
-
-    @Autowired
-    private StellarNetworkService stellarNetworkService;
 
     private int tickLimit = 15;
 
@@ -68,7 +59,8 @@ public class FailedRetryService {
     /**
      * retry failed record, queue
      */
-    @Scheduled(cron = "0 0/30 * * * *", zone = ZONE_UTC)
+//    @Scheduled(cron = "0 0/30 * * * *", zone = ZONE_UTC)
+    @Scheduled(fixedDelay = 60 * 1000, initialDelay = 10000)
     private synchronized void FailedBctxRetry() {
         if(isSuspended) return;
         if(DexGovStatus.isStopped) return;
@@ -77,7 +69,8 @@ public class FailedRetryService {
         logger.debug("FailedBctxRetry Scheduled...{}", ts);
 
         Cursor<BctxRecord> bctxRecords = dslContext.selectFrom(BCTX)
-                .where(BCTX.STATUS.eq(BctxStatusEnum.FAILED))
+                .where(BCTX.STATUS.eq(BctxStatusEnum.FAILED)
+                .and(BCTX.TX_AUX.startsWith("TALKENH")))
                 .limit(tickLimit)
                 .fetchLazy();
 
@@ -88,7 +81,8 @@ public class FailedRetryService {
         }
     }
 
-    @Scheduled(cron = "0 15/45 * * * *", zone = ZONE_UTC)
+//    @Scheduled(cron = "0 15/45 * * * *", zone = ZONE_UTC)
+    @Scheduled(fixedDelay = 60 * 1000, initialDelay = 5000)
     private void FailedUserRewardRetry() {
         if(isSuspended) return;
         if(DexGovStatus.isStopped) return;
@@ -96,57 +90,66 @@ public class FailedRetryService {
         long ts = UTCUtil.getNowTimestamp_s();
         logger.debug("FailedUserRewardRetry Scheduled...{}", ts);
 
-//        Cursor<UserRewardRecord> userRewardRecords = dslContext.selectFrom(USER_REWARD)
-//                .where(USER_REWARD.ERRORCODE.isNotNull())
-//                .limit(tickLimit)
-//                .fetchLazy();
-//
-//        try {
-//            checkMissed(userRewardRecords, ts);
-//        } catch(Exception ex) {
-//            alarmService.exception(logger, ex);
-//        }
+        Cursor<UserRewardRecord> userRewardRecords = dslContext.selectFrom(USER_REWARD)
+                .where(USER_REWARD.ERRORCODE.isNotNull())
+                .limit(tickLimit)
+                .fetchLazy();
+
+        try {
+            checkMissed(userRewardRecords, ts);
+        } catch(Exception ex) {
+            alarmService.exception(logger, ex);
+        }
     }
 
     // TODO : merge dup and optimize code with API
-    private <T extends Record> void checkMissed(Cursor<T> records, long timestamp) {
+    private <T extends Record> void checkMissed(Cursor<T> records, long timestamp) throws TradeWalletCreateFailedException {
         while(records.hasNext()) {
             Record record = records.fetchNext();
             // TODO : record Type Check
             if (record instanceof BctxRecord) {
                 BctxRecord bctxRecord = (BctxRecord) record;
-                logger.debug("BctxRecord : {}", bctxRecord);
+                logger.debug("BctxRecord : {} : {}", bctxRecord.getId(), bctxRecord);
 
-                bctxRecord.setStatus(BctxStatusEnum.QUEUED);
-                dslContext.attach(bctxRecord);
-                bctxRecord.store();
+//                bctxRecord.setStatus(BctxStatusEnum.QUEUED);
+//                dslContext.attach(bctxRecord);
+//                bctxRecord.store();
 
             } else if (record instanceof UserRewardRecord) {
                 UserRewardRecord userRewardRecord = (UserRewardRecord) record;
-                logger.debug("UserRewardRecord : {}", userRewardRecord);
+                logger.debug("UserRewardRecord : {} : {}", userRewardRecord.getId(), userRewardRecord);
 
-                // TODO : if trade_wallet exists.
-                Boolean activationConfirmed = dslContext.select(USER_TRADE_WALLET.ACTIVATIONCONFIRMED)
-                        .from(USER_TRADE_WALLET)
-                        .where(USER_TRADE_WALLET.USER_ID.eq(userRewardRecord.getUserId()))
-                        .fetchAnyInto(Boolean.class);
-
-                // TODO : is it real activate on stellar network
-
-                if (activationConfirmed) {
-                    userRewardRecord.setCheckFlag(Boolean.FALSE);
-                    userRewardRecord.setErrorcode(null);
-                    userRewardRecord.setErrormessage(null);
-                    dslContext.attach(userRewardRecord);
-                    userRewardRecord.store();
-                } else {
-                    // TODO : remove tradeWallet
-                }
-
+//                long userId = userRewardRecord.getUserId();
+//
+//                UserTradeWalletRecord utwRecord = dslContext.selectFrom(USER_TRADE_WALLET)
+//                        .where(USER_TRADE_WALLET.USER_ID.eq(userId))
+//                        .fetchAny();
+//                if (utwRecord != null) {
+//                    AccountResponse ar = twService.getAccountInfoFromStellar(utwRecord.getAccountid());
+//                    if(ar != null) {
+//                        logger.debug("UserTradeWalletRecord : {} : {}, {}", userId, utwRecord.toString(), ar);
+//                        resetUserReward(userRewardRecord);
+//                    } else {
+//                        utwRecord.delete();
+//                        dslContext.attach(utwRecord);
+//                        resetUserReward(userRewardRecord);
+//                    }
+//                } else {
+//                    logger.debug("UserTradeWallet NULL : {}", userId);
+//                    resetUserReward(userRewardRecord);
+//                }
             } else {
                 logger.debug("NONE RETRY");
             }
         }
+    }
+
+    private void resetUserReward(UserRewardRecord userRewardRecord) {
+        userRewardRecord.setCheckFlag(Boolean.FALSE);
+        userRewardRecord.setErrorcode(null);
+        userRewardRecord.setErrormessage(null);
+        dslContext.attach(userRewardRecord);
+        userRewardRecord.store();
     }
 
     private User getUser(long userId) {

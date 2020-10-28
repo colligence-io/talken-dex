@@ -151,9 +151,8 @@ public class UserRewardBctxService {
 				continue;
 			}
 
+            BctxRecord bctxRecord = null;
 			try {
-				BctxRecord bctxRecord;
-
 				if(rewardRecord.getPrivateWalletFlag()) {
 					bctxRecord = getPrivateWalletBctxRecord(rewardRecord, meta);
 				} else {
@@ -161,10 +160,11 @@ public class UserRewardBctxService {
 				}
 
 				if(bctxRecord != null) {
-					TransactionBlockExecutor.of(txMgr).transactional(() -> {
-						dslContext.attach(bctxRecord);
-						bctxRecord.store();
-						rewardRecord.setBctxId(bctxRecord.getId());
+                    final BctxRecord _BctxRecord = bctxRecord;
+                    TransactionBlockExecutor.of(txMgr).transactional(() -> {
+						dslContext.attach(_BctxRecord);
+                        _BctxRecord.store();
+						rewardRecord.setBctxId(_BctxRecord.getId());
 						rewardRecord.setCheckFlag(true);
 						rewardRecord.store();
 					});
@@ -175,10 +175,22 @@ public class UserRewardBctxService {
 					ds.setAmount(ds.getAmount().add(rewardRecord.getAmount()));
 				}
 			} catch(Exception ex) {
-				alarmService.error(logger, "Reward distribute failed : {} {}", ex.getClass().getSimpleName(), ex.getMessage());
-				alarmService.exception(logger, ex);
-				rewardRecord.setErrorcode(ex.getClass().getSimpleName());
-				rewardRecord.setErrormessage(ex.getMessage());
+				StringBuilder sb = new StringBuilder(ex.getMessage());
+				if (bctxRecord != null) {
+                    sb.append("[BCTX:")
+                            .append(bctxRecord)
+                            .append("] ")
+                            .append(ex.getMessage());
+
+                } else {
+                    sb.append(ex.getMessage());
+                }
+				String errorMessage = sb.toString();
+                alarmService.error(logger, "Reward distribute failed : {} {}", ex.getClass().getSimpleName(), errorMessage);
+                alarmService.exception(logger, ex);
+
+                rewardRecord.setErrorcode(ex.getClass().getSimpleName());
+				rewardRecord.setErrormessage(errorMessage);
 				rewardRecord.setCheckFlag(true);
 				rewardRecord.store();
 			}

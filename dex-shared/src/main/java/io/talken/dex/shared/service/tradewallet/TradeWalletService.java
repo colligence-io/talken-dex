@@ -163,7 +163,7 @@ public class TradeWalletService {
 	}
 
 	private TradeWalletInfo loadTradeWallet(User user, boolean ensure) throws TradeWalletCreateFailedException {
-		UserTradeWalletRecord twRecord = dslContext.selectFrom(USER_TRADE_WALLET).where(USER_TRADE_WALLET.USER_ID.eq(user.getId())).fetchOne();
+		UserTradeWalletRecord twRecord = dslContext.selectFrom(USER_TRADE_WALLET).where(USER_TRADE_WALLET.USER_ID.eq(user.getId())).fetchAny();
 		TradeWalletInfo rtn = new TradeWalletInfo(user);
 		rtn.setConfirmed(false);
 
@@ -295,7 +295,7 @@ public class TradeWalletService {
 		throw new TradeWalletCreateFailedException("Cannot confirm trade wallet from stellar network");
 	}
 
-	private AccountResponse getAccountInfoFromStellar(String accountId) throws TradeWalletCreateFailedException {
+	public AccountResponse getAccountInfoFromStellar(String accountId) throws TradeWalletCreateFailedException {
 		// check stellar account balance
 		AccountResponse accountResponse = null;
 		try {
