@@ -71,7 +71,12 @@ public class FailoverBctxService {
 
         Cursor<BctxRecord> bctxRecords = dslContext.selectFrom(BCTX)
                 .where(BCTX.STATUS.eq(BctxStatusEnum.FAILED)
-                .and(BCTX.TX_AUX.startsWith("TALKENH")))
+                .and(
+                    (BCTX.TX_AUX.startsWith("TALKENH")
+                    .or(BCTX.TX_AUX.startsWith("TALKENI"))
+                    .or(BCTX.TX_AUX.startsWith("TALKENJ"))
+                    .or(BCTX.TX_AUX.startsWith("TALKENL")))
+                ))
                 .limit(tickLimit)
                 .fetchLazy();
 
@@ -110,7 +115,7 @@ public class FailoverBctxService {
             // TODO : record Type Check
             if (record instanceof BctxRecord) {
                 BctxRecord bctxRecord = (BctxRecord) record;
-                logger.debug("BctxRecord : {} : {}", bctxRecord.getId(), bctxRecord);
+                logger.debug("BctxRecord : {} : {}", bctxRecord.getId(), bctxRecord.toString());
 
 //                bctxRecord.setStatus(BctxStatusEnum.QUEUED);
 //                dslContext.attach(bctxRecord);
@@ -118,27 +123,28 @@ public class FailoverBctxService {
 
             } else if (record instanceof UserRewardRecord) {
                 UserRewardRecord userRewardRecord = (UserRewardRecord) record;
-                logger.debug("UserRewardRecord : {} : {}", userRewardRecord.getId(), userRewardRecord);
+                logger.debug("UserRewardRecord : {} : {}", userRewardRecord.getId(), userRewardRecord.toString());
 
-//                long userId = userRewardRecord.getUserId();
+                long userId = userRewardRecord.getUserId();
 //
-//                UserTradeWalletRecord utwRecord = dslContext.selectFrom(USER_TRADE_WALLET)
-//                        .where(USER_TRADE_WALLET.USER_ID.eq(userId))
-//                        .fetchAny();
-//                if (utwRecord != null) {
-//                    AccountResponse ar = twService.getAccountInfoFromStellar(utwRecord.getAccountid());
-//                    if(ar != null) {
-//                        logger.debug("UserTradeWalletRecord : {} : {}, {}", userId, utwRecord.toString(), ar);
+                UserTradeWalletRecord utwRecord = dslContext.selectFrom(USER_TRADE_WALLET)
+                        .where(USER_TRADE_WALLET.USER_ID.eq(userId))
+                        .fetchAny();
+                if (utwRecord != null) {
+                    AccountResponse ar = twService.getAccountInfoFromStellar(utwRecord.getAccountid());
+                    if(ar != null) {
+                        logger.debug("UserTradeWalletRecord : {} : {}, {}", userId, utwRecord.toString(), ar);
 //                        resetUserReward(userRewardRecord);
-//                    } else {
+                    } else {
+                        logger.debug("UserTradeWalletRecord NOT CONFIRMED : {} : {}", userId, utwRecord.toString());
 //                        utwRecord.delete();
 //                        dslContext.attach(utwRecord);
 //                        resetUserReward(userRewardRecord);
-//                    }
-//                } else {
-//                    logger.debug("UserTradeWallet NULL : {}", userId);
-//                    resetUserReward(userRewardRecord);
-//                }
+                    }
+                } else {
+                    logger.debug("UserTradeWallet NULL : {}", userId);
+                    resetUserReward(userRewardRecord);
+                }
             } else {
                 logger.debug("NONE RETRY");
             }
