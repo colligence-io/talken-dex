@@ -89,7 +89,7 @@ public class UserRewardBctxService {
 	/**
 	 * check reward, queue bctx
 	 */
-	@Scheduled(fixedDelay = 60 * 1000, initialDelay = 4000)
+	@Scheduled(fixedDelay = 60 * 1000 * 3, initialDelay = 4000)
 	private void rewardToBctx() {
 		if(isSuspended) return;
 		if(DexGovStatus.isStopped) return;
@@ -178,10 +178,10 @@ public class UserRewardBctxService {
 				StringBuilder sb = new StringBuilder(ex.getMessage());
 				if (bctxRecord != null) {
                     sb.append("[BCTX:")
-                            .append(bctxRecord)
+                            .append(bctxRecord.getId())
                             .append("] ")
                             .append(ex.getMessage());
-
+                    rewardRecord.setBctxId(bctxRecord.getId()   );
                 } else {
                     sb.append(ex.getMessage());
                 }
