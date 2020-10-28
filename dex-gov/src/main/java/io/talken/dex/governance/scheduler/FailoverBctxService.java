@@ -110,7 +110,7 @@ public class FailoverBctxService {
             // TODO : record Type Check
             if (record instanceof BctxRecord) {
                 BctxRecord bctxRecord = (BctxRecord) record;
-                logger.debug("BctxRecord : {} : {}", bctxRecord.getId(), bctxRecord.toString());
+                logger.warn("BctxRecord : {} : {}", bctxRecord.getId(), bctxRecord.toString());
 
 //                bctxRecord.setStatus(BctxStatusEnum.QUEUED);
 //                dslContext.attach(bctxRecord);
@@ -118,7 +118,7 @@ public class FailoverBctxService {
 
             } else if (record instanceof UserRewardRecord) {
                 UserRewardRecord userRewardRecord = (UserRewardRecord) record;
-                logger.debug("UserRewardRecord : {} : {}", userRewardRecord.getId(), userRewardRecord.toString());
+                logger.warn("UserRewardRecord : {} : {}", userRewardRecord.getId(), userRewardRecord.toString());
 
                 long userId = userRewardRecord.getUserId();
 //
@@ -128,20 +128,20 @@ public class FailoverBctxService {
                 if (utwRecord != null) {
                     AccountResponse ar = twService.getAccountInfoFromStellar(utwRecord.getAccountid());
                     if(ar != null) {
-                        logger.debug("UserTradeWalletRecord : {} : {}, {}", userId, utwRecord.toString(), ar);
+                        logger.warn("UserTradeWalletRecord : {} : {}, {}", userId, utwRecord.toString(), ar);
 //                        resetUserReward(userRewardRecord);
                     } else {
-                        logger.debug("UserTradeWalletRecord NOT CONFIRMED : {} : {}", userId, utwRecord.toString());
+                        logger.warn("UserTradeWalletRecord NOT CONFIRMED : {} : {}", userId, utwRecord.toString());
 //                        utwRecord.delete();
 //                        dslContext.attach(utwRecord);
 //                        resetUserReward(userRewardRecord);
                     }
                 } else {
-                    logger.debug("UserTradeWallet NULL : {}", userId);
+                    logger.warn("UserTradeWallet NULL : {}", userId);
                     resetUserReward(userRewardRecord);
                 }
             } else {
-                logger.debug("NONE RETRY");
+                logger.warn("NONE RETRY");
             }
         }
     }
