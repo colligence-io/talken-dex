@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.responses.AccountResponse;
 
+import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.*;
 
 @Service
@@ -41,7 +42,7 @@ public class FailoverBctxService {
     private TradeWalletService twService;
 
 
-    private int tickLimit = 15;
+    private int tickLimit = 100;
 
     private boolean isSuspended = false;
 
@@ -60,7 +61,7 @@ public class FailoverBctxService {
      * retry failed record, queue
      */
 //    @Scheduled(cron = "0 0/30 * * * *", zone = ZONE_UTC)
-    @Scheduled(fixedDelay = 60 * 1000, initialDelay = 10000)
+    @Scheduled(fixedDelay = 60 * 1000 * 5, initialDelay = 10000)
     private synchronized void FailedBctxRetry() {
         if(isSuspended) return;
         if(DexGovStatus.isStopped) return;
@@ -82,7 +83,7 @@ public class FailoverBctxService {
     }
 
 //    @Scheduled(cron = "0 15/45 * * * *", zone = ZONE_UTC)
-    @Scheduled(fixedDelay = 60 * 1000, initialDelay = 5000)
+    @Scheduled(fixedDelay = 60 * 1000 * 5, initialDelay = 5000)
     private void FailedUserRewardRetry() {
         if(isSuspended) return;
         if(DexGovStatus.isStopped) return;

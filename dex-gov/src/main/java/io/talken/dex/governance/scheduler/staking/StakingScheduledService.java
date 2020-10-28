@@ -39,6 +39,7 @@ import org.stellar.sdk.responses.SubmitTransactionResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
 
+import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_STAKING;
 import static io.talken.common.persistence.jooq.Tables.USER;
 
@@ -68,7 +69,7 @@ public class StakingScheduledService {
     @Autowired
     private StellarNetworkService stellarNetworkService;
 
-    private int tickLimit = 15;
+    private int tickLimit = 100;
 
     private boolean isSuspended = false;
 
