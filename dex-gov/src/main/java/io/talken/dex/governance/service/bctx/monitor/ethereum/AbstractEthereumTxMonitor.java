@@ -1,5 +1,9 @@
 package io.talken.dex.governance.service.bctx.monitor.ethereum;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.talken.common.RunningProfile;
 import io.talken.common.util.BeanCopier;
 import io.talken.common.util.PrefixedLogger;
@@ -136,7 +140,12 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 				}
 
 				final long startCollect = System.currentTimeMillis();
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
 				Map<String, TransactionReceipt> receipts = collector.collect(collectionThreadNum, networkName, web3j, txs);
+//                Map<String, TransactionReceipt> receipts = mapper.convertValue(collector.collect(collectionThreadNum, networkName, web3j, txs)
+//                        , new TypeReference<Map<String, TransactionReceipt>>() {});
 				final long collectTakes = System.currentTimeMillis() - startCollect;
 
 				if(receipts.size() != txs.size()) {
@@ -144,7 +153,9 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 				}
 
 				for(Transaction transaction : txs) {
-					TransactionReceipt transactionReceipt = receipts.get(transaction.getHash());
+                    TransactionReceipt transactionReceipt = mapper.convertValue(receipts.get(transaction.getHash()), TransactionReceipt.class);
+//					TransactionReceipt transactionReceipt = receipts.get(transaction.getHash());
+//
 					if(transactionReceipt == null)
 						throw new BctxException("ReceiptNotCollected", "Cannot get tx receipt from receipt collection, cancel monitoring");
 
