@@ -175,7 +175,7 @@ public class UserRewardBctxService {
 					ds.setAmount(ds.getAmount().add(rewardRecord.getAmount()));
 				}
 			} catch(Exception ex) {
-				StringBuilder sb = new StringBuilder(ex.getMessage());
+				StringBuilder sb = new StringBuilder();
 				if (bctxRecord != null) {
                     sb.append("[BCTX:")
                             .append(bctxRecord.getId())
@@ -185,6 +185,7 @@ public class UserRewardBctxService {
                 } else {
                     sb.append(ex.getMessage());
                 }
+				
 				String errorMessage = sb.toString();
                 alarmService.error(logger, "Reward distribute failed : {} {}", ex.getClass().getSimpleName(), errorMessage);
                 alarmService.exception(logger, ex);
