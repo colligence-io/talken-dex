@@ -190,6 +190,10 @@ public class UserRewardBctxService {
                 alarmService.exception(logger, ex);
 
                 rewardRecord.setErrorcode(ex.getClass().getSimpleName());
+                // 임시.
+                if (errorMessage.length() > 255) {
+                    errorMessage = errorMessage.substring(0, 254);
+                }
 				rewardRecord.setErrormessage(errorMessage);
 				rewardRecord.setCheckFlag(true);
 				rewardRecord.store();
