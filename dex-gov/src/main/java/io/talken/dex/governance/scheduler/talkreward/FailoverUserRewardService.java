@@ -108,25 +108,31 @@ public class FailoverUserRewardService {
             // TODO: first 리워드 오류
             if (userRewardRecord.getBctxId() != null && bctxRecord != null) {
                 // BCTX failed retry
-                if (bctxRecord.getStatus().equals(BctxStatusEnum.FAILED))
+                if (bctxRecord.getStatus().equals(BctxStatusEnum.FAILED)) {
+                    alarmService.info(logger, "BCTX failed retry [BCTX#{}] at UserReward_Id {}", bctxRecord.getId(), userRewardRecord.getId());
                     retryBctx(bctxRecord);
+                }
             } else if (utwRecord != null) {
                 AccountResponse ar = twService.getAccountInfoFromStellar(utwRecord.getAccountid());
                 if(ar != null) {
                     // 지갑 계정 생성됨. account activation TRUE
                     // user_reward failed retry
+                    alarmService.info(logger, "UserReward failed (0) retry UserReward_Id {}", userRewardRecord.getId());
                     retryUserReward(userRewardRecord);
                 } else {
                     // 지갑 계정 생성됨. account activation FALSE
                     // 지갑 계정 삭제
                     // user_reward failed retry
+                    alarmService.warn(logger, "UserReward failed (1) reset UserTradeWallet for User_Id {}", utwRecord.getUserId());
                     utwRecord.delete();
                     dslContext.attach(utwRecord);
+                    alarmService.warn(logger, "UserReward failed (2) retry UserReward_Id {}", userRewardRecord.getId());
                     retryUserReward(userRewardRecord);
                 }
             } else {
                 // 지갑 없음
                 // user_reward failed retry
+                alarmService.warn(logger, "UserReward failed (NO_WALLET) retry UserReward_Id {}", userRewardRecord.getId());
                 retryUserReward(userRewardRecord);
             }
         }

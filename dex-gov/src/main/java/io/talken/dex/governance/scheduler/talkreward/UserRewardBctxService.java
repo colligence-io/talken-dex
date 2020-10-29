@@ -185,7 +185,7 @@ public class UserRewardBctxService {
                 } else {
                     sb.append(ex.getMessage());
                 }
-				
+
 				String errorMessage = sb.toString();
                 alarmService.error(logger, "Reward distribute failed : {} {}", ex.getClass().getSimpleName(), errorMessage);
                 alarmService.exception(logger, ex);
