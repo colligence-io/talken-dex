@@ -36,10 +36,10 @@ import static io.talken.common.persistence.jooq.Tables.BCTX;
 public class BlockChainTransactionService implements ApplicationContextAware {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(BlockChainTransactionService.class);
 
-	// constructor autowire with lomkok
+	// constructor autowire with lombok
 	private final DSLContext dslContext;
 
-	// constructor autowire with lomkok
+	// constructor autowire with lombok
 	private final DataSourceTransactionManager txMgr;
 
 	private final SingleKeyTable<BlockChainPlatformEnum, TxSender> txSenders = new SingleKeyTable<>();
@@ -90,7 +90,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 					if(txMonitors.containsKey(bctxRecord.getBctxType()))
 						txMonitors.get(bctxRecord.getBctxType()).checkTransactionStatus(bctxRecord.getBcRefId());
 				} catch(Exception ex) {
-					logger.exception(ex, "Cannot check pending transaction : {}", bctxRecord.getBcRefId());
+					logger.exception(ex, "Cannot check pending transaction [BCTX#{}] / {}", bctxRecord.getId(), bctxRecord.getBcRefId());
 				}
 			}
 		}

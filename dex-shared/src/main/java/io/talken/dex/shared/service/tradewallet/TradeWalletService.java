@@ -292,7 +292,8 @@ public class TradeWalletService {
 		}
 
 		// if cannot confirm, throw exception
-		throw new TradeWalletCreateFailedException("Cannot confirm trade wallet from stellar network");
+        logger.debug("TradeWalletCreateFailedException {} {}", user.getId(), accountId);
+		throw new TradeWalletCreateFailedException("[UserId#"+ user.getId() + "] Cannot confirm trade wallet from stellar network.");
 	}
 
 	public AccountResponse getAccountInfoFromStellar(String accountId) throws TradeWalletCreateFailedException {

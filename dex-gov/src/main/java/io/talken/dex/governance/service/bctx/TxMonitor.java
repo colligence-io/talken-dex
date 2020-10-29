@@ -139,8 +139,12 @@ public abstract class TxMonitor<TB, TT, TR> {
 	 * @throws Exception
 	 */
 	public void checkTransactionStatus(String txId) throws Exception {
-		TT tx = getTransactionReceipt(txId);
-		if(tx != null) updateBctxReceiptInfo(tx);
+	    if (txId != null) {
+            TT tx = getTransactionReceipt(txId);
+            if(tx != null) updateBctxReceiptInfo(tx);
+        } else {
+            throw new BctxException(this.getClass().getSimpleName(), "checkTransactionStatus : txId is null");
+        }
 	}
 
 	/**
