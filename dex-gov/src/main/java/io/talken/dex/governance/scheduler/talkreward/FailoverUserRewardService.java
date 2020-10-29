@@ -1,6 +1,6 @@
 package io.talken.dex.governance.scheduler.talkreward;
 
-import io.talken.common.RunningProfile;
+//import io.talken.common.RunningProfile;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.persistence.jooq.tables.records.UserRewardRecord;
@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.responses.AccountResponse;
 
+//import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.*;
 
 @Service
@@ -60,15 +61,15 @@ public class FailoverUserRewardService {
      */
 
 //    @Scheduled(cron = "0 15/45 * * * *", zone = ZONE_UTC)
-    @Scheduled(fixedDelay = 60 * 1000, initialDelay = 5000)
+    @Scheduled(fixedDelay = 60 * 1000 * 15, initialDelay = 5000)
     private synchronized void FailedUserRewardRetry() {
-        // TEST
-        if (RunningProfile.isProduction()) this.isSuspended = true;
+        // for TEST
+//        if (RunningProfile.isProduction()) this.isSuspended = true;
         if(isSuspended) return;
         if(DexGovStatus.isStopped) return;
 
         long ts = UTCUtil.getNowTimestamp_s();
-        logger.debug("FailedUserRewardRetry Scheduled...{}", ts);
+        logger.info("FailedUserRewardRetry Scheduled...{}", ts);
 
         Cursor<Record> records = dslContext
                 .select()
@@ -110,6 +111,7 @@ public class FailoverUserRewardService {
                 // BCTX failed retry
                 if (bctxRecord.getStatus().equals(BctxStatusEnum.FAILED)) {
                     alarmService.info(logger, "BCTX failed retry [BCTX#{}] at UserReward_Id {}", bctxRecord.getId(), userRewardRecord.getId());
+                    logger.info("BCTX failed retry [BCTX#{}] at UserReward_Id {}", bctxRecord.getId(), userRewardRecord.getId());
                     retryBctx(bctxRecord);
                 }
             } else if (utwRecord != null) {
@@ -118,21 +120,25 @@ public class FailoverUserRewardService {
                     // 지갑 계정 생성됨. account activation TRUE
                     // user_reward failed retry
                     alarmService.info(logger, "UserReward failed (0) retry UserReward_Id {}", userRewardRecord.getId());
+                    logger.info("UserReward failed (0) retry UserReward_Id {}", userRewardRecord.getId());
                     retryUserReward(userRewardRecord);
                 } else {
                     // 지갑 계정 생성됨. account activation FALSE
                     // 지갑 계정 삭제
                     // user_reward failed retry
                     alarmService.warn(logger, "UserReward failed (1) reset UserTradeWallet for User_Id {}", utwRecord.getUserId());
+                    logger.warn("UserReward failed (1) reset UserTradeWallet for User_Id {}", utwRecord.getUserId());
                     utwRecord.delete();
                     dslContext.attach(utwRecord);
                     alarmService.warn(logger, "UserReward failed (2) retry UserReward_Id {}", userRewardRecord.getId());
+                    logger.warn("UserReward failed (2) retry UserReward_Id {}", userRewardRecord.getId());
                     retryUserReward(userRewardRecord);
                 }
             } else {
                 // 지갑 없음
                 // user_reward failed retry
-                alarmService.warn(logger, "UserReward failed (NO_WALLET) retry UserReward_Id {}", userRewardRecord.getId());
+                alarmService.info(logger, "UserReward failed (NO_WALLET) retry UserReward_Id {}", userRewardRecord.getId());
+                logger.info("UserReward failed (NO_WALLET) retry UserReward_Id {}", userRewardRecord.getId());
                 retryUserReward(userRewardRecord);
             }
         }
