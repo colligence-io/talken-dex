@@ -163,6 +163,7 @@ public class TradeWalletService {
 	}
 
 	private TradeWalletInfo loadTradeWallet(User user, boolean ensure) throws TradeWalletCreateFailedException {
+	    if (user == null) throw new TradeWalletCreateFailedException("Invalid User");
 		UserTradeWalletRecord twRecord = dslContext.selectFrom(USER_TRADE_WALLET).where(USER_TRADE_WALLET.USER_ID.eq(user.getId())).fetchAny();
 		TradeWalletInfo rtn = new TradeWalletInfo(user);
 		rtn.setConfirmed(false);
