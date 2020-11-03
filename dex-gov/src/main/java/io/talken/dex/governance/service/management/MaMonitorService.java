@@ -163,6 +163,9 @@ public class MaMonitorService {
 		// get ma balances
 		for(Map.Entry<String, TokenMetaTable.Meta> _kv : tmService.getTokenMetaManagedList().entrySet()) {
 			String assetCode = _kv.getKey();
+			// TODO : temp
+			if (assetCode.equals("TALKSV") || assetCode.equals("TALKCH")) continue;
+			
 			TokenMetaTable.Meta meta = _kv.getValue();
 
 			if(!issuers.contains(meta.getManagedInfo().getIssuerAddress())) {
