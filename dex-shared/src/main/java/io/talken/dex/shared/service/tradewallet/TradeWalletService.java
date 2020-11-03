@@ -180,6 +180,7 @@ public class TradeWalletService {
 				twRecord.setUserId(user.getId());
 				twRecord.setAccountid(accountId);
 				twRecord.setSecret(walletString);
+				logger.debug("CREATE WALLET {}", twRecord);
 				dslContext.attach(twRecord);
 				twRecord.store();
 			} catch(Exception ex) {
