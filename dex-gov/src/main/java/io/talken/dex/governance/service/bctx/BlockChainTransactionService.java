@@ -104,15 +104,15 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 					if(txMonitors.containsKey(bctxRecord.getBctxType())) {
 					    // 흐름 확인.
                         if (bctxRecord.getStatus().equals(BctxStatusEnum.SENT) && bctxRecord.getBcRefId() != null) {
-                            alarmService.warn(logger,"[TEST] BCTX MON(beforeUpdate) : [BCTX#{}] / {}, syml {}, amt {}, stat {}",
-                                    bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount(), bctxRecord.getStatus());
+                            alarmService.warn(logger,"[TEST] BCTX MON(beforeUpdate) : [BCTX#{}] / {}, sym {}, amt {}, stat {}",
+                                    bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount().stripTrailingZeros(), bctxRecord.getStatus());
                         }
 
                         txMonitors.get(bctxRecord.getBctxType()).checkTransactionStatus(bctxRecord.getBcRefId());
 
                         if (bctxRecord.getStatus().equals(BctxStatusEnum.SENT) && bctxRecord.getBcRefId() != null) {
                             alarmService.warn(logger,"[TEST] BCTX MON(afterUpdate) : [BCTX#{}] / {}, sym {}, amt {}, stat {}",
-                                    bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount(), bctxRecord.getStatus());
+                                    bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount().stripTrailingZeros(), bctxRecord.getStatus());
                         }
                         // status 업데이트 확인
                         // cond check, status 업데이트 없으면, 시간 30분 넘으면
@@ -125,7 +125,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 
                             if (diff > 30) {
                                 alarmService.warn(logger,"[TEST] BCTX MON(diff) : [BCTX#{}] / {}, sym {}, amt {}, stat {}",
-                                        bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount(), bctxRecord.getStatus());
+                                        bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount().stripTrailingZeros(), bctxRecord.getStatus());
                             }
                         }
                     }
