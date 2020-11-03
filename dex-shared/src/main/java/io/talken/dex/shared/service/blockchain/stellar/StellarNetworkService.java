@@ -82,11 +82,11 @@ public class StellarNetworkService {
 	public Server pickServer() {
 	    if (this.appName != null && this.appVersion != null)
             return pickServer(this.appName, this.appVersion);
-		return new Server(this.publicServerUri);
+		return new Server(this.serverUri);
 	}
 
     public Server pickServer(String appName, String appVersion) {
-        Server server = new Server(this.publicServerUri);
+        Server server = new Server(this.serverUri);
         return getServer(appName, appVersion, server);
     }
 
