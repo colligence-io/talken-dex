@@ -70,7 +70,7 @@ subprojects {
         compile('io.talken:java-common:20200924-1') { changing = true }
 
         // jooq
-        compile('org.jooq:jooq:3.14.1')
+//        compile('org.jooq:jooq:3.14.1')
 
         annotationProcessor('org.projectlombok:lombok:1.18.8')
         compileOnly('org.projectlombok:lombok:1.18.8')
