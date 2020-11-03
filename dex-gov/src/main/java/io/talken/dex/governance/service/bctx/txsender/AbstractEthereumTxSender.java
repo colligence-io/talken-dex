@@ -1,5 +1,9 @@
 package io.talken.dex.governance.service.bctx.txsender;
 
+import com.google.api.client.json.Json;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
@@ -12,6 +16,8 @@ import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.service.blockchain.ethereum.EthRpcClient;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
 import io.talken.dex.shared.service.blockchain.ethereum.StandardERC20ContractFunctions;
+import org.jooq.JSON;
+import org.jooq.tools.json.JSONValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.crypto.RawTransaction;
@@ -184,4 +190,97 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 			return false;
 		}
 	}
+
+    public boolean sendEthereumTxNonce(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
+
+//        EthRpcClient infuraClient = ethereumNetworkService.getInfuraClient();
+//
+//        Web3jService web3jService = infuraClient.newWeb3jService();
+//        Web3j web3j = Web3j.build(web3jService);
+//
+//        final String from = bctx.getAddressFrom();
+
+        // TODO : parse Bctx_Log Request nonce
+//        BigInteger nonce = log.getRequest();
+        BigInteger nonce = JsonParser.parseString(log.getRequest()).getAsJsonObject().get("nonce").getAsBigInteger();
+
+//        BigInteger gasPrice = ethereumNetworkService.getGasPrice(web3j);
+
+        return true;
+//        BigInteger amount;
+//        if(decimals != null) {
+//            amount = bctx.getAmount().multiply(BigDecimal.TEN.pow(decimals)).toBigInteger();
+//        } else {
+//            amount = Convert.toWei(bctx.getAmount(), Convert.Unit.ETHER).toBigInteger();
+//        }
+//
+//        BigInteger gasLimit = BigInteger.valueOf(21000); // 21000 for native ethereum gasLimit
+//        RawTransaction rawTx;
+//
+//        if(contractAddr != null) {
+//            String encodedFunction = FunctionEncoder.encode(StandardERC20ContractFunctions.transfer(bctx.getAddressTo(), amount));
+//
+//            // estimate gasLimit with given transaction
+//            Transaction est_tx = Transaction.createFunctionCallTransaction(
+//                    from,
+//                    nonce,
+//                    gasPrice,
+//                    BigInteger.ZERO,
+//                    contractAddr,
+//                    encodedFunction
+//            );
+//
+//            try {
+//                BigInteger estAmountUsed = web3j.ethEstimateGas(est_tx).sendAsync().get().getAmountUsed();
+//
+//                gasLimit = estAmountUsed.multiply(BigInteger.valueOf(12)).divide(BigInteger.TEN); // use 120% of estimated gaslimit
+//            } catch(Exception ex) {
+//                gasLimit = DEFAULT_ERC20_GASLIMIT;
+//                logger.warn("Cannot estimate ethereum tx gasLimit [{}], use default {}", ex.getClass().getSimpleName(), gasLimit);
+//            }
+//
+//            rawTx = RawTransaction.createTransaction(
+//                    nonce,
+//                    gasPrice,
+//                    gasLimit, // use estimated gaslimit
+//                    contractAddr,
+//                    encodedFunction
+//            );
+//
+//        } else {
+//            rawTx = RawTransaction.createEtherTransaction(
+//                    nonce,
+//                    gasPrice,
+//                    gasLimit,  // use 21000 fixed gaslimit for ethereum
+//                    bctx.getAddressTo(),
+//                    amount
+//            );
+//        }
+//
+//        log.setRequest(JSONWriter.toJsonString(rawTx));
+//
+//        logger.info("[BCTX#{}] Request sign for {}", bctx.getId(), from);
+//        byte[] txSigned = signServer().signEthereumTransaction(rawTx, from);
+//
+//        logger.info("[BCTX#{}] Sending TX to ethereum network. gas = {} gwei * {}", bctx.getId(), Convert.fromWei(gasPrice.toString(), Convert.Unit.GWEI), gasLimit);
+//        EthSendTransaction ethSendTx = web3j.ethSendRawTransaction(Numeric.toHexString(txSigned)).sendAsync().get();
+//
+//        log.setResponse(JSONWriter.toJsonString(ethSendTx));
+//
+//        Response.Error error = ethSendTx.getError();
+//        String txHash = ethSendTx.getTransactionHash();
+//
+//        if(error == null) {
+//            // store last successful nonce
+//            nonceCheck.put(from, nonce);
+//
+//            log.setBcRefId(txHash);
+//            log.setResponse(ethSendTx.getRawResponse());
+//            return true;
+//        } else {
+//            log.setErrorcode(Integer.toString(error.getCode()));
+//            log.setErrormessage(error.getMessage());
+//            return false;
+//        }
+    }
 }

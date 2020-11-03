@@ -11,12 +11,14 @@ import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.SingleKeyTable;
+import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Result;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Scope;
@@ -25,6 +27,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,11 +40,14 @@ import static io.talken.common.persistence.jooq.Tables.BCTX;
 public class BlockChainTransactionService implements ApplicationContextAware {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(BlockChainTransactionService.class);
 
-	// constructor autowire with lombok
+    // constructor autowire with lombok
 	private final DSLContext dslContext;
 
 	// constructor autowire with lombok
 	private final DataSourceTransactionManager txMgr;
+
+    // constructor autowire with lombok
+    private final AdminAlarmService alarmService;
 
 	private final SingleKeyTable<BlockChainPlatformEnum, TxSender> txSenders = new SingleKeyTable<>();
 	private final Map<BlockChainPlatformEnum, TxMonitor> txMonitors = new HashMap<>();
@@ -93,8 +100,33 @@ public class BlockChainTransactionService implements ApplicationContextAware {
                     continue;
                 }
 				try {
-					if(txMonitors.containsKey(bctxRecord.getBctxType()))
-						txMonitors.get(bctxRecord.getBctxType()).checkTransactionStatus(bctxRecord.getBcRefId());
+                    // TODO : 30 minute over retry
+					if(txMonitors.containsKey(bctxRecord.getBctxType())) {
+					    // 흐름 확인.
+                        if (bctxRecord.getStatus().equals(BctxStatusEnum.SENT) && bctxRecord.getBcRefId() != null) {
+                            alarmService.warn(logger,"[TEST] BCTX MON(beforeUpdate) : status {}, txId {}", bctxRecord.getStatus(), bctxRecord.getBcRefId());
+                        }
+
+                        txMonitors.get(bctxRecord.getBctxType()).checkTransactionStatus(bctxRecord.getBcRefId());
+
+                        if (bctxRecord.getStatus().equals(BctxStatusEnum.SENT) && bctxRecord.getBcRefId() != null) {
+                            alarmService.warn(logger,"[TEST] BCTX MON(afterUpdate) : status {}, txId {}", bctxRecord.getStatus(), bctxRecord.getBcRefId());
+                        }
+                        // status 업데이트 확인
+                        // cond check, status 업데이트 없으면, 시간 30분 넘으면
+                        if (bctxRecord.getStatus().equals(BctxStatusEnum.SENT) && bctxRecord.getBcRefId() != null) {
+                            LocalDateTime now = UTCUtil.getNow();
+                            LocalDateTime bctxCreate = bctxRecord.getCreateTimestamp();
+
+                            Duration duration = Duration.between(now, bctxCreate);
+                            long diff = Math.abs(duration.toMinutes());
+
+                            if (diff > 30) {
+                                alarmService.error(logger,"[TEST] BCTX MON(diff) : bctxId {}, status {}, txId {}", bctxRecord.getId(), bctxRecord.getStatus(), bctxRecord.getBcRefId());
+                            }
+                        }
+                    }
+
 				} catch(Exception ex) {
 					logger.exception(ex, "Cannot check pending transaction [BCTX#{}] / {}", bctxRecord.getId(), bctxRecord.getBcRefId());
 				}
