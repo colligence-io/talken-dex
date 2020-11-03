@@ -124,8 +124,8 @@ public class BlockChainTransactionService implements ApplicationContextAware {
                             long diff = Math.abs(duration.toMinutes());
 
                             if (diff > 30) {
-                                alarmService.warn(logger,"[TEST] BCTX MON(diff) : [BCTX#{}] / {}, sym {}, amt {}, stat {}",
-                                        bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount().stripTrailingZeros(), bctxRecord.getStatus());
+                                alarmService.warn(logger,"[TEST] BCTX MON(diff {}m) : [BCTX#{}] / {}, sym {}, amt {}, stat {}",
+                                        diff, bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount().stripTrailingZeros(), bctxRecord.getStatus());
                             }
                         }
                     }
