@@ -139,8 +139,10 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		if(DexGovStatus.isStopped) return;
 
 		int processed = -1;
+        logger.debug("Stellar checkTask START");
 		do {
 			processed = processNextTransactions();
+			logger.debug("Stellar processed {}", processed);
 			if(processed < 0) {
                 adminAlarmService.error(logger, "Stopped Scheduler while monitor processing stellar transaction pId : {}", processed);
 			    break; // break if error occured while processing
@@ -251,6 +253,8 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 		if(processed > 0)
 			logger.info("{} : LEDGER={}, PAGINGTOKEN = {}, RECEIPTS = {} ({} ms), SAVED = {} ({} ms)", "Stellar", lastSuccessTransaction.getLedger(), lastSuccessTransaction.getPagingToken(), numReceipts, takes, receiptsToSave.size(), saveTakes);
+		else
+            logger.info("{} : has not processes", "Stellar", processed);
 
 		return processed;
 	}
