@@ -179,7 +179,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
         logger.debug("Stellar server {}", server);
 		Page<TransactionResponse> txPage;
 		try {
-            logger.debug("Stellar opt_status {}, {}", opt_status, opt_status.isPresent());
+            logger.debug("Stellar opt_status {}, {}", opt_status.isPresent(), opt_status.get());
 			if(opt_status.isPresent()) {
 				// 200 is maximum
 				txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(opt_status.get()).limit(TXREQUEST_LIMIT).includeFailed(false).execute();
@@ -197,7 +197,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		int processed = 0;
 		int numReceipts = 0;
 
-        logger.debug("Stellar txPage {}", txPage);
+        logger.debug("Stellar txPage size {}, getRecords {}", txPage.getRecords().size(), txPage.getRecords());
 
 		TransactionResponse lastSuccessTransaction = null;
 		List<StellarOpReceipt> receiptsToSave = new ArrayList<>();
