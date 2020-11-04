@@ -176,9 +176,10 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		final long started = System.currentTimeMillis();
 
 		Server server = stellarNetworkService.pickServer();
-
+        logger.debug("Stellar server {}", server);
 		Page<TransactionResponse> txPage;
 		try {
+            logger.debug("Stellar opt_status {}, {}", opt_status, opt_status.isPresent());
 			if(opt_status.isPresent()) {
 				// 200 is maximum
 				txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(opt_status.get()).limit(TXREQUEST_LIMIT).includeFailed(false).execute();
@@ -196,15 +197,18 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		int processed = 0;
 		int numReceipts = 0;
 
+        logger.debug("Stellar txPage {}", txPage);
+
 		TransactionResponse lastSuccessTransaction = null;
 		List<StellarOpReceipt> receiptsToSave = new ArrayList<>();
-
 
 		try {
 			for(TransactionResponse txRecord : txPage.getRecords()) {
 				StellarTxReceipt txResult;
+                logger.debug("Stellar txRecord {}", txRecord);
 				try {
 					txResult = new StellarTxReceipt(txRecord, stellarNetworkService.getNetwork());
+                    logger.debug("Stellar txResult {}", txResult);
 				} catch(StellarTxResultParsingError error) {
 					adminAlarmService.exception(logger, error, "Decode XDR failed, THIS CANNOT BE RECOVERED, skip tx {}", txRecord.getHash());
 					continue;
@@ -216,8 +220,10 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 				processDexTask(txResult);
 
 				List<StellarOpReceipt> opReceipts = txResult.getOpReceipts();
+                logger.debug("Stellar opReceipts {}", opReceipts);
 
 				for(StellarOpReceipt opReceipt : opReceipts) {
+                    logger.debug("Stellar opReceipt {}", opReceipt);
 					numReceipts++;
 					if(opReceipt.getOperationType().equals(OperationType.PAYMENT)) {
 						callReceiptHandlerStack(null, txResult, opReceipt);
@@ -236,10 +242,13 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 			adminAlarmService.exception(logger, ex, "Error occured while monitor processing stellar transaction");
 		}
 
+        logger.debug("Stellar receiptsToSave {}", receiptsToSave);
+
 		final long saveStarted = System.currentTimeMillis();
 		mongoTemplate.insert(receiptsToSave, COLLECTION_NAME);
 		final long saveTakes = System.currentTimeMillis() - saveStarted;
 
+        logger.debug("Stellar lastSuccessTransaction {}", lastSuccessTransaction);
 		if(lastSuccessTransaction != null) {
 			final String lpt = lastSuccessTransaction.getPagingToken();
 			final LocalDateTime ltt = StellarConverter.toLocalDateTime(lastSuccessTransaction.getCreatedAt());
