@@ -18,10 +18,8 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public abstract class AbstractLuniverseTxSender extends TxSender {
@@ -83,17 +81,9 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 			nonce = nonce_p;
 		}
 
+        BigInteger amount = getEthAmount(decimals, bctx);
 		BigInteger gasPrice = luniverseNetworkService.getGasPrice(web3j);
-
 		BigInteger gasLimit = luniverseNetworkService.getGasLimit(web3j);
-
-		BigInteger amount;
-		if(decimals != null) {
-			amount = bctx.getAmount().multiply(BigDecimal.TEN.pow(decimals)).toBigInteger();
-		} else {
-			amount = Convert.toWei(bctx.getAmount(), Convert.Unit.ETHER).toBigInteger();
-		}
-
 
 		RawTransaction rawTx;
 
