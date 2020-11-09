@@ -19,6 +19,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 public class BlockChainInfoController {
@@ -104,4 +106,13 @@ public class BlockChainInfoController {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(ethereumInfoService.getErc20Balance(postBody.getContract(), postBody.getAddress()));
 	}
+
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GETTRANSACTIONCOUNT, method = RequestMethod.GET)
+    public DexResponse<Map<String, BigInteger>> getBlock(@RequestParam("address") String address) throws Exception {
+	    if (address != null) {
+	        return DexResponse.buildResponse(ethereumInfoService.getTransactionCount(address));
+        } else {
+            return DexResponse.buildResponse(new HashMap<>());
+        }
+    }
 }
