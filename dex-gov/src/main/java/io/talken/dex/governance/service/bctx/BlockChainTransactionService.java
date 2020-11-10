@@ -1,8 +1,8 @@
 package io.talken.dex.governance.service.bctx;
 
-
 import com.google.common.base.Throwables;
 import io.talken.common.exception.TalkenException;
+import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
@@ -55,10 +55,10 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 	private final SingleKeyTable<BlockChainPlatformEnum, TxSender> txSenders = new SingleKeyTable<>();
 	private final Map<BlockChainPlatformEnum, TxMonitor> txMonitors = new HashMap<>();
 
-
 	private ApplicationContext applicationContext;
 
 	private final static int RETRY_INTERVAL = 300;
+    private final static int PENDING_CHECK_MIN = 3; // TODO: fix 30 min
 
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -103,64 +103,11 @@ public class BlockChainTransactionService implements ApplicationContextAware {
                     continue;
                 }
 				try {
-                    // TODO : 30 minute over retry
+
 					if(txMonitors.containsKey(bctxRecord.getBctxType())) {
-					    // 흐름 확인.
-//                        if (bctxRecord.getStatus().equals(BctxStatusEnum.SENT) && bctxRecord.getBcRefId() != null) {
-//                            alarmService.warn(logger,"[TEST] BCTX MON(beforeUpdate) : [BCTX#{}] / {}, sym {}, amt {}, stat {}",
-//                                    bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount().stripTrailingZeros(), bctxRecord.getStatus());
-//                        }
-
-                        txMonitors.get(bctxRecord.getBctxType()).checkTransactionStatus(bctxRecord.getBcRefId());
-
-//                        if (bctxRecord.getStatus().equals(BctxStatusEnum.SENT) && bctxRecord.getBcRefId() != null) {
-//                            alarmService.warn(logger,"[TEST] BCTX MON(afterUpdate) : [BCTX#{}] / {}, sym {}, amt {}, stat {}",
-//                                    bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount().stripTrailingZeros(), bctxRecord.getStatus());
-//                        }
+					    txMonitors.get(bctxRecord.getBctxType()).checkTransactionStatus(bctxRecord.getBcRefId());
                         // status 업데이트 확인
-                        // cond check, status 업데이트 없으면, 시간 30분 넘으면
-                        // cond check #2, ETH anchor, deanchor
-                        if (bctxRecord.getBctxType().equals(BlockChainPlatformEnum.ETHEREUM) || bctxRecord.getBctxType().equals(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN)) {
-                            if (bctxRecord.getStatus().equals(BctxStatusEnum.SENT) && bctxRecord.getBcRefId() != null) {
-                                LocalDateTime now = UTCUtil.getNow();
-                                LocalDateTime bctxCreate = bctxRecord.getCreateTimestamp();
-
-                                Duration duration = Duration.between(now, bctxCreate);
-                                long diff = Math.abs(duration.toMinutes());
-
-                                if (diff > 30) {
-                                    alarmService.warn(logger,"[TEST] BCTX MON(diff {} m) : [BCTX#{}] / {}, sym {}, amt {}, stat {}",
-                                            diff, bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount().stripTrailingZeros(), bctxRecord.getStatus());
-                                    Bctx bctx = bctxRecord.into(BCTX).into(Bctx.class);
-                                    BctxLogRecord lastLog = dslContext
-                                            .selectFrom(BCTX_LOG)
-                                            .where(BCTX_LOG.BCTX_ID.eq(bctx.getId()))
-                                            .fetchAny();
-
-                                    if (txSenders.has(BlockChainPlatformEnum.ETHEREUM)) {
-                                        EthereumTxSender txSender = (EthereumTxSender) txSenders.select(BlockChainPlatformEnum.ETHEREUM);
-                                        TokenMetaTable.Meta meta = txSender.getTokenMeta(bctx.getSymbol());
-                                        txSender.sendTxWithNonce(null, meta.getUnitDecimals(), bctx, lastLog);
-                                    } else if (txSenders.has(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN)) {
-                                        EthereumErc20TxSender txSender = (EthereumErc20TxSender) txSenders.select(BlockChainPlatformEnum.ETHEREUM);
-
-                                        TokenMetaTable.Meta meta = txSender.getTokenMeta(bctx.getSymbol());
-                                        String metaCA = txSender.getMetaCA(meta, bctx);
-                                        String bctxCA = txSender.getBctxCA(bctx);
-
-                                        if((metaCA != null && bctxCA != null) && metaCA.equals(bctxCA)) {
-                                            txSender.sendTxWithNonce(null, meta.getUnitDecimals(), bctx, lastLog);
-                                        } else {
-                                            lastLog.setStatus(BctxStatusEnum.FAILED);
-                                            lastLog.setErrorcode("CONTRACT_ID_NOT_MATCH");
-                                            lastLog.setErrormessage("CONTRACT_ID of bctx is not match with TokenMeta.");
-                                            lastLog.store();
-                                            dslContext.attach(lastLog);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        recoveryPending(bctxRecord);
                     }
 				} catch(Exception ex) {
 					logger.exception(ex, "Cannot check pending transaction [BCTX#{}] / {}", bctxRecord.getId(), bctxRecord.getBcRefId());
@@ -254,4 +201,71 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 			}
 		}
 	}
+
+	private void recoveryPending(BctxRecord bctxRecord) throws TokenMetaNotFoundException {
+        // cond check, status 업데이트 없으면, 시간 30분 넘으면
+        // cond check #2, ETH anchor, deanchor
+        if (bctxRecord.getStatus().equals(BctxStatusEnum.SENT) && bctxRecord.getBcRefId() != null) {
+            LocalDateTime now = UTCUtil.getNow();
+            LocalDateTime bctxCreate = bctxRecord.getCreateTimestamp();
+
+            Duration duration = Duration.between(now, bctxCreate);
+            long diff = Math.abs(duration.toMinutes());
+
+            if (diff > PENDING_CHECK_MIN) {
+                alarmService.warn(logger,"[TEST] BCTX MON(diff {} m) : [BCTX#{}] / {}, sym {}, amt {}, stat {}",
+                        diff, bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount().stripTrailingZeros(), bctxRecord.getStatus());
+                Bctx bctx = bctxRecord.into(BCTX).into(Bctx.class);
+                BctxLogRecord lastLog = dslContext.selectFrom(BCTX_LOG)
+                        .where(BCTX_LOG.BCTX_ID.eq(bctx.getId()))
+                        .fetchAny();
+
+                if (bctxRecord.getBctxType().equals(BlockChainPlatformEnum.ETHEREUM)) {
+                    if (txSenders.has(BlockChainPlatformEnum.ETHEREUM)) {
+                        EthereumTxSender txSender = (EthereumTxSender) txSenders.select(BlockChainPlatformEnum.ETHEREUM);
+                        TokenMetaTable.Meta meta = txSender.getTokenMeta(bctx.getSymbol());
+                        alarmService.warn(logger,"[TEST] BCTX ETH SEND Recovery : [BCTX#{}] / meta {}, log", meta, lastLog);
+                        // TODO : sendTx
+                        // txSender.sendTxWithNonce(null, meta.getUnitDecimals(), bctx, lastLog);
+                    } else {
+                        logger.error("No txSender [BCTX#{}] / {}", bctxRecord.getId(), bctxRecord.getBcRefId());
+//                                        lastLog.setStatus(BctxStatusEnum.FAILED);
+//                                        lastLog.setErrorcode("NoTxSender");
+//                                        lastLog.setErrormessage("TxSender " + bctxRecord.getBctxType() + " not found");
+//                                        lastLog.store();
+//                                        dslContext.attach(lastLog);
+                    }
+
+                } else if (bctxRecord.getBctxType().equals(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN)) {
+                    if (txSenders.has(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN)) {
+                        EthereumErc20TxSender txSender = (EthereumErc20TxSender) txSenders.select(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN);
+
+                        TokenMetaTable.Meta meta = txSender.getTokenMeta(bctx.getSymbol());
+                        String metaCA = txSender.getMetaCA(meta, bctx);
+                        String bctxCA = txSender.getBctxCA(bctx);
+
+                        if((metaCA != null && bctxCA != null) && metaCA.equals(bctxCA)) {
+                            // TODO : sendTx
+                            // txSender.sendTxWithNonce(null, meta.getUnitDecimals(), bctx, lastLog);
+                            alarmService.warn(logger,"[TEST] BCTX ERC20 SEND Recovery : [BCTX#{}] / meta {}, log", meta, lastLog);
+                        } else {
+                            alarmService.warn(logger,"[TEST] BCTX ERC20 SEND ERR : [BCTX#{}] / meta {}, log", meta, lastLog);
+//                                            lastLog.setStatus(BctxStatusEnum.FAILED);
+//                                            lastLog.setErrorcode("CONTRACT_ID_NOT_MATCH");
+//                                            lastLog.setErrormessage("CONTRACT_ID of bctx is not match with TokenMeta.");
+//                                            lastLog.store();
+//                                            dslContext.attach(lastLog);
+                        }
+                    } else {
+                        logger.error("No txSender [BCTX#{}] / {}", bctxRecord.getId(), bctxRecord.getBcRefId());
+                        //                                        lastLog.setStatus(BctxStatusEnum.FAILED);
+//                                        lastLog.setErrorcode("NoTxSender");
+//                                        lastLog.setErrormessage("TxSender " + bctxRecord.getBctxType() + " not found");
+//                                        lastLog.store();
+//                                        dslContext.attach(lastLog);
+                    }
+                }
+            }
+        }
+    }
 }

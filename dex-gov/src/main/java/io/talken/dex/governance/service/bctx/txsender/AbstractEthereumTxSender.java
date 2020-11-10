@@ -38,10 +38,6 @@ public abstract class AbstractEthereumTxSender extends TxSender {
     @Autowired
     private DSLContext dslContext;
 
-	protected EthRpcClient ethRpcClient;
-	protected Web3jService web3jService;
-    protected Web3j web3j;
-
 	private static final BigInteger DEFAULT_ERC20_GASLIMIT = BigInteger.valueOf(100000L);
 
 	private static Map<String, BigInteger> nonceCheck = new HashMap<>();
@@ -49,9 +45,6 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 	public AbstractEthereumTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
 		super(platform);
 		this.logger = logger;
-        this.ethRpcClient = ethereumNetworkService.getInfuraClient();
-        this.web3jService = ethRpcClient.newWeb3jService();
-        this.web3j = Web3j.build(web3jService);
 	}
 
 	/**
@@ -107,6 +100,10 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 	 */
 	protected boolean sendEthereumTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
 		final String from = bctx.getAddressFrom();
+
+        EthRpcClient ethRpcClient = ethereumNetworkService.getInfuraClient();
+        Web3jService web3jService = ethRpcClient.newWeb3jService();
+        Web3j web3j = Web3j.build(web3jService);
 
 		BigInteger nonce = ethRpcClient.getNonce(web3jService, from);
 
@@ -204,6 +201,10 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
     private RawTransaction generateRawTx(String contractAddr, Integer decimals, Bctx bctx,
                                          BigInteger nonce, BigInteger amount, BigInteger gasPrice, BigInteger gasLimit, String from ) {
+        EthRpcClient ethRpcClient = ethereumNetworkService.getInfuraClient();
+        Web3jService web3jService = ethRpcClient.newWeb3jService();
+        Web3j web3j = Web3j.build(web3jService);
+
         RawTransaction rawTx;
 
         if(contractAddr != null) {
