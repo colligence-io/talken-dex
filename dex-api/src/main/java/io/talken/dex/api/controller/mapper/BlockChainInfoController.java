@@ -7,10 +7,7 @@ import io.talken.dex.api.config.auth.AuthRequired;
 import io.talken.dex.api.controller.DTOValidator;
 import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
-import io.talken.dex.api.controller.dto.Erc20BalanceRequest;
-import io.talken.dex.api.controller.dto.EthBalanceRequest;
-import io.talken.dex.api.controller.dto.LuniverseGasPriceResult;
-import io.talken.dex.api.controller.dto.LuniverseTxListResult;
+import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.api.service.bc.EthereumInfoService;
 import io.talken.dex.api.service.bc.LuniverseInfoService;
 import io.talken.dex.shared.exception.DexException;
@@ -107,8 +104,13 @@ public class BlockChainInfoController {
 		return DexResponse.buildResponse(ethereumInfoService.getErc20Balance(postBody.getContract(), postBody.getAddress()));
 	}
 
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GETPENDING_TXLIST, method = RequestMethod.POST)
+    public DexResponse<PendingTxListResult> getPendingTransactionTxList(@RequestBody PendingTxListRequest request) throws Exception {
+        return DexResponse.buildResponse(ethereumInfoService.getPendingTransactionTxList(request));
+    }
+
     @RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GETTRANSACTIONCOUNT, method = RequestMethod.GET)
-    public DexResponse<Map<String, BigInteger>> getBlock(@RequestParam("address") String address) throws Exception {
+    public DexResponse<Map<String, BigInteger>> getTransactionCount(@RequestParam("address") String address) throws Exception {
 	    if (address != null) {
 	        return DexResponse.buildResponse(ethereumInfoService.getTransactionCount(address));
         } else {
