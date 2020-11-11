@@ -107,7 +107,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 					if(txMonitors.containsKey(bctxRecord.getBctxType())) {
 					    txMonitors.get(bctxRecord.getBctxType()).checkTransactionStatus(bctxRecord.getBcRefId());
                         // status 업데이트 확인
-                        recoveryPending(bctxRecord);
+                        //recoveryPending(bctxRecord);
                     }
 				} catch(Exception ex) {
 					logger.exception(ex, "Cannot check pending transaction [BCTX#{}] / {}", bctxRecord.getId(), bctxRecord.getBcRefId());
@@ -203,8 +203,8 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 	}
 
 	private void recoveryPending(BctxRecord bctxRecord) throws TokenMetaNotFoundException {
-        // cond check, status 업데이트 없으면, 시간 30분 넘으면
-        // cond check #2, ETH anchor, deanchor
+        // cond check #1 status 업데이트 없으면, 시간 30분 넘으면
+        // cond check #2 ETH anchor, deanchor
         if (bctxRecord.getStatus().equals(BctxStatusEnum.SENT) && bctxRecord.getBcRefId() != null) {
             LocalDateTime now = UTCUtil.getNow();
             LocalDateTime bctxCreate = bctxRecord.getCreateTimestamp();
@@ -213,6 +213,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
             long diff = Math.abs(duration.toMinutes());
 
             if (diff > PENDING_CHECK_MIN) {
+                // TODO: syslogin0809 : 0x3Eef31524C233fF8cB783e9E000DBDB39cD8e6b3
                 alarmService.warn(logger,"[TEST] BCTX MON(diff {} m) : [BCTX#{}] / {}, sym {}, amt {}, stat {}",
                         diff, bctxRecord.getId(), bctxRecord.getBcRefId(), bctxRecord.getSymbol(), bctxRecord.getAmount().stripTrailingZeros(), bctxRecord.getStatus());
                 Bctx bctx = bctxRecord.into(BCTX).into(Bctx.class);
