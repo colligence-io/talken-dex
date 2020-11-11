@@ -1,6 +1,5 @@
 package io.talken.dex.shared.service.blockchain.ethereum;
 
-
 import io.talken.common.RunningProfile;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.util.PrefixedLogger;
@@ -28,7 +27,7 @@ public class EthereumNetworkService {
 
 	private final DexSettings dexSettings;
 
-	private boolean isUseLocal = false;
+	private static final boolean ACTIVATE_LOCAL_NODE = false;
 
 	private EthRpcClient localClient;
 	private EthRpcClient infuraClient;
@@ -43,8 +42,6 @@ public class EthereumNetworkService {
 	@PostConstruct
 	private void init() throws Exception {
 		final String network = dexSettings.getBcnode().getEthereum().getNetwork().equalsIgnoreCase("test") ? "TEST" : "PUBLIC";
-		// default is infura
-		this.isUseLocal = true;
 
 		this.localClient = new EthRpcClient(dexSettings.getBcnode().getEthereum().getRpcUri());
 		this.infuraClient = new EthRpcClient(dexSettings.getBcnode().getEthereum().getInfuraUri());
@@ -78,7 +75,7 @@ public class EthereumNetworkService {
 	}
 
     public EthRpcClient getRpcClient() {
-        if (this.isUseLocal) return this.localClient;
+        if (ACTIVATE_LOCAL_NODE) return this.localClient;
 	    else return this.infuraClient;
     }
 
