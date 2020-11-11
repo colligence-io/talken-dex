@@ -85,7 +85,7 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 	 */
 	protected boolean sendEthereumTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
 
-		EthRpcClient infuraClient = ethereumNetworkService.getInfuraClient();
+		EthRpcClient infuraClient = ethereumNetworkService.getRpcClient();
 
 		Web3jService web3jService = infuraClient.newWeb3jService();
 		Web3j web3j = Web3j.build(web3jService);
