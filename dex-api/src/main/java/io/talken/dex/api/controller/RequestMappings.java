@@ -60,6 +60,8 @@ public class RequestMappings {
 	public static final String BLOCK_CHAIN_ETHEREUM_GETERC20BALANCE = BLOCK_CHAIN_ETHEREUM + "/getErc20Balance";
     public static final String BLOCK_CHAIN_ETHEREUM_GETTRANSACTIONCOUNT = BLOCK_CHAIN_ETHEREUM + "/getEthTxCount";
     public static final String BLOCK_CHAIN_ETHEREUM_GETPENDING_TXLIST = BLOCK_CHAIN_ETHEREUM + "/getEthPendingTxList";
+    public static final String BLOCK_CHAIN_ETHEREUM_GET_TRANSACTION_BY_HASH = BLOCK_CHAIN_ETHEREUM + "/getTransaction";
+    public static final String BLOCK_CHAIN_ETHEREUM_GET_TRANSACTION_RECEIPT_BY_HASH = BLOCK_CHAIN_ETHEREUM + "/getTransactionReceipt";
 
 	// TokenMetaService
 	private static final String TMS = ROOT + "/tms";

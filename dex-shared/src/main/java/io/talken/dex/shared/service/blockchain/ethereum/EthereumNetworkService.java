@@ -13,11 +13,14 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.Transaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @Scope("singleton")
@@ -77,6 +80,16 @@ public class EthereumNetworkService {
     public EthRpcClient getRpcClient() {
         if (ACTIVATE_LOCAL_NODE) return this.localClient;
 	    else return this.infuraClient;
+    }
+
+    public Transaction getEthTransaction(String txHash) throws ExecutionException, InterruptedException {
+        Web3j web3j = this.getRpcClient().newClient();
+        return web3j.ethGetTransactionByHash(txHash).sendAsync().get().getTransaction().orElse(null);
+    }
+
+    public TransactionReceipt getEthTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
+        Web3j web3j = this.getRpcClient().newClient();
+        return web3j.ethGetTransactionReceipt(txHash).sendAsync().get().getTransactionReceipt().orElse(null);
     }
 
 	/**

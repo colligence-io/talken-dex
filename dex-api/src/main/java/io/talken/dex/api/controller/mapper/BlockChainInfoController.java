@@ -117,4 +117,18 @@ public class BlockChainInfoController {
             return DexResponse.buildResponse(new HashMap<>());
         }
     }
+
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GET_TRANSACTION_BY_HASH, method = RequestMethod.GET)
+    public DexResponse<EthTransactionResultDTO> getTransaction(@RequestParam("txHash") String txHash) throws Exception {
+        return DexResponse.buildResponse(ethereumInfoService.getEthTransaction(txHash));
+    }
+
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GET_TRANSACTION_RECEIPT_BY_HASH, method = RequestMethod.GET)
+    public DexResponse<EthTransactionReceiptResultDTO> getTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
+        if (txHash != null) {
+            return DexResponse.buildResponse(ethereumInfoService.getEthTransactionReceipt(txHash));
+        } else {
+            return DexResponse.buildResponse(null);
+        }
+    }
 }

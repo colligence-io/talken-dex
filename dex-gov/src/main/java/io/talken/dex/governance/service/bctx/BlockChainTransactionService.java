@@ -248,9 +248,10 @@ public class BlockChainTransactionService implements ApplicationContextAware {
         // TODO : cond check #3
         // TODO : check isTranscationPending
         // TODO : use choice tx or txReceipt
-        Web3j web3j = ethNetworkService.getRpcClient().newClient();
-        Transaction tx = web3j.ethGetTransactionByHash(bctxRecord.getBcRefId()).sendAsync().get().getTransaction().orElse(null);
-        TransactionReceipt txReceipt = web3j.ethGetTransactionReceipt(bctxRecord.getBcRefId()).sendAsync().get().getTransactionReceipt().orElse(null);
+        String txHash = bctxRecord.getBcRefId();
+
+        Transaction tx = ethNetworkService.getEthTransaction(txHash);
+        TransactionReceipt txReceipt = ethNetworkService.getEthTransactionReceipt(txHash);
 
         // TODO : check transaction cond
         // TODO : txBlockHash, txBlockNumber is null

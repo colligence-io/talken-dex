@@ -4,32 +4,28 @@ import io.talken.common.exception.common.GeneralException;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
-import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.common.util.UTCUtil;
+import io.talken.dex.api.controller.dto.EthTransactionReceiptResultDTO;
+import io.talken.dex.api.controller.dto.EthTransactionResultDTO;
 import io.talken.dex.api.controller.dto.PendingTxListRequest;
 import io.talken.dex.api.controller.dto.PendingTxListResult;
 import io.talken.dex.shared.service.blockchain.ethereum.Erc20ContractInfoService;
 import io.talken.dex.shared.service.blockchain.ethereum.EthereumNetworkService;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthBlock;
-import org.web3j.protocol.core.methods.response.EthBlockNumber;
-import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
+import org.web3j.protocol.core.methods.response.*;
 
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static io.talken.common.persistence.jooq.Tables.BCTX;
 
@@ -39,7 +35,7 @@ public class EthereumInfoService {
     private static final PrefixedLogger logger = PrefixedLogger.getLogger(EthereumInfoService.class);
 
 	@Autowired
-	private EthereumNetworkService ethereumNetworkService;
+	private EthereumNetworkService ethNetworkService;
 
 	@Autowired
 	private Erc20ContractInfoService contractInfoService;
@@ -55,7 +51,7 @@ public class EthereumInfoService {
 	 * @throws GeneralException
 	 */
 	public BigInteger getEthBalance(String address) throws GeneralException {
-		return getEthBalance(ethereumNetworkService.getLocalClient().newClient(), address);
+		return getEthBalance(ethNetworkService.getLocalClient().newClient(), address);
 	}
 
 	/**
@@ -83,7 +79,7 @@ public class EthereumInfoService {
 	 * @throws GeneralException
 	 */
 	public BigInteger getErc20Balance(String contract, String address) throws GeneralException {
-		return getErc20Balance(ethereumNetworkService.getLocalClient().newClient(), contract, address);
+		return getErc20Balance(ethNetworkService.getLocalClient().newClient(), contract, address);
 	}
 
 	/**
@@ -135,7 +131,7 @@ public class EthereumInfoService {
 
     public Map<String, BigInteger> getTransactionCount(String address) throws ExecutionException, InterruptedException {
         Map<String, BigInteger> map = new HashMap<>();
-        Web3j web3j = ethereumNetworkService.getLocalClient().newClient();
+        Web3j web3j = ethNetworkService.getLocalClient().newClient();
 //        web3j.web3ClientVersion().flowable().subscribe(
 //                x -> {
 //                    logger.info("subscribe::{}", x.getWeb3ClientVersion());
@@ -177,5 +173,61 @@ public class EthereumInfoService {
         map.put("EthGetTransactionCount_C", ethGetTransactionCountC.getTransactionCount());
 
         return map;
+    }
+
+    public EthTransactionResultDTO getEthTransaction(String txHash) throws ExecutionException, InterruptedException {
+        EthTransactionResultDTO.EthTransactionResultDTOBuilder builder = EthTransactionResultDTO.builder();
+        if (txHash != null) {
+            Transaction tx = ethNetworkService.getEthTransaction(txHash);
+            if (tx != null) {
+                builder.blockHash(tx.getBlockHash())
+                        .blockNumber(tx.getBlockNumber())
+                        .from(tx.getFrom())
+                        .gas(tx.getGas())
+                        .gasPrice(tx.getGasPrice())
+                        .hash(tx.getHash())
+                        .input(tx.getInput())
+                        .nonce(tx.getNonce())
+                        .to(tx.getTo())
+                        .transactionIndex(tx.getTransactionIndex())
+                        .value(tx.getValue())
+                        .v(tx.getV())
+                        .s(tx.getS())
+                        .r(tx.getR());
+
+                if (tx.getCreates() != null) builder.creates(tx.getCreates());
+                if (tx.getChainId() != null) builder.chainId(tx.getChainId());
+                if (tx.getPublicKey() != null) builder.publicKey(tx.getPublicKey());
+            }
+        }
+
+        return builder.build();
+    }
+
+    public EthTransactionReceiptResultDTO getEthTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
+        EthTransactionReceiptResultDTO.EthTransactionReceiptResultDTOBuilder builder = EthTransactionReceiptResultDTO.builder();
+        if (txHash != null) {
+            TransactionReceipt tx = ethNetworkService.getEthTransactionReceipt(txHash);
+            if (tx != null) {
+                builder.transactionHash(tx.getTransactionHash())
+                        .transactionIndex(tx.getTransactionIndex())
+                        .blockHash(tx.getBlockHash())
+                        .blockNumber(tx.getBlockNumber())
+                        .from(tx.getFrom())
+                        .to(tx.getTo())
+                        .cumulativeGasUsed(tx.getCumulativeGasUsed())
+                        .gasUsed(tx.getGasUsed())
+                        .contractAddress(tx.getContractAddress())
+                        .logs(tx.getLogs())
+                        .logsBloom(tx.getLogsBloom())
+                        .root(tx.getRoot())
+                        .status(tx.getStatus());
+
+                builder.revertReason(tx.getRevertReason());
+                builder.isStatus(tx.isStatusOK());
+            }
+        }
+
+        return builder.build();
     }
 }
