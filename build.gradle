@@ -69,6 +69,9 @@ subprojects {
     dependencies {
         compile('io.talken:java-common:20200924-1') { changing = true }
 
+        // jooq
+//        compile('org.jooq:jooq:3.14.1')
+
         annotationProcessor('org.projectlombok:lombok:1.18.8')
         compileOnly('org.projectlombok:lombok:1.18.8')
 
@@ -95,8 +98,8 @@ subprojects {
         compile('com.github.stellar:java-stellar-sdk:0.21.0')
 
         // ethereum web3j sdk
-        compile('org.web3j:core:4.6.4')
-        compile('org.web3j:contracts:4.6.4')
+        compile('org.web3j:core:4.8.0')
+        compile('org.web3j:contracts:4.8.0')
 
         // devtools
         runtime('org.springframework.boot:spring-boot-devtools')

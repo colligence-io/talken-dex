@@ -80,11 +80,14 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 	protected TransactionReceipt getTransactionReceipt(String txId) {
 		try {
 			Web3j web3j = ethNetworkService.getLocalClient().newClient();
-			Optional<TransactionReceipt> opt_receipt = web3j.ethGetTransactionReceipt(txId).send().getTransactionReceipt();
-			if(opt_receipt.isPresent()) {
-				TransactionReceipt receipt = opt_receipt.get();
-				if(receipt.getBlockNumberRaw() != null) return opt_receipt.get();
-			} else logger.debug("Ethereum Tx {} is not found.", txId);
+			TransactionReceipt opt_receipt = web3j.ethGetTransactionReceipt(txId)
+                    .sendAsync().get().getTransactionReceipt().orElse(null);
+			if(opt_receipt == null) {
+                logger.debug("Ethereum Tx {} is not found.", txId);
+            } else if(opt_receipt.getBlockNumberRaw() == null) {
+                logger.debug("Ethereum Tx {} is Pending.", txId);
+			}
+            return opt_receipt;
 		} catch(Exception ex) {
 			logger.exception(ex);
 		}

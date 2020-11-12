@@ -154,14 +154,13 @@ public abstract class TxMonitor<TB, TT, TR> {
 	 * @throws Exception
 	 */
 	private void updateBctxReceiptInfo(TT tx) throws Exception {
-
 		TxReceipt receipt = toTxMonitorReceipt(tx);
 
 		BctxLogRecord logRecord = dslContext.selectFrom(BCTX_LOG)
 				.where(BCTX_LOG.BC_REF_ID.eq(receipt.txRefId.toLowerCase()).and(BCTX_LOG.STATUS.eq(BctxStatusEnum.SENT)))
 				.orderBy(BCTX_LOG.ID.desc())
 				.limit(1)
-				.fetchOne();
+				.fetchAny();
 
 		if(logRecord != null) {
 			logger.info("TxReceipt of BCTX#{}[{}] arrived. {}, refId = {}", logRecord.getBctxId(), logRecord.getId(), receipt.status, receipt.getTxRefId());

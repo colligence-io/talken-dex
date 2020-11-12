@@ -75,10 +75,9 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 		if(amount.compareTo(BigDecimal.ZERO) <= 0) return;
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
-				.and(
-						DEX_TASK_ANCHOR.VC4S_PRIVATEADDR.eq(receipt.getFrom().toLowerCase())
-								.and(DEX_TASK_ANCHOR.VC4S_HOLDERADDR.eq(receipt.getTo().toLowerCase()))
-								.and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)))
+				.and(DEX_TASK_ANCHOR.VC4S_PRIVATEADDR.eq(receipt.getFrom().toLowerCase())
+                        .and(DEX_TASK_ANCHOR.VC4S_HOLDERADDR.eq(receipt.getTo().toLowerCase()))
+						.and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)))
 				.and(getBcTypeCondition(receipt.getContractAddress()));
 
 		DexTaskAnchorRecord taskRecord = dslContext.selectFrom(DEX_TASK_ANCHOR)

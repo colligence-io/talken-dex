@@ -141,6 +141,7 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		int processed = -1;
 		do {
 			processed = processNextTransactions();
+//			logger.debug("Stellar processed {}", processed);
 			if(processed < 0) {
                 adminAlarmService.error(logger, "Stopped Scheduler while monitor processing stellar transaction pId : {}", processed);
 			    break; // break if error occured while processing
@@ -172,11 +173,11 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		Optional<String> opt_status = Optional.ofNullable(ssService.of(StellarTxMonitorStatus.class).read().getLastPagingToken());
 
 		final long started = System.currentTimeMillis();
-
 		Server server = stellarNetworkService.pickServer();
 
 		Page<TransactionResponse> txPage;
 		try {
+//            logger.debug("Stellar opt_status {}, {}", opt_status.isPresent(), opt_status.get());
 			if(opt_status.isPresent()) {
 				// 200 is maximum
 				txPage = server.transactions().order(RequestBuilder.Order.ASC).cursor(opt_status.get()).limit(TXREQUEST_LIMIT).includeFailed(false).execute();
@@ -196,7 +197,6 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 		TransactionResponse lastSuccessTransaction = null;
 		List<StellarOpReceipt> receiptsToSave = new ArrayList<>();
-
 
 		try {
 			for(TransactionResponse txRecord : txPage.getRecords()) {
@@ -251,6 +251,8 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 		if(processed > 0)
 			logger.info("{} : LEDGER={}, PAGINGTOKEN = {}, RECEIPTS = {} ({} ms), SAVED = {} ({} ms)", "Stellar", lastSuccessTransaction.getLedger(), lastSuccessTransaction.getPagingToken(), numReceipts, takes, receiptsToSave.size(), saveTakes);
+//		else
+//            logger.info("{} : has not processes", "Stellar", processed);
 
 		return processed;
 	}
