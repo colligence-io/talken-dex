@@ -3,21 +3,19 @@ package io.talken.dex.api.controller.dto;
 import lombok.Builder;
 import lombok.Data;
 
-import java.math.BigInteger;
-
 @Data
 @Builder
 public class EthTransactionResultDTO {
     private String hash;
-    private BigInteger nonce;
+    private String nonce;
     private String blockHash;
-    private BigInteger blockNumber;
-    private BigInteger transactionIndex;
+    private String blockNumber;
+    private String transactionIndex;
     private String from;
     private String to;
-    private BigInteger value;
-    private BigInteger gasPrice;
-    private BigInteger gas;
+    private String value;
+    private String gasPrice;
+    private String gas;
     private String input;
     private String raw;
     private String r;

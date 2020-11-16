@@ -13,7 +13,7 @@ public class EthTransactionReceiptResultDTO {
     private String transactionHash;
     private BigInteger transactionIndex;
     private String blockHash;
-    private BigInteger blockNumber;
+    private String blockNumber;
     private BigInteger cumulativeGasUsed;
     private BigInteger gasUsed;
     private String contractAddress;
