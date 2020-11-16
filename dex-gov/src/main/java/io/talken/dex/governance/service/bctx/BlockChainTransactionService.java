@@ -252,28 +252,20 @@ public class BlockChainTransactionService implements ApplicationContextAware {
         TransactionReceipt txReceipt = ethNetworkService.getEthTransactionReceipt(txHash);
 
         // TODO : check transaction cond
-        // TODO : txBlockHash, txBlockNumber is null
         BigInteger nonce;
-
         boolean isPending = true;
 
         if (tx != null) {
             nonce = tx.getNonce();
-            if (tx.getBlockHash() != null && tx.getBlockNumberRaw() != null) {
-                logger.info("[TEST] BCTX tx : [BCTX#{}] / txBlockHash {}, txBlockNumber {}, ",
-                        bctxRecord.getId(), tx.getBlockHash(), tx.getBlockNumberRaw());
+            // TODO : check txBlockHash, txBlockNumber, txReceipt
+            if (tx.getBlockHash() != null && tx.getBlockNumberRaw() != null && txReceipt != null) {
+                logger.info("[TEST] BCTX tx : [BCTX#{}] / txBlockHash {}, txBlockNumber {}, receipt {}",
+                        bctxRecord.getId(), tx.getBlockHash(), tx.getBlockNumberRaw(), txReceipt);
                 isPending = false;
             }
         } else {
-            logger.error("[TEST] BCTX tx : [BCTX#{}] / Cannot find Tx");
+            logger.error("[TEST] BCTX tx : [BCTX#{}] / Cannot find Tx(skipNotConfirmedTx)");
             return;
-        }
-
-        // TODO : txReceipt is null
-        if (txReceipt != null) {
-            logger.info("[TEST] BCTX txReceipt : [BCTX#{}] / receipt {}", bctxRecord.getId(), txReceipt);
-        } else {
-            isPending = false;
         }
 
         if (!isPending) return;
