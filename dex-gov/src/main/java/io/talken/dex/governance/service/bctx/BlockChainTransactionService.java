@@ -29,7 +29,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
@@ -68,7 +67,7 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 	private final static int RETRY_INTERVAL = 300;
 
 	// retry ETH, ERC20
-    private final static int RETRY_DELAYED = 3; // TODO: fix 30 min
+    private final static int RETRY_DELAYED = 30; // TODO: fix 30 min
 
     @Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -115,7 +114,6 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 				try {
 					if(txMonitors.containsKey(bctxRecord.getBctxType())) {
 					    txMonitors.get(bctxRecord.getBctxType()).checkTransactionStatus(bctxRecord.getBcRefId());
-                        // TODO : status 업데이트 확인
                         checkPending(bctxRecord);
                     }
 				} catch(Exception ex) {
@@ -295,10 +293,10 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 
         if (bctxType.equals(ETH)) {
             if (txSenders.has(ETH)) {
-                EthereumTxSender ethTxSender = (EthereumTxSender) txSenders.select(ETH);
+                logger.info("[TEST] BCTX Retry Send Pending Tx : [BCTX#{}] / txHash {}",bctxRecord.getId(), bctxRecord.getBcRefId());
                 // TODO : sendTx
-                logger.info("[TEST] BCTX Retry Pending Tx : [BCTX#{}] / txHash {}",bctxRecord.getId(), bctxRecord.getBcRefId());
-                ethTxSender.sendTxWithNonce(null, meta.getUnitDecimals(), bctx, log, nonce);
+                EthereumTxSender ethTxSender = (EthereumTxSender) txSenders.select(ETH);
+//                ethTxSender.sendTxWithNonce(null, meta.getUnitDecimals(), bctx, log, nonce);
             } else {
                 errorMessage = bctxType + " TxSender not found";
                 txSender.setBctxLogFailedNoTxSender(logger, log, bctx, TxSender.ErrorCode.NO_TX_SENDER, errorMessage);
@@ -312,9 +310,9 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 
                 if ((metaCA != null && bctxCA != null) && metaCA.equals(bctxCA)) {
                     // TODO : sendTx
-                    logger.info("[TEST] BCTX Retry Pending Tx : [BCTX#{}] / txHash {}",bctxRecord.getId(), bctxRecord.getBcRefId());
                     String contractAddr = meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString();
-                    erc20TxSender.sendTxWithNonce(contractAddr, meta.getUnitDecimals(), bctx, log, nonce);
+                    logger.info("[TEST] BCTX Retry Send Pending Tx : [BCTX#{}] / txHash {} / contractAddr {}",bctxRecord.getId(), bctxRecord.getBcRefId(), contractAddr);
+//                    erc20TxSender.sendTxWithNonce(contractAddr, meta.getUnitDecimals(), bctx, log, nonce);
                 } else {
                     errorMessage = "CONTRACT_ID of bctx is not match with TokenMeta";
                     txSender.setBctxLogFailedNoTxSender(logger, log, bctx, TxSender.ErrorCode.CONTRACT_ID_NOT_MATCH, errorMessage);
