@@ -166,12 +166,19 @@ public class TokenMetaGovService extends TokenMetaTableService {
 
 				// trim data for sure
 				TokenMetaManaged _miData = _tmi.into(TokenMetaManaged.class);
+
 				_miData.setIssueraddress(_miData.getIssueraddress().trim());
 				_miData.setOfferfeeholderaddress(_miData.getOfferfeeholderaddress().trim());
 				_miData.setDeancfeeholderaddress(_miData.getDeancfeeholderaddress().trim());
 				_miData.setSwapfeeholderaddress(_miData.getSwapfeeholderaddress().trim());
 				if(_miData.getDistributoraddress() != null)
 					_miData.setDistributoraddress(_miData.getDistributoraddress().trim());
+				_miData.setManagedstatus(_miData.getManagedstatus());
+                _miData.setAnchorableflag(_miData.getAnchorableflag());
+                _miData.setDeanchorableflag(_miData.getDeanchorableflag());
+                _miData.setSendableflag(_miData.getSendableflag());
+                _miData.setPrivatewalletusableflag(_miData.getPrivatewalletusableflag());
+                _miData.setTradewalletusableflag(_miData.getTradewalletusableflag());
 
 				_tmMiMap.put(_tmi.getTmId(), _miData);
 			}
@@ -312,6 +319,13 @@ public class TokenMetaGovService extends TokenMetaTableService {
 					mi.setDeancFeeHolderAddress(_mi.getDeancfeeholderaddress());
 					mi.setSwapFeeHolderAddress(_mi.getSwapfeeholderaddress());
 					mi.setDistributorAddress(_mi.getDistributoraddress());
+                    mi.setStatus(_mi.getManagedstatus());
+                    mi.setAnchorableFlag(_mi.getAnchorableflag());
+                    mi.setDeanchorableFlag(_mi.getDeanchorableflag());
+                    mi.setSendableFlag(_mi.getSendableflag());
+                    mi.setPrivateWalletUsableFlag(_mi.getPrivatewalletusableflag());
+                    mi.setTradeWalletUsableFlag(_mi.getTradewalletusableflag());
+
 					if(_mi.getUpdateTimestamp() == null)
 						mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getCreateTimestamp()));
 					else
@@ -367,7 +381,7 @@ public class TokenMetaGovService extends TokenMetaTableService {
 			updateStorage(newTmTable);
 
 			redisTemplate.opsForValue().set(TokenMetaTable.REDIS_KEY, newTmTable);
-			redisTemplate.opsForValue().set(TokenMetaTable.REDIS_UDPATED_KEY, loadTimestamp);
+			redisTemplate.opsForValue().set(TokenMetaTable.REDIS_UPDATED_KEY, loadTimestamp);
 		} catch(Exception ex) {
 			throw new TokenMetaLoadException(ex);
 		}

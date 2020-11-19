@@ -2,6 +2,7 @@ package io.talken.dex.governance.service.management;
 
 
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
+import io.talken.common.persistence.enums.TokenMetaManagedStatusEnum;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.collection.ObjectPair;
 import io.talken.common.util.integration.slack.AdminAlarmService;
@@ -163,8 +164,11 @@ public class MaMonitorService {
 		// get ma balances
 		for(Map.Entry<String, TokenMetaTable.Meta> _kv : tmService.getTokenMetaManagedList().entrySet()) {
 			String assetCode = _kv.getKey();
-			// TODO : temp
-			if (assetCode.equals("TALKSV") || assetCode.equals("TALKCH")) continue;
+
+            // TODO : check managed status and flag
+            // TODO : anchor/deanchor check managedInfo.pickActiveHolderAccountAddress
+            // TODO : temp
+			if (assetCode.equals("TALKP") || assetCode.equals("TALKSV") || assetCode.equals("TALKCH")) continue;
 			
 			TokenMetaTable.Meta meta = _kv.getValue();
 
@@ -258,13 +262,16 @@ public class MaMonitorService {
 		}
 	}
 
-
 	private ObjectPair<BigDecimal, BigDecimal> getAccountBalance(TokenMetaTable.Meta meta, String address) throws Exception {
 		BigDecimal coin = null;
 		BigDecimal token = null;
 		switch(meta.getBctxType()) {
 			case STELLAR_TOKEN:
-				token = StellarConverter.getAccountBalance(stellarNetworkService.pickServer().accounts().account(address), Asset.createNonNativeAsset(meta.getSymbol(), meta.getAux().get(TokenMetaAuxCodeEnum.STELLAR_ISSUER_ID).toString()));
+			    AccountResponse response = stellarNetworkService.pickServer().accounts().account(address);
+			    String symbol = meta.getSymbol();
+			    String issure = meta.getManagedInfo().dexIssuerAccount().getAccountId();
+                Asset asset = Asset.createNonNativeAsset(symbol, issure);
+				token = StellarConverter.getAccountBalance(response, asset);
 			case STELLAR:
 				coin = StellarConverter.getAccountNativeBalance(stellarNetworkService.pickServer().accounts().account(address));
 				break;
