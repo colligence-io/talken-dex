@@ -66,7 +66,7 @@ public class WalletService {
 	@Autowired
 	private RedisTemplate<String, Object> redisTemplate;
 
-	private final BigDecimal MINIMUM_LUK_FOR_TRANSFER = BigDecimal.valueOf(1.5);
+	private final BigDecimal MINIMUM_LUK_FOR_TRANSFER = BigDecimal.valueOf(2.381);
 	private final int LUK_TRANSFER_PENDING_TIME = 5;
 
 	/**
