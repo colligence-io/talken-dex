@@ -6,6 +6,7 @@ import io.talken.common.exception.TalkenException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.persistence.DexTaskRecord;
+import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.DexTaskAnchorRecord;
@@ -311,4 +312,94 @@ public class AnchorService {
 		result.setDeanchorAmount(taskRecord.getDeanchoramount());
 		return result;
 	}
+
+    @Deprecated
+    public PrivateWalletTransferDTO anchorOnlyTALKLMT(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
+        final String TALK = "TALK";
+
+        final BigDecimal amount = StellarConverter.scale(request.getAmount());
+        final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
+        final String assetHolderAddress = tmService.getManagedInfo(request.getAssetCode()).pickActiveHolderAccountAddress();
+        final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
+        final long userId = user.getId();
+
+        PrivateWalletTransferDTO result = pwService.createTransferDTObase(PrivateWalletMsgTypeEnum.ANCHOR, request.getAssetCode());
+
+        String platform_aux = null;
+        if(result.getPlatform().getAuxCode() != null) {
+            if(!result.getAux().containsKey(result.getPlatform().getAuxCode().name()))
+                throw new BlockChainPlatformNotSupportedException("No aux data for " + request.getAssetCode() + " found on meta.");
+            platform_aux = result.getAux().get(result.getPlatform().getAuxCode().name()).toString();
+        }
+
+        // check there is same unchecked request within 1 minutes
+        Optional<DexTaskAnchorRecord> sameRequest = dslContext.selectFrom(DEX_TASK_ANCHOR).where(
+                DEX_TASK_ANCHOR.PRIVATEADDR.eq(request.getPrivateWalletAddress())
+                        .and(DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.LUNIVERSE_MAIN_TOKEN))
+                        .and(DEX_TASK_ANCHOR.ASSETCODE.eq(TALK))
+                        .and(DEX_TASK_ANCHOR.AMOUNT.eq(amount))
+                        .and(DEX_TASK_ANCHOR.BC_REF_ID.isNull())
+                        .and(DEX_TASK_ANCHOR.CREATE_TIMESTAMP.gt(DSL.localDateTimeSub(DSL.currentLocalDateTime(), 60, DatePart.SECOND)))
+        ).limit(1).fetchOptional();
+
+        if(sameRequest.isPresent()) {
+            throw new DuplicatedTaskFoundException(sameRequest.get().getTaskid());
+        }
+
+        String position;
+
+        // create task record
+        DexTaskAnchorRecord taskRecord = new DexTaskAnchorRecord();
+        taskRecord.setTaskid(dexTaskId.getId());
+        taskRecord.setUserId(userId);
+
+        taskRecord.setBctxType(result.getPlatform());
+        taskRecord.setPrivateaddr(request.getPrivateWalletAddress());
+        taskRecord.setTradeaddr(tradeWallet.getAccountId());
+        taskRecord.setHolderaddr(assetHolderAddress);
+        taskRecord.setAssetcode(TALK);
+        taskRecord.setPlatformAux(platform_aux);
+        taskRecord.setAmount(amount);
+        taskRecord.setNetworkfee(request.getNetworkFee());
+        dslContext.attach(taskRecord);
+        taskRecord.store();
+        logger.info("{} generated. userId = {}", dexTaskId, userId);
+
+        // Adjust native balance before anchor
+        position = "rebalance";
+        StellarChannelTransaction.Builder sctxBuilder = stellarNetworkService.newChannelTxBuilder();
+        try {
+            ObjectPair<Boolean, BigDecimal> rebalanced = twService.addNativeBalancingOperation(sctxBuilder, tradeWallet, false, TALK);
+            if(rebalanced.first()) {
+                try {
+                    logger.debug("Rebalance trade wallet {} (#{}) for anchor task.", tradeWallet.getAccountId(), userId);
+                    SubmitTransactionResponse rebalanceResponse = sctxBuilder.buildAndSubmit();
+                    if(!rebalanceResponse.isSuccess()) {
+                        ObjectPair<String, String> errorInfo = StellarConverter.getResultCodesFromExtra(rebalanceResponse);
+                        logger.error("Cannot rebalance trade wallet {} {} : {} {}", user.getId(), tradeWallet.getAccountId(), errorInfo.first(), errorInfo.second());
+                        throw new TradeWalletRebalanceException(errorInfo.first());
+                    }
+
+                    taskRecord.setRebalanceamount(rebalanced.second());
+                    taskRecord.setRebalancetxhash(rebalanceResponse.getHash());
+                    taskRecord.store();
+                } catch(IOException | AccountRequiresMemoException e) {
+                    throw new StellarException(e);
+                }
+            }
+        } catch(TalkenException tex) {
+            DexTaskRecord.writeError(taskRecord, position, tex);
+            throw tex;
+        }
+
+        logger.info("{} complete. userId = {}", dexTaskId, userId);
+        result.setAddrFrom(taskRecord.getPrivateaddr());
+        result.setAddrTo(taskRecord.getHolderaddr());
+        result.setAddrTrade(taskRecord.getTradeaddr());
+        result.setAmount(amount);
+        result.setNetfee(taskRecord.getNetworkfee());
+        result.setSymbol(TALK);
+
+        return result;
+    }
 }

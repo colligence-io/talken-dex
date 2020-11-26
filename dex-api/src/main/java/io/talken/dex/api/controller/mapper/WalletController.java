@@ -14,6 +14,7 @@ import io.talken.dex.api.service.WalletService;
 import io.talken.dex.api.service.integration.PrivateWalletMsgTypeEnum;
 import io.talken.dex.api.service.integration.PrivateWalletService;
 import io.talken.dex.api.service.integration.PrivateWalletTransferDTO;
+import io.talken.dex.shared.exception.ParameterViolationException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -176,4 +177,12 @@ public class WalletController {
 	public DexResponse<Boolean> checkLmtTransferReady(@RequestParam("address") String address) {
 		return DexResponse.buildResponse(walletService.checkTransferLukPrepared(address));
 	}
+
+    @Deprecated
+    @AuthRequired
+    @RequestMapping(value = RequestMappings.PRIVATE_WALLET_TALK_LMT_ANCHOR, method = RequestMethod.POST)
+    public DexResponse<PrivateWalletTransferDTO> anchorOnlyTALKLMT(@RequestBody AnchorRequest postBody) throws TalkenException {
+        DTOValidator.validate(postBody);
+        return DexResponse.buildResponse(anchorService.anchorOnlyTALKLMT(authInfo.getUser(), postBody));
+    }
 }
