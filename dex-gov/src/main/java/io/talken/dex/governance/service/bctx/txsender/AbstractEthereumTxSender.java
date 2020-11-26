@@ -37,6 +37,7 @@ public abstract class AbstractEthereumTxSender extends TxSender {
     @Autowired
     private DSLContext dslContext;
 
+    private static final BigInteger DEFAULT_GASLIMIT = BigInteger.valueOf(78800L);
 	private static final BigInteger DEFAULT_ERC20_GASLIMIT = BigInteger.valueOf(100000L);
 
 	private static Map<String, BigInteger> nonceCheck = new HashMap<>();
@@ -119,7 +120,7 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
         BigInteger amount = getEthAmount(decimals, bctx);
 		BigInteger gasPrice = ethereumNetworkService.getGasPrice(web3j);
-		BigInteger gasLimit = BigInteger.valueOf(21000); // 21000 for native ethereum gasLimit
+		BigInteger gasLimit = DEFAULT_GASLIMIT;
 
 		RawTransaction rawTx = generateRawTx(contractAddr, decimals, bctx, nonce, amount, gasPrice, gasLimit, from);
 
@@ -162,7 +163,7 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
         BigInteger amount = getEthAmount(decimals, bctx);
         BigInteger gasPrice = ethereumNetworkService.getGasPrice(web3j);
-        BigInteger gasLimit = BigInteger.valueOf(21000); // 21000 for native ethereum gasLimit
+        BigInteger gasLimit = DEFAULT_GASLIMIT;
 
         RawTransaction rawTx = generateRawTx(contractAddr, decimals, bctx, nonce, amount, gasPrice, gasLimit, from);
         log.setRequest(JSONWriter.toJsonString(rawTx));
