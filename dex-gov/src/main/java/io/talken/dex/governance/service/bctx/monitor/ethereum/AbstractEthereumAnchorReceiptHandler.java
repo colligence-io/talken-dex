@@ -57,13 +57,7 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 	@Override
 	public void handle(EthBlock.Block block, TransactionReceipt txResult, EthereumTransferReceipt receipt) throws Exception {
 		// check transfer is to holder
-		if(!checkHolder(receipt.getTo())) {
-            logger.error("Cancel to Transfer(Empty Holder) [#{}] : {} -> {}",
-                    receipt.getBlockNumber(),
-                    receipt.getFrom(), receipt.getTo()
-            );
-		    return;
-		}
+		if(!checkHolder(receipt.getTo())) return;
 
 		// convert amount to actual
 		BigDecimal amountValue = new BigDecimal(receipt.getValue());
