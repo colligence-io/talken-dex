@@ -316,6 +316,7 @@ public class AnchorService {
     @Deprecated
     public PrivateWalletTransferDTO anchorOnlyTALKLMT(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
         final String TALK = "TALK";
+        final BlockChainPlatformEnum LMT = BlockChainPlatformEnum.LUNIVERSE_MAIN_TOKEN;
 
         final BigDecimal amount = StellarConverter.scale(request.getAmount());
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
@@ -335,7 +336,7 @@ public class AnchorService {
         // check there is same unchecked request within 1 minutes
         Optional<DexTaskAnchorRecord> sameRequest = dslContext.selectFrom(DEX_TASK_ANCHOR).where(
                 DEX_TASK_ANCHOR.PRIVATEADDR.eq(request.getPrivateWalletAddress())
-                        .and(DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.LUNIVERSE_MAIN_TOKEN))
+                        .and(DEX_TASK_ANCHOR.BCTX_TYPE.eq(LMT))
                         .and(DEX_TASK_ANCHOR.ASSETCODE.eq(TALK))
                         .and(DEX_TASK_ANCHOR.AMOUNT.eq(amount))
                         .and(DEX_TASK_ANCHOR.BC_REF_ID.isNull())
@@ -353,17 +354,18 @@ public class AnchorService {
         taskRecord.setTaskid(dexTaskId.getId());
         taskRecord.setUserId(userId);
 
-        taskRecord.setBctxType(result.getPlatform());
+        taskRecord.setAssetcode(TALK);
+        taskRecord.setBctxType(LMT);
+
         taskRecord.setPrivateaddr(request.getPrivateWalletAddress());
         taskRecord.setTradeaddr(tradeWallet.getAccountId());
         taskRecord.setHolderaddr(assetHolderAddress);
-        taskRecord.setAssetcode(TALK);
         taskRecord.setPlatformAux(platform_aux);
         taskRecord.setAmount(amount);
         taskRecord.setNetworkfee(request.getNetworkFee());
         dslContext.attach(taskRecord);
         taskRecord.store();
-        logger.info("{} generated. userId = {}", dexTaskId, userId);
+        logger.info("TALK_LMT anchor_task {} generated. userId = {}", dexTaskId, userId);
 
         // Adjust native balance before anchor
         position = "rebalance";
@@ -392,13 +394,15 @@ public class AnchorService {
             throw tex;
         }
 
-        logger.info("{} complete. userId = {}", dexTaskId, userId);
+        logger.info("TALK_LMT anchor_task {} complete. userId = {}", dexTaskId, userId);
         result.setAddrFrom(taskRecord.getPrivateaddr());
         result.setAddrTo(taskRecord.getHolderaddr());
         result.setAddrTrade(taskRecord.getTradeaddr());
         result.setAmount(amount);
         result.setNetfee(taskRecord.getNetworkfee());
+
         result.setSymbol(TALK);
+        result.setPlatform(LMT);
 
         return result;
     }

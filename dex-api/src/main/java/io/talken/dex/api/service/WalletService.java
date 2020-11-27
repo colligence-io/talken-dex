@@ -226,5 +226,4 @@ public class WalletService {
 		logger.info("getLukBalance({}) : {}", address, result.stripTrailingZeros().toString());
 		return result;
 	}
-
 }
