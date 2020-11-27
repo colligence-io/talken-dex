@@ -63,11 +63,11 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 		BigDecimal amountValue = new BigDecimal(receipt.getValue());
 		BigDecimal amount;
 		if(receipt.getTokenDecimal() != null) {
-			amount = amountValue.divide(BigDecimal.TEN.pow(Integer.valueOf(receipt.getTokenDecimal())), RoundingMode.FLOOR);
+			amount = amountValue.divide(BigDecimal.TEN.pow(Integer.valueOf(receipt.getTokenDecimal())), 7, RoundingMode.FLOOR);
 		} else {
 			amount = Convert.fromWei(amountValue.toString(), Convert.Unit.ETHER);
 		}
-        logger.info("amount [[{}, {}, {}]]", receipt.getValue(), amountValue, amount);
+        logger.info("amount [[{} : {}, {}, {}]]", receipt.getTokenDecimal(), receipt.getValue(), amountValue, amount);
 		amount = StellarConverter.scale(amount);
         logger.info("amount_convert [[{}]]", amount);
 
