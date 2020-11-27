@@ -67,17 +67,29 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 		} else {
 			amount = Convert.fromWei(amountValue.toString(), Convert.Unit.ETHER);
 		}
+        logger.info("amount [[{}, {}, {}]]", receipt.getValue(), amountValue, amount);
 		amount = StellarConverter.scale(amount);
+        logger.info("amount_convert [[{}]]", amount);
 
 		logger.info("Transfer to holder detected [#{}] : {} -> {} : {} {}({})",
                 receipt.getBlockNumber(),
                 receipt.getFrom(), receipt.getTo(),
-                amount.toString(),
+                amount.stripTrailingZeros().toString(),
                 receipt.getTokenSymbol() != null ? receipt.getTokenSymbol() : receipt.getTokenName(),
                 receipt.getContractAddress());
 
 		// return amount is smaller than zero
-		if(amount.compareTo(BigDecimal.ZERO) <= 0) return;
+		if(amount.compareTo(BigDecimal.ZERO) <= 0) {
+            logger.error("Cancel to Transfer [#{}] : {} -> {} : {} {}({})",
+                    receipt.getBlockNumber(),
+                    receipt.getFrom(), receipt.getTo(),
+                    amount.stripTrailingZeros().toString(),
+                    receipt.getTokenSymbol() != null ? receipt.getTokenSymbol() : receipt.getTokenName(),
+                    receipt.getContractAddress()
+            );
+
+		    return;
+        }
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
 				.and(DEX_TASK_ANCHOR.VC4S_PRIVATEADDR.eq(receipt.getFrom().toLowerCase())
@@ -96,7 +108,7 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
             logger.info("Transfer to holder detected but no matching anchor task found");
             logger.error("Transfer to holder detected but no matching anchor task found : {} -> {} : {} {}({})",
                     receipt.getFrom(), receipt.getTo(),
-                    amount.toString(),
+                    amount.stripTrailingZeros().toString(),
                     receipt.getTokenSymbol() != null ? receipt.getTokenSymbol() : receipt.getTokenName(),
                     receipt.getContractAddress());
 			return;
@@ -104,7 +116,7 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 			logger.info("Transfer to holder detected for {} : {} -> {} : {} {}({})",
                     taskRecord.getTaskid(),
                     receipt.getFrom(), receipt.getTo(),
-                    amount.toString(),
+                    amount.stripTrailingZeros().toString(),
                     receipt.getTokenSymbol() != null ? receipt.getTokenSymbol() : receipt.getTokenName(),
                     receipt.getContractAddress());
 		}
