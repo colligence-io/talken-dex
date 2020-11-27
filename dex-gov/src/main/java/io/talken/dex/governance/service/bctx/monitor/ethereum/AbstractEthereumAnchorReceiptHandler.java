@@ -69,7 +69,7 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 		}
 		amount = StellarConverter.scale(amount);
 
-		logger.info("[EA] Transfer to holder detected : {} -> {} : {} {}({})",
+		logger.info("Transfer to holder detected : {} -> {} : {} {}({})",
                 receipt.getFrom(), receipt.getTo(), amount.stripTrailingZeros().toString(), receipt.getTokenSymbol(), receipt.getContractAddress());
 
 		// return amount is smaller than zero
@@ -89,11 +89,11 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 
 		// finish if task not found
 		if(taskRecord == null) {
-			logger.error("[EA] Transfer to holder detected but no matching anchor task found : {} -> {} : {} {}({})",
+			logger.error("Transfer to holder detected but no matching anchor task found : {} -> {} : {} {}({})",
                     receipt.getFrom(), receipt.getTo(), amount.stripTrailingZeros().toString(), receipt.getTokenSymbol(), receipt.getContractAddress());
 			return;
 		} else {
-			logger.info("[EA] Transfer to holder detected for {} : {} -> {} : {} {}({})",
+			logger.info("Transfer to holder detected for {} : {} -> {} : {} {}({})",
                     taskRecord.getTaskid(), receipt.getFrom(), receipt.getTo(), amount.stripTrailingZeros().toString(), receipt.getTokenSymbol(), receipt.getContractAddress());
 		}
 
