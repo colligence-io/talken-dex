@@ -168,7 +168,7 @@ public class MaMonitorService {
             // TODO : check managed status and flag
             // TODO : anchor/deanchor check managedInfo.pickActiveHolderAccountAddress
             // TODO : temp
-			if (assetCode.equals("TALKP") || assetCode.equals("TALKSV") || assetCode.equals("TALKCH")) continue;
+			if (assetCode.equals("TALKLMT") || assetCode.equals("TALKP") || assetCode.equals("TALKSV") || assetCode.equals("TALKCH")) continue;
 			
 			TokenMetaTable.Meta meta = _kv.getValue();
 

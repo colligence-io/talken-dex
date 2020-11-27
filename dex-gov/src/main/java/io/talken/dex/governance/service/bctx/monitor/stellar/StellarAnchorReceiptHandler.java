@@ -80,7 +80,9 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 		if(!checkHolder(opReceipt.getRequest().getTo())) return;
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
-				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(opReceipt.getRequest().getFrom()).and(DEX_TASK_ANCHOR.HOLDERADDR.eq(opReceipt.getRequest().getTo())).and(DEX_TASK_ANCHOR.AMOUNT.eq(opReceipt.getRequest().getAmount())));
+				.and(DEX_TASK_ANCHOR.PRIVATEADDR.eq(opReceipt.getRequest().getFrom())
+                .and(DEX_TASK_ANCHOR.HOLDERADDR.eq(opReceipt.getRequest().getTo()))
+                .and(DEX_TASK_ANCHOR.AMOUNT.eq(opReceipt.getRequest().getAmount())));
 
 		if(opReceipt.getRequest().getAsset().equalsIgnoreCase("native")) {
 			condition = condition.and(DEX_TASK_ANCHOR.BCTX_TYPE.eq(BlockChainPlatformEnum.STELLAR));

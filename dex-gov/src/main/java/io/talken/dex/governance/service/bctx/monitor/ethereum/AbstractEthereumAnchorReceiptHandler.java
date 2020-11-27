@@ -69,7 +69,8 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 		}
 		amount = StellarConverter.scale(amount);
 
-		logger.info("Transfer to holder detected : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getContractAddress());
+		logger.info("[EA] Transfer to holder detected : {} -> {} : {} {}({})",
+                receipt.getFrom(), receipt.getTo(), amount.stripTrailingZeros().toString(), receipt.getTokenSymbol(), receipt.getContractAddress());
 
 		// return amount is smaller than zero
 		if(amount.compareTo(BigDecimal.ZERO) <= 0) return;
@@ -88,10 +89,12 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 
 		// finish if task not found
 		if(taskRecord == null) {
-			logger.error("Transfer to holder detected but no matching anchor task found : {} -> {} : {} {}({})", receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getContractAddress());
+			logger.error("[EA] Transfer to holder detected but no matching anchor task found : {} -> {} : {} {}({})",
+                    receipt.getFrom(), receipt.getTo(), amount.stripTrailingZeros().toString(), receipt.getTokenSymbol(), receipt.getContractAddress());
 			return;
 		} else {
-			logger.info("Transfer to holder detected for {} : {} -> {} : {} {}({})", taskRecord.getTaskid(), receipt.getFrom(), receipt.getTo(), amount, receipt.getTokenSymbol(), receipt.getContractAddress());
+			logger.info("[EA] Transfer to holder detected for {} : {} -> {} : {} {}({})",
+                    taskRecord.getTaskid(), receipt.getFrom(), receipt.getTo(), amount.stripTrailingZeros().toString(), receipt.getTokenSymbol(), receipt.getContractAddress());
 		}
 
 		taskRecord.setBcRefId(receipt.getHash());
@@ -112,7 +115,7 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 		TransactionBlockExecutor.of(txMgr).transactional(() -> {
 			bctxRecord.store();
 			taskRecord.setIssueBctxId(bctxRecord.getId());
-			logger.info("Anchor task {} issuing bctx queued : #{}", taskRecord.getTaskid(), bctxRecord.getId());
+			logger.info("[EA] Anchor task {} issuing bctx queued : #{}", taskRecord.getTaskid(), bctxRecord.getId());
 			taskRecord.store();
 		});
 	}
