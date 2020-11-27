@@ -105,7 +105,6 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 
 		// finish if task not found
 		if(taskRecord == null) {
-            logger.info("Transfer to holder detected but no matching anchor task found");
             logger.error("Transfer to holder detected but no matching anchor task found : {} -> {} : {} {}({})",
                     receipt.getFrom(), receipt.getTo(),
                     amount.stripTrailingZeros().toString(),
