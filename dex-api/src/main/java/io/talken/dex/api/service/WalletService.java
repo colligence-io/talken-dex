@@ -214,12 +214,17 @@ public class WalletService {
 	 * @return
 	 */
 	public boolean checkTransferLukPrepared(String address) {
-		return MINIMUM_LUK_FOR_TRANSFER.compareTo(getLukBalance(address)) <= 0;
+        BigDecimal lukBalance = getLukBalance(address);
+	    boolean result = MINIMUM_LUK_FOR_TRANSFER.compareTo(lukBalance) <= 0;
+        logger.info("checkTransferLukPrepared : {} {} ", MINIMUM_LUK_FOR_TRANSFER, lukBalance);
+		return result;
 	}
 
 	private BigDecimal getLukBalance(String address) {
 		BigInteger balanceRaw = luniverseNetworkService.getBalance(address, null);
-		return (balanceRaw == null) ? BigDecimal.ZERO : Convert.fromWei(balanceRaw.toString(), Convert.Unit.ETHER);
+		BigDecimal result = (balanceRaw == null) ? BigDecimal.ZERO : Convert.fromWei(balanceRaw.toString(), Convert.Unit.ETHER);
+		logger.info("getLukBalance({}) : {}", address, result.stripTrailingZeros().toString());
+		return result;
 	}
 
 }

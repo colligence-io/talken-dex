@@ -367,7 +367,7 @@ public class TokenMetaGovService extends TokenMetaTableService {
 			updateStorage(newTmTable);
 
 			redisTemplate.opsForValue().set(TokenMetaTable.REDIS_KEY, newTmTable);
-			redisTemplate.opsForValue().set(TokenMetaTable.REDIS_UDPATED_KEY, loadTimestamp);
+			redisTemplate.opsForValue().set(TokenMetaTable.REDIS_UPDATED_KEY, loadTimestamp);
 		} catch(Exception ex) {
 			throw new TokenMetaLoadException(ex);
 		}

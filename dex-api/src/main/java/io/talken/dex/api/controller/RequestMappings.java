@@ -74,4 +74,7 @@ public class RequestMappings {
 	private static final String ADM = "/adm";
 	public static final String ADM_RELOAD_TM = ADM + "/reloadTokenMeta";
 	public static final String ADM_MI_UPDATEHOLDER = ADM + "/managedInfo/{symbol}/updateHolder";
+
+	// deprecated
+    public static final String PRIVATE_WALLET_TALK_LMT_ANCHOR = PRIVATE_WALLET + "/talkLMTAnchor";
 }

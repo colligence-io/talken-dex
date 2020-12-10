@@ -170,9 +170,9 @@ public class UserRewardBctxService {
 					});
 
 					if(!dStatus.has(assetCode)) dStatus.insert(new DistStatus(meta.getSymbol()));
-					DistStatus ds = dStatus.select(assetCode);
-					ds.getCount().incrementAndGet();
-					ds.setAmount(ds.getAmount().add(rewardRecord.getAmount()));
+					DistStatus distStatus = dStatus.select(assetCode);
+                    distStatus.getCount().incrementAndGet();
+                    distStatus.setAmount(distStatus.getAmount().add(rewardRecord.getAmount()));
 				}
 			} catch(Exception ex) {
 				StringBuilder sb = new StringBuilder();
@@ -191,10 +191,6 @@ public class UserRewardBctxService {
                 alarmService.exception(logger, ex);
 
                 rewardRecord.setErrorcode(ex.getClass().getSimpleName());
-                // 임시.
-                if (errorMessage.length() > 255) {
-                    errorMessage = errorMessage.substring(0, 254);
-                }
 				rewardRecord.setErrormessage(errorMessage);
 				rewardRecord.setCheckFlag(true);
 				rewardRecord.store();

@@ -61,7 +61,7 @@ public class TokenMetaApiService extends TokenMetaTableService {
 	protected void checkAndReload() throws TokenMetaLoadException {
 		try {
 			Long redisTmUpdated =
-					Optional.ofNullable(redisTemplate.opsForValue().get(TokenMetaTable.REDIS_UDPATED_KEY))
+					Optional.ofNullable(redisTemplate.opsForValue().get(TokenMetaTable.REDIS_UPDATED_KEY))
 							.map((o) -> Long.valueOf(o.toString()))
 							.orElseThrow(() -> new TokenMetaLoadException("cannot find cached meta"));
 

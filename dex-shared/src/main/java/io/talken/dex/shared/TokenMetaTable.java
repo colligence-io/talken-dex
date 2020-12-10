@@ -21,7 +21,7 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 	private static final long serialVersionUID = -3910073165659722969L;
 
 	public static final String REDIS_KEY = "talken:svc:token_meta";
-	public static final String REDIS_UDPATED_KEY = "talken:svc:token_meta_updated";
+	public static final String REDIS_UPDATED_KEY = "talken:svc:token_meta_updated";
 
 	public Meta forMeta(String key) {
 		if(!this.containsKey(key)) this.put(key, new Meta());
@@ -123,6 +123,8 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 			return cache.getAssetIssuer();
 		}
 
+		// TODO : ??? activeFlag, hotFlag
+        // TODO : anchor/deanchor 요청 제어
 		public String pickActiveHolderAccountAddress() throws ActiveAssetHolderAccountNotFoundException {
 			Optional<HolderAccountInfo> opt_aha = assetHolderAccounts.stream()
 					.filter(TokenMetaTable.HolderAccountInfo::getActiveFlag)
