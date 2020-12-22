@@ -38,6 +38,7 @@ import org.stellar.sdk.AccountRequiresMemoException;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+import org.stellar.sdk.responses.SubmitTransactionTimeoutResponseException;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -293,32 +294,31 @@ public class AnchorService {
 			if(!txResponse.isSuccess()) {
 				throw StellarException.from(txResponse);
 			}
-            throw StellarException.from(txResponse);
 		} catch(TalkenException tex) {
 			DexTaskRecord.writeError(taskRecord, position, tex);
 			throw tex;
-		} catch(IOException | AccountRequiresMemoException ioex) {
+		} catch(IOException | AccountRequiresMemoException | SubmitTransactionTimeoutResponseException ioex) {
+		    // TODO: SubmitTransactionTimeoutResponseException 처리
+            //
 			StellarException ex = new StellarException(ioex);
 			DexTaskRecord.writeError(taskRecord, position, ex);
+            logger.debug("{} / {}", ioex.getClass().getSimpleName(), ioex.getMessage());
 			throw ex;
 		} catch(Exception e) {
-            StellarException stellarEx = new StellarException(e);
-		    logger.debug("Ex :: {}, msg : {}", e.getClass().getSimpleName(), e.getMessage());
-            logger.debug("stellarEx :: {}, msg : {}", stellarEx.getClass().getSimpleName(), stellarEx.getMessage());
-
-            DexTaskRecord.writeError(taskRecord, position, stellarEx);
+            DexTaskRecord.writeError(taskRecord, position, new BctxException(e, "BctxException", "Unknown Deanchor Error"));
+            logger.debug("{} / {}", e.getClass().getSimpleName(), e.getMessage());
             throw e;
         }
 
-//		logger.info("{} complete. userId = {}", dexTaskId, userId);
-//		DeanchorResult result = new DeanchorResult();
-//		result.setTaskId(dexTaskId.getId());
-//		result.setTxHash(taskRecord.getTxHash());
-//		result.setFeeAssetCode("TALK");
-//		result.setFeeAmount(taskRecord.getFeeamount());
-//		result.setDeanchorAssetCode(taskRecord.getAssetcode());
-//		result.setDeanchorAmount(taskRecord.getDeanchoramount());
-//		return result;
+		logger.info("{} complete. userId = {}", dexTaskId, userId);
+		DeanchorResult result = new DeanchorResult();
+		result.setTaskId(dexTaskId.getId());
+		result.setTxHash(taskRecord.getTxHash());
+		result.setFeeAssetCode("TALK");
+		result.setFeeAmount(taskRecord.getFeeamount());
+		result.setDeanchorAssetCode(taskRecord.getAssetcode());
+		result.setDeanchorAmount(taskRecord.getDeanchoramount());
+		return result;
 	}
 
     @Deprecated
