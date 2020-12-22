@@ -300,7 +300,13 @@ public class AnchorService {
 			StellarException ex = new StellarException(ioex);
 			DexTaskRecord.writeError(taskRecord, position, ex);
 			throw ex;
-		}
+		} catch(Exception e) {
+            StellarException stellarEx = new StellarException(e);
+		    logger.debug("Ex {}", e.getMessage());
+            logger.debug("stellarEx {}", stellarEx.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
 
 		logger.info("{} complete. userId = {}", dexTaskId, userId);
 		DeanchorResult result = new DeanchorResult();
