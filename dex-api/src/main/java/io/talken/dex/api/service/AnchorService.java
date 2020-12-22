@@ -3,6 +3,7 @@ package io.talken.dex.api.service;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.exception.TalkenException;
+import io.talken.common.exception.common.GeneralException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.persistence.DexTaskRecord;
@@ -297,15 +298,12 @@ public class AnchorService {
 		} catch(TalkenException tex) {
 			DexTaskRecord.writeError(taskRecord, position, tex);
 			throw tex;
-		} catch(IOException | AccountRequiresMemoException | SubmitTransactionTimeoutResponseException ioex) {
-		    // TODO: SubmitTransactionTimeoutResponseException 처리(Anchor도 확인...)
-			StellarException ex = new StellarException(ioex);
-			DexTaskRecord.writeError(taskRecord, position, ex);
-            logger.debug("{} / {}", ioex.getClass().getSimpleName(), ioex.getMessage());
-			throw ex;
-		} catch(Exception e) {
-            DexTaskRecord.writeError(taskRecord, position, new BctxException(e, "BctxException", "Unknown Error"));
-            logger.debug("{} / {}", e.getClass().getSimpleName(), e.getMessage());
+        } catch(IOException | AccountRequiresMemoException | SubmitTransactionTimeoutResponseException ioex) {
+            StellarException ex = new StellarException(ioex);
+            DexTaskRecord.writeError(taskRecord, position, ex);
+            throw ex;
+        } catch(Exception e) {
+            DexTaskRecord.writeError(taskRecord, position, new GeneralException(e));
             throw e;
         }
 

@@ -2,6 +2,7 @@ package io.talken.dex.governance.scheduler.staking;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.exception.TalkenException;
+import io.talken.common.exception.common.GeneralException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.persistence.DexTaskRecord;
@@ -35,6 +36,7 @@ import org.stellar.sdk.Asset;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+import org.stellar.sdk.responses.SubmitTransactionTimeoutResponseException;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -189,8 +191,13 @@ public class StakingScheduledService {
 
                     taskRecord.setRebalanceamount(rebalanced.second());
                     taskRecord.setRebalancetxhash(rebalanceResponse.getHash());
-                } catch(IOException | AccountRequiresMemoException e) {
-                    throw new StellarException(e);
+                } catch(IOException | AccountRequiresMemoException | SubmitTransactionTimeoutResponseException ioex) {
+                    StellarException ex = new StellarException(ioex);
+                    DexTaskRecord.writeError(taskRecord, position, ex);
+                    throw ex;
+                } catch(Exception e) {
+                    DexTaskRecord.writeError(taskRecord, position, new GeneralException(e));
+                    throw e;
                 }
             }
         } catch(TalkenException tex) {

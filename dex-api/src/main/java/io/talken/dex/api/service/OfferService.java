@@ -31,6 +31,7 @@ import org.stellar.sdk.*;
 import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.responses.OfferResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+import org.stellar.sdk.responses.SubmitTransactionTimeoutResponseException;
 import org.stellar.sdk.xdr.OperationResult;
 
 import java.io.IOException;
@@ -282,11 +283,14 @@ public class OfferService {
 		} catch(TalkenException tex) {
 			DexTaskRecord.writeError(taskRecord, position, tex);
 			throw tex;
-		} catch(IOException | AccountRequiresMemoException ioex) {
-			StellarException ex = new StellarException(ioex);
-			DexTaskRecord.writeError(taskRecord, position, ex);
-			throw ex;
-		}
+        } catch(IOException | AccountRequiresMemoException | SubmitTransactionTimeoutResponseException ioex) {
+            StellarException ex = new StellarException(ioex);
+            DexTaskRecord.writeError(taskRecord, position, ex);
+            throw ex;
+        } catch(Exception e) {
+            DexTaskRecord.writeError(taskRecord, position, new GeneralException(e));
+            throw e;
+        }
 
 		position = "process_result";
 		try {
