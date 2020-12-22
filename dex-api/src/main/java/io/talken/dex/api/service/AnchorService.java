@@ -302,9 +302,10 @@ public class AnchorService {
 			throw ex;
 		} catch(Exception e) {
             StellarException stellarEx = new StellarException(e);
-		    logger.debug("Ex {}", e.getMessage());
-            logger.debug("stellarEx {}", stellarEx.getMessage());
-            e.printStackTrace();
+		    logger.debug("Ex :: {}, msg : {}", e.getClass().getSimpleName(), e.getMessage());
+            logger.debug("stellarEx :: {}, msg : {}", stellarEx.getClass().getSimpleName(), stellarEx.getMessage());
+
+            DexTaskRecord.writeError(taskRecord, position, stellarEx);
             throw e;
         }
 
