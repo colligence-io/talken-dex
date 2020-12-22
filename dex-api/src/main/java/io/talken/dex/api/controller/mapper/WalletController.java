@@ -14,7 +14,6 @@ import io.talken.dex.api.service.WalletService;
 import io.talken.dex.api.service.integration.PrivateWalletMsgTypeEnum;
 import io.talken.dex.api.service.integration.PrivateWalletService;
 import io.talken.dex.api.service.integration.PrivateWalletTransferDTO;
-import io.talken.dex.shared.exception.ParameterViolationException;
 import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;

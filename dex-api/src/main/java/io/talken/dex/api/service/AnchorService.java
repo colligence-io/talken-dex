@@ -293,6 +293,7 @@ public class AnchorService {
 			if(!txResponse.isSuccess()) {
 				throw StellarException.from(txResponse);
 			}
+            throw StellarException.from(txResponse);
 		} catch(TalkenException tex) {
 			DexTaskRecord.writeError(taskRecord, position, tex);
 			throw tex;
@@ -309,15 +310,15 @@ public class AnchorService {
             throw e;
         }
 
-		logger.info("{} complete. userId = {}", dexTaskId, userId);
-		DeanchorResult result = new DeanchorResult();
-		result.setTaskId(dexTaskId.getId());
-		result.setTxHash(taskRecord.getTxHash());
-		result.setFeeAssetCode("TALK");
-		result.setFeeAmount(taskRecord.getFeeamount());
-		result.setDeanchorAssetCode(taskRecord.getAssetcode());
-		result.setDeanchorAmount(taskRecord.getDeanchoramount());
-		return result;
+//		logger.info("{} complete. userId = {}", dexTaskId, userId);
+//		DeanchorResult result = new DeanchorResult();
+//		result.setTaskId(dexTaskId.getId());
+//		result.setTxHash(taskRecord.getTxHash());
+//		result.setFeeAssetCode("TALK");
+//		result.setFeeAmount(taskRecord.getFeeamount());
+//		result.setDeanchorAssetCode(taskRecord.getAssetcode());
+//		result.setDeanchorAmount(taskRecord.getDeanchoramount());
+//		return result;
 	}
 
     @Deprecated
