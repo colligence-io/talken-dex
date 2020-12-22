@@ -1,5 +1,6 @@
 package io.talken.dex.governance.service.bctx.txsender;
 
+import io.talken.common.RunningProfile;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
@@ -19,7 +20,6 @@ import org.web3j.crypto.RawTransaction;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.core.Response;
-import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
@@ -37,8 +37,10 @@ public abstract class AbstractEthereumTxSender extends TxSender {
     @Autowired
     private DSLContext dslContext;
 
-    private static final BigInteger DEFAULT_GASLIMIT = BigInteger.valueOf(78800L);
-	private static final BigInteger DEFAULT_ERC20_GASLIMIT = BigInteger.valueOf(100000L);
+    private static final BigInteger DEFAULT_GASLIMIT = BigInteger.valueOf(21000L);
+	private static final BigInteger DEFAULT_ERC20_GASLIMIT = BigInteger.valueOf(78800L);
+    private static final BigInteger DEFAULT_RFR_GASLIMIT = BigInteger.valueOf(200000L);
+    private static final String RFR_CONTRACT = "0xd0929d411954c47438dc1d871dd6081f5c5e149c";
 
 	private static Map<String, BigInteger> nonceCheck = new HashMap<>();
 
@@ -194,35 +196,36 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
     private RawTransaction generateRawTx(String contractAddr, Integer decimals, Bctx bctx,
                                          BigInteger nonce, BigInteger amount, BigInteger gasPrice, BigInteger gasLimit, String from ) {
-
-        EthRpcClient ethRpcClient = ethereumNetworkService.getInfuraClient();
-        Web3jService web3jService = ethRpcClient.newWeb3jService();
-        Web3j web3j = Web3j.build(web3jService);
-
         RawTransaction rawTx;
 
-        // TODO: syslogin0809 : 0x3Eef31524C233fF8cB783e9E000DBDB39cD8e6b3
-//        if ()
-
         if(contractAddr != null) {
-            String encodedFunction = FunctionEncoder.encode(StandardERC20ContractFunctions.transfer(bctx.getAddressTo(), amount));
-
             // estimate gasLimit with given transaction
-            Transaction est_tx = Transaction.createFunctionCallTransaction(
-                    from,
-                    nonce,
-                    gasPrice,
-                    BigInteger.ZERO,
-                    contractAddr,
-                    encodedFunction
-            );
+//            EthRpcClient ethRpcClient = ethereumNetworkService.getInfuraClient();
+//            Web3jService web3jService = ethRpcClient.newWeb3jService();
+//            Web3j web3j = Web3j.build(web3jService);
+//            Transaction est_tx = Transaction.createFunctionCallTransaction(
+//                    from,
+//                    nonce,
+//                    gasPrice,
+//                    BigInteger.ZERO,
+//                    contractAddr,
+//                    encodedFunction
+//            );
 
-            try {
-                BigInteger estAmountUsed = web3j.ethEstimateGas(est_tx).sendAsync().get().getAmountUsed();
-                gasLimit = estAmountUsed.multiply(BigInteger.valueOf(12)).divide(BigInteger.TEN); // use 120% of estimated gaslimit
-            } catch(Exception ex) {
-                gasLimit = DEFAULT_ERC20_GASLIMIT;
-                logger.warn("Cannot estimate ethereum tx gasLimit [{}], use default {}", ex.getClass().getSimpleName(), gasLimit);
+//            try {
+//                BigInteger estAmountUsed = web3j.ethEstimateGas(est_tx).sendAsync().get().getAmountUsed();
+//                gasLimit = estAmountUsed.multiply(BigInteger.valueOf(12)).divide(BigInteger.TEN); // use 120% of estimated gaslimit
+//            } catch(Exception ex) {
+//                gasLimit = DEFAULT_ERC20_GASLIMIT;
+//                logger.warn("Cannot estimate ethereum tx gasLimit [{}], use default {}", ex.getClass().getSimpleName(), gasLimit);
+//            }
+
+            String encodedFunction = FunctionEncoder.encode(StandardERC20ContractFunctions.transfer(bctx.getAddressTo(), amount));
+            gasLimit = DEFAULT_ERC20_GASLIMIT;
+
+            // for RFR
+            if (RunningProfile.isProduction() && RFR_CONTRACT.equals(contractAddr)) {
+                gasLimit = DEFAULT_RFR_GASLIMIT;
             }
 
             rawTx = RawTransaction.createTransaction(

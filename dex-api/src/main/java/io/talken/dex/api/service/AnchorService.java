@@ -298,14 +298,13 @@ public class AnchorService {
 			DexTaskRecord.writeError(taskRecord, position, tex);
 			throw tex;
 		} catch(IOException | AccountRequiresMemoException | SubmitTransactionTimeoutResponseException ioex) {
-		    // TODO: SubmitTransactionTimeoutResponseException 처리
-            //
+		    // TODO: SubmitTransactionTimeoutResponseException 처리(Anchor도 확인...)
 			StellarException ex = new StellarException(ioex);
 			DexTaskRecord.writeError(taskRecord, position, ex);
             logger.debug("{} / {}", ioex.getClass().getSimpleName(), ioex.getMessage());
 			throw ex;
 		} catch(Exception e) {
-            DexTaskRecord.writeError(taskRecord, position, new BctxException(e, "BctxException", "Unknown Deanchor Error"));
+            DexTaskRecord.writeError(taskRecord, position, new BctxException(e, "BctxException", "Unknown Error"));
             logger.debug("{} / {}", e.getClass().getSimpleName(), e.getMessage());
             throw e;
         }
