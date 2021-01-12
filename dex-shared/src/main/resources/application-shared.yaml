@@ -6,6 +6,18 @@ spring:
     type: redis
   application:
     name: TKN-DEX
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    hikari:
+      idle-timeout: 10000
+      max-lifetime: 400000
+      connection-timeout: 5000
+      validation-timeout: 5000
+      register-mbeans: true
+    dbcp2:
+      test-on-borrow: true
+      validation-query: SELECT 1
 
 talken:
   dex:

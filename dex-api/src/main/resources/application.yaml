@@ -5,15 +5,16 @@ spring.profiles.include: ['common', 'shared']
 spring:
   profiles:
     active: common
-  main:
-    allow-bean-definition-overriding: true
+  application:
+    version: tkn-dex-api-1.5.6
   http:
     encoding:
       charset: UTF-8
       enabled: true
       force: true
-  application:
-    version: api-1.5.6
+  datasource:
+    hikari:
+      pool-name: tkn-dex-api_pool
 
 talken:
   dex:

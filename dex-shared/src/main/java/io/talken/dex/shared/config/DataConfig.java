@@ -42,6 +42,44 @@ public class DataConfig {
 		ds.setMaxLifetime(600000);
 //		ds.setIdleTimeout(60000);
 		ds.setDriverClassName("org.mariadb.jdbc.Driver");
+
+        /**
+         * DB x
+         * connect_timeout,5
+         * net_read_timeout,30
+         * wait_timeout,600
+         */
+//		ds.setValidationTimeout(10000);
+//		ds.setIdleTimeout(4900); // if setMinimumidle
+
+        /**
+         * add performance tuning properties
+         *
+         * best practice
+         * https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration
+         *
+         * dataSource.cachePrepStmts=true
+         * dataSource.prepStmtCacheSize=250
+         * dataSource.prepStmtCacheSqlLimit=2048
+         * dataSource.useServerPrepStmts=true
+         * dataSource.useLocalSessionState=true
+         * dataSource.rewriteBatchedStatements=true
+         * dataSource.cacheResultSetMetadata=true
+         * dataSource.cacheServerConfiguration=true
+         * dataSource.elideSetAutoCommits=true
+         * dataSource.maintainTimeStats=false
+         */
+        ds.addDataSourceProperty("dataSource.cachePrepStmts", "true");
+        ds.addDataSourceProperty("dataSource.prepStmtCacheSize", "250");
+        ds.addDataSourceProperty("dataSource.prepStmtCacheSqlLimit", "2048");
+        ds.addDataSourceProperty("dataSource.useServerPrepStmts", "true");
+//		ds.addDataSourceProperty("dataSource.useLocalSessionState", "true");
+//		ds.addDataSourceProperty("dataSource.rewriteBatchedStatements", "true");
+//		ds.addDataSourceProperty("dataSource.cacheResultSetMetadata", "true");
+//		ds.addDataSourceProperty("dataSource.cacheServerConfiguration", "true");
+//		ds.addDataSourceProperty("dataSource.elideSetAutoCommits", "true");
+//		ds.addDataSourceProperty("dataSource.maintainTimeStats", "false");
+
 		return ds;
 	}
 

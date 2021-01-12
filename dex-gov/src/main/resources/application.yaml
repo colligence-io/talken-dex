@@ -5,8 +5,9 @@ spring.profiles.include: ['common', 'shared']
 spring:
   profiles:
     active: common
+  application:
+    version: tkn-dex-gov-1.5.6
   main:
-    allow-bean-definition-overriding: true
     web-application-type: none
   http:
     encoding:
@@ -15,16 +16,7 @@ spring:
       force: true
   datasource:
     hikari:
-      idle-timeout: 10000
-      max-lifetime: 400000
-      connection-timeout: 5000
-      validation-timeout: 5000
       pool-name: tkn-dex-gov_pool
-    dbcp2:
-      test-on-borrow: true
-      validation-query: SELECT 1
-  application:
-    version: gov-1.5.6
 
 talken:
   dex:

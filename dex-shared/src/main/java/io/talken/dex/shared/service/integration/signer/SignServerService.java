@@ -102,7 +102,7 @@ public class SignServerService {
 			IntegrationResult<SignServerAnswerResponse> answerResult = RestApiClient.requestPost(this.answerUrl, request2, SignServerAnswerResponse.class);
 
 			if(!answerResult.isSuccess()) {
-				logger.error("Cannot get signServer Acces Token : {}, {}", answerResult.getErrorCode(), answerResult.getErrorMessage());
+				logger.error("Cannot get signServer Access Token : {}, {}", answerResult.getErrorCode(), answerResult.getErrorMessage());
 				return false;
 			}
 
