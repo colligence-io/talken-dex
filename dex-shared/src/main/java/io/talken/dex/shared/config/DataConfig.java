@@ -37,10 +37,10 @@ public class DataConfig {
 		ds.setJdbcUrl(jdbcUrl);
 		ds.setUsername(secret.getUsername());
 		ds.setPassword(secret.getPassword());
-		ds.setMinimumIdle(4);
-		ds.setMaximumPoolSize(8);
-		ds.setMaxLifetime(590000);
-		ds.setIdleTimeout(60000);
+//		ds.setMinimumIdle(4);
+		ds.setMaximumPoolSize(16);
+		ds.setMaxLifetime(600000);
+//		ds.setIdleTimeout(60000);
 		ds.setDriverClassName("org.mariadb.jdbc.Driver");
 		return ds;
 	}
