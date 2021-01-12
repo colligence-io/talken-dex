@@ -67,7 +67,7 @@ subprojects {
     }
 
     dependencies {
-        compile('io.talken:java-common:20201223-1') { changing = true }
+        compile('io.talken:java-common:20200108-1') { changing = true }
 
         // jooq
 //        compile('org.jooq:jooq:3.14.1')
