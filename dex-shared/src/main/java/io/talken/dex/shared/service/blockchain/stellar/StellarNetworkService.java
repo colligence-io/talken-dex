@@ -1,6 +1,7 @@
 package io.talken.dex.shared.service.blockchain.stellar;
 
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.shared.DexSettings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,9 @@ public class StellarNetworkService {
 	@Autowired
 	private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private AdminAlarmService alarmService;
+
 	private final DexSettings dexSettings;
 
 	private String serverUri;
@@ -51,8 +55,8 @@ public class StellarNetworkService {
 
 	private static final int MAXIMUM_SUBMIT_RETRY = 5;
 
-    String appName;
-    String appVersion;
+    private String appName;
+    private String appVersion;
 
 	@PostConstruct
 	private void init() throws IOException {
@@ -205,14 +209,23 @@ public class StellarNetworkService {
 		SubmitTransactionTimeoutResponseException rtn = null;
 		for(int i = 0; i < MAXIMUM_SUBMIT_RETRY; i++) {
 			try {
+			    // TODO : rebuild tx set more fee
+			    if (i > 0) {
+			        // TODO : add fee and build tx
+                    long fee = tx.getFee() + (i * 50);
+                }
 				return server.submitTransaction(tx);
 			} catch(Exception ex) {
 				if(ex instanceof SubmitTransactionTimeoutResponseException) {
 					rtn = (SubmitTransactionTimeoutResponseException) ex;
 					logger.warn("Stellar TX submit timeout occured, trial = {}, tx = {}", i + 1, tx.toString());
-                    logger.warn("TX timeout seq = {}, srcAccount = {}, memo = {}"
-                            , tx.getSequenceNumber(), tx.getSourceAccount(), tx.getMemo());
+                    logger.warn("TX timeout seq = {}, srcAccount = {}, memo = {}, fee = {}",
+                            tx.getSequenceNumber(), tx.getSourceAccount(), tx.getMemo(), tx.getFee());
 				} else {
+                    logger.error("Failed TX finally timeout seq = {}, srcAccount = {}, memo = {}, fee = {}",
+                            tx.getSequenceNumber(), tx.getSourceAccount(), tx.getMemo(), tx.getFee());
+                    alarmService.error(logger, "Failed TX finally TX timeout seq = {}, srcAccount = {}, memo = {}, fee = {}",
+                            tx.getSequenceNumber(), tx.getSourceAccount(), tx.getMemo(), tx.getFee());
 					throw ex;
 				}
 			}

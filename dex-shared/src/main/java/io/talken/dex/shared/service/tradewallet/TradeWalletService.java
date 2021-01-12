@@ -42,6 +42,7 @@ import java.util.List;
 
 import static io.talken.common.persistence.jooq.Tables.USER;
 import static io.talken.common.persistence.jooq.Tables.USER_TRADE_WALLET;
+import static io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction.TIME_BOUND;
 
 @Service
 @Scope("singleton")
@@ -434,8 +435,9 @@ public class TradeWalletService {
 			// merge account if account is created at stellar network
 			if(account != null) {
 				Transaction.Builder txBuilder = new Transaction.Builder(account, stellarNetworkService.getNetwork())
-						.setBaseFee(stellarNetworkService.getNetworkFee())
-						.setTimeout(30);
+                        .addTimeBounds(TimeBounds.expiresAfter(TIME_BOUND))
+//						.setTimeout(30)
+						.setBaseFee(stellarNetworkService.getNetworkFee());
 
 				boolean sendTx = false;
 
@@ -468,8 +470,9 @@ public class TradeWalletService {
 				}
 
 				Transaction mtx = new Transaction.Builder(account, stellarNetworkService.getNetwork())
+                        .addTimeBounds(TimeBounds.expiresAfter(TIME_BOUND))
 						.setBaseFee(stellarNetworkService.getNetworkFee())
-						.setTimeout(30)
+//						.setTimeout(30)
 						.addOperation(new AccountMergeOperation.Builder(this.creatorAddress).build())
 						.build();
 
