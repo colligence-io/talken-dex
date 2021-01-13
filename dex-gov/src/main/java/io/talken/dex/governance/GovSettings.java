@@ -28,10 +28,9 @@ public class GovSettings extends DexSettings {
 
 	private _Scheduler scheduler;
 
-
 	@Getter
 	@Setter
-    private static class _Scheduler {
+    public static class _Scheduler {
 		private int poolSize;
 		private int maxPoolSize;
 		private int queueCapacity;
