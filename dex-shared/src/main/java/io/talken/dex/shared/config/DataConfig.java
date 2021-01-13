@@ -20,6 +20,7 @@ import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 import org.springframework.jdbc.support.SQLExceptionTranslator;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import javax.annotation.PostConstruct;
 import javax.management.JMX;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -38,7 +39,12 @@ public class DataConfig {
     private final Environment env;
     private final VaultSecretReader secretReader;
 
-    private final String poolName = env.getProperty("spring.application.name") + "_pool";
+    private String poolName;
+
+    @PostConstruct
+    public void init() {
+        this.poolName = env.getProperty("spring.application.name") + "_pool";
+    }
 
     @Bean(name = "dataSource")
     @Primary
