@@ -15,6 +15,11 @@ spring:
 #      test-on-borrow: true
 #      validation-query: SELECT 1
 
+logging:
+  level:
+    com.zaxxer.hikari.HikariConfig: DEBUG
+    com.zaxxer.hikari: TRACE
+
 talken:
   dex:
     mam:
