@@ -36,12 +36,16 @@ subprojects {
     version = "1.5.7"
 
     bootJar {
-        baseName = "talken-" + project.name
+        baseName = "tkn-" + project.name
     }
 
     jar {
-        baseName = "talken-" + project.name
+        baseName = "tkn-" + project.name
         manifest.attributes provider: 'gradle'
+    }
+
+    springBoot {
+        buildInfo()
     }
 
     repositories {

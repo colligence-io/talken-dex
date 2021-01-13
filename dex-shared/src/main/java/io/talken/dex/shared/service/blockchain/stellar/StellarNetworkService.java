@@ -4,7 +4,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.shared.DexSettings;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -30,15 +30,11 @@ import static io.talken.common.persistence.redis.RedisConsts.KEY_GOVERNANCE_DEX_
 public class StellarNetworkService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarNetworkService.class);
 
-    @Autowired
-    private Environment env;
-
-	@Autowired
-	private StringRedisTemplate redisTemplate;
-
-    @Autowired
-    private AdminAlarmService alarmService;
-
+	// BEANS
+    private final Environment env;
+    private final BuildProperties buildProperties;
+	private final StringRedisTemplate redisTemplate;
+    private final AdminAlarmService alarmService;
 	private final DexSettings dexSettings;
 
 	private String serverUri;
@@ -64,12 +60,10 @@ public class StellarNetworkService {
 		this.serverUri = dexSettings.getBcnode().getStellar().getRpcUri();
 		this.publicServerUri = dexSettings.getBcnode().getStellar().getPublicRpcUri();
         this.appName = env.getProperty("spring.application.name");
-        this.appVersion = env.getProperty("spring.application.version");
+        this.appVersion = buildProperties.getVersion();
 
 		logger.info("Using Stellar {} Network : {}", this.network, this.serverUri);
 		logger.info("Using Stellar Public {} Network : {}", this.network, this.publicServerUri);
-//        app_name	Value of X-App-Name HTTP header representing app name
-//        app_version	Value of X-App-Version HTTP header representing app version
 
 		for(Map.Entry<String, String> _ch : dexSettings.getBcnode().getStellar().getSecret().getChannels().entrySet()) {
 			KeyPair chkp = KeyPair.fromSecretSeed(_ch.getValue());

@@ -6,15 +6,12 @@ spring:
   profiles:
     active: common
   application:
-    version: tkn-dex-api-1.5.6
+    name: TKN-DEX-API
   http:
     encoding:
       charset: UTF-8
       enabled: true
       force: true
-  datasource:
-    hikari:
-      pool-name: tkn-dex-api_pool
 
 talken:
   dex:
