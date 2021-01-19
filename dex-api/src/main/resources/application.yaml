@@ -12,6 +12,19 @@ spring:
       charset: UTF-8
       enabled: true
       force: true
+  datasource:
+    hikari:
+      max-lifetime: 580000
+      maximum-pool-size: 8
+      register-mbeans: true
+      connectionTestQuery: SELECT 1
+      pool-name: HikariPool_DexGOV
+      driver-class-name: 'org.mariadb.jdbc.Driver'
+      data-source-properties:
+        prepStmtCacheSize: '256'
+        prepStmtCacheSqlLimit: '2048'
+        cachePrepStmts: 'true'
+        useServerPrepStmts: 'true'
 
 talken:
   dex:

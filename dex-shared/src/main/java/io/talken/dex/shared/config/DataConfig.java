@@ -10,17 +10,18 @@ import org.jooq.DSLContext;
 import org.jooq.ExecuteContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 import org.springframework.jdbc.support.SQLExceptionTranslator;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.annotation.PostConstruct;
 import javax.management.JMX;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -36,34 +37,25 @@ public class DataConfig {
     private static final PrefixedLogger logger = PrefixedLogger.getLogger(DataConfig.class);
 
     // BEANS
-    private final Environment env;
     private final VaultSecretReader secretReader;
 
+    @Value("${spring.datasource.hikari.pool-name}")
     private String poolName;
-
-    @PostConstruct
-    public void init() {
-        this.poolName = env.getProperty("spring.application.name") + "_pool";
-    }
 
     @Bean(name = "dataSource")
     @Primary
+    @ConfigurationProperties("spring.datasource.hikari")
     public DataSource dataSource() {
         VaultSecretDataMariaDB secret = secretReader.readSecret("mariadb", VaultSecretDataMariaDB.class);
 
         String jdbcUrl = "jdbc:mariadb://" + secret.getAddr() + ":" + secret.getPort() + "/" + secret.getSchema();
 
-        HikariDataSource ds = new HikariDataSource();
-        ds.setJdbcUrl(jdbcUrl);
-        ds.setUsername(secret.getUsername());
-        ds.setPassword(secret.getPassword());
-        ds.setPoolName(poolName);
-
-        ds.setMaxLifetime(580000);
-        ds.setMaximumPoolSize(16);
-        ds.setRegisterMbeans(true);
-        ds.setConnectionTestQuery("SELECT 1");
-        ds.setDriverClassName("org.mariadb.jdbc.Driver");
+        return DataSourceBuilder.create()
+                .type(HikariDataSource.class)
+                .username(secret.getUsername())
+                .password(secret.getPassword())
+                .url(jdbcUrl)
+                .build();
 
         /**
          * DB x
@@ -77,7 +69,7 @@ public class DataConfig {
          *
          * best practice
          * https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration
-         *
+
          * dataSource.cachePrepStmts=true
          * dataSource.prepStmtCacheSize=250
          * dataSource.prepStmtCacheSqlLimit=2048
@@ -88,19 +80,8 @@ public class DataConfig {
          * dataSource.cacheServerConfiguration=true
          * dataSource.elideSetAutoCommits=true
          * dataSource.maintainTimeStats=false
+         *
          */
-        ds.addDataSourceProperty("dataSource.cachePrepStmts", "true");
-        ds.addDataSourceProperty("dataSource.prepStmtCacheSize", "250");
-        ds.addDataSourceProperty("dataSource.prepStmtCacheSqlLimit", "2048");
-        ds.addDataSourceProperty("dataSource.useServerPrepStmts", "true");
-//		ds.addDataSourceProperty("dataSource.useLocalSessionState", "true");
-//		ds.addDataSourceProperty("dataSource.rewriteBatchedStatements", "true");
-//		ds.addDataSourceProperty("dataSource.cacheResultSetMetadata", "true");
-//		ds.addDataSourceProperty("dataSource.cacheServerConfiguration", "true");
-//		ds.addDataSourceProperty("dataSource.elideSetAutoCommits", "true");
-//		ds.addDataSourceProperty("dataSource.maintainTimeStats", "false");
-
-        return ds;
     }
 
     @Bean
@@ -124,7 +105,7 @@ public class DataConfig {
     }
 
     @Bean
-    public HikariPoolMXBean initPoolMbeans() throws MalformedObjectNameException {
+    public HikariPoolMXBean poolProxy() throws MalformedObjectNameException {
         MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
         ObjectName objPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
         return JMX.newMBeanProxy(mbeanServer, objPoolName, HikariPoolMXBean.class);
@@ -133,7 +114,7 @@ public class DataConfig {
     @Bean
     public void logPoolStats() {
         try {
-            HikariPoolMXBean poolProxy = initPoolMbeans();
+            HikariPoolMXBean poolProxy = poolProxy();
             logger.info(
                     "[{}] HikariCP: "
                             + "numBusyConnections = {}, "
