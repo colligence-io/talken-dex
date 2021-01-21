@@ -18,7 +18,7 @@ spring:
       maximum-pool-size: 8
       register-mbeans: true
       connectionTestQuery: SELECT 1
-      pool-name: HikariPool_DexGOV
+      pool-name: HikariPool_DexAPI
       driver-class-name: 'org.mariadb.jdbc.Driver'
       data-source-properties:
         prepStmtCacheSize: '256'

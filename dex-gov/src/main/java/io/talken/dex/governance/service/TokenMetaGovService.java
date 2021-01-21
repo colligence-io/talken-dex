@@ -312,6 +312,14 @@ public class TokenMetaGovService extends TokenMetaTableService {
 					mi.setDeancFeeHolderAddress(_mi.getDeancfeeholderaddress());
 					mi.setSwapFeeHolderAddress(_mi.getSwapfeeholderaddress());
 					mi.setDistributorAddress(_mi.getDistributoraddress());
+					// add flags #20210121
+                    mi.setPrivateWalletUsableFlag(_mi.getPrivatewalletusableflag());
+                    mi.setTradeWalletUsableFlag(_mi.getTradewalletusableflag());
+                    mi.setSendableFlag(_mi.getSendableflag());
+                    mi.setAnchorableFlag(_mi.getAnchorableflag());
+                    mi.setDeanchorableFlag(_mi.getDeanchorableflag());
+                    mi.setManagedStatus(_mi.getManagedstatus());
+
 					if(_mi.getUpdateTimestamp() == null)
 						mi.setUpdateTimestamp(UTCUtil.toTimestamp_s(_mi.getCreateTimestamp()));
 					else
