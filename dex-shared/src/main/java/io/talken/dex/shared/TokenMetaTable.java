@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.RegionEnum;
 import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
+import io.talken.common.persistence.enums.TokenMetaManagedStatusEnum;
 import io.talken.dex.shared.exception.ActiveAssetHolderAccountNotFoundException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -79,6 +80,14 @@ public class TokenMetaTable extends HashMap<String, TokenMetaTable.Meta> impleme
 		private String deancFeeHolderAddress;
 		private String swapFeeHolderAddress;
 		private String distributorAddress;
+
+        private Boolean privateWalletUsableFlag;
+        private Boolean tradeWalletUsableFlag;
+        private Boolean sendableFlag;
+        private Boolean anchorableFlag;
+        private Boolean deanchorableFlag;
+        private TokenMetaManagedStatusEnum managedStatus;
+
 		private Map<String, MarketPairInfo> marketPair = null;
 		private List<HolderAccountInfo> assetHolderAccounts = null;
 		private Long updateTimestamp;
