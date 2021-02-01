@@ -91,7 +91,7 @@ public class NodeMonitorService {
         return sb;
     }
 
-	private void checkEthereumNodes(StringBuilder sb) throws IOException {
+	private void checkEthereumNodes(StringBuilder sb) throws Exception {
 		ObjectPair<String, BigInteger> localInfo = getEthereumNodeInfo(ethereumNetworkService.getLocalClient());
 		ObjectPair<String, BigInteger> infuraInfo = getEthereumNodeInfo(ethereumNetworkService.getInfuraClient());
 
@@ -107,7 +107,7 @@ public class NodeMonitorService {
 		}
 	}
 
-	private ObjectPair<String, BigInteger> getEthereumNodeInfo(EthRpcClient client) throws IOException {
+	private ObjectPair<String, BigInteger> getEthereumNodeInfo(EthRpcClient client) throws Exception {
 		String version = client.getClientVersion();
 		BigInteger number = client.newClient().ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock().getNumber();
 		return new ObjectPair<>(version, number);
