@@ -26,7 +26,7 @@ public class EthRpcClient {
 	}
 
 	public String getClientVersion() throws IOException {
-	    // NOTICE: error occur 4.8.3
+	    // NOTICE: error occur <= 4.8.3
 		if(this.client == null) this.client = newClient().web3ClientVersion().send().getWeb3ClientVersion();
 		return client;
 	}
