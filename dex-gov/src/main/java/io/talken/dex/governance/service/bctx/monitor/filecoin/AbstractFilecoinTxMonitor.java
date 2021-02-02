@@ -145,7 +145,7 @@ public abstract class AbstractFilecoinTxMonitor extends TxMonitor<FilecoinMessag
 
 				// log process if receipts processed
 				if((txs.size() > 0) || (cursor.longValueExact() % 30 == 0))
-					logger.info("{} : BLOCKNUMBER = {}/{}, RECEIPTS = {} ({} ms, collect {} ms){}", networkName, cursor, latestBlockNumber, txs.size(), takes, collectTakes, eta);
+					logger.info("{} : BLOCKNUMBER = {}/{}, TOTAL_TX = {} ({} ms, collect {} ms){}", networkName, cursor, latestBlockNumber, txs.size(), takes, collectTakes, eta);
 			}
 		} catch(Exception ex) {
 			logger.exception(ex, "Exception while processing {} block {}", networkName, cursor);
@@ -244,6 +244,7 @@ public abstract class AbstractFilecoinTxMonitor extends TxMonitor<FilecoinMessag
 //	}
 
 	@Override
+    // TODO: 20210202 recognize Tx Success or Failed
 	protected TxReceipt toTxMonitorReceipt(FilecoinMessage.SecpkMessage tx) {
 //		if(tx.isStatusOK()) {
 			return TxReceipt.ofSuccessful(tx.getCid().getRoot(), tx);

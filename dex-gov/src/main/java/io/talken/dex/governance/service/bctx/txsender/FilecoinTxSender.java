@@ -33,6 +33,7 @@ public class FilecoinTxSender extends TxSender {
     private DSLContext dslContext;
 
     // 수정 필요.
+    // TODO : find Default FileCoin gasLimit
     private static final BigInteger DEFAULT_GASLIMIT = BigInteger.valueOf(78800L);
 //	private static final BigInteger DEFAULT_ERC20_GASLIMIT = BigInteger.valueOf(100000L);
 
@@ -68,6 +69,7 @@ public class FilecoinTxSender extends TxSender {
 //				: new BigDecimal (2) .multiply (pow);
 //		BigDecimal fee = new BigDecimal ( "0.001");
 
+        // TODO : 20210202 generate values static or get network default
 		FilecoinTransaction tran = new FilecoinTransaction();
 		tran.setFrom(bctx.getAddressFrom());
 		tran.setTo(bctx.getAddressTo());
@@ -83,12 +85,14 @@ public class FilecoinTxSender extends TxSender {
 		tran.setParams("");
 		tran.setMethod(0L);
 
+		// TODO : 20210202 if need synchronized
 		log.setRequest(JSONWriter.toJsonString(tran));
 		String signData = FilecoinSign.signTransaction(tran, new ArrayList<String>());
 		FilecoinTransaction transaction = client.push(signData);
 		log.setResponse(JSONWriter.toJsonString(transaction));
 
 		if (transaction != null && !"".equals(transaction.getCID())) {
+		    // TODO : 20210202 if dont need remove nonceCheck
 			nonceCheck.put(bctx.getAddressFrom(), nonce);
 			log.setBcRefId(transaction.getCID());
 			log.setResponse(JSONWriter.toJsonString(transaction));

@@ -108,6 +108,14 @@ subprojects {
         implementation('org.web3j:core:4.8.2')
         implementation('org.web3j:contracts:4.8.2')
 
+        // filecoin
+        implementation('com.github.arteam:simple-json-rpc-client:1.2')
+        implementation('com.github.briandilley.jsonrpc4j:jsonrpc4j:1.4.6')
+        implementation('org.apache.httpcomponents:httpclient:4.5.13')
+        implementation('co.nstant.in:cbor:0.9')
+        implementation('org.bitcoinj:bitcoinj-core:0.15.9')
+        implementation('com.github.apetersson:Blake2b:0.1')
+
         // devtools
         runtimeOnly('org.springframework.boot:spring-boot-devtools')
 

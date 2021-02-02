@@ -39,9 +39,9 @@ public abstract class AbstractFilecoinAnchorReceiptHandler extends AbstractAncho
 	abstract protected Condition getBcTypeCondition(String contractAddr);
 
 	/**
-	 * handle receipt
-	 * 1. check this receipt is anchoring (transfer to holder?)
-	 * 2. check this receipt is anchoring (search DB task)
+	 * handle fcMessage
+	 * 1. check this fcMessage is anchoring (transfer to holder?)
+	 * 2. check this fcMessage is anchoring (search DB task)
 	 * 3. insert asset issueing bctx
 	 *
 	 * @param block
@@ -51,30 +51,31 @@ public abstract class AbstractFilecoinAnchorReceiptHandler extends AbstractAncho
 	 */
 	@Override
 	public void handle(FilecoinMessage.Block block, FilecoinMessage.SecpkMessage txResult, FilecoinMessage.SecpkMessage msg) throws Exception {
-		FilecoinMessage.Message receipt = msg.getMessage();
+		FilecoinMessage.Message fcMessage = msg.getMessage();
 		// check transfer is to holder
-		if (!checkHolder(receipt.getTo())) return;
+		if (!checkHolder(fcMessage.getTo())) return;
 
 		// convert amount to actual
-		BigDecimal amountValue = receipt.getValue();
+		BigDecimal amountValue = fcMessage.getValue();
 		BigDecimal amount;
-//		if (receipt.getTokenDecimal() != null) {
-//			amount = amountValue.divide(BigDecimal.TEN.pow(Integer.valueOf(receipt.getTokenDecimal())), 7, RoundingMode.FLOOR);
+		// TODO : Fix Decimal Check
+//		if (fcMessage.getTokenDecimal() != null) {
+//			amount = amountValue.divide(BigDecimal.TEN.pow(Integer.valueOf(fcMessage.getTokenDecimal())), 7, RoundingMode.FLOOR);
 //		} else {
 //			amount = Convert.fromWei(amountValue.toString(), Convert.Unit.ETHER);
 //		}
 		amount = StellarConverter.scale(amountValue);
 
-		logger.info("Transfer to holder detected : {} -> {} : {} {}", receipt.getFrom(), receipt.getTo(), amount, BlockChainPlatformEnum.FILECOIN);
+		logger.info("Transfer to holder detected : {} -> {} : {} {}", fcMessage.getFrom(), fcMessage.getTo(), amount, BlockChainPlatformEnum.FILECOIN);
 
 		// return amount is smaller than zero
 		if (amount.compareTo(BigDecimal.ZERO) <= 0) return;
 
 		Condition condition = DEX_TASK_ANCHOR.BC_REF_ID.isNull()
-				.and(DEX_TASK_ANCHOR.VC4S_PRIVATEADDR.eq(receipt.getFrom().toLowerCase())
-						.and(DEX_TASK_ANCHOR.VC4S_HOLDERADDR.eq(receipt.getTo().toLowerCase()))
-						.and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)));
-//				.and(getBcTypeCondition(receipt.getContractAddress()));
+				.and(DEX_TASK_ANCHOR.VC4S_PRIVATEADDR.eq(fcMessage.getFrom().toLowerCase())
+						.and(DEX_TASK_ANCHOR.VC4S_HOLDERADDR.eq(fcMessage.getTo().toLowerCase()))
+						.and(DEX_TASK_ANCHOR.AMOUNT.eq(amount)))
+				        .and(getBcTypeCondition(null));
 
 		DexTaskAnchorRecord taskRecord = dslContext.selectFrom(DEX_TASK_ANCHOR)
 				.where(condition)
@@ -84,10 +85,10 @@ public abstract class AbstractFilecoinAnchorReceiptHandler extends AbstractAncho
 
 		// finish if task not found
 		if (taskRecord == null) {
-			logger.error("Transfer to holder detected but no matching anchor task found : {} -> {} : {} {}", receipt.getFrom(), receipt.getTo(), amount, BlockChainPlatformEnum.FILECOIN);
+			logger.error("Transfer to holder detected but no matching anchor task found : {} -> {} : {} {}", fcMessage.getFrom(), fcMessage.getTo(), amount, BlockChainPlatformEnum.FILECOIN);
 			return;
 		} else {
-			logger.info("Transfer to holder detected for {} : {} -> {} : {} {}", taskRecord.getTaskid(), receipt.getFrom(), receipt.getTo(), amount, BlockChainPlatformEnum.FILECOIN);
+			logger.info("Transfer to holder detected for {} : {} -> {} : {} {}", taskRecord.getTaskid(), fcMessage.getFrom(), fcMessage.getTo(), amount, BlockChainPlatformEnum.FILECOIN);
 		}
 
 		taskRecord.setBcRefId(msg.getCid().getRoot());

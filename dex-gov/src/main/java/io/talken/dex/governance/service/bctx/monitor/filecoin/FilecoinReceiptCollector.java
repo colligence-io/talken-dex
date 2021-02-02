@@ -17,6 +17,7 @@ import java.util.concurrent.*;
 
 @Service
 @Scope("singleton")
+@Deprecated
 public class FilecoinReceiptCollector {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(FilecoinReceiptCollector.class);
 
