@@ -1,7 +1,6 @@
 package io.talken.dex.shared.config;
 
 import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.HikariPoolMXBean;
 import io.talken.common.persistence.vault.VaultSecretReader;
 import io.talken.common.persistence.vault.data.VaultSecretDataMariaDB;
 import io.talken.common.util.PrefixedLogger;
@@ -10,7 +9,6 @@ import org.jooq.DSLContext;
 import org.jooq.ExecuteContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -22,12 +20,7 @@ import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 import org.springframework.jdbc.support.SQLExceptionTranslator;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.management.JMX;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 import javax.sql.DataSource;
-import java.lang.management.ManagementFactory;
 
 @Configuration
 @ComponentScan("io.talken.common.persistence")
@@ -39,8 +32,8 @@ public class DataConfig {
     // BEANS
     private final VaultSecretReader secretReader;
 
-    @Value("${spring.datasource.hikari.pool-name}")
-    private String poolName;
+//    @Value("${spring.datasource.hikari.pool-name}")
+//    private String poolName;
 
     @Bean(name = "dataSource")
     @Primary
@@ -104,33 +97,33 @@ public class DataConfig {
         return config;
     }
 
-    @Bean
-    public HikariPoolMXBean poolProxy() throws MalformedObjectNameException {
-        MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-        ObjectName objPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
-        return JMX.newMBeanProxy(mbeanServer, objPoolName, HikariPoolMXBean.class);
-    }
+//    @Bean
+//    public HikariPoolMXBean poolProxy() throws MalformedObjectNameException {
+//        MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+//        ObjectName objPoolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + poolName + ")");
+//        return JMX.newMBeanProxy(mbeanServer, objPoolName, HikariPoolMXBean.class);
+//    }
 
-    @Bean
-    public void logPoolStats() {
-        try {
-            HikariPoolMXBean poolProxy = poolProxy();
-            logger.info(
-                    "[{}] HikariCP: "
-                            + "numBusyConnections = {}, "
-                            + "numIdleConnections = {}, "
-                            + "numConnections = {}, "
-                            + "numThreadsAwaitingCheckout = {}",
-                    poolName,
-                    poolProxy.getActiveConnections(),
-                    poolProxy.getIdleConnections(),
-                    poolProxy.getTotalConnections(),
-                    poolProxy.getThreadsAwaitingConnection());
-
-        } catch(MalformedObjectNameException e) {
-            logger.error("[{}] Unable to log pool statistics.", poolName, e);
-        }
-    }
+//    @Bean
+//    public void logPoolStats() {
+//        try {
+//            HikariPoolMXBean poolProxy = poolProxy();
+//            logger.info(
+//                    "[{}] HikariCP: "
+//                            + "numBusyConnections = {}, "
+//                            + "numIdleConnections = {}, "
+//                            + "numConnections = {}, "
+//                            + "numThreadsAwaitingCheckout = {}",
+//                    poolName,
+//                    poolProxy.getActiveConnections(),
+//                    poolProxy.getIdleConnections(),
+//                    poolProxy.getTotalConnections(),
+//                    poolProxy.getThreadsAwaitingConnection());
+//
+//        } catch(MalformedObjectNameException e) {
+//            logger.error("[{}] Unable to log pool statistics.", poolName, e);
+//        }
+//    }
 
     @Bean
     public ExceptionTranslator exceptionTransformer() {
