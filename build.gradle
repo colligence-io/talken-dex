@@ -67,10 +67,11 @@ subprojects {
     }
 
     dependencies {
-        compile('io.talken:java-common:20200924-1') { changing = true }
-
+//        compile('io.talken:java-common:20200924-1') { changing = true }
+//        compile('io.talken:java-common:20201214-1') { changing = true }
+        compile('io.talken:java-common:20201119-9') { changing = true }
         // jooq
-//        compile('org.jooq:jooq:3.14.1')
+        compile('org.jooq:jooq:3.14.1')
 
         annotationProcessor('org.projectlombok:lombok:1.18.8')
         compileOnly('org.projectlombok:lombok:1.18.8')
@@ -100,6 +101,14 @@ subprojects {
         // ethereum web3j sdk
         compile('org.web3j:core:4.8.0')
         compile('org.web3j:contracts:4.8.0')
+
+        // Filecoin
+        compile('com.github.arteam:simple-json-rpc-client:1.2')
+        compile('com.github.briandilley.jsonrpc4j:jsonrpc4j:1.4.6')
+        compile('org.apache.httpcomponents:httpclient:4.5.13')
+        compile('co.nstant.in:cbor:0.9')
+        compile('org.bitcoinj:bitcoinj-core:0.15.9')
+        compile('com.github.apetersson:Blake2b:0.1')
 
         // devtools
         runtime('org.springframework.boot:spring-boot-devtools')
