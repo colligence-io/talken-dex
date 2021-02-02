@@ -40,6 +40,10 @@ talken:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://13.125.55.194:8545"
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
+      filecoin:
+        infuraUri: "https://filecoin.infura.io"
+        projectId: "1ld7AhUXVAo1S2dTAFmms9HK7WE"
+        projectSecret: "c628cd44465c7d17c8f37afead39106e"
     task:
       createOffer:
         feeRatePivot: 0.005
@@ -95,6 +99,10 @@ talken:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://13.125.55.194:8545"
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5151520500809142437"
+      filecoin:
+        infuraUri: "https://filecoin.infura.io"
+        projectId: "1ld7AhUXVAo1S2dTAFmms9HK7WE"
+        projectSecret: "c628cd44465c7d17c8f37afead39106e"
     integration:
       relay:
         apiUrl: http://192.168.0.36:3888/graphql
