@@ -99,7 +99,7 @@ subprojects {
         implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
 
         // stellar sdk
-        compile('com.github.stellar:java-stellar-sdk:0.21.0')
+        compile('com.github.stellar:java-stellar-sdk:0.23.0')
 
         // ethereum web3j sdk
         compile('org.web3j:core:4.8.0')
