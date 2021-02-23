@@ -41,7 +41,7 @@ public class StellarNetworkService {
 
 	private String publicServerUri;
 
-	private static final int BASE_FEE = 100;
+	private static final int BASE_FEE = 100001;
 
 	private static final int PICK_CHANNEL_TIMEOUT = 10000;
 
