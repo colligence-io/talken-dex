@@ -43,7 +43,7 @@ public class FailoverUserRewardService {
 
     private int tickLimit = 100;
 
-    private boolean isSuspended = false;
+    private boolean isSuspended = true;
 
     private final String _CLAZZ_NAME = this.getClass().getSimpleName();
 
