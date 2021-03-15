@@ -57,7 +57,7 @@ talken:
       createOffer:
         feeRatePivot: 0.005
       deanchor:
-        feeAmountTalk: 20
+        feeAmountTalk: 50
     integration:
       relay:
         apiUrl: http://192.168.0.33:3888/graphql
