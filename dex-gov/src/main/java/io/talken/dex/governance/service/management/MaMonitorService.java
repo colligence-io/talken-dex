@@ -193,24 +193,28 @@ public class MaMonitorService {
 			// get holder balances
 			BigDecimal holderTotal = BigDecimal.ZERO;
 			StringJoiner holderAddresses = new StringJoiner(",");
-			for(TokenMetaTable.HolderAccountInfo assetHolderAccount : meta.getManagedInfo().getAssetHolderAccounts()) {
-				ObjectPair<BigDecimal, BigDecimal> hBal = getAccountBalance(meta, assetHolderAccount.getAddress());
+			if (meta.getManagedInfo().getAssetHolderAccounts() == null) {
+                adminAlarmService.error(logger, "Holder Accounts is null : {}", meta.getSymbol());
+            } else {
+                for(TokenMetaTable.HolderAccountInfo assetHolderAccount : meta.getManagedInfo().getAssetHolderAccounts()) {
+                    ObjectPair<BigDecimal, BigDecimal> hBal = getAccountBalance(meta, assetHolderAccount.getAddress());
 
-				if(meta.getNativeFlag()) {
-					holderTotal = holderTotal.add(hBal.first());
-				}
-				else {
-					holderTotal = holderTotal.add(hBal.second());
-				}
+                    if(meta.getNativeFlag()) {
+                        holderTotal = holderTotal.add(hBal.first());
+                    }
+                    else {
+                        holderTotal = holderTotal.add(hBal.second());
+                    }
 
-				holderAddresses.add(assetHolderAccount.getAddress());
+                    holderAddresses.add(assetHolderAccount.getAddress());
 
-				// check holder native balance
-				ObjectPair<BigDecimal, String> minBal = getNetfeeBuffer(meta, "holder");
-				if(hBal.second().compareTo(BigDecimal.ZERO) > 0 && hBal.first().compareTo(minBal.first()) < 0) {
-					adminAlarmService.warn(logger, "MAM : {} Holder( {} ) low native balance for network fee : {} < {} {}", meta.getSymbol(), assetHolderAccount.getAddress(), hBal.first().stripTrailingZeros().toPlainString(), minBal.first().stripTrailingZeros().toPlainString(), minBal.second());
-				}
-			}
+                    // check holder native balance
+                    ObjectPair<BigDecimal, String> minBal = getNetfeeBuffer(meta, "holder");
+                    if(hBal.second().compareTo(BigDecimal.ZERO) > 0 && hBal.first().compareTo(minBal.first()) < 0) {
+                        adminAlarmService.warn(logger, "MAM : {} Holder( {} ) low native balance for network fee : {} < {} {}", meta.getSymbol(), assetHolderAccount.getAddress(), hBal.first().stripTrailingZeros().toPlainString(), minBal.first().stripTrailingZeros().toPlainString(), minBal.second());
+                    }
+                }
+            }
 
 			// compare holderTotal <-> supply - feeTotal
 			BigDecimal supply = supplies.get(meta.getManagedInfo().dexAssetType());
