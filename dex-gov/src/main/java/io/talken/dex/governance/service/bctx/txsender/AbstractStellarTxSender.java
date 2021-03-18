@@ -79,9 +79,7 @@ public abstract class AbstractStellarTxSender extends TxSender {
                 .addTimeBounds(TimeBounds.expiresAfter(TIME_BOUND))
 				.setBaseFee(stellarNetworkService.getNetworkFee())
 //                .setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
-				.addOperation(
-						operation
-				);
+				.addOperation(operation);
 
 		if(bctx.getTxAux() != null) txBuilder.addMemo(Memo.text(bctx.getTxAux()));
 

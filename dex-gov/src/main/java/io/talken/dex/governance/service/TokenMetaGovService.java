@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.talken.common.persistence.jooq.Tables.*;
+import static io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction.TIME_BOUND;
 
 @Service
 @Scope("singleton")
@@ -422,15 +423,15 @@ public class TokenMetaGovService extends TokenMetaTableService {
 
 			if(!trusted) {
 				logger.info("No trust on {} for {} / {}", source.getAccountId(), target.getAssetCode(), target.dexIssuerAccount().getAccountId());
+				Operation op = new ChangeTrustOperation.Builder(
+				        target.dexAssetType(),
+                        String.valueOf(StellarConverter.rawToActualString(BigInteger.valueOf(Long.MAX_VALUE)))
+                ).build();
 				Transaction tx = new Transaction.Builder(sourceAccount, stellarNetworkService.getNetwork())
-						.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+//						.setTimeout(Transaction.Builder.TIMEOUT_INFINITE)
+                        .addTimeBounds(TimeBounds.expiresAfter(TIME_BOUND))
 						.setBaseFee(stellarNetworkService.getNetworkFee())
-						.addOperation(
-								new ChangeTrustOperation.Builder(
-										target.dexAssetType(),
-										String.valueOf(StellarConverter.rawToActualString(BigInteger.valueOf(Long.MAX_VALUE)))
-								).build()
-						)
+						.addOperation(op)
 						.build();
 
 				signServerService.signStellarTransaction(tx);

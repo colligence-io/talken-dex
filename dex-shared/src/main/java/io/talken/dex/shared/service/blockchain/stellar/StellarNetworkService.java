@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.responses.FeeStatsResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 import org.stellar.sdk.responses.SubmitTransactionTimeoutResponseException;
 import shadow.okhttp3.OkHttpClient;
@@ -41,7 +42,8 @@ public class StellarNetworkService {
 
 	private String publicServerUri;
 
-	private static final int BASE_FEE = 100001;
+	private static final int BASE_FEE = 100;
+    private static final int MAX_BASE_FEE = 100001;
 
 	private static final int PICK_CHANNEL_TIMEOUT = 10000;
 
@@ -53,6 +55,9 @@ public class StellarNetworkService {
 
     private String appName;
     private String appVersion;
+
+//    @Autowired
+//    private SignServerService signServerService;
 
 	@PostConstruct
 	private void init() throws IOException {
@@ -127,6 +132,10 @@ public class StellarNetworkService {
 		return BASE_FEE;
 	}
 
+    public int getNetworkMaxFee() {
+        return MAX_BASE_FEE;
+    }
+
 	/**
 	 * shortcut new channel tx builder
 	 *
@@ -191,6 +200,18 @@ public class StellarNetworkService {
 		return channels.stream().map(StellarChannel::getAccountId).collect(Collectors.toList());
 	}
 
+	public int getBaseFeeFromServer() throws IOException {
+        Server server = this.pickPublicServer();
+        FeeStatsResponse resp = server.feeStats().execute();
+        return resp.getLastLedgerBaseFee().intValue();
+    }
+
+    public int getMaxFeeFromServer() throws IOException {
+        Server server = this.pickPublicServer();
+        FeeStatsResponse resp = server.feeStats().execute();
+        return resp.getMaxFee().getMax().intValue();
+    }
+
 	/**
 	 * Send Stellar Transaction to network, if timeout occurred, retry MAXIMUM_SUBMIT_RETRY times
 	 *
@@ -200,13 +221,40 @@ public class StellarNetworkService {
 	 * @throws IOException
 	 */
 	public SubmitTransactionResponse sendTransaction(Server server, Transaction tx) throws IOException, AccountRequiresMemoException {
+//        AccountResponse sourceAccount = null;
 		SubmitTransactionTimeoutResponseException rtn = null;
 		for(int i = 0; i < MAXIMUM_SUBMIT_RETRY; i++) {
 			try {
 			    // TODO : rebuild tx set more fee
 			    if (i > 0) {
 			        // TODO : add fee and build tx
-                    long fee = tx.getFee() + (i * 50);
+//                    if (sourceAccount == null)
+//                        sourceAccount = server.accounts().account(tx.getSourceAccount());
+                    int baseFee = BASE_FEE;
+
+                    if (i < 4) {
+                        baseFee = getBaseFeeFromServer();
+                    } else {
+                        int maxBaseFee = getMaxFeeFromServer();
+                        if (maxBaseFee > MAX_BASE_FEE) baseFee = maxBaseFee;
+                        else baseFee = MAX_BASE_FEE;
+                    }
+                    logger.warn("[TEST] Re-CalculationBase Fee = {}, {}", i + 1, baseFee);
+
+//                    Transaction.Builder builder = new Transaction.Builder(sourceAccount, tx.getNetwork())
+//                            .setBaseFee(baseFee);
+//                    for(Operation op : tx.getOperations()) {
+//                        builder.addOperation(op);
+//                    }
+//
+//                    if (tx.getTimeBounds() != null) {
+//                        builder.addTimeBounds(tx.getTimeBounds());
+//                    } else {
+//                        builder.setTimeout(Transaction.Builder.TIMEOUT_INFINITE);
+//                    }
+//
+//                    Transaction retryTx = builder.build();
+//                    return server.submitTransaction(retryTx);
                 }
 				return server.submitTransaction(tx);
 			} catch(Exception ex) {

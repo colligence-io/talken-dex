@@ -137,8 +137,7 @@ public class StellarChannelTransaction implements Closeable {
 
 				// builder
 				Transaction.Builder txBuilder = new Transaction.Builder(channelAccount, stellarNetworkService.getNetwork())
-                        .addTimeBounds(TimeBounds.expiresAfter(TIME_BOUND))
-						.setBaseFee(stellarNetworkService.getNetworkFee());
+                        .addTimeBounds(TimeBounds.expiresAfter(TIME_BOUND));
 //						.setTimeout(Transaction.Builder.TIMEOUT_INFINITE);
 
 				// add memo if exists
@@ -148,6 +147,9 @@ public class StellarChannelTransaction implements Closeable {
 				// add operations
 				for(Operation operation : this.operations)
 					txBuilder.addOperation(operation);
+
+				// Fee Calc
+                txBuilder.setBaseFee(stellarNetworkService.getNetworkFee() * this.operations.size());
 
 				// build tx
 				Transaction tx = txBuilder.build();
