@@ -13,13 +13,11 @@ import org.jooq.impl.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
 import org.springframework.jdbc.support.SQLExceptionTranslator;
+import org.springframework.jmx.support.RegistrationPolicy;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.management.JMX;
@@ -33,6 +31,7 @@ import java.lang.management.ManagementFactory;
 @ComponentScan("io.talken.common.persistence")
 @EnableTransactionManagement
 @RequiredArgsConstructor
+@EnableMBeanExport(registration=RegistrationPolicy.IGNORE_EXISTING)
 public class DataConfig {
     private static final PrefixedLogger logger = PrefixedLogger.getLogger(DataConfig.class);
 
