@@ -95,6 +95,7 @@ public class DexSettings {
 		private _Stellar stellar;
 		private _Ethereum ethereum;
 		private _Luniverse luniverse;
+        private _Klaytn klaytn;
 	}
 
 	@Getter
@@ -124,6 +125,14 @@ public class DexSettings {
 		private String sideRpcUri;
 		private String mainRpcUri;
 	}
+
+    @Getter
+    @Setter
+    public static class _Klaytn {
+        private int chainId;
+        private String accessKeyId;
+        private String secretAccessKey;
+    }
 
 	private _Integration integration;
 

@@ -105,6 +105,10 @@ subprojects {
         compile('org.web3j:core:4.8.0')
         compile('org.web3j:contracts:4.8.0')
 
+        // klaytn
+        implementation 'com.klaytn.caver:core:1.5.7'
+        implementation 'xyz.groundx.caver:caver-java-ext-kas:1.1.0'
+
         // devtools
         runtime('org.springframework.boot:spring-boot-devtools')
 
