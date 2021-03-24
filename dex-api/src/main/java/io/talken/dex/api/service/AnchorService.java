@@ -101,7 +101,8 @@ public class AnchorService {
 		}
 
 		// check there is same unchecked request within 1 minutes
-		Optional<DexTaskAnchorRecord> sameRequest = dslContext.selectFrom(DEX_TASK_ANCHOR).where(
+		Optional<DexTaskAnchorRecord> sameRequest = dslContext
+				.selectFrom(DEX_TASK_ANCHOR).where(
 				DEX_TASK_ANCHOR.PRIVATEADDR.eq(request.getPrivateWalletAddress())
 						.and(DEX_TASK_ANCHOR.ASSETCODE.eq(request.getAssetCode()))
 						.and(DEX_TASK_ANCHOR.AMOUNT.eq(amount))

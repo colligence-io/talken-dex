@@ -96,6 +96,15 @@ public class DexSettings {
 		private _Ethereum ethereum;
 		private _Luniverse luniverse;
         private _Klaytn klaytn;
+		private _Filecoin filecoin;
+	}
+
+	@Getter
+	@Setter
+	public static class _Filecoin {
+		private String infuraUri;
+		private String projectId;
+		private String projectSecret;
 	}
 
 	@Getter
