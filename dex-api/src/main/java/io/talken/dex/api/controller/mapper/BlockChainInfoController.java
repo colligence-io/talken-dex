@@ -9,8 +9,10 @@ import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
 import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.api.service.bc.EthereumInfoService;
+import io.talken.dex.api.service.bc.KlaytnInfoService;
 import io.talken.dex.api.service.bc.LuniverseInfoService;
 import io.talken.dex.shared.exception.DexException;
+import io.talken.dex.shared.service.blockchain.klaytn.KlaytnNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +30,9 @@ public class BlockChainInfoController {
 
 	@Autowired
 	private EthereumInfoService ethereumInfoService;
+
+    @Autowired
+    private KlaytnInfoService klaytnInfoService;
 
 	@Autowired
 	private AuthInfo authInfo;
@@ -130,5 +135,19 @@ public class BlockChainInfoController {
         } else {
             return DexResponse.buildResponse(null);
         }
+    }
+
+    /**
+     * get klay balance
+     *
+     * @param postBody
+     * @return
+     * @throws TalkenException
+     */
+//    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GETBALANCE, method = RequestMethod.POST)
+    public DexResponse<BigInteger> getKlayBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
+        DTOValidator.validate(postBody);
+        return DexResponse.buildResponse(klaytnInfoService.getBalance(postBody.getAddress()));
     }
 }

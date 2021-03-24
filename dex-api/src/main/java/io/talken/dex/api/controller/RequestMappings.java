@@ -63,7 +63,10 @@ public class RequestMappings {
     public static final String BLOCK_CHAIN_ETHEREUM_GET_TRANSACTION_BY_HASH = BLOCK_CHAIN_ETHEREUM + "/getTransaction";
     public static final String BLOCK_CHAIN_ETHEREUM_GET_TRANSACTION_RECEIPT_BY_HASH = BLOCK_CHAIN_ETHEREUM + "/getTransactionReceipt";
 
-	// TokenMetaService
+    private static final String BLOCK_CHAIN_KLAYTN = BLOCK_CHAIN + "/klaytn";
+    public static final String BLOCK_CHAIN_KLAYTN_GETBALANCE = BLOCK_CHAIN_KLAYTN + "/getBalance";
+
+    // TokenMetaService
 	private static final String TMS = ROOT + "/tms";
 	public static final String TMS_TM_LIST = TMS + "/list";
 	public static final String TMS_TM_INFO = TMS + "/info/{symbol}";

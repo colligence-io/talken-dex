@@ -20,15 +20,21 @@ public class KlaytnNetworkService {
 
     private final DexSettings dexSettings;
 
+    private KlayKasRpcClient klayKasRpcClient;
+
     @PostConstruct
     private void init() throws IOException {
-        CaverExtKAS caver = new CaverExtKAS();
         final int chainId = dexSettings.getBcnode().getKlaytn().getChainId();
         final String accessKeyId = dexSettings.getBcnode().getKlaytn().getAccessKeyId();
         final String secretAccessKey = dexSettings.getBcnode().getKlaytn().getSecretAccessKey();
-        caver.initKASAPI(chainId, accessKeyId, secretAccessKey);
 
-        Quantity response = caver.rpc.klay.getBlockNumber().send();
+        this.klayKasRpcClient = new KlayKasRpcClient(chainId, accessKeyId, secretAccessKey);
+
+        Quantity response = this.klayKasRpcClient.getClient().rpc.klay.getBlockNumber().send();
         logger.info("Using Klaytn {} Network : {} {}", chainId, response.getValue(), "");
+    }
+
+    public KlayKasRpcClient getKasClient() {
+        return this.klayKasRpcClient;
     }
 }
