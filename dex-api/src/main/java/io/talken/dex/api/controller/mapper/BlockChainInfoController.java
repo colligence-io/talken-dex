@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.TransferArray;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -214,5 +215,19 @@ public class BlockChainInfoController {
         } else {
             return DexResponse.buildResponse(null);
         }
+    }
+
+    /**
+     * get klay transactionList
+     *
+     * @param postBody
+     * @return
+     * @throws TalkenException
+     */
+    //    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_LIST, method = RequestMethod.POST)
+    public DexResponse<TransferArray> getKlayTransactionReceipt(@RequestBody EthBalanceRequest postBody) throws TalkenException {
+        DTOValidator.validate(postBody);
+        return DexResponse.buildResponse(klaytnInfoService.getTransactionList(postBody.getAddress()));
     }
 }

@@ -69,6 +69,7 @@ public class RequestMappings {
     public static final String BLOCK_CHAIN_KLAYTN_GASPRICE = BLOCK_CHAIN_KLAYTN + "/gasPrice";
     public static final String BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_BY_HASH = BLOCK_CHAIN_KLAYTN + "/getTransaction";
     public static final String BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_RECEIPT_BY_HASH = BLOCK_CHAIN_KLAYTN + "/getTransactionReceipt";
+    public static final String BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_LIST = BLOCK_CHAIN_KLAYTN + "/getTransactionList";
 
     // TokenMetaService
 	private static final String TMS = ROOT + "/tms";

@@ -16,6 +16,16 @@ import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import xyz.groundx.caver_ext_kas.CaverExtKAS;
+import xyz.groundx.caver_ext_kas.kas.KAS;
+import xyz.groundx.caver_ext_kas.kas.tokenhistory.TokenHistory;
+import xyz.groundx.caver_ext_kas.kas.tokenhistory.TokenHistoryQueryOptions;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.ApiException;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.ApiResponse;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.api.TokenApi;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.api.TokenHistoryApi;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.PageableTransfers;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.TransferArray;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -128,6 +138,21 @@ public class KlaytnInfoService {
             throw new GeneralException(ex);
         }
 	}
+
+	public TransferArray getTransactionList(String address) throws GeneralException {
+        String xChainId = klayNetworkService.getKasClient().getChainId();
+        TokenHistoryApi thApi = klayNetworkService.getKasClient().getClient().kas.tokenHistory.getTokenHistoryApi();
+
+        try {
+            String kind = TokenHistoryQueryOptions.KIND.getAllKind().replace("'", "").replace(" ", "");
+            // TODO : param need to decodeURL
+            ApiResponse<PageableTransfers> resp = thApi.getTransfersByEoaWithHttpInfo(xChainId, address, kind, null, null, null, null);
+            TransferArray items = resp.getData().getItems();
+            return items;
+        } catch(Exception ex) {
+            throw new GeneralException(ex);
+        }
+    }
 
 	public PendingTxListResult getPendingTransactionTxList(PendingTxListRequest request) {
 	    // TODO : add condition
