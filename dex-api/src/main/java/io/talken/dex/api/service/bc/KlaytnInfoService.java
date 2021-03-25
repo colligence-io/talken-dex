@@ -1,5 +1,8 @@
 package io.talken.dex.api.service.bc;
 
+import com.klaytn.caver.methods.response.Account;
+import com.klaytn.caver.methods.response.Transaction;
+import com.klaytn.caver.methods.response.TransactionReceipt;
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
@@ -30,6 +33,26 @@ public class KlaytnInfoService {
     @Autowired
     private DSLContext dslContext;
 
+    /****************
+     * TODO : make RPC Call Error response (also eth)
+     ****************/
+
+    /**
+     * get klay account
+     *
+     * @param address
+     * @return
+     * @throws GeneralException
+     */
+    public Account.AccountData getAccount(String address) throws GeneralException{
+        try {
+            // TODO : getError for RPC call
+            return klayNetworkService.getKasClient().getClient().rpc.klay.getAccount(address).send().getResult();
+        } catch(Exception ex) {
+            throw new GeneralException(ex);
+        }
+    }
+
 	/**
 	 * get klay balance
 	 *
@@ -39,12 +62,55 @@ public class KlaytnInfoService {
 	 */
 	public BigInteger getBalance(String address) throws GeneralException{
 	    try {
-            BigInteger balance = klayNetworkService.getKasClient().getClient().rpc.klay.getBalance(address).send().getValue();
-            return balance;
+            return klayNetworkService.getKasClient().getClient().rpc.klay.getBalance(address).send().getValue();
         } catch(Exception ex) {
             throw new GeneralException(ex);
         }
 	}
+
+    /**
+     * get klay gasPrice
+     *
+     * @return
+     * @throws GeneralException
+     */
+    public BigInteger getGasPrice() throws GeneralException{
+        try {
+            return klayNetworkService.getKasClient().getClient().rpc.klay.getGasPrice().send().getValue();
+        } catch(Exception ex) {
+            throw new GeneralException(ex);
+        }
+    }
+
+    /**
+     * get klay transaction
+     *
+     * @param hash
+     * @return
+     * @throws GeneralException
+     */
+    public Transaction.TransactionData getTransactionByHash(String hash) throws GeneralException{
+        try {
+            return klayNetworkService.getKasClient().getClient().rpc.klay.getTransactionByHash(hash).send().getResult();
+        } catch(Exception ex) {
+            throw new GeneralException(ex);
+        }
+    }
+
+    /**
+     * get klay transactionReceipt
+     *
+     * @param hash
+     * @return
+     * @throws GeneralException
+     */
+    public TransactionReceipt.TransactionReceiptData getTransactionReceiptByHash(String hash) throws GeneralException{
+        try {
+            return klayNetworkService.getKasClient().getClient().rpc.klay.getTransactionReceipt(hash).send().getResult();
+        } catch(Exception ex) {
+            throw new GeneralException(ex);
+        }
+    }
 
 	/**
 	 * get kip7/erc20 balance
@@ -86,60 +152,4 @@ public class KlaytnInfoService {
 
 	    return result;
     }
-
-//    public EthTransactionResultDTO getTransaction(String txHash) throws ExecutionException, InterruptedException {
-//        EthTransactionResultDTO.EthTransactionResultDTOBuilder builder = EthTransactionResultDTO.builder();
-//        if (txHash != null) {
-//            Transaction tx = ethNetworkService.getEthTransaction(txHash);
-//            if (tx != null) {
-//                builder.blockHash(tx.getBlockHash())
-//                        .blockNumber(tx.getBlockNumberRaw())
-//                        .from(tx.getFrom())
-//                        .gas(tx.getGasRaw())
-//                        .gasPrice(tx.getGasPriceRaw())
-//                        .hash(tx.getHash())
-//                        .input(tx.getInput())
-//                        .nonce(tx.getNonceRaw())
-//                        .to(tx.getTo())
-//                        .transactionIndex(tx.getTransactionIndexRaw())
-//                        .value(tx.getValueRaw())
-//                        .v(tx.getV())
-//                        .s(tx.getS())
-//                        .r(tx.getR());
-//
-//                if (tx.getCreates() != null) builder.creates(tx.getCreates());
-//                if (tx.getChainId() != null) builder.chainId(tx.getChainId());
-//                if (tx.getPublicKey() != null) builder.publicKey(tx.getPublicKey());
-//            }
-//        }
-//
-//        return builder.build();
-//    }
-//
-//    public EthTransactionReceiptResultDTO getTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
-//        EthTransactionReceiptResultDTO.EthTransactionReceiptResultDTOBuilder builder = EthTransactionReceiptResultDTO.builder();
-//        if (txHash != null) {
-//            TransactionReceipt tx = ethNetworkService.getEthTransactionReceipt(txHash);
-//            if (tx != null) {
-//                builder.transactionHash(tx.getTransactionHash())
-//                        .transactionIndex(tx.getTransactionIndex())
-//                        .blockHash(tx.getBlockHash())
-//                        .blockNumber(tx.getBlockNumberRaw())
-//                        .from(tx.getFrom())
-//                        .to(tx.getTo())
-//                        .cumulativeGasUsed(tx.getCumulativeGasUsed())
-//                        .gasUsed(tx.getGasUsed())
-//                        .contractAddress(tx.getContractAddress())
-//                        .logs(tx.getLogs())
-//                        .logsBloom(tx.getLogsBloom())
-//                        .root(tx.getRoot())
-//                        .status(tx.getStatus());
-//
-//                builder.revertReason(tx.getRevertReason());
-//                builder.isStatus(tx.isStatusOK());
-//            }
-//        }
-//
-//        return builder.build();
-//    }
 }

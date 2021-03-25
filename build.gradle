@@ -33,7 +33,7 @@ subprojects {
     targetCompatibility = 1.8
 
     group = "io.talken"
-    version = "1.5.7"
+    version = "1.6.0"
 
     bootJar {
         baseName = "tkn-" + project.name
@@ -71,7 +71,7 @@ subprojects {
     }
 
     dependencies {
-        implementation('io.talken:java-common:20200108-1') { changing = true }
+        implementation('io.talken:java-common:20200324-1') { changing = true }
 
         // jooq
 //        compile('org.jooq:jooq:3.14.1')
@@ -115,6 +115,10 @@ subprojects {
         implementation('co.nstant.in:cbor:0.9')
         implementation('org.bitcoinj:bitcoinj-core:0.15.9')
         implementation('com.github.apetersson:Blake2b:0.1')
+
+        // klaytn
+        implementation 'com.klaytn.caver:core:1.5.7'
+        implementation 'xyz.groundx.caver:caver-java-ext-kas:1.1.0'
 
         // devtools
         runtimeOnly('org.springframework.boot:spring-boot-devtools')
