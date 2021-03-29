@@ -1,13 +1,11 @@
 package io.talken.dex.shared.service.blockchain.klaytn;
 
-import com.klaytn.caver.Caver;
 import com.klaytn.caver.methods.response.Quantity;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.DexSettings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import xyz.groundx.caver_ext_kas.CaverExtKAS;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;

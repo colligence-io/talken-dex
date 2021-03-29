@@ -9,17 +9,14 @@ import io.talken.dex.api.config.auth.AuthInfo;
 import io.talken.dex.api.config.auth.AuthRequired;
 import io.talken.dex.api.controller.DTOValidator;
 import io.talken.dex.api.controller.DexResponse;
-import io.talken.dex.api.controller.DexResponseBody;
 import io.talken.dex.api.controller.RequestMappings;
 import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.api.service.bc.EthereumInfoService;
 import io.talken.dex.api.service.bc.KlaytnInfoService;
 import io.talken.dex.api.service.bc.LuniverseInfoService;
 import io.talken.dex.shared.exception.DexException;
-import io.talken.dex.shared.service.blockchain.klaytn.KlaytnNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.TransferArray;
 
