@@ -16,9 +16,7 @@ public class BscRpcClient {
     private String client = null;
     private Boolean isParity = null;
 
-    public BscRpcClient(String uri) {
-        this.uri = uri;
-    }
+    public BscRpcClient(String uri) { this.uri = uri; }
 
     public String getUri() {
         return uri;

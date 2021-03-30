@@ -96,7 +96,7 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-	@AuthRequired
+//	@AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GETETHBALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getEthBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
@@ -110,7 +110,7 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-	@AuthRequired
+//	@AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GETERC20BALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getErc20Balance(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
@@ -240,9 +240,19 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GETERC20BALANCE, method = RequestMethod.POST)
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GETBALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getBscBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException, IOException {
 		DTOValidator.validate(postBody);
-		return DexResponse.buildResponse(bscInfoService.getBalance(postBody.getAddress()));
+		return DexResponse.buildResponse(bscInfoService.getBscBalance(postBody.getAddress()));
+	}
+	/**
+	 * get Bsc gasPrice
+	 *
+	 * @return
+	 * @throws TalkenException
+	 */
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GASPRICE, method = RequestMethod.GET)
+	public DexResponse<BscGasPriceResult> getBscGasPriceAndLimit() throws TalkenException {
+		return DexResponse.buildResponse(bscInfoService.getGasPriceAndLimit());
 	}
 }
