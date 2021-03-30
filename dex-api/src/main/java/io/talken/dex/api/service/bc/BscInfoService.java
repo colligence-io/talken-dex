@@ -3,18 +3,22 @@ package io.talken.dex.api.service.bc;
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.dto.BscGasPriceResult;
+import io.talken.dex.api.controller.dto.EthTransactionReceiptResultDTO;
+import io.talken.dex.api.controller.dto.EthTransactionResultDTO;
 import io.talken.dex.shared.exception.InternalServerErrorException;
 import io.talken.dex.shared.service.blockchain.bsc.BscNetworkService;
-import io.talken.dex.shared.service.blockchain.ethereum.Erc20ContractInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.Transaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @Scope("singleton")
@@ -25,9 +29,6 @@ public class BscInfoService {
     private BscNetworkService bscNetworkService;
 
     private Web3j rpcClient;
-
-    public BscInfoService() {
-    }
 
     @PostConstruct
     private void init() throws Exception {
@@ -80,4 +81,61 @@ public class BscInfoService {
     public BigInteger getGasLimit(Web3j web3j) {
         return new BigInteger("100000");
     }
+
+    public EthTransactionResultDTO getBscTransaction(String txHash) throws ExecutionException, InterruptedException {
+        EthTransactionResultDTO.EthTransactionResultDTOBuilder builder = EthTransactionResultDTO.builder();
+        if (txHash != null) {
+            Transaction tx = bscNetworkService.getBscTransaction(txHash);
+            if (tx != null) {
+                builder.blockHash(tx.getBlockHash())
+                        .blockNumber(tx.getBlockNumberRaw())
+                        .from(tx.getFrom())
+                        .gas(tx.getGasRaw())
+                        .gasPrice(tx.getGasPriceRaw())
+                        .hash(tx.getHash())
+                        .input(tx.getInput())
+                        .nonce(tx.getNonceRaw())
+                        .to(tx.getTo())
+                        .transactionIndex(tx.getTransactionIndexRaw())
+                        .value(tx.getValueRaw())
+                        .v(tx.getV())
+                        .s(tx.getS())
+                        .r(tx.getR());
+
+                if (tx.getCreates() != null) builder.creates(tx.getCreates());
+                if (tx.getChainId() != null) builder.chainId(tx.getChainId());
+                if (tx.getPublicKey() != null) builder.publicKey(tx.getPublicKey());
+            }
+        }
+
+        return builder.build();
+    }
+
+    public EthTransactionReceiptResultDTO getBscTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
+        EthTransactionReceiptResultDTO.EthTransactionReceiptResultDTOBuilder builder = EthTransactionReceiptResultDTO.builder();
+        if (txHash != null) {
+            TransactionReceipt tx = bscNetworkService.getBscTransactionReceipt(txHash);
+            if (tx != null) {
+                builder.transactionHash(tx.getTransactionHash())
+                        .transactionIndex(tx.getTransactionIndex())
+                        .blockHash(tx.getBlockHash())
+                        .blockNumber(tx.getBlockNumberRaw())
+                        .from(tx.getFrom())
+                        .to(tx.getTo())
+                        .cumulativeGasUsed(tx.getCumulativeGasUsed())
+                        .gasUsed(tx.getGasUsed())
+                        .contractAddress(tx.getContractAddress())
+                        .logs(tx.getLogs())
+                        .logsBloom(tx.getLogsBloom())
+                        .root(tx.getRoot())
+                        .status(tx.getStatus());
+
+                builder.revertReason(tx.getRevertReason());
+                builder.isStatus(tx.isStatusOK());
+            }
+        }
+
+        return builder.build();
+    }
+
 }
