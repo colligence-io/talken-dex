@@ -11,6 +11,7 @@ import io.talken.dex.api.controller.DTOValidator;
 import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
 import io.talken.dex.api.controller.dto.*;
+import io.talken.dex.api.service.bc.BscInfoService;
 import io.talken.dex.api.service.bc.EthereumInfoService;
 import io.talken.dex.api.service.bc.KlaytnInfoService;
 import io.talken.dex.api.service.bc.LuniverseInfoService;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.TransferArray;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +38,9 @@ public class BlockChainInfoController {
 
     @Autowired
     private KlaytnInfoService klaytnInfoService;
+
+    @Autowired
+	private BscInfoService bscInfoService;
 
 	@Autowired
 	private AuthInfo authInfo;
@@ -227,4 +232,43 @@ public class BlockChainInfoController {
         DTOValidator.validate(postBody);
         return DexResponse.buildResponse(klaytnInfoService.getTransactionList(postBody.getAddress()));
     }
+
+	/**
+	 * get Bsc balance
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
+	//    @AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GETBALANCE, method = RequestMethod.POST)
+	public DexResponse<BigInteger> getBscBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(bscInfoService.getBscBalance(postBody.getAddress()));
+	}
+	/**
+	 * get Bsc gasPrice
+	 *
+	 * @return
+	 * @throws TalkenException
+	 */
+	//    @AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GASPRICE, method = RequestMethod.GET)
+	public DexResponse<BscGasPriceResult> getBscGasPriceAndLimit() throws TalkenException {
+		return DexResponse.buildResponse(bscInfoService.getGasPriceAndLimit());
+	}
+
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GET_TRANSACTION_BY_HASH, method = RequestMethod.GET)
+	public DexResponse<EthTransactionResultDTO> getBscTransaction(@RequestParam("txHash") String txHash) throws Exception {
+		return DexResponse.buildResponse(bscInfoService.getBscTransaction(txHash));
+	}
+
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GET_TRANSACTION_RECEIPT_BY_HASH, method = RequestMethod.GET)
+	public DexResponse<EthTransactionReceiptResultDTO> getBscTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
+		if (txHash != null) {
+			return DexResponse.buildResponse(bscInfoService.getBscTransactionReceipt(txHash));
+		} else {
+			return DexResponse.buildResponse(null);
+		}
+	}
 }
