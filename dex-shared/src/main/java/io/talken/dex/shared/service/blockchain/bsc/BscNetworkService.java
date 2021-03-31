@@ -32,7 +32,10 @@ public class BscNetworkService {
         this.mainRpcUri = settings.getMainRpcUri();
         this.client = new BscRpcClient(this.mainRpcUri);
 
-        logger.info("Using BSC SERVICE Network : {} / {} / {}",chainId,this.client.getUri(),this.client.getClientVersion());
+        logger.info("Using BSC SERVICE Network : {} / {} / {}",
+                "chain Id: " + chainId,
+                "uri: " + this.client.getUri(),
+                "client version: " + this.client.getClientVersion());
     }
 
     public BscRpcClient getClient() { return this.client; }

@@ -79,7 +79,7 @@ public class BscInfoService {
     }
 
     public BigInteger getGasLimit(Web3j web3j) {
-        return new BigInteger("100000");
+        return new BigInteger("21000");
     }
 
     public EthTransactionResultDTO getBscTransaction(String txHash) throws ExecutionException, InterruptedException {
