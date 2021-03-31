@@ -6,6 +6,7 @@ import io.talken.dex.api.controller.dto.BscGasPriceResult;
 import io.talken.dex.api.controller.dto.EthTransactionReceiptResultDTO;
 import io.talken.dex.api.controller.dto.EthTransactionResultDTO;
 import io.talken.dex.shared.exception.InternalServerErrorException;
+import io.talken.dex.shared.service.blockchain.bsc.Bep20ContractInfoService;
 import io.talken.dex.shared.service.blockchain.bsc.BscNetworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -27,6 +28,9 @@ public class BscInfoService {
 
     @Autowired
     private BscNetworkService bscNetworkService;
+
+    @Autowired
+    private Bep20ContractInfoService contractInfoService;
 
     private Web3j rpcClient;
 
@@ -57,6 +61,35 @@ public class BscInfoService {
     public BigInteger getBscBalance(Web3j web3j, String address) throws GeneralException {
         try {
             return web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send().getBalance();
+        } catch(Exception ex) {
+            throw new GeneralException(ex);
+        }
+    }
+
+    /**
+     * get bep20 balance
+     *
+     * @param contract
+     * @param address
+     * @return
+     * @throws GeneralException
+     */
+    public BigInteger getBep20Balance(String contract, String address) throws GeneralException {
+        return getBep20Balance(bscNetworkService.getClient().newClient(), contract, address);
+    }
+
+    /**
+     * get bep20 balance
+     *
+     * @param web3j
+     * @param contract
+     * @param address
+     * @return
+     * @throws GeneralException
+     */
+    public BigInteger getBep20Balance(Web3j web3j, String contract, String address) throws GeneralException {
+        try {
+            return contractInfoService.getBalanceOf(web3j, contract, address);
         } catch(Exception ex) {
             throw new GeneralException(ex);
         }

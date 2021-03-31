@@ -22,6 +22,7 @@ public class CacheConfig {
 		public static final String SWAP_PREDICT_SET = "swapPredictSet";
 		public static final String ETH_ERC20_CONTRACT_INFO = "eth_erc20ContractInfo";
 		public static final String LUK_ERC20_CONTRACT_INFO = "luk_erc20ContractInfo";
+		public static final String BSC_BEP20_CONTRACT_INFO = "bsc_bep20ContractInfo";
 	}
 
 	@Autowired
@@ -39,6 +40,8 @@ public class CacheConfig {
 		cfgMap.put(CacheNames.SWAP_PREDICT_SET, buildCacheConfiguration(Duration.ofSeconds(3))); // 3 seconds
 		cfgMap.put(CacheNames.ETH_ERC20_CONTRACT_INFO, buildCacheConfiguration(Duration.ZERO)); // eternal cache
 		cfgMap.put(CacheNames.LUK_ERC20_CONTRACT_INFO, buildCacheConfiguration(Duration.ZERO)); // eternal cache
+		cfgMap.put(CacheNames.BSC_BEP20_CONTRACT_INFO, buildCacheConfiguration(Duration.ZERO)); // eternal cache
+
 
 		return cfgMap;
 	}

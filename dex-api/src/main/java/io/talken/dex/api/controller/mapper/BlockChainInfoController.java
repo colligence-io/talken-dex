@@ -246,6 +246,21 @@ public class BlockChainInfoController {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(bscInfoService.getBscBalance(postBody.getAddress()));
 	}
+
+	/**
+	 * get bep20 balance
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
+//	@AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GETBEP20BALANCE, method = RequestMethod.POST)
+	public DexResponse<BigInteger> getBep20Balance(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(bscInfoService.getBep20Balance(postBody.getContract(), postBody.getAddress()));
+	}
+
 	/**
 	 * get Bsc gasPrice
 	 *

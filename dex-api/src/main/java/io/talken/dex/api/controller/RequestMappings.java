@@ -73,6 +73,7 @@ public class RequestMappings {
 
     private static final String BLOCK_CHAIN_BSC = BLOCK_CHAIN + "/bsc";
 	public static final String BLOCK_CHAIN_BSC_GETBALANCE = BLOCK_CHAIN_BSC + "/getBalance";
+	public static final String BLOCK_CHAIN_BSC_GETBEP20BALANCE = BLOCK_CHAIN_BSC + "/getBep20Balance";
 	public static final String BLOCK_CHAIN_BSC_GASPRICE = BLOCK_CHAIN_BSC + "/gasPrice";
 	public static final String BLOCK_CHAIN_BSC_GET_TRANSACTION_BY_HASH = BLOCK_CHAIN_BSC + "/getTransaction";
 	public static final String BLOCK_CHAIN_BSC_GET_TRANSACTION_RECEIPT_BY_HASH = BLOCK_CHAIN_BSC + "/getTransactionReceipt";
