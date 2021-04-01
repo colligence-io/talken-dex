@@ -101,17 +101,22 @@ public class AdminRedisMessageListnerService implements MessageListener {
 		if(command.startsWith("rebalance trade wallet ")) {
 			rebalanceTradeWallet(command.replaceFirst("rebalance trade wallet ", ""));
 		}
+
+        if(command.startsWith("reset trade wallet ")) {
+            resetTradeWallet(command.replaceFirst("reset trade wallet ", ""));
+        }
 	}
 
 	private void rebalanceTradeWallet(String cmd) {
 		String[] args = cmd.split(" ");
 
 		if(args.length < 3)
-			adminAlarmService.warn(logger, "ADMIN TRADE WALLET REBALANCE : not enough args, usage = rebalance trade wallet [UID] [ASSETCODE] [TARGET BALANCE]");
+		    adminAlarmService.warn(logger, "ADMIN TRADE WALLET REBALANCE : not enough args, usage = rebalance trade wallet [UID] [ASSETCODE] [TARGET BALANCE]");
 
 		User u = dslContext.selectFrom(USER).where(USER.UID.eq(args[0])).fetchOneInto(User.class);
 
-		if(u == null) adminAlarmService.warn(logger, "ADMIN TRADE WALLET REBALANCE : user " + args[0] + " not found");
+		if(u == null)
+		    adminAlarmService.warn(logger, "ADMIN TRADE WALLET REBALANCE : user " + args[0] + " not found");
 
 		try {
 			String txHash = twService.rebalanceIssuedAsset(u, args[1], new BigDecimal(args[2]));
@@ -120,4 +125,23 @@ public class AdminRedisMessageListnerService implements MessageListener {
 			adminAlarmService.error(logger, "ADMIN TRADE WALLET REBALANCE : Exception :: {}", ex.getClass().getSimpleName() + " " + ex.getMessage());
 		}
 	}
+
+    private void resetTradeWallet(String cmd) {
+        String[] args = cmd.split(" ");
+
+        if(args.length < 1)
+            adminAlarmService.warn(logger, "ADMIN TRADE WALLET RESET : not enough args, usage = reset trade wallet [UID]");
+
+        User u = dslContext.selectFrom(USER).where(USER.UID.eq(args[0])).fetchOneInto(User.class);
+
+        if(u == null)
+            adminAlarmService.warn(logger, "ADMIN TRADE WALLET RESET : user " + args[0] + " not found");
+
+        try {
+            boolean result = twService.resetTradeWallet(u);
+            adminAlarmService.info(logger, "ADMIN TRADE WALLET RESET : " + args[0] + " " + result);
+        } catch(Exception ex) {
+            adminAlarmService.error(logger, "ADMIN TRADE WALLET RESET : Exception :: {}", ex.getClass().getSimpleName() + " " + ex.getMessage());
+        }
+    }
 }
