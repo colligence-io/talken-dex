@@ -64,7 +64,8 @@ public class EthereumNetworkService {
 	 * @return
 	 */
 	public EthRpcClient getLocalClient() {
-		return this.localClient;
+        return getInfuraClient();
+//		return this.localClient;
 	}
 
 	/**
