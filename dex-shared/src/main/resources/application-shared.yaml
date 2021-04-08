@@ -15,6 +15,13 @@ spring:
 #      test-on-borrow: true
 #      validation-query: SELECT 1
 
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
 logging:
   level:
     com.zaxxer.hikari.HikariConfig: DEBUG

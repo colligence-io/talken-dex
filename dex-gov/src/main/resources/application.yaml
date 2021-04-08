@@ -9,14 +9,12 @@ spring:
     name: TKN-DEX-GOV
   main:
     web-application-type: none
-  http:
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
   datasource:
     hikari:
-      max-lifetime: 580000
+      idle-timeout: 10000
+      connection-timeout: 10000
+      validation-timeout: 10000
+      max-lifetime: 590000
       maximum-pool-size: 8
       register-mbeans: true
       connectionTestQuery: SELECT 1

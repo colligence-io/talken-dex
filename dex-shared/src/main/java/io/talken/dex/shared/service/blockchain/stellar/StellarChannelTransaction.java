@@ -124,7 +124,8 @@ public class StellarChannelTransaction implements Closeable {
 			StellarChannelTransaction sctx = new StellarChannelTransaction();
 			sctx.stellarNetworkService = this.stellarNetworkService;
 			try {
-				sctx.server = stellarNetworkService.pickServer();
+//				sctx.server = stellarNetworkService.pickServer();
+                sctx.server = stellarNetworkService.pickPublicServer();
 				// pick channel
 				sctx.channel = stellarNetworkService.pickChannel();
 
