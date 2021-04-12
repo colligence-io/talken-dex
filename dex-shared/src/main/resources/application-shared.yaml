@@ -71,6 +71,10 @@ talken:
         infuraUri: "https://filecoin.infura.io"
         projectId: "1ld7AhUXVAo1S2dTAFmms9HK7WE"
         projectSecret: "c628cd44465c7d17c8f37afead39106e"
+      heco:
+        chainId: 256
+        mainRpcUri: "https://http-testnet.hecochain.com"
+
 
     task:
       createOffer:
@@ -138,6 +142,9 @@ talken:
         infuraUri: "https://filecoin.infura.io"
         projectId: "1ld7AhUXVAo1S2dTAFmms9HK7WE"
         projectSecret: "c628cd44465c7d17c8f37afead39106e"
+      heco:
+        chainId: 128
+        mainRpcUri: "https://http-mainnet.hecochain.com"
     integration:
       relay:
         apiUrl: http://192.168.0.36:3888/graphql

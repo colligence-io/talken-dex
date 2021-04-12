@@ -78,6 +78,13 @@ public class RequestMappings {
 	public static final String BLOCK_CHAIN_BSC_GET_TRANSACTION_BY_HASH = BLOCK_CHAIN_BSC + "/getTransaction";
 	public static final String BLOCK_CHAIN_BSC_GET_TRANSACTION_RECEIPT_BY_HASH = BLOCK_CHAIN_BSC + "/getTransactionReceipt";
 
+	private static final String BLOCK_CHAIN_HECO = BLOCK_CHAIN + "/heco";
+	public static final String BLOCK_CHAIN_HECO_GETBALANCE = BLOCK_CHAIN_HECO + "/getBalance";
+	public static final String BLOCK_CHAIN_HECO_GETBEP20BALANCE = BLOCK_CHAIN_HECO + "/getBep20Balance";
+	public static final String BLOCK_CHAIN_HECO_GASPRICE = BLOCK_CHAIN_HECO + "/gasPrice";
+	public static final String BLOCK_CHAIN_HECO_GET_TRANSACTION_BY_HASH = BLOCK_CHAIN_HECO + "/getTransaction";
+	public static final String BLOCK_CHAIN_HECO_GET_TRANSACTION_RECEIPT_BY_HASH = BLOCK_CHAIN_HECO + "/getTransactionReceipt";
+
     // TokenMetaService
 	private static final String TMS = ROOT + "/tms";
 	public static final String TMS_TM_LIST = TMS + "/list";
