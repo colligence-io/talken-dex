@@ -11,10 +11,7 @@ import io.talken.dex.api.controller.DTOValidator;
 import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
 import io.talken.dex.api.controller.dto.*;
-import io.talken.dex.api.service.bc.BscInfoService;
-import io.talken.dex.api.service.bc.EthereumInfoService;
-import io.talken.dex.api.service.bc.KlaytnInfoService;
-import io.talken.dex.api.service.bc.LuniverseInfoService;
+import io.talken.dex.api.service.bc.*;
 import io.talken.dex.shared.exception.DexException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -41,6 +38,9 @@ public class BlockChainInfoController {
 
     @Autowired
 	private BscInfoService bscInfoService;
+
+	@Autowired
+	private HecoInfoService hecoInfoService;
 
 	@Autowired
 	private AuthInfo authInfo;
@@ -285,5 +285,19 @@ public class BlockChainInfoController {
 		} else {
 			return DexResponse.buildResponse(null);
 		}
+	}
+
+	/**
+	 * get Bsc balance
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
+	//    @AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GETBALANCE, method = RequestMethod.POST)
+	public DexResponse<BigInteger> getHecoBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(hecoInfoService.getHecoBalance(postBody.getAddress()));
 	}
 }
