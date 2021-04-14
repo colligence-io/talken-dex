@@ -1,6 +1,5 @@
 package io.talken.dex.shared.config;
 
-import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
@@ -36,8 +35,6 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
 		}
 
 		final MongoCredential credential = MongoCredential.createCredential(secret().getUsername(), secret().getAuthSource(), secret().getPassword().toCharArray());
-		final MongoClientOptions options = MongoClientOptions.builder().build();
-
 
 		MongoClientSettings settings = MongoClientSettings.builder()
 				.applyToClusterSettings(builder -> builder.hosts(addrs))

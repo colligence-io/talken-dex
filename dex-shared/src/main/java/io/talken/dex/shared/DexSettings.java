@@ -95,6 +95,17 @@ public class DexSettings {
 		private _Stellar stellar;
 		private _Ethereum ethereum;
 		private _Luniverse luniverse;
+        private _Klaytn klaytn;
+        private _Bsc bsc;
+		private _Filecoin filecoin;
+	}
+
+	@Getter
+	@Setter
+	public static class _Filecoin {
+		private String infuraUri;
+		private String projectId;
+		private String projectSecret;
 	}
 
 	@Getter
@@ -124,6 +135,21 @@ public class DexSettings {
 		private String sideRpcUri;
 		private String mainRpcUri;
 	}
+
+    @Getter
+    @Setter
+    public static class _Klaytn {
+        private int chainId;
+        private String accessKeyId;
+        private String secretAccessKey;
+    }
+
+    @Getter
+    @Setter
+    public static class _Bsc {
+        private int chainId;
+        private String mainRpcUri;
+    }
 
 	private _Integration integration;
 

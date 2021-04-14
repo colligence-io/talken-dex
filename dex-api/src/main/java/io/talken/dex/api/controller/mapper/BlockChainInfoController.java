@@ -1,5 +1,8 @@
 package io.talken.dex.api.controller.mapper;
 
+import com.klaytn.caver.methods.response.Account;
+import com.klaytn.caver.methods.response.Transaction;
+import com.klaytn.caver.methods.response.TransactionReceipt;
 import io.talken.common.exception.TalkenException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.config.auth.AuthInfo;
@@ -8,13 +11,17 @@ import io.talken.dex.api.controller.DTOValidator;
 import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
 import io.talken.dex.api.controller.dto.*;
+import io.talken.dex.api.service.bc.BscInfoService;
 import io.talken.dex.api.service.bc.EthereumInfoService;
+import io.talken.dex.api.service.bc.KlaytnInfoService;
 import io.talken.dex.api.service.bc.LuniverseInfoService;
 import io.talken.dex.shared.exception.DexException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.TransferArray;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +35,12 @@ public class BlockChainInfoController {
 
 	@Autowired
 	private EthereumInfoService ethereumInfoService;
+
+    @Autowired
+    private KlaytnInfoService klaytnInfoService;
+
+    @Autowired
+	private BscInfoService bscInfoService;
 
 	@Autowired
 	private AuthInfo authInfo;
@@ -131,4 +144,146 @@ public class BlockChainInfoController {
             return DexResponse.buildResponse(null);
         }
     }
+
+    /**
+     * get klay account
+     *
+     * @param postBody
+     * @return
+     * @throws TalkenException
+     */
+    //    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GETACCOUNT, method = RequestMethod.POST)
+    public DexResponse<Account.AccountData> getKlayAccount(@RequestBody EthBalanceRequest postBody) throws TalkenException {
+        DTOValidator.validate(postBody);
+        return DexResponse.buildResponse(klaytnInfoService.getAccount(postBody.getAddress()));
+    }
+
+    /**
+     * get klay balance
+     *
+     * @param postBody
+     * @return
+     * @throws TalkenException
+     */
+    //    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GETBALANCE, method = RequestMethod.POST)
+    public DexResponse<BigInteger> getKlayBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
+        DTOValidator.validate(postBody);
+        return DexResponse.buildResponse(klaytnInfoService.getBalance(postBody.getAddress()));
+    }
+
+    /**
+     * get klay gasPrice
+     *
+     * @return
+     * @throws TalkenException
+     */
+    //    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GASPRICE, method = RequestMethod.GET)
+    public DexResponse<BigInteger> getKlayGasPrice() throws TalkenException {
+        return DexResponse.buildResponse(klaytnInfoService.getGasPrice());
+    }
+
+    /**
+     * get klay transaction
+     *
+     * @param txHash
+     * @return
+     * @throws TalkenException
+     */
+    //    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_BY_HASH, method = RequestMethod.GET)
+    public DexResponse<Transaction.TransactionData> getKlayTransaction(@RequestParam("txHash") String txHash) throws TalkenException {
+        if (txHash != null) {
+            return DexResponse.buildResponse(klaytnInfoService.getTransactionByHash(txHash));
+        } else {
+            return DexResponse.buildResponse(null);
+        }
+    }
+
+    /**
+     * get klay transactionReceipt
+     *
+     * @param txHash
+     * @return
+     * @throws TalkenException
+     */
+    //    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_RECEIPT_BY_HASH, method = RequestMethod.GET)
+    public DexResponse<TransactionReceipt.TransactionReceiptData> getKlayTransactionReceipt(@RequestParam("txHash") String txHash) throws TalkenException {
+        if (txHash != null) {
+            return DexResponse.buildResponse(klaytnInfoService.getTransactionReceiptByHash(txHash));
+        } else {
+            return DexResponse.buildResponse(null);
+        }
+    }
+
+    /**
+     * get klay transactionList
+     *
+     * @param postBody
+     * @return
+     * @throws TalkenException
+     */
+    //    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_LIST, method = RequestMethod.POST)
+    public DexResponse<TransferArray> getKlayTransactionReceipt(@RequestBody EthBalanceRequest postBody) throws TalkenException {
+        DTOValidator.validate(postBody);
+        return DexResponse.buildResponse(klaytnInfoService.getTransactionList(postBody.getAddress()));
+    }
+
+	/**
+	 * get Bsc balance
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
+	//    @AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GETBALANCE, method = RequestMethod.POST)
+	public DexResponse<BigInteger> getBscBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(bscInfoService.getBscBalance(postBody.getAddress()));
+	}
+
+	/**
+	 * get bep20 balance
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
+//	@AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GETBEP20BALANCE, method = RequestMethod.POST)
+	public DexResponse<BigInteger> getBep20Balance(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(bscInfoService.getBep20Balance(postBody.getContract(), postBody.getAddress()));
+	}
+
+	/**
+	 * get Bsc gasPrice
+	 *
+	 * @return
+	 * @throws TalkenException
+	 */
+	//    @AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GASPRICE, method = RequestMethod.GET)
+	public DexResponse<BscGasPriceResult> getBscGasPriceAndLimit() throws TalkenException {
+		return DexResponse.buildResponse(bscInfoService.getGasPriceAndLimit());
+	}
+
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GET_TRANSACTION_BY_HASH, method = RequestMethod.GET)
+	public DexResponse<EthTransactionResultDTO> getBscTransaction(@RequestParam("txHash") String txHash) throws Exception {
+		return DexResponse.buildResponse(bscInfoService.getBscTransaction(txHash));
+	}
+
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GET_TRANSACTION_RECEIPT_BY_HASH, method = RequestMethod.GET)
+	public DexResponse<EthTransactionReceiptResultDTO> getBscTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
+		if (txHash != null) {
+			return DexResponse.buildResponse(bscInfoService.getBscTransactionReceipt(txHash));
+		} else {
+			return DexResponse.buildResponse(null);
+		}
+	}
 }

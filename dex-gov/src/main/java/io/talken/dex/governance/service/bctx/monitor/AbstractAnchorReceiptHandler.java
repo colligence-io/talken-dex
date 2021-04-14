@@ -41,9 +41,12 @@ public abstract class AbstractAnchorReceiptHandler implements TokenMetaTableUpda
 		for(TokenMetaTable.Meta meta : metaTable.values()) {
 			if(meta.isManaged()) {
 				if(bcTypes.contains(meta.getBctxType())) {
-					for(TokenMetaTable.HolderAccountInfo assetHolderAccount : meta.getManagedInfo().getAssetHolderAccounts()) {
-						holderAddresses.add(assetHolderAccount.getAddress().toLowerCase());
-					}
+				    // TODO : filecoin meta exception 임시.
+				    if (meta.getManagedInfo() != null && meta.getManagedInfo().getAssetHolderAccounts() != null) {
+                        for(TokenMetaTable.HolderAccountInfo assetHolderAccount : meta.getManagedInfo().getAssetHolderAccounts()) {
+                            holderAddresses.add(assetHolderAccount.getAddress().toLowerCase());
+                        }
+                    }
 				}
 			}
 		}

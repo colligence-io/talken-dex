@@ -15,6 +15,13 @@ spring:
 #      test-on-borrow: true
 #      validation-query: SELECT 1
 
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
 logging:
   level:
     com.zaxxer.hikari.HikariConfig: DEBUG
@@ -53,6 +60,18 @@ talken:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://13.125.55.194:8545"
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5300575914426995782"
+      klaytn:
+        chainId: 1001
+        accessKeyId: "KASKSKZAXHOHESP81QUHE2YN"
+        secretAccessKey: "Q8UZkFRnpSALo2CHD2/SMCnkum8iiqoayrC/J6W1"
+      bsc:
+        chainId: 97
+        mainRpcUri: "https://data-seed-prebsc-1-s1.binance.org:8545"
+      filecoin:
+        infuraUri: "https://filecoin.infura.io"
+        projectId: "1ld7AhUXVAo1S2dTAFmms9HK7WE"
+        projectSecret: "c628cd44465c7d17c8f37afead39106e"
+
     task:
       createOffer:
         feeRatePivot: 0.005
@@ -108,6 +127,17 @@ talken:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://13.125.55.194:8545"
         sideRpcUri: "http://baas-rpc.luniverse.io:8545?lChainId=5151520500809142437"
+      klaytn:
+        chainId: 8217
+        accessKeyId: "KASKSKZAXHOHESP81QUHE2YN"
+        secretAccessKey: "Q8UZkFRnpSALo2CHD2/SMCnkum8iiqoayrC/J6W1"
+      bsc:
+        chainId: 56
+        mainRpcUri: "https://bsc-dataseed.binance.org"
+      filecoin:
+        infuraUri: "https://filecoin.infura.io"
+        projectId: "1ld7AhUXVAo1S2dTAFmms9HK7WE"
+        projectSecret: "c628cd44465c7d17c8f37afead39106e"
     integration:
       relay:
         apiUrl: http://192.168.0.36:3888/graphql

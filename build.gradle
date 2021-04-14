@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.2.4.RELEASE")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.3.9.RELEASE")
     }
 }
 
@@ -33,7 +33,7 @@ subprojects {
     targetCompatibility = 1.8
 
     group = "io.talken"
-    version = "1.5.7"
+    version = "1.6.0"
 
     bootJar {
         baseName = "tkn-" + project.name
@@ -71,56 +71,71 @@ subprojects {
     }
 
     dependencies {
-        compile('io.talken:java-common:20200108-1') { changing = true }
+        implementation('io.talken:java-common:20200405-1') { changing = true }
 
         // jooq
 //        compile('org.jooq:jooq:3.14.1')
 
-        annotationProcessor('org.projectlombok:lombok:1.18.8')
-        compileOnly('org.projectlombok:lombok:1.18.8')
+        annotationProcessor('org.projectlombok:lombok:1.18.16')
+        compileOnly('org.projectlombok:lombok:1.18.16')
 
         // Spring Data
-        compile('org.springframework.boot:spring-boot-starter-jdbc')
-        compile('org.springframework.boot:spring-boot-starter-aop')
+        implementation('org.springframework.boot:spring-boot-starter-jdbc')
+        implementation('org.springframework.boot:spring-boot-starter-aop')
 
         // configuration processor
-        compile('org.springframework.boot:spring-boot-configuration-processor')
+        implementation('org.springframework.boot:spring-boot-configuration-processor')
+
+        // Spring validation
+        implementation('org.springframework.boot:spring-boot-starter-validation')
 
         // Spring cache
-        compile('org.springframework.boot:spring-boot-starter-cache')
+        implementation('org.springframework.boot:spring-boot-starter-cache')
 
         // Redis
-        compile('org.springframework.boot:spring-boot-starter-data-redis')
+        implementation('org.springframework.boot:spring-boot-starter-data-redis')
 
         // MongoDB
-        compile('org.springframework.boot:spring-boot-starter-data-mongodb')
+        implementation('org.springframework.boot:spring-boot-starter-data-mongodb')
 
         implementation("com.squareup.okhttp3:okhttp:4.9.0")
         implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
 
         // stellar sdk
-        compile('com.github.stellar:java-stellar-sdk:0.23.0')
+        implementation('com.github.stellar:java-stellar-sdk:0.22.1')
 
         // ethereum web3j sdk
-        compile('org.web3j:core:4.8.0')
-        compile('org.web3j:contracts:4.8.0')
+        implementation('org.web3j:core:4.8.2')
+        implementation('org.web3j:contracts:4.8.2')
+
+        // filecoin
+        implementation('com.github.arteam:simple-json-rpc-client:1.2')
+        implementation('com.github.briandilley.jsonrpc4j:jsonrpc4j:1.4.6')
+        implementation('org.apache.httpcomponents:httpclient:4.5.13')
+        implementation('co.nstant.in:cbor:0.9')
+        implementation('org.bitcoinj:bitcoinj-core:0.15.9')
+        implementation('com.github.apetersson:Blake2b:0.1')
+
+        // klaytn
+        implementation 'com.klaytn.caver:core:1.5.7'
+        implementation 'xyz.groundx.caver:caver-java-ext-kas:1.1.0'
 
         // devtools
-        runtime('org.springframework.boot:spring-boot-devtools')
+        runtimeOnly('org.springframework.boot:spring-boot-devtools')
 
-        testCompile('org.springframework.boot:spring-boot-starter-test')
-        testCompile('junit:junit:4.12')
+        testImplementation('org.springframework.boot:spring-boot-starter-test')
+        testImplementation('junit:junit:4.13')
     }
 }
 
 project(':dex-api') {
     dependencies {
-        compile project(":dex-shared")
+        implementation project(":dex-shared")
     }
 }
 
 project(':dex-gov') {
     dependencies {
-        compile project(":dex-shared")
+        implementation project(":dex-shared")
     }
 }

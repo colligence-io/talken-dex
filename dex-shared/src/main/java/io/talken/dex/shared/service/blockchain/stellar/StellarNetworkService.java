@@ -75,17 +75,22 @@ public class StellarNetworkService {
 			if(!chkp.getAccountId().equals(_ch.getKey()))
 				throw new IllegalArgumentException("Stellar Channel for " + _ch.getKey() + " has set with mismatch secretKey.");
 			final StellarChannel sc = new StellarChannel(chkp);
-			AccountResponse accountResponse = pickServer().accounts().account(chkp.getAccountId());
+			AccountResponse accountResponse = pickPublicServer().accounts().account(chkp.getAccountId());
 			sc.update(accountResponse);
 			channels.add(sc);
 			logger.info("Stellar Channel {} added : {} XLM", sc.getAccountId(), sc.getBalance().stripTrailingZeros().toPlainString());
 		}
 	}
 
+    public Server pickLocalServer() {
+        return new Server(this.serverUri);
+    }
+
 	public Server pickServer() {
-	    if (this.appName != null && this.appVersion != null)
-            return pickServer(this.appName, this.appVersion);
-		return new Server(this.serverUri);
+	    return pickPublicServer();
+//	    if (this.appName != null && this.appVersion != null)
+//            return pickServer(this.appName, this.appVersion);
+//		return new Server(this.serverUri);
 	}
 
     public Server pickServer(String appName, String appVersion) {
