@@ -55,7 +55,7 @@ talken:
         #rpcUri: "http://tn.henesis.io/ethereum/ropsten?clientId=be774503e333c688b2acee1b37de702d"
         gasOracleUrl: "http://192.168.0.37:38084/ethgasAPI.json"
         gasEtherscanUrl: "https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=548Q8A315UV37WFIYVDNCS32847ZJVRZ7F"
-        infuraUri: "https://ropsten.infura.io/v3/a374b566c26149e2b94cc9bf7bafec50"
+        infuraUri: "https://ropsten.infura.io/v3/ce57899759f64f1fb1d13241e9849f99"
       luniverse:
         apiUri: "https://api.luniverse.io"
         mainRpcUri: "http://13.125.55.194:8545"
