@@ -273,11 +273,23 @@ public class BlockChainInfoController {
 		return DexResponse.buildResponse(bscInfoService.getGasPriceAndLimit());
 	}
 
+	/**
+	 * get bsc transaction by hash
+	 * @param txHash
+	 * @return
+	 * @throws Exception
+	 */
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GET_TRANSACTION_BY_HASH, method = RequestMethod.GET)
 	public DexResponse<EthTransactionResultDTO> getBscTransaction(@RequestParam("txHash") String txHash) throws Exception {
 		return DexResponse.buildResponse(bscInfoService.getBscTransaction(txHash));
 	}
 
+	/**
+	 * get bsc transaction receipt by hash
+	 * @param txHash
+	 * @return
+	 * @throws Exception
+	 */
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GET_TRANSACTION_RECEIPT_BY_HASH, method = RequestMethod.GET)
 	public DexResponse<EthTransactionReceiptResultDTO> getBscTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
 		if (txHash != null) {
@@ -288,7 +300,7 @@ public class BlockChainInfoController {
 	}
 
 	/**
-	 * get Bsc balance
+	 * get Heco balance
 	 *
 	 * @param postBody
 	 * @return
@@ -299,5 +311,43 @@ public class BlockChainInfoController {
 	public DexResponse<BigInteger> getHecoBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(hecoInfoService.getHecoBalance(postBody.getAddress()));
+	}
+
+	/**
+	 * get Heco gasPrice
+	 *
+	 * @return
+	 * @throws TalkenException
+	 */
+	//    @AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GASPRICE, method = RequestMethod.GET)
+	public DexResponse<HecoGasPriceResult> getHecoGasPriceAndLimit() throws TalkenException {
+		return DexResponse.buildResponse(hecoInfoService.getGasPriceAndLimit());
+	}
+
+	/**
+	 * get heco transaction by hash
+	 * @param txHash
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GET_TRANSACTION_BY_HASH, method = RequestMethod.GET)
+	public DexResponse<EthTransactionResultDTO> getHecoTransaction(@RequestParam("txHash") String txHash) throws Exception {
+		return DexResponse.buildResponse(hecoInfoService.getHecoTransaction(txHash));
+	}
+
+	/**
+	 * get heco transaction receipt by hash
+	 * @param txHash
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GET_TRANSACTION_RECEIPT_BY_HASH, method = RequestMethod.GET)
+	public DexResponse<EthTransactionReceiptResultDTO> getHecoTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
+		if (txHash != null) {
+			return DexResponse.buildResponse(hecoInfoService.getHecoTransactionReceipt(txHash));
+		} else {
+			return DexResponse.buildResponse(null);
+		}
 	}
 }
