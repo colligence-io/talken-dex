@@ -162,4 +162,33 @@ public class HecoInfoService {
 
         return builder.build();
     }
+
+    /**
+     * get hrc20 balance
+     *
+     * @param contract
+     * @param address
+     * @return
+     * @throws GeneralException
+     */
+    public BigInteger getHrc20Balance(String contract, String address) throws GeneralException {
+        return getHrc20Balance(hecoNetworkService.getClient().newClient(), contract, address);
+    }
+
+    /**
+     * get hrc20 balance
+     *
+     * @param web3j
+     * @param contract
+     * @param address
+     * @return
+     * @throws GeneralException
+     */
+    public BigInteger getHrc20Balance(Web3j web3j, String contract, String address) throws GeneralException {
+        try {
+            return contractInfoService.getBalanceOf(web3j, contract, address);
+        } catch(Exception ex) {
+            throw new GeneralException(ex);
+        }
+    }
 }

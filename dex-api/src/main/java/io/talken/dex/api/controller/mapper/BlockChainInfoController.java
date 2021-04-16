@@ -350,4 +350,18 @@ public class BlockChainInfoController {
 			return DexResponse.buildResponse(null);
 		}
 	}
+
+	/**
+	 * get hrc20 balance
+	 *
+	 * @param postBody
+	 * @return
+	 * @throws TalkenException
+	 */
+//	@AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GETHRC20BALANCE, method = RequestMethod.POST)
+	public DexResponse<BigInteger> getHrc20Balance(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {
+		DTOValidator.validate(postBody);
+		return DexResponse.buildResponse(hecoInfoService.getHrc20Balance(postBody.getContract(), postBody.getAddress()));
+	}
 }

@@ -80,7 +80,7 @@ public class RequestMappings {
 
 	private static final String BLOCK_CHAIN_HECO = BLOCK_CHAIN + "/heco";
 	public static final String BLOCK_CHAIN_HECO_GETBALANCE = BLOCK_CHAIN_HECO + "/getBalance";
-	public static final String BLOCK_CHAIN_HECO_GETBEP20BALANCE = BLOCK_CHAIN_HECO + "/getBep20Balance";
+	public static final String BLOCK_CHAIN_HECO_GETHRC20BALANCE = BLOCK_CHAIN_HECO + "/getHrc20Balance";
 	public static final String BLOCK_CHAIN_HECO_GASPRICE = BLOCK_CHAIN_HECO + "/gasPrice";
 	public static final String BLOCK_CHAIN_HECO_GET_TRANSACTION_BY_HASH = BLOCK_CHAIN_HECO + "/getTransaction";
 	public static final String BLOCK_CHAIN_HECO_GET_TRANSACTION_RECEIPT_BY_HASH = BLOCK_CHAIN_HECO + "/getTransactionReceipt";
