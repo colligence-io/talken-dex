@@ -98,6 +98,7 @@ public class DexSettings {
         private _Klaytn klaytn;
         private _Bsc bsc;
 		private _Filecoin filecoin;
+		private _Heco heco;
 	}
 
 	@Getter
@@ -150,6 +151,13 @@ public class DexSettings {
         private int chainId;
         private String mainRpcUri;
     }
+
+	@Getter
+	@Setter
+	public static class _Heco {
+		private int chainId;
+		private String mainRpcUri;
+	}
 
 	private _Integration integration;
 
