@@ -2,7 +2,6 @@ package io.talken.dex.api.service.bc;
 
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.controller.dto.BscGasPriceResult;
 import io.talken.dex.api.controller.dto.EthTransactionReceiptResultDTO;
 import io.talken.dex.api.controller.dto.EthTransactionResultDTO;
 import io.talken.dex.api.controller.dto.HecoGasPriceResult;

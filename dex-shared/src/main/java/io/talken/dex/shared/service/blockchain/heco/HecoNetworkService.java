@@ -2,8 +2,6 @@ package io.talken.dex.shared.service.blockchain.heco;
 
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.DexSettings;
-import io.talken.dex.shared.service.blockchain.bsc.BscNetworkService;
-import io.talken.dex.shared.service.blockchain.bsc.BscRpcClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;

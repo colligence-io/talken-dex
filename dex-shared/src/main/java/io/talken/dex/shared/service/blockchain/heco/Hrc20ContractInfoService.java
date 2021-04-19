@@ -2,7 +2,6 @@ package io.talken.dex.shared.service.blockchain.heco;
 
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.shared.config.CacheConfig;
-import io.talken.dex.shared.service.blockchain.bsc.Bep20ContractInfoService;
 import io.talken.dex.shared.service.blockchain.ethereum.StandardERC20ContractFunctions;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
