@@ -5,11 +5,13 @@ import com.klaytn.caver.methods.response.Transaction;
 import com.klaytn.caver.methods.response.TransactionReceipt;
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.api.controller.dto.KlayTransactionListRequest;
 import io.talken.dex.shared.service.blockchain.klaytn.KlaytnNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import xyz.groundx.caver_ext_kas.kas.tokenhistory.TokenHistory;
 import xyz.groundx.caver_ext_kas.kas.tokenhistory.TokenHistoryQueryOptions;
 import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.ApiResponse;
 import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.api.TokenHistoryApi;
@@ -28,6 +30,8 @@ public class KlaytnInfoService {
 
     @Autowired
     private DSLContext dslContext;
+
+    final static long PAGE = 10;
 
     /****************
      * TODO : make RPC Call Error response (also eth)
@@ -135,15 +139,26 @@ public class KlaytnInfoService {
         }
 	}
 
-	public TransferArray getTransactionList(String address) throws GeneralException {
-        String xChainId = klayNetworkService.getKasClient().getChainId();
-        TokenHistoryApi thApi = klayNetworkService.getKasClient().getClient().kas.tokenHistory.getTokenHistoryApi();
-
+	public TransferArray getTransactionList(KlayTransactionListRequest request) throws GeneralException {
         try {
-            String kind = TokenHistoryQueryOptions.KIND.getAllKind().replace("'", "").replace(" ", "");
-            // TODO : param need to decodeURL
-            ApiResponse<PageableTransfers> resp = thApi.getTransfersByEoaWithHttpInfo(xChainId, address, kind, null, null, null, null);
-            TransferArray items = resp.getData().getItems();
+            TokenHistoryQueryOptions options = new TokenHistoryQueryOptions();
+
+            options.setSize(PAGE);
+
+            if (request.getContract() != null) {
+                options.setCaFilter(request.getContract());
+                options.setKind(TokenHistoryQueryOptions.KIND.valueOf(request.getType()));
+            } else {
+                options.setKind(TokenHistoryQueryOptions.KIND.valueOf(request.getType()));
+            }
+
+            if (request.getCursor() != null) {
+                options.setCursor(request.getCursor());
+            }
+
+            PageableTransfers pt = klayNetworkService.getKasClient().getClient().kas.tokenHistory.getTransferHistoryByAccount(request.getAddress(), options);
+            TransferArray items = pt.getItems();
+
             return items;
         } catch(Exception ex) {
             throw new GeneralException(ex);

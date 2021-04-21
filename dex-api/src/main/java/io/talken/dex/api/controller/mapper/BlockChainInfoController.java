@@ -151,7 +151,7 @@ public class BlockChainInfoController {
      * @return
      * @throws TalkenException
      */
-    //    @AuthRequired
+    @AuthRequired
     @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GETACCOUNT, method = RequestMethod.POST)
     public DexResponse<Account.AccountData> getKlayAccount(@RequestBody EthBalanceRequest postBody) throws TalkenException {
         DTOValidator.validate(postBody);
@@ -165,7 +165,7 @@ public class BlockChainInfoController {
      * @return
      * @throws TalkenException
      */
-    //    @AuthRequired
+    @AuthRequired
     @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GETBALANCE, method = RequestMethod.POST)
     public DexResponse<BigInteger> getKlayBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
         DTOValidator.validate(postBody);
@@ -178,7 +178,7 @@ public class BlockChainInfoController {
      * @return
      * @throws TalkenException
      */
-    //    @AuthRequired
+    @AuthRequired
     @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GASPRICE, method = RequestMethod.GET)
     public DexResponse<BigInteger> getKlayGasPrice() throws TalkenException {
         return DexResponse.buildResponse(klaytnInfoService.getGasPrice());
@@ -191,7 +191,7 @@ public class BlockChainInfoController {
      * @return
      * @throws TalkenException
      */
-    //    @AuthRequired
+    @AuthRequired
     @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_BY_HASH, method = RequestMethod.GET)
     public DexResponse<Transaction.TransactionData> getKlayTransaction(@RequestParam("txHash") String txHash) throws TalkenException {
         if (txHash != null) {
@@ -208,7 +208,7 @@ public class BlockChainInfoController {
      * @return
      * @throws TalkenException
      */
-    //    @AuthRequired
+    @AuthRequired
     @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_RECEIPT_BY_HASH, method = RequestMethod.GET)
     public DexResponse<TransactionReceipt.TransactionReceiptData> getKlayTransactionReceipt(@RequestParam("txHash") String txHash) throws TalkenException {
         if (txHash != null) {
@@ -225,11 +225,11 @@ public class BlockChainInfoController {
      * @return
      * @throws TalkenException
      */
-    //    @AuthRequired
+    @AuthRequired
     @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_LIST, method = RequestMethod.POST)
-    public DexResponse<TransferArray> getKlayTransactionReceipt(@RequestBody EthBalanceRequest postBody) throws TalkenException {
+    public DexResponse<TransferArray> getKlayTransactionReceipt(@RequestBody KlayTransactionListRequest postBody) throws TalkenException {
         DTOValidator.validate(postBody);
-        return DexResponse.buildResponse(klaytnInfoService.getTransactionList(postBody.getAddress()));
+        return DexResponse.buildResponse(klaytnInfoService.getTransactionList(postBody));
     }
 
 	/**
@@ -239,7 +239,7 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-	//    @AuthRequired
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GETBALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getBscBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
@@ -253,7 +253,7 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-//	@AuthRequired
+	@AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GETBEP20BALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getBep20Balance(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
@@ -266,7 +266,7 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-	//    @AuthRequired
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GASPRICE, method = RequestMethod.GET)
 	public DexResponse<BscGasPriceResult> getBscGasPriceAndLimit() throws TalkenException {
 		return DexResponse.buildResponse(bscInfoService.getGasPriceAndLimit());
