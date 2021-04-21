@@ -34,6 +34,9 @@ public class HecoInfoService {
 
     private Web3j rpcClient;
 
+    static final String DEFAULT_GASLIMIT = "21000";
+    static final String DEFAULT_CONTRACT_GASLIMIT = "300000";
+
     @PostConstruct
     private void init() throws Exception {
         this.rpcClient = hecoNetworkService.newMainRpcClient();
@@ -89,8 +92,10 @@ public class HecoInfoService {
     }
 
     public BigInteger getGasLimit(Web3j web3j) {
-        return new BigInteger("21000");
+        return new BigInteger(DEFAULT_GASLIMIT);
     }
+
+    // TODO: for contract transfer
 
     /**
      * get heco transaction by hash
