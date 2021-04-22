@@ -12,6 +12,7 @@ import io.talken.dex.governance.service.management.MaMonitorService;
 import io.talken.dex.governance.service.management.NodeMonitorService;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TokenMetaTableUpdateEventHandler;
+import io.talken.dex.shared.exception.TokenMetaLoadException;
 import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,9 @@ public class AdminRedisMessageListnerService implements MessageListener {
 
 	@Autowired
 	private DSLContext dslContext;
+
+	@Autowired
+	private TokenMetaGovService tokenMetaGovService;
 
 	@PostConstruct
 	private void init() {
@@ -115,7 +119,12 @@ public class AdminRedisMessageListnerService implements MessageListener {
 		}
 
 		if(command.startsWith("update storage")) {
-			updateStorage(tmTable, miTable);
+			try {
+				adminAlarmService.info(logger, "ADMIN UPDATE TOKEN META STORAGE.");
+				tokenMetaGovService.adminUpdateStorage();
+			} catch(TokenMetaLoadException ex) {
+				adminAlarmService.error(logger, "EXCEPTION DETECTED : while updating meta data. this may cause unpredictable results. :: {}", ex);
+			}
 		}
 	}
 
@@ -154,38 +163,6 @@ public class AdminRedisMessageListnerService implements MessageListener {
 			adminAlarmService.info(logger, "ADMIN TRADE WALLET RESET : " + args[0] + " " + result);
 		} catch(Exception ex) {
 			adminAlarmService.error(logger, "ADMIN TRADE WALLET RESET : Exception :: {}", ex.getClass().getSimpleName() + " " + ex.getMessage());
-		}
-	}
-
-	private void updateStorage(TokenMetaTable tmTable, TokenMetaTable miTable) {
-		try {
-			logger.info("Executing admin command : Update Token Meta storage.");
-			TokenMetaTable newMiTable = new TokenMetaTable();
-
-			for(Map.Entry<String, TokenMetaTable.Meta> _kv : tmTable.entrySet()) {
-				if(_kv.getValue().isManaged()) {
-					_kv.getValue().getManagedInfo().prepareCache();
-					newMiTable.put(_kv.getKey(), _kv.getValue());
-				}
-			}
-
-			if(updateHandlers != null) {
-				for(TokenMetaTableUpdateEventHandler updateHandler : updateHandlers) {
-					try {
-						updateHandler.handleTokenMetaTableUpdate(tmTable);
-					} catch(Exception ex) {
-						logger.exception(ex, "Exception detected while updating meta data. this may cause unpredictable results.");
-					}
-				}
-			}
-
-			this.tmTable = tmTable;
-			this.miTable = newMiTable;
-
-			logger.info("Token Meta loaded : all {}, managed {}", tmTable.size(), miTable.size());
-			adminAlarmService.info(logger, "ADMIN UPDATE TOKEN META STORAGE.");
-		} catch(Exception ex) {
-			adminAlarmService.error(logger, "EXCEPTION DETECTED : while updating meta data. this may cause unpredictable results. :: {}", ex);
 		}
 	}
 }

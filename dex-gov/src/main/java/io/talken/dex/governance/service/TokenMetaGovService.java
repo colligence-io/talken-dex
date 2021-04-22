@@ -15,6 +15,7 @@ import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.DoubleKeyObject;
 import io.talken.common.util.collection.DoubleKeyTable;
 import io.talken.common.util.collection.ObjectPair;
+import io.talken.common.util.integration.slack.AdminAlarmService;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TokenMetaTableService;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
@@ -466,6 +467,9 @@ public class TokenMetaGovService extends TokenMetaTableService {
 		}
 	}
 
+	public void adminUpdateStorage() throws TokenMetaLoadException {
+		load();
+	}
 
 //
 //	public String getActiveHolderAccountAddress(String code) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException {

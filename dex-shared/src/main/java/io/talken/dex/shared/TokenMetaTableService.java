@@ -3,6 +3,8 @@ package io.talken.dex.shared;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.common.util.integration.slack.AdminAlarmService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.stellar.sdk.Asset;
 
 import java.util.ArrayList;
@@ -11,6 +13,9 @@ import java.util.Map;
 
 public abstract class TokenMetaTableService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaTableService.class);
+
+	@Autowired
+	private AdminAlarmService adminAlarmService;
 
 	private TokenMetaTable tmTable = new TokenMetaTable();
 	private TokenMetaTable miTable = new TokenMetaTable();
@@ -45,7 +50,8 @@ public abstract class TokenMetaTableService {
 		this.tmTable = tmTable;
 		this.miTable = newMiTable;
 
-		logger.info("Token Meta loaded : all {}, managed {}", tmTable.size(), miTable.size());
+		adminAlarmService.info(logger, "Token Meta loaded : all {}, managed {}", tmTable.size(), miTable.size());
+
 	}
 
 	/**
