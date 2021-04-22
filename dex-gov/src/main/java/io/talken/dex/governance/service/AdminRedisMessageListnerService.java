@@ -10,8 +10,6 @@ import io.talken.dex.governance.DexGovStatus;
 import io.talken.dex.governance.scheduler.talkreward.UserRewardBctxService;
 import io.talken.dex.governance.service.management.MaMonitorService;
 import io.talken.dex.governance.service.management.NodeMonitorService;
-import io.talken.dex.shared.TokenMetaTable;
-import io.talken.dex.shared.TokenMetaTableUpdateEventHandler;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
 import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import org.jooq.DSLContext;
@@ -25,8 +23,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
 
 import static io.talken.common.persistence.jooq.Tables.USER;
 
@@ -35,10 +31,6 @@ public class AdminRedisMessageListnerService implements MessageListener {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AdminRedisMessageListnerService.class);
 
 	private static final String SVC = "tkn-dex-gov";
-
-	private TokenMetaTable tmTable = new TokenMetaTable();
-	private TokenMetaTable miTable = new TokenMetaTable();
-	private List<TokenMetaTableUpdateEventHandler> updateHandlers = null;
 
 	@Autowired
 	private RedisMessageListenerContainer container;
