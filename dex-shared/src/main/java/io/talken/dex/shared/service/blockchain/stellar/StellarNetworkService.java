@@ -87,10 +87,10 @@ public class StellarNetworkService {
     }
 
 	public Server pickServer() {
-	    return pickPublicServer();
-//	    if (this.appName != null && this.appVersion != null)
-//            return pickServer(this.appName, this.appVersion);
-//		return new Server(this.serverUri);
+//	    return pickPublicServer();
+	    if (this.appName != null && this.appVersion != null)
+            return pickServer(this.appName, this.appVersion);
+		return new Server(this.serverUri);
 	}
 
     public Server pickServer(String appName, String appVersion) {
