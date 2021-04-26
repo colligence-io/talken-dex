@@ -13,12 +13,16 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.EthBlock;
+import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -36,6 +40,7 @@ public class HecoInfoService {
 
     static final String DEFAULT_GASLIMIT = "21000";
     static final String DEFAULT_CONTRACT_GASLIMIT = "300000";
+    static final String DEFAULT_CONTRACT_GASPRICE = "1000000000";
 
     @PostConstruct
     private void init() throws Exception {
@@ -87,15 +92,34 @@ public class HecoInfoService {
     }
 
     public BigInteger getGasPrice(Web3j web3j) throws IOException {
-        // recommended from lambda256
         return web3j.ethGasPrice().send().getGasPrice();
     }
 
-    public BigInteger getGasLimit(Web3j web3j) {
+    public BigInteger getGasLimit(Web3j web3j) throws IOException {
+        //default gas limit value
         return new BigInteger(DEFAULT_GASLIMIT);
     }
 
-    // TODO: for contract transfer
+    // TODO: need to calculate gas price for contract tokens
+    public HecoGasPriceResult getHrc20GasPriceAndLimit() throws InternalServerErrorException {
+        try {
+            HecoGasPriceResult rtn = new HecoGasPriceResult();
+            rtn.setGasPrice(getHrc20GasPrice(this.rpcClient));
+            rtn.setGasLimit(getHrc20GasLimit(this.rpcClient));
+            return rtn;
+        } catch(Exception e) {
+            throw new InternalServerErrorException(e);
+        }
+    }
+    public BigInteger getHrc20GasPrice(Web3j web3j) throws IOException {
+        // expected value. 1 Gwei is default.
+        return new BigInteger(DEFAULT_CONTRACT_GASPRICE);
+    }
+
+    public BigInteger getHrc20GasLimit(Web3j web3j) throws IOException {
+        return new BigInteger(DEFAULT_CONTRACT_GASLIMIT);
+    }
+
 
     /**
      * get heco transaction by hash
@@ -108,6 +132,7 @@ public class HecoInfoService {
         EthTransactionResultDTO.EthTransactionResultDTOBuilder builder = EthTransactionResultDTO.builder();
         if (txHash != null) {
             Transaction tx = hecoNetworkService.getHecoTransaction(txHash);
+
             if (tx != null) {
                 builder.blockHash(tx.getBlockHash())
                         .blockNumber(tx.getBlockNumberRaw())

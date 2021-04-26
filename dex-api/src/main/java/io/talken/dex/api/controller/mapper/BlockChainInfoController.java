@@ -239,7 +239,7 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-    @AuthRequired
+//    @AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GETBALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getBscBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
@@ -266,10 +266,16 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-    @AuthRequired
+//    @AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GASPRICE, method = RequestMethod.GET)
 	public DexResponse<BscGasPriceResult> getBscGasPriceAndLimit() throws TalkenException {
 		return DexResponse.buildResponse(bscInfoService.getGasPriceAndLimit());
+	}
+
+	//    @AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_BEP20GASPRICE, method = RequestMethod.GET)
+	public DexResponse<BscGasPriceResult> getBep20GasPriceAndLimit() throws TalkenException {
+		return DexResponse.buildResponse(bscInfoService.getBep20GasPriceAndLimit());
 	}
 
 	/**
@@ -322,6 +328,12 @@ public class BlockChainInfoController {
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GASPRICE, method = RequestMethod.GET)
 	public DexResponse<HecoGasPriceResult> getHecoGasPriceAndLimit() throws TalkenException {
 		return DexResponse.buildResponse(hecoInfoService.getGasPriceAndLimit());
+	}
+
+	//    @AuthRequired
+	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_HRC20GASPRICE, method = RequestMethod.GET)
+	public DexResponse<HecoGasPriceResult> getHrc20GasPriceAndLimit() throws TalkenException {
+		return DexResponse.buildResponse(hecoInfoService.getHrc20GasPriceAndLimit());
 	}
 
 	/**

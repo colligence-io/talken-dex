@@ -5,6 +5,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.dto.BscGasPriceResult;
 import io.talken.dex.api.controller.dto.EthTransactionReceiptResultDTO;
 import io.talken.dex.api.controller.dto.EthTransactionResultDTO;
+import io.talken.dex.api.controller.dto.HecoGasPriceResult;
 import io.talken.dex.shared.exception.InternalServerErrorException;
 import io.talken.dex.shared.service.blockchain.bsc.Bep20ContractInfoService;
 import io.talken.dex.shared.service.blockchain.bsc.BscNetworkService;
@@ -33,6 +34,10 @@ public class BscInfoService {
     private Bep20ContractInfoService contractInfoService;
 
     private Web3j rpcClient;
+
+    static final String DEFAULT_GASLIMIT = "21000";
+    static final String DEFAULT_CONTRACT_GASLIMIT = "300000";
+    static final String DEFAULT_CONTRACT_GASPRICE = "5000000000";
 
     @PostConstruct
     private void init() throws Exception {
@@ -112,7 +117,27 @@ public class BscInfoService {
     }
 
     public BigInteger getGasLimit(Web3j web3j) {
-        return new BigInteger("21000");
+        return new BigInteger(DEFAULT_GASLIMIT);
+    }
+
+    // TODO: need to calculate gas price for contract tokens
+    public BscGasPriceResult getBep20GasPriceAndLimit() throws InternalServerErrorException {
+        try {
+            BscGasPriceResult rtn = new BscGasPriceResult();
+            rtn.setGasPrice(getBep20GasPrice(this.rpcClient));
+            rtn.setGasLimit(getBep20GasLimit(this.rpcClient));
+            return rtn;
+        } catch(Exception e) {
+            throw new InternalServerErrorException(e);
+        }
+    }
+    public BigInteger getBep20GasPrice(Web3j web3j) throws IOException {
+        // expected value. 5 Gwei is default.
+        return new BigInteger(DEFAULT_CONTRACT_GASPRICE);
+    }
+
+    public BigInteger getBep20GasLimit(Web3j web3j) throws IOException {
+        return new BigInteger(DEFAULT_CONTRACT_GASLIMIT);
     }
 
     public EthTransactionResultDTO getBscTransaction(String txHash) throws ExecutionException, InterruptedException {
