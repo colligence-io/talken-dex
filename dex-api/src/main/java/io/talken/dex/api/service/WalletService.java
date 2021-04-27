@@ -244,12 +244,6 @@ public class WalletService {
             throws TokenMetaNotFoundException, TradeWalletCreateFailedException {
 
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.RECLAIM);
-//        if (user == null) {
-//            user = dslContext.selectFrom(USER)
-//                    .where(USER.ID.eq((long)10))
-//                    .fetchOptionalInto(User.class)
-//                    .orElseThrow(() -> new AuthenticationException("User not found"));
-//        }
         final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
         final long userId = user.getId();
 
