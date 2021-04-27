@@ -23,6 +23,7 @@ import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.exception.*;
+import io.talken.dex.shared.exception.auth.AuthenticationException;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import io.talken.dex.shared.service.blockchain.stellar.*;
 import io.talken.dex.shared.service.integration.wallet.TalkenWalletService;
@@ -243,6 +244,12 @@ public class WalletService {
             throws TokenMetaNotFoundException, TradeWalletCreateFailedException {
 
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.RECLAIM);
+//        if (user == null) {
+//            user = dslContext.selectFrom(USER)
+//                    .where(USER.ID.eq((long)10))
+//                    .fetchOptionalInto(User.class)
+//                    .orElseThrow(() -> new AuthenticationException("User not found"));
+//        }
         final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
         final long userId = user.getId();
 
@@ -298,6 +305,7 @@ public class WalletService {
         bctxRecord.setAddressTo(meta.getManagedInfo().getIssuerAddress());
         bctxRecord.setAmount(request.getAmount());
         bctxRecord.setNetfee(BigDecimal.ZERO);
+        dslContext.attach(bctxRecord);
         bctxRecord.store();
 
         logger.info("{} complete. userId = {}", dexTaskId, userId);
