@@ -24,6 +24,7 @@ import io.talken.common.util.collection.ObjectPair;
 import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.TokenMetaTable;
+import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.exception.*;
 import io.talken.dex.shared.exception.auth.AuthenticationException;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
@@ -43,6 +44,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
 import org.stellar.sdk.responses.AccountResponse;
@@ -78,6 +80,8 @@ public class WalletService {
 	private final TokenMetaApiService tmService;
 
     private final StellarNetworkService stellarNetworkService;
+
+    private final DataSourceTransactionManager txMgr;
 
 	private final RedisTemplate<String, Object> redisTemplate;
 
@@ -243,8 +247,14 @@ public class WalletService {
 	}
 
     public ReclaimResult reclaim(User user, ReclaimRequest request)
-            throws TokenMetaNotFoundException, TradeWalletCreateFailedException, TokenMetaNotManagedException, SigningException, StellarException, IOException {
+            throws Exception {
 
+	    if (user == null) {
+            user = dslContext.selectFrom(USER)
+                    .where(USER.ID.eq((long)10))
+                    .fetchOptionalInto(User.class)
+                    .orElseThrow(() -> new AuthenticationException("User not found"));
+        }
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.RECLAIM);
         final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
         final long userId = user.getId();
@@ -312,22 +322,34 @@ public class WalletService {
             }
         } catch(AccountRequiresMemoException | SubmitTransactionTimeoutResponseException stex) {
             bctxRecord.setStatus(BctxStatusEnum.FAILED);
+            logRecord.setErrorcode(stex.getClass().getSimpleName());
+            logRecord.setErrormessage(stex.getMessage());
         } catch(Exception e) {
             bctxRecord.setStatus(BctxStatusEnum.FAILED);
+            logRecord.setErrorcode(e.getClass().getSimpleName());
+            logRecord.setErrormessage(e.getMessage());
         }
 
-        dslContext.attach(bctxRecord);
-        bctxRecord.store();
-
-        dslContext.attach(logRecord);
-        logRecord.store();
-
-        logger.info("{} complete. userId = {}", dexTaskId, userId);
-
         ReclaimResult result = new ReclaimResult();
-        result.setBctx(bctxRecord.into(BCTX).into(Bctx.class));
-        result.setBctxLog(logRecord.into(BCTX_LOG).into(BctxLog.class));
 
+        try {
+            TransactionBlockExecutor.of(txMgr).transactional(() -> {
+                dslContext.attach(bctxRecord);
+                bctxRecord.store();
+
+                logRecord.setBctxId(bctxRecord.getId());
+                logRecord.setStatus(bctxRecord.getStatus());
+                dslContext.attach(logRecord);
+                logRecord.store();
+
+                result.setBctx(bctxRecord.into(BCTX).into(Bctx.class));
+                result.setBctxLog(logRecord.into(BCTX_LOG).into(BctxLog.class));
+
+                logger.info("{} complete. userId = {}", dexTaskId, userId);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return result;
     }
 
