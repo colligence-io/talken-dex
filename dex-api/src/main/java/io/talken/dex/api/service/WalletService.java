@@ -306,6 +306,7 @@ public class WalletService {
                 logRecord.setBcRefId(txResponse.getHash());
                 logRecord.setResponse(GSONWriter.toJsonString(txResponse));
                 bctxRecord.setTxAux(dexTaskId.getId());
+                bctxRecord.setBcRefId(txResponse.getHash());
                 bctxRecord.setStatus(BctxStatusEnum.SUCCESS);
             } else {
                 ObjectPair<String, String> resultCodes = StellarConverter.getResultCodesFromExtra(txResponse);
