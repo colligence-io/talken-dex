@@ -1,6 +1,7 @@
 package io.talken.dex.api.service;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
+import com.google.gson.JsonObject;
 import io.talken.common.exception.TalkenException;
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.exception.common.IntegrationException;
@@ -16,6 +17,7 @@ import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.persistence.jooq.tables.records.DexTaskDeanchorRecord;
+import io.talken.common.util.GSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
@@ -241,15 +243,27 @@ public class WalletService {
 	}
 
     public ReclaimResult reclaim(User user, ReclaimRequest request)
-            throws TokenMetaNotFoundException, TradeWalletCreateFailedException {
+            throws TokenMetaNotFoundException, TradeWalletCreateFailedException, TokenMetaNotManagedException, SigningException, StellarException, IOException {
 
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.RECLAIM);
         final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
         final long userId = user.getId();
 
-        // TODO: send use bctx
-        /*
+        BctxLogRecord logRecord = new BctxLogRecord();
 
+        TokenMetaTable.Meta meta;
+        meta = tmService.getTokenMeta(request.getAssetCode());
+        BctxRecord bctxRecord = new BctxRecord();
+
+        bctxRecord.setBctxType(BlockChainPlatformEnum.STELLAR_TOKEN);
+        bctxRecord.setSymbol(meta.getManagedInfo().getAssetCode());
+        bctxRecord.setPlatformAux(meta.getManagedInfo().getIssuerAddress());
+        bctxRecord.setAddressFrom(tradeWallet.getAccountId());
+        bctxRecord.setAddressTo(meta.getManagedInfo().getIssuerAddress());
+        bctxRecord.setAmount(request.getAmount());
+        bctxRecord.setNetfee(BigDecimal.ZERO);
+
+        // TODO: send use bctx
         final BigDecimal amount = StellarConverter.scale(request.getAmount());
         final KeyPair issuerAccount = tmService.getManagedInfo(request.getAssetCode()).dexIssuerAccount();
         Asset asset = tmService.getAssetType(request.getAssetCode());
@@ -277,34 +291,42 @@ public class WalletService {
 
             SubmitTransactionResponse txResponse = sctx.submit();
 
-            if(!txResponse.isSuccess()) {
-                throw StellarException.from(txResponse);
+            JsonObject requestInfo = new JsonObject();
+            requestInfo.addProperty("sequence", seq);
+            requestInfo.addProperty("hash", txHash);
+            requestInfo.addProperty("envelopeXdr", xdr);
+
+            logRecord.setRequest(GSONWriter.toJsonString(requestInfo));
+            logRecord.setBcRefId(txHash);
+
+            if(txResponse.isSuccess()) {
+                logRecord.setBcRefId(txResponse.getHash());
+                logRecord.setResponse(GSONWriter.toJsonString(txResponse));
+                bctxRecord.setStatus(BctxStatusEnum.SUCCESS);
+            } else {
+                ObjectPair<String, String> resultCodes = StellarConverter.getResultCodesFromExtra(txResponse);
+                logRecord.setErrorcode(resultCodes.first());
+                logRecord.setErrormessage(resultCodes.second());
+                bctxRecord.setStatus(BctxStatusEnum.FAILED);
+//                throw StellarException.from(txResponse);
             }
         } catch(AccountRequiresMemoException | SubmitTransactionTimeoutResponseException stex) {
-            throw new StellarException(stex);
+            bctxRecord.setStatus(BctxStatusEnum.FAILED);
         } catch(Exception e) {
-            throw e;
+            bctxRecord.setStatus(BctxStatusEnum.FAILED);
         }
-        */
 
-        TokenMetaTable.Meta meta;
-        meta = tmService.getTokenMeta(request.getAssetCode());
-
-        BctxRecord bctxRecord = new BctxRecord();
-        bctxRecord.setStatus(BctxStatusEnum.QUEUED);
-        bctxRecord.setBctxType(BlockChainPlatformEnum.STELLAR_TOKEN);
-        bctxRecord.setSymbol(meta.getManagedInfo().getAssetCode());
-        bctxRecord.setPlatformAux(meta.getManagedInfo().getIssuerAddress());
-        bctxRecord.setAddressFrom(tradeWallet.getAccountId());
-        bctxRecord.setAddressTo(meta.getManagedInfo().getIssuerAddress());
-        bctxRecord.setAmount(request.getAmount());
-        bctxRecord.setNetfee(BigDecimal.ZERO);
         dslContext.attach(bctxRecord);
         bctxRecord.store();
 
+        dslContext.attach(logRecord);
+        logRecord.store();
+
         logger.info("{} complete. userId = {}", dexTaskId, userId);
+
         ReclaimResult result = new ReclaimResult();
         result.setBctx(bctxRecord.into(BCTX).into(Bctx.class));
+        result.setBctxLog(logRecord.into(BCTX_LOG).into(BctxLog.class));
 
         return result;
     }
@@ -332,5 +354,4 @@ public class WalletService {
 
         return result;
     }
-
 }
