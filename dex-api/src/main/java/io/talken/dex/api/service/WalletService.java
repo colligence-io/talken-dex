@@ -248,13 +248,6 @@ public class WalletService {
 
     public ReclaimResult reclaim(User user, ReclaimRequest request)
             throws Exception {
-
-	    if (user == null) {
-            user = dslContext.selectFrom(USER)
-                    .where(USER.ID.eq((long)10))
-                    .fetchOptionalInto(User.class)
-                    .orElseThrow(() -> new AuthenticationException("User not found"));
-        }
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.RECLAIM);
         final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
         final long userId = user.getId();
@@ -356,7 +349,6 @@ public class WalletService {
 
     public ReclaimResult getReclaimByUser(User user)
             throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException {
-
         final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
         ReclaimResult result = new ReclaimResult();
 

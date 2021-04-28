@@ -181,13 +181,13 @@ public class WalletController {
 		return DexResponse.buildResponse(walletService.checkTransferLukPrepared(address));
 	}
 
-//    @AuthRequired
+    @AuthRequired
     @RequestMapping(value = RequestMappings.TRADE_WALLET_RECLAIM, method = RequestMethod.GET)
     public DexResponse<ReclaimResult> requestReclaim() throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException {
         return DexResponse.buildResponse(walletService.getReclaimByUser(authInfo.getUser()));
     }
 
-//    @AuthRequired
+    @AuthRequired
     @RequestMapping(value = RequestMappings.TRADE_WALLET_RECLAIM, method = RequestMethod.POST)
     public DexResponse<ReclaimResult> requestReclaim(@RequestBody ReclaimRequest postBody) throws Exception {
         DTOValidator.validate(postBody);
