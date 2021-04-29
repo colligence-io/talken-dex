@@ -2,6 +2,7 @@ package io.talken.dex.api.controller.mapper;
 
 import io.talken.common.exception.TalkenException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
+import io.talken.common.exception.common.TokenMetaNotManagedException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.config.auth.AuthInfo;
 import io.talken.dex.api.config.auth.AuthRequired;
@@ -15,14 +16,13 @@ import io.talken.dex.api.service.WalletService;
 import io.talken.dex.api.service.integration.PrivateWalletMsgTypeEnum;
 import io.talken.dex.api.service.integration.PrivateWalletService;
 import io.talken.dex.api.service.integration.PrivateWalletTransferDTO;
-import io.talken.dex.shared.exception.ParameterViolationException;
-import io.talken.dex.shared.exception.TaskIntegrityCheckFailedException;
-import io.talken.dex.shared.exception.TradeWalletCreateFailedException;
+import io.talken.dex.shared.exception.*;
 import io.talken.dex.shared.service.blockchain.stellar.StellarOpReceipt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -189,7 +189,7 @@ public class WalletController {
 
     @AuthRequired
     @RequestMapping(value = RequestMappings.TRADE_WALLET_RECLAIM, method = RequestMethod.POST)
-    public DexResponse<ReclaimResult> requestReclaim(@RequestBody ReclaimRequest postBody) throws ParameterViolationException, TokenMetaNotFoundException, TradeWalletCreateFailedException {
+    public DexResponse<ReclaimResult> requestReclaim(@RequestBody ReclaimRequest postBody) throws Exception {
         DTOValidator.validate(postBody);
         return DexResponse.buildResponse(walletService.reclaim(authInfo.getUser(), postBody));
     }

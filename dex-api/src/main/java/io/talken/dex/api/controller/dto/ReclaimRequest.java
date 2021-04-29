@@ -12,6 +12,5 @@ public class ReclaimRequest {
 	private String assetCode;
 	@NotNull
 	private BigDecimal amount;
-	@NotNull
 	private BigDecimal fee;
 }
