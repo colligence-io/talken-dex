@@ -258,17 +258,20 @@ public class WalletService {
         meta = tmService.getTokenMeta(request.getAssetCode());
         BctxRecord bctxRecord = new BctxRecord();
 
+        String toAddr = meta.getManagedInfo().getDeancFeeHolderAddress();
+        String fromAddr = tradeWallet.getAccountId();
+
         bctxRecord.setBctxType(BlockChainPlatformEnum.STELLAR_TOKEN);
         bctxRecord.setSymbol(meta.getManagedInfo().getAssetCode());
         bctxRecord.setPlatformAux(meta.getManagedInfo().getIssuerAddress());
-        bctxRecord.setAddressFrom(tradeWallet.getAccountId());
-        bctxRecord.setAddressTo(meta.getManagedInfo().getIssuerAddress());
+        bctxRecord.setAddressFrom(fromAddr);
+        bctxRecord.setAddressTo(toAddr);
         bctxRecord.setAmount(request.getAmount());
         bctxRecord.setNetfee(BigDecimal.ZERO);
 
         // TODO: send use bctx
         final BigDecimal amount = StellarConverter.scale(request.getAmount());
-        final KeyPair issuerAccount = tmService.getManagedInfo(request.getAssetCode()).dexIssuerAccount();
+        final KeyPair toAccount = tmService.getManagedInfo(request.getAssetCode()).dexDeanchorFeeHolderAccount();
         Asset asset = tmService.getAssetType(request.getAssetCode());
         StellarChannelTransaction.Builder sctxBuilder = stellarNetworkService.newChannelTxBuilder();
         // TODO: check convert amount
@@ -276,10 +279,10 @@ public class WalletService {
                 .setMemo(dexTaskId.getId())
                 .addOperation(
                         new PaymentOperation.Builder(
-                                issuerAccount.getAccountId(),
+                                toAccount.getAccountId(),
                                 asset,
                                 StellarConverter.actualToString(amount)
-                        ).setSourceAccount(tradeWallet.getAccountId())
+                        ).setSourceAccount(fromAddr)
                                 .build()
                 )
                 .addSigner(new StellarSignerAccount(twService.extractKeyPair(tradeWallet)));
