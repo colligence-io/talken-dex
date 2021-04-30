@@ -117,7 +117,7 @@ subprojects {
         implementation('com.github.apetersson:Blake2b:0.1')
 
         // klaytn
-        implementation 'com.klaytn.caver:core:1.5.7'
+        implementation 'com.klaytn.caver:core:1.6.0'
         implementation 'xyz.groundx.caver:caver-java-ext-kas:1.1.0'
 
         // devtools

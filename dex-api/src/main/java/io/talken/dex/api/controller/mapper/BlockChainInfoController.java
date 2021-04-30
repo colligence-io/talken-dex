@@ -13,6 +13,7 @@ import io.talken.dex.api.controller.RequestMappings;
 import io.talken.dex.api.controller.dto.*;
 import io.talken.dex.api.service.bc.*;
 import io.talken.dex.shared.exception.DexException;
+import io.talken.dex.shared.service.blockchain.klaytn.Kip7ContractInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
@@ -171,6 +172,28 @@ public class BlockChainInfoController {
         DTOValidator.validate(postBody);
         return DexResponse.buildResponse(klaytnInfoService.getBalance(postBody.getAddress()));
     }
+
+    /**
+     * get klay balance
+     *
+     * @param postBody
+     * @return
+     * @throws TalkenException
+     */
+//    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GETKIP7BALANCE, method = RequestMethod.POST)
+    public DexResponse<BigInteger> getKlayKIP7Balance(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {
+        DTOValidator.validate(postBody);
+        return DexResponse.buildResponse(klaytnInfoService.getKip7Balance(postBody.getContract(), postBody.getAddress()));
+    }
+
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GETKIP7INFO, method = RequestMethod.POST)
+    public DexResponse<Kip7ContractInfoService.Kip7ContractInfo> getKlayContractInfo(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {
+        DTOValidator.validate(postBody);
+        return DexResponse.buildResponse(klaytnInfoService.getContract(postBody.getContract(), postBody.getAddress()));
+    }
+
+
 
     /**
      * get klay gasPrice

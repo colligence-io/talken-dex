@@ -6,15 +6,13 @@ import com.klaytn.caver.methods.response.TransactionReceipt;
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.dto.KlayTransactionListRequest;
+import io.talken.dex.shared.service.blockchain.klaytn.Kip7ContractInfoService;
 import io.talken.dex.shared.service.blockchain.klaytn.KlaytnNetworkService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import xyz.groundx.caver_ext_kas.kas.tokenhistory.TokenHistory;
 import xyz.groundx.caver_ext_kas.kas.tokenhistory.TokenHistoryQueryOptions;
-import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.ApiResponse;
-import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.api.TokenHistoryApi;
 import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.PageableTransfers;
 import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.TransferArray;
 
@@ -27,6 +25,9 @@ public class KlaytnInfoService {
 
 	@Autowired
 	private KlaytnNetworkService klayNetworkService;
+
+    @Autowired
+    private Kip7ContractInfoService kip7ContractInfoService;
 
     @Autowired
     private DSLContext dslContext;
@@ -131,9 +132,9 @@ public class KlaytnInfoService {
 	 * @return
 	 * @throws GeneralException
 	 */
-	public BigInteger getErc20Balance(String contract, String address) throws GeneralException {
+	public BigInteger getKip7Balance(String contract, String address) throws GeneralException {
         try {
-            return klayNetworkService.getKasClient().getClient().rpc.klay.getBalance(address).send().getValue();
+            return kip7ContractInfoService.getBalanceOf(klayNetworkService.getKasClient().getClient(), contract, address);
         } catch(Exception ex) {
             throw new GeneralException(ex);
         }
@@ -160,6 +161,14 @@ public class KlaytnInfoService {
             TransferArray items = pt.getItems();
 
             return items;
+        } catch(Exception ex) {
+            throw new GeneralException(ex);
+        }
+    }
+
+    public Kip7ContractInfoService.Kip7ContractInfo getContract(String contract, String address) throws GeneralException {
+        try {
+            return kip7ContractInfoService.getKip7ContractInfo(klayNetworkService.getKasClient().getClient(), contract);
         } catch(Exception ex) {
             throw new GeneralException(ex);
         }

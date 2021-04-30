@@ -24,6 +24,7 @@ public class CacheConfig {
 		public static final String LUK_ERC20_CONTRACT_INFO = "luk_erc20ContractInfo";
 		public static final String BSC_BEP20_CONTRACT_INFO = "bsc_bep20ContractInfo";
 		public static final String HECO_HRC20_CONTRACT_INFO = "heco_hrc20ContractInfo";
+        public static final String KLAY_KIP7_CONTRACT_INFO = "klay_kip7ContractInfo";
 	}
 
 	@Autowired
@@ -43,7 +44,7 @@ public class CacheConfig {
 		cfgMap.put(CacheNames.LUK_ERC20_CONTRACT_INFO, buildCacheConfiguration(Duration.ZERO)); // eternal cache
 		cfgMap.put(CacheNames.BSC_BEP20_CONTRACT_INFO, buildCacheConfiguration(Duration.ZERO)); // eternal cache
 		cfgMap.put(CacheNames.HECO_HRC20_CONTRACT_INFO, buildCacheConfiguration(Duration.ZERO)); // eternal cache
-
+        cfgMap.put(CacheNames.KLAY_KIP7_CONTRACT_INFO, buildCacheConfiguration(Duration.ZERO)); // eternal cache
 
 		return cfgMap;
 	}

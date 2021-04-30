@@ -67,10 +67,13 @@ public class RequestMappings {
     private static final String BLOCK_CHAIN_KLAYTN = BLOCK_CHAIN + "/klaytn";
     public static final String BLOCK_CHAIN_KLAYTN_GETACCOUNT = BLOCK_CHAIN_KLAYTN + "/getAccount";
     public static final String BLOCK_CHAIN_KLAYTN_GETBALANCE = BLOCK_CHAIN_KLAYTN + "/getBalance";
+    public static final String BLOCK_CHAIN_KLAYTN_GETKIP7BALANCE = BLOCK_CHAIN_KLAYTN + "/getKip7Balance";
     public static final String BLOCK_CHAIN_KLAYTN_GASPRICE = BLOCK_CHAIN_KLAYTN + "/gasPrice";
     public static final String BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_BY_HASH = BLOCK_CHAIN_KLAYTN + "/getTransaction";
     public static final String BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_RECEIPT_BY_HASH = BLOCK_CHAIN_KLAYTN + "/getTransactionReceipt";
     public static final String BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_LIST = BLOCK_CHAIN_KLAYTN + "/getTransactionList";
+
+    public static final String BLOCK_CHAIN_KLAYTN_GETKIP7INFO = BLOCK_CHAIN_KLAYTN + "/getContract";
 
     private static final String BLOCK_CHAIN_BSC = BLOCK_CHAIN + "/bsc";
 	public static final String BLOCK_CHAIN_BSC_GETBALANCE = BLOCK_CHAIN_BSC + "/getBalance";
