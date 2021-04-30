@@ -56,6 +56,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -246,8 +248,13 @@ public class WalletService {
 		return result;
 	}
 
-    public ReclaimResult reclaim(User user, ReclaimRequest request)
-            throws Exception {
+    public ReclaimResult reclaim(User user, ReclaimRequest request) throws Exception {
+        ReclaimResult result = new ReclaimResult();
+        result.setCheckTerm(checkReclaimTerm());
+        if (!result.getCheckTerm()) {
+            return result;
+        }
+
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.RECLAIM);
         final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
         final long userId = user.getId();
@@ -328,8 +335,6 @@ public class WalletService {
             logRecord.setErrormessage(e.getMessage());
         }
 
-        ReclaimResult result = new ReclaimResult();
-
         try {
             TransactionBlockExecutor.of(txMgr).transactional(() -> {
                 dslContext.attach(bctxRecord);
@@ -348,6 +353,7 @@ public class WalletService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return result;
     }
 
@@ -355,6 +361,7 @@ public class WalletService {
             throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException {
         final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
         ReclaimResult result = new ReclaimResult();
+        result.setCheckTerm(checkReclaimTerm());
 
         Record record = dslContext
                 .select()
@@ -372,5 +379,13 @@ public class WalletService {
         }
 
         return result;
+    }
+
+    private boolean checkReclaimTerm() {
+        final ZoneId KST_ZONE = ZoneId.of("Asia/Seoul");
+        ZonedDateTime now = ZonedDateTime.now(KST_ZONE);
+        ZonedDateTime start = ZonedDateTime.of(2021, 4, 30, 16, 59, 59, 0, KST_ZONE);
+        ZonedDateTime end = ZonedDateTime.of(2021, 5, 3, 17, 0, 0, 0, KST_ZONE);
+        return now.isAfter(start) && now.isBefore(end);
     }
 }

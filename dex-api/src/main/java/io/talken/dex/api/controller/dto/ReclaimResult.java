@@ -8,4 +8,5 @@ import lombok.Data;
 public class ReclaimResult {
     private Bctx bctx;
 	private BctxLog bctxLog;
+	private Boolean checkTerm;
 }
