@@ -1,6 +1,7 @@
 package io.talken.dex.api.controller.mapper;
 
 import io.talken.common.exception.TalkenException;
+import io.talken.common.persistence.enums.DexTaskTypeEnum;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.config.auth.AuthInfo;
 import io.talken.dex.api.config.auth.AuthRequired;
@@ -182,7 +183,7 @@ public class WalletController {
     @AuthRequired
     @RequestMapping(value = RequestMappings.TRADE_WALLET_RECLAIM, method = RequestMethod.GET)
     public DexResponse<ReclaimResult> requestReclaim() throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException {
-        return DexResponse.buildResponse(walletService.getReclaimByUser(authInfo.getUser()));
+        return DexResponse.buildResponse(walletService.getReclaimByUser(authInfo.getUser(), DexTaskTypeEnum.RECLAIM));
     }
 
     @AuthRequired
@@ -190,6 +191,19 @@ public class WalletController {
     public DexResponse<ReclaimResult> requestReclaim(@RequestBody ReclaimRequest postBody) throws Exception {
         DTOValidator.validate(postBody);
         return DexResponse.buildResponse(walletService.reclaim(authInfo.getUser(), postBody));
+    }
+
+    @AuthRequired
+    @RequestMapping(value = RequestMappings.TRADE_WALLET_USDT_CLAIM, method = RequestMethod.GET)
+    public DexResponse<ReclaimResult> usdtClaim() throws Exception {
+        return DexResponse.buildResponse(walletService.getReclaimByUser(authInfo.getUser(), DexTaskTypeEnum.USDT_CLAIM));
+    }
+
+    @AuthRequired
+    @RequestMapping(value = RequestMappings.TRADE_WALLET_USDT_CLAIM, method = RequestMethod.POST)
+    public DexResponse<ReclaimResult> requestUsdtClaim(@RequestBody ReclaimRequest postBody) throws Exception {
+        DTOValidator.validate(postBody);
+        return DexResponse.buildResponse(walletService.usdtClaim(authInfo.getUser(), postBody));
     }
 
     @Deprecated

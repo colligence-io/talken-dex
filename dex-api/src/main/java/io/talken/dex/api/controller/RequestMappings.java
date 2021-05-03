@@ -21,6 +21,7 @@ public class RequestMappings {
 	public static final String TRADE_WALLET_DEANCHOR_TASK = TRADE_WALLET + "/deanchor";
 	public static final String TRADE_WALLET_DEANCHOR_FEE = TRADE_WALLET_DEANCHOR_TASK + "/fee";
     public static final String TRADE_WALLET_RECLAIM = TRADE_WALLET + "/reclaim";
+    public static final String TRADE_WALLET_USDT_CLAIM = TRADE_WALLET + "/usdt_claim";
 
 	// OfferService
 	private static final String OFFER = DEX + "/offer";

@@ -11,6 +11,7 @@ import io.talken.common.persistence.DexTaskRecord;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
+import io.talken.common.persistence.enums.TokenMetaAuxCodeEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
 import io.talken.common.persistence.jooq.tables.pojos.BctxLog;
 import io.talken.common.persistence.jooq.tables.pojos.User;
@@ -357,7 +358,7 @@ public class WalletService {
         return result;
     }
 
-    public ReclaimResult getReclaimByUser(User user)
+    public ReclaimResult getReclaimByUser(User user, DexTaskTypeEnum dexTaskTypeEnum)
             throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException {
         final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
         ReclaimResult result = new ReclaimResult();
@@ -372,10 +373,80 @@ public class WalletService {
 
         if (record != null && record.get(BCTX.TX_AUX) != null) {
             DexTaskId dexTaskId = DexTaskId.decode_taskId(record.get(BCTX.TX_AUX));
-            if (DexTaskTypeEnum.RECLAIM.equals(dexTaskId.getType())) {
+            if (dexTaskTypeEnum.equals(dexTaskId.getType())) {
                 result.setBctx(record.into(BCTX).into(Bctx.class));
                 result.setBctxLog(record.into(BCTX_LOG).into(BctxLog.class));
             }
+        }
+
+        return result;
+    }
+
+    public ReclaimResult usdtClaim(User user, ReclaimRequest postBody) throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException, TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException {
+        final String symbol = postBody.getAssetCode();
+        final BigDecimal TALK_TX_FEE = BigDecimal.valueOf(100);
+        final BigDecimal RATE = BigDecimal.valueOf(0.08);
+        final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.USDT_CLAIM);
+
+	    ReclaimResult result = new ReclaimResult();
+        result.setCheckTerm(false);
+
+        if (getReclaimByUser(user, DexTaskTypeEnum.USDT_CLAIM) != null) {
+            return result;
+        }
+
+        ReclaimResult claimResult = getReclaimByUser(user, DexTaskTypeEnum.RECLAIM);
+        if (claimResult.getBctx() == null ||
+            !claimResult.getBctx().getStatus().equals(BctxStatusEnum.SUCCESS)) {
+            return result;
+        }
+
+        BigDecimal talkAmount = claimResult.getBctx().getAmount();
+
+        if (!talkAmount.equals(postBody.getAmount())) {
+            return result;
+        }
+
+        BigDecimal usdtAmount = talkAmount.subtract(TALK_TX_FEE).multiply(RATE);
+
+        BctxRecord bctxRecord = new BctxRecord();
+        BctxLogRecord logRecord = new BctxLogRecord();
+
+        TokenMetaTable.Meta meta;
+        meta = tmService.getTokenMeta(symbol);
+
+        ObjectPair<Boolean, String> toAddr = pwService.getAddress(user.getId(), meta.getPlatform(), meta.getSymbol());
+        if (!toAddr.first())
+            return result;
+
+        String fromAddr = meta.getManagedInfo().pickActiveHolderAccountAddress();
+        String contractAddr = meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString();
+
+        bctxRecord.setBctxType(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN);
+        bctxRecord.setSymbol(meta.getSymbol());
+        bctxRecord.setPlatformAux(contractAddr);
+        bctxRecord.setAddressFrom(fromAddr);
+        bctxRecord.setAddressTo(toAddr.second());
+        bctxRecord.setAmount(usdtAmount);
+        bctxRecord.setNetfee(BigDecimal.ZERO);
+
+        try {
+            TransactionBlockExecutor.of(txMgr).transactional(() -> {
+                dslContext.attach(bctxRecord);
+                bctxRecord.store();
+
+                logRecord.setBctxId(bctxRecord.getId());
+                logRecord.setStatus(bctxRecord.getStatus());
+                dslContext.attach(logRecord);
+                logRecord.store();
+
+                result.setBctx(bctxRecord.into(BCTX).into(Bctx.class));
+                result.setBctxLog(logRecord.into(BCTX_LOG).into(BctxLog.class));
+
+                logger.info("{} complete. userId = {}", dexTaskId, user.getId());
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return result;
