@@ -1,26 +1,15 @@
 package io.talken.dex.shared.service.blockchain.klaytn;
 
-import com.klaytn.caver.abi.Function;
-import com.klaytn.caver.abi.FunctionEncoder;
-import com.klaytn.caver.abi.FunctionReturnDecoder;
-import com.klaytn.caver.abi.datatypes.Type;
-import com.klaytn.caver.abi.datatypes.generated.Uint256;
-import com.klaytn.caver.kct.kip7.KIP7ConstantData;
-import com.klaytn.caver.methods.request.CallObject;
+import com.klaytn.caver.kct.kip7.KIP7;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.shared.config.CacheConfig;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-
-import org.web3j.protocol.core.Response;
 import xyz.groundx.caver_ext_kas.CaverExtKAS;
 import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.FtContractDetail;
 
 import java.math.BigInteger;
-import java.util.List;
 
 @Service
 @Scope("singleton")
@@ -84,31 +73,22 @@ public class Kip7ContractInfoService {
      * @throws Exception
      */
     public BigInteger getBalanceOf(CaverExtKAS caver, String contractAddress, String owner) throws Exception {
+        KIP7 kip7 = new KIP7(caver, contractAddress);
+        int decimal = kip7.decimals();
+        BigInteger balance = kip7.balanceOf(owner);
 
-        String abi = KIP7ConstantData.ABI;
-
-        Function function = StandardKIP7ContractFunctions.balanceOf(owner);
-
-        // #1
-//        new Request<>(
-//                "klay_call",
-//                Collections.<String>emptyList(),
-//                caver.rpc.getWeb3jService(),
-//                Bytes.class).send();
-
-        // #2
-        CallObject obj = CallObject.createCallObject();
+        // #
+//        Function function = StandardKIP7ContractFunctions.balanceOf(owner);
+//        CallObject obj = CallObject.createCallObject();
 //        obj.setFrom(owner);
-        obj.setTo(contractAddress);
-        obj.setData(FunctionEncoder.encode(function));
+//        obj.setTo(contractAddress);
+//        obj.setData(FunctionEncoder.encode(function));
+//        Response<String> response = caver.rpc.klay.call(obj).send();
+//        List<Type> decoded = FunctionReturnDecoder.decode(response.getResult(), function.getOutputParameters());
 
-        Response<String> response = caver.rpc.klay.call(obj).send();
-
-        List<Type> decoded = FunctionReturnDecoder.decode(response.getResult(), function.getOutputParameters());
-
-        if(decoded.size() > 0)
-            return ((Uint256) decoded.get(0)).getValue();
-        else
-            return null;
+//        if(decoded.size() > 0)
+//            return ((Uint256) decoded.get(0)).getValue();
+//        else
+        return balance.divide(BigInteger.valueOf(10).pow(decimal));
     }
 }
