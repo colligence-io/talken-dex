@@ -410,7 +410,7 @@ public class WalletService {
         result.setCheckStatus(false);
 
         Bctx usdtClaimBctx = getReclaimByUser(user, DexTaskTypeEnum.USDT_CLAIM).getBctx();
-        if (usdtClaimBctx != null && usdtClaimBctx.getStatus().equals(BctxStatusEnum.SUCCESS)) {
+        if (usdtClaimBctx != null) {
             return result;
         }
 
