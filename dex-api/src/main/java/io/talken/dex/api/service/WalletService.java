@@ -359,17 +359,35 @@ public class WalletService {
     }
 
     public ReclaimResult getReclaimByUser(User user, DexTaskTypeEnum dexTaskTypeEnum)
-            throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException {
-        final TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
+            throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException, TokenMetaNotFoundException, IntegrationException {
+	    final String USDT = "USDT";
         ReclaimResult result = new ReclaimResult();
-        result.setCheckTerm(checkReclaimTerm());
+        Record record;
+        if (DexTaskTypeEnum.RECLAIM.equals(dexTaskTypeEnum)) {
+            TradeWalletInfo tradeWallet = twService.ensureTradeWallet(user);
+            result.setCheckTerm(checkReclaimTerm());
+            record = dslContext
+                    .select()
+                    .from(BCTX)
+                    .leftJoin(BCTX_LOG).on(BCTX_LOG.BCTX_ID.eq(BCTX.ID))
+                    .where(BCTX.ADDRESS_FROM.eq(tradeWallet.getAccountId()))
+                    .fetchAny();
+        } else {
+            TokenMetaTable.Meta meta = tmService.getTokenMeta(USDT);
+            ObjectPair<Boolean, String> pwAddr = pwService.getAddress(user.getId(), meta.getPlatform(), USDT);
+            if (!pwAddr.first()) return result;
 
-        Record record = dslContext
-                .select()
-                .from(BCTX)
-                .leftJoin(BCTX_LOG).on(BCTX_LOG.BCTX_ID.eq(BCTX.ID))
-                .where(BCTX.ADDRESS_FROM.eq(tradeWallet.getAccountId()))
-                .fetchAny();
+            result.setCheckTerm(true);
+            record = dslContext
+                    .select()
+                    .from(BCTX)
+                    .leftJoin(BCTX_LOG).on(BCTX_LOG.BCTX_ID.eq(BCTX.ID))
+                    .where(BCTX.ADDRESS_TO.eq(pwAddr.second())
+                            .and(BCTX.TX_AUX.startsWith("TALKENR"))
+                            .and(BCTX.SYMBOL.eq(USDT))
+                    )
+                    .fetchAny();
+        }
 
         if (record != null && record.get(BCTX.TX_AUX) != null) {
             DexTaskId dexTaskId = DexTaskId.decode_taskId(record.get(BCTX.TX_AUX));
@@ -382,42 +400,38 @@ public class WalletService {
         return result;
     }
 
-    public ReclaimResult usdtClaim(User user, ReclaimRequest postBody) throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException, TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException {
+    public UsdtClaimResult usdtClaim(User user, ReclaimRequest postBody) throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException, TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException {
         final String symbol = postBody.getAssetCode();
         final BigDecimal TALK_TX_FEE = BigDecimal.valueOf(100);
         final BigDecimal RATE = BigDecimal.valueOf(0.08);
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.USDT_CLAIM);
 
-	    ReclaimResult result = new ReclaimResult();
-        result.setCheckTerm(false);
+        UsdtClaimResult result = new UsdtClaimResult();
+        result.setCheckStatus(false);
 
-        if (getReclaimByUser(user, DexTaskTypeEnum.USDT_CLAIM) != null) {
+        Bctx usdtClaimBctx = getReclaimByUser(user, DexTaskTypeEnum.USDT_CLAIM).getBctx();
+        if (usdtClaimBctx != null && usdtClaimBctx.getStatus().equals(BctxStatusEnum.SUCCESS)) {
             return result;
         }
 
-        ReclaimResult claimResult = getReclaimByUser(user, DexTaskTypeEnum.RECLAIM);
-        if (claimResult.getBctx() == null ||
-            !claimResult.getBctx().getStatus().equals(BctxStatusEnum.SUCCESS)) {
+        Bctx reclaimBctx = getReclaimByUser(user, DexTaskTypeEnum.RECLAIM).getBctx();
+        if (reclaimBctx == null || !reclaimBctx.getStatus().equals(BctxStatusEnum.SUCCESS)) {
             return result;
         }
 
-        BigDecimal talkAmount = claimResult.getBctx().getAmount();
-
-        if (!talkAmount.equals(postBody.getAmount())) {
+        BigDecimal talkAmount = reclaimBctx.getAmount();
+        if (talkAmount.compareTo(postBody.getAmount()) != 0) {
             return result;
         }
 
         BigDecimal usdtAmount = talkAmount.subtract(TALK_TX_FEE).multiply(RATE);
 
         BctxRecord bctxRecord = new BctxRecord();
-        BctxLogRecord logRecord = new BctxLogRecord();
 
-        TokenMetaTable.Meta meta;
-        meta = tmService.getTokenMeta(symbol);
+        TokenMetaTable.Meta meta = tmService.getTokenMeta(symbol);
 
         ObjectPair<Boolean, String> toAddr = pwService.getAddress(user.getId(), meta.getPlatform(), meta.getSymbol());
-        if (!toAddr.first())
-            return result;
+        if (!toAddr.first()) return result;
 
         String fromAddr = meta.getManagedInfo().pickActiveHolderAccountAddress();
         String contractAddr = meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString();
@@ -426,28 +440,15 @@ public class WalletService {
         bctxRecord.setSymbol(meta.getSymbol());
         bctxRecord.setPlatformAux(contractAddr);
         bctxRecord.setAddressFrom(fromAddr);
+        bctxRecord.setTxAux(dexTaskId.getId());
         bctxRecord.setAddressTo(toAddr.second());
         bctxRecord.setAmount(usdtAmount);
         bctxRecord.setNetfee(BigDecimal.ZERO);
+        dslContext.attach(bctxRecord);
+        bctxRecord.store();
 
-        try {
-            TransactionBlockExecutor.of(txMgr).transactional(() -> {
-                dslContext.attach(bctxRecord);
-                bctxRecord.store();
-
-                logRecord.setBctxId(bctxRecord.getId());
-                logRecord.setStatus(bctxRecord.getStatus());
-                dslContext.attach(logRecord);
-                logRecord.store();
-
-                result.setBctx(bctxRecord.into(BCTX).into(Bctx.class));
-                result.setBctxLog(logRecord.into(BCTX_LOG).into(BctxLog.class));
-
-                logger.info("{} complete. userId = {}", dexTaskId, user.getId());
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        result.setBctx(bctxRecord.into(BCTX).into(Bctx.class));
+        result.setCheckStatus(true);
 
         return result;
     }
