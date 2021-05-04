@@ -55,7 +55,7 @@ public class EthereumNetworkService {
         this.gasOracleApiUrl = dexSettings.getBcnode().getEthereum().getGasOracleUrl();
 		this.gasEthescanApiUrl = dexSettings.getBcnode().getEthereum().getGasEtherscanUrl();
 
-		logger.info("Using Ethereum {} Network : {} {}", network, this.localClient.getUri(), this.localClient.getClientVersion());
+//		logger.info("Using Ethereum {} Network : {} {}", network, this.localClient.getUri(), this.localClient.getClientVersion());
 		logger.info("Using Ethereum Infura {} Network : {} {}", network, this.infuraClient.getUri(), this.infuraClient.getClientVersion());
 		updateGasPrice();
 	}

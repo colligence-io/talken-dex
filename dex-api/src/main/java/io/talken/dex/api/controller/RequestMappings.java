@@ -26,8 +26,12 @@ public class RequestMappings {
      * The constant PRIVATE_WALLET_CHECK_LMT_TRANSFER_READY.
      */
     public static final String PRIVATE_WALLET_CHECK_LMT_TRANSFER_READY = PRIVATE_WALLET + "/checkLmtTransferReady";
+    /**
+     * The constant PRIVATE_WALLET_CLAIM.
+     */
+    public static final String PRIVATE_WALLET_CLAIM = PRIVATE_WALLET + "/claim";
 
-	private static final String TRADE_WALLET = DEX + "/tw";
+    private static final String TRADE_WALLET = DEX + "/tw";
     /**
      * The constant TRADE_WALLET_TXLIST.
      */
@@ -196,6 +200,15 @@ public class RequestMappings {
      * The constant BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_LIST.
      */
     public static final String BLOCK_CHAIN_KLAYTN_GET_TRANSACTION_LIST = BLOCK_CHAIN_KLAYTN + "/getTransactionList";
+    /**
+     * The constant BLOCK_CHAIN_KLAYTN_SEND.
+     */
+    public static final String BLOCK_CHAIN_KLAYTN_SEND = BLOCK_CHAIN_KLAYTN + "/send";
+    /**
+     * The constant BLOCK_CHAIN_KLAYTN_SEND_CONTRACT.
+     */
+    public static final String BLOCK_CHAIN_KLAYTN_SEND_CONTRACT = BLOCK_CHAIN_KLAYTN + "/sendContract";
+
 
     /**
      * The constant BLOCK_CHAIN_KLAYTN_GETKIP7INFO.

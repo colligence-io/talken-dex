@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.TransferArray;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.wallet.model.TransactionResult;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -447,4 +448,20 @@ public class BlockChainInfoController {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(hecoInfoService.getHrc20Balance(postBody.getContract(), postBody.getAddress()));
 	}
+
+    //    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_SEND, method = RequestMethod.POST)
+    public DexResponse<TransactionResult> send(@RequestBody KlaySendRequest postBody) throws Exception {
+        DTOValidator.validate(postBody);
+        TransactionResult result = klaytnInfoService.send(postBody.getSymbol(), postBody.getTo(), postBody.getAmount());
+        return DexResponse.buildResponse(result);
+    }
+
+    //    @AuthRequired
+    @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_SEND_CONTRACT, method = RequestMethod.POST)
+    public DexResponse<TransactionReceipt.TransactionReceiptData> sendContract(@RequestBody KlaySendRequest postBody) throws Exception {
+        DTOValidator.validate(postBody);
+        TransactionReceipt.TransactionReceiptData receipt = klaytnInfoService.sendContract(postBody.getSymbol(), postBody.getContract(), postBody.getTo(), postBody.getAmount());
+        return DexResponse.buildResponse(receipt);
+    }
 }
