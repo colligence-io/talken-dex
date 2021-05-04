@@ -2,12 +2,9 @@ package io.talken.dex.api.service;
 
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import com.google.gson.JsonObject;
-import io.talken.common.exception.TalkenException;
-import io.talken.common.exception.common.GeneralException;
 import io.talken.common.exception.common.IntegrationException;
 import io.talken.common.exception.common.TokenMetaNotFoundException;
 import io.talken.common.exception.common.TokenMetaNotManagedException;
-import io.talken.common.persistence.DexTaskRecord;
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.enums.DexTaskTypeEnum;
@@ -17,7 +14,6 @@ import io.talken.common.persistence.jooq.tables.pojos.BctxLog;
 import io.talken.common.persistence.jooq.tables.pojos.User;
 import io.talken.common.persistence.jooq.tables.records.BctxLogRecord;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
-import io.talken.common.persistence.jooq.tables.records.DexTaskDeanchorRecord;
 import io.talken.common.util.GSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
@@ -27,7 +23,6 @@ import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
 import io.talken.dex.shared.exception.*;
-import io.talken.dex.shared.exception.auth.AuthenticationException;
 import io.talken.dex.shared.service.blockchain.luniverse.LuniverseNetworkService;
 import io.talken.dex.shared.service.blockchain.stellar.*;
 import io.talken.dex.shared.service.integration.wallet.TalkenWalletService;
@@ -35,10 +30,7 @@ import io.talken.dex.shared.service.tradewallet.TradeWalletInfo;
 import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.jooq.DatePart;
 import org.jooq.Record;
-import org.jooq.impl.DSL;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -53,14 +45,12 @@ import org.stellar.sdk.responses.SubmitTransactionResponse;
 import org.stellar.sdk.responses.SubmitTransactionTimeoutResponseException;
 import org.web3j.utils.Convert;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.talken.common.persistence.jooq.Tables.*;
 
@@ -400,16 +390,16 @@ public class WalletService {
         return result;
     }
 
-    public UsdtClaimResult usdtClaim(User user, ReclaimRequest postBody) throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException, TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException {
+    public ClaimResult claim(User user, ReclaimRequest postBody) throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException, TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException {
         final String symbol = postBody.getAssetCode();
         final BigDecimal TALK_TX_FEE = BigDecimal.valueOf(100);
         final BigDecimal RATE = BigDecimal.valueOf(0.08);
-        final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.USDT_CLAIM);
+        final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.CLAIM);
 
-        UsdtClaimResult result = new UsdtClaimResult();
+        ClaimResult result = new ClaimResult();
         result.setCheckStatus(false);
 
-        Bctx usdtClaimBctx = getReclaimByUser(user, DexTaskTypeEnum.USDT_CLAIM).getBctx();
+        Bctx usdtClaimBctx = getReclaimByUser(user, DexTaskTypeEnum.CLAIM).getBctx();
         if (usdtClaimBctx != null) {
             return result;
         }
@@ -424,10 +414,9 @@ public class WalletService {
             return result;
         }
 
-        BigDecimal usdtAmount = talkAmount.subtract(TALK_TX_FEE).multiply(RATE);
+        BigDecimal claimAmount = talkAmount.subtract(TALK_TX_FEE).multiply(RATE);
 
         BctxRecord bctxRecord = new BctxRecord();
-
         TokenMetaTable.Meta meta = tmService.getTokenMeta(symbol);
 
         ObjectPair<Boolean, String> toAddr = pwService.getAddress(user.getId(), meta.getPlatform(), meta.getSymbol());
@@ -442,7 +431,7 @@ public class WalletService {
         bctxRecord.setAddressFrom(fromAddr);
         bctxRecord.setTxAux(dexTaskId.getId());
         bctxRecord.setAddressTo(toAddr.second());
-        bctxRecord.setAmount(usdtAmount);
+        bctxRecord.setAmount(claimAmount);
         bctxRecord.setNetfee(BigDecimal.ZERO);
         dslContext.attach(bctxRecord);
         bctxRecord.store();

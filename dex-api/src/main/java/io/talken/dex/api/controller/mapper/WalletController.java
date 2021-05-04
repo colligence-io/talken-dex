@@ -196,16 +196,16 @@ public class WalletController {
     }
 
     @AuthRequired
-    @RequestMapping(value = RequestMappings.TRADE_WALLET_USDT_CLAIM, method = RequestMethod.GET)
-    public DexResponse<ReclaimResult> usdtClaim() throws Exception {
-        return DexResponse.buildResponse(walletService.getReclaimByUser(authInfo.getUser(), DexTaskTypeEnum.USDT_CLAIM));
+    @RequestMapping(value = RequestMappings.TRADE_WALLET_CLAIM, method = RequestMethod.GET)
+    public DexResponse<ReclaimResult> claim() throws Exception {
+        return DexResponse.buildResponse(walletService.getReclaimByUser(authInfo.getUser(), DexTaskTypeEnum.CLAIM));
     }
 
     @AuthRequired
-    @RequestMapping(value = RequestMappings.TRADE_WALLET_USDT_CLAIM, method = RequestMethod.POST)
-    public DexResponse<UsdtClaimResult> requestUsdtClaim(@RequestBody ReclaimRequest postBody) throws Exception {
+    @RequestMapping(value = RequestMappings.TRADE_WALLET_CLAIM, method = RequestMethod.POST)
+    public DexResponse<ClaimResult> requestClaim(@RequestBody ReclaimRequest postBody) throws Exception {
         DTOValidator.validate(postBody);
-        return DexResponse.buildResponse(walletService.usdtClaim(authInfo.getUser(), postBody));
+        return DexResponse.buildResponse(walletService.claim(authInfo.getUser(), postBody));
     }
 
     @Deprecated
