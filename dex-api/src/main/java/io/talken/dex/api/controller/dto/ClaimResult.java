@@ -4,7 +4,7 @@ import io.talken.common.persistence.jooq.tables.pojos.Bctx;
 import lombok.Data;
 
 @Data
-public class UsdtClaimResult {
+public class ClaimResult {
     private Bctx bctx;
 	private Boolean checkStatus;
 }
