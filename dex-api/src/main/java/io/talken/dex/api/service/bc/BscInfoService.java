@@ -3,8 +3,8 @@ package io.talken.dex.api.service.bc;
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.dto.BscGasPriceResult;
-import io.talken.dex.api.controller.dto.EthTransactionReceiptResultDTO;
-import io.talken.dex.api.controller.dto.EthTransactionResultDTO;
+import io.talken.dex.api.controller.dto.EthTransactionReceiptResult;
+import io.talken.dex.api.controller.dto.EthTransactionResult;
 import io.talken.dex.shared.exception.InternalServerErrorException;
 import io.talken.dex.shared.service.blockchain.bsc.Bep20ContractInfoService;
 import io.talken.dex.shared.service.blockchain.bsc.BscNetworkService;
@@ -139,8 +139,8 @@ public class BscInfoService {
         return new BigInteger(DEFAULT_CONTRACT_GASLIMIT);
     }
 
-    public EthTransactionResultDTO getBscTransaction(String txHash) throws ExecutionException, InterruptedException {
-        EthTransactionResultDTO.EthTransactionResultDTOBuilder builder = EthTransactionResultDTO.builder();
+    public EthTransactionResult getBscTransaction(String txHash) throws ExecutionException, InterruptedException {
+        EthTransactionResult.EthTransactionResultBuilder builder = EthTransactionResult.builder();
         if (txHash != null) {
             Transaction tx = bscNetworkService.getBscTransaction(txHash);
             if (tx != null) {
@@ -168,8 +168,8 @@ public class BscInfoService {
         return builder.build();
     }
 
-    public EthTransactionReceiptResultDTO getBscTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
-        EthTransactionReceiptResultDTO.EthTransactionReceiptResultDTOBuilder builder = EthTransactionReceiptResultDTO.builder();
+    public EthTransactionReceiptResult getBscTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
+        EthTransactionReceiptResult.EthTransactionReceiptResultBuilder builder = EthTransactionReceiptResult.builder();
         if (txHash != null) {
             TransactionReceipt tx = bscNetworkService.getBscTransactionReceipt(txHash);
             if (tx != null) {

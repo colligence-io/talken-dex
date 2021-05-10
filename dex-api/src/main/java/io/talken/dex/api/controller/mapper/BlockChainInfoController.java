@@ -5,7 +5,6 @@ import com.klaytn.caver.methods.response.Transaction;
 import com.klaytn.caver.methods.response.TransactionReceipt;
 import io.talken.common.exception.TalkenException;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.config.auth.AuthInfo;
 import io.talken.dex.api.config.auth.AuthRequired;
 import io.talken.dex.api.controller.DTOValidator;
 import io.talken.dex.api.controller.DexResponse;
@@ -41,9 +40,6 @@ public class BlockChainInfoController {
 
 	@Autowired
 	private HecoInfoService hecoInfoService;
-
-	@Autowired
-	private AuthInfo authInfo;
 
 	/**
 	 * get luniverse gas price and limit
@@ -132,12 +128,12 @@ public class BlockChainInfoController {
     }
 
     @RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GET_TRANSACTION_BY_HASH, method = RequestMethod.GET)
-    public DexResponse<EthTransactionResultDTO> getTransaction(@RequestParam("txHash") String txHash) throws Exception {
+    public DexResponse<EthTransactionResult> getTransaction(@RequestParam("txHash") String txHash) throws Exception {
         return DexResponse.buildResponse(ethereumInfoService.getEthTransaction(txHash));
     }
 
     @RequestMapping(value = RequestMappings.BLOCK_CHAIN_ETHEREUM_GET_TRANSACTION_RECEIPT_BY_HASH, method = RequestMethod.GET)
-    public DexResponse<EthTransactionReceiptResultDTO> getTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
+    public DexResponse<EthTransactionReceiptResult> getTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
         if (txHash != null) {
             return DexResponse.buildResponse(ethereumInfoService.getEthTransactionReceipt(txHash));
         } else {
@@ -180,7 +176,7 @@ public class BlockChainInfoController {
      * @return
      * @throws TalkenException
      */
-//    @AuthRequired
+    @AuthRequired
     @RequestMapping(value = RequestMappings.BLOCK_CHAIN_KLAYTN_GETKIP7BALANCE, method = RequestMethod.POST)
     public DexResponse<BigInteger> getKlayKIP7Balance(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {
         DTOValidator.validate(postBody);
@@ -262,7 +258,7 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-//    @AuthRequired
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GETBALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getBscBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
@@ -289,7 +285,7 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-//    @AuthRequired
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GASPRICE, method = RequestMethod.GET)
 	public DexResponse<BscGasPriceResult> getBscGasPriceAndLimit() throws TalkenException {
 		return DexResponse.buildResponse(bscInfoService.getGasPriceAndLimit());
@@ -308,7 +304,7 @@ public class BlockChainInfoController {
 	 * @throws Exception
 	 */
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GET_TRANSACTION_BY_HASH, method = RequestMethod.GET)
-	public DexResponse<EthTransactionResultDTO> getBscTransaction(@RequestParam("txHash") String txHash) throws Exception {
+	public DexResponse<EthTransactionResult> getBscTransaction(@RequestParam("txHash") String txHash) throws Exception {
 		return DexResponse.buildResponse(bscInfoService.getBscTransaction(txHash));
 	}
 
@@ -319,7 +315,7 @@ public class BlockChainInfoController {
 	 * @throws Exception
 	 */
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_BSC_GET_TRANSACTION_RECEIPT_BY_HASH, method = RequestMethod.GET)
-	public DexResponse<EthTransactionReceiptResultDTO> getBscTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
+	public DexResponse<EthTransactionReceiptResult> getBscTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
 		if (txHash != null) {
 			return DexResponse.buildResponse(bscInfoService.getBscTransactionReceipt(txHash));
 		} else {
@@ -334,7 +330,7 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-	//    @AuthRequired
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GETBALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getHecoBalance(@RequestBody EthBalanceRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
@@ -347,13 +343,13 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-	//    @AuthRequired
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GASPRICE, method = RequestMethod.GET)
 	public DexResponse<HecoGasPriceResult> getHecoGasPriceAndLimit() throws TalkenException {
 		return DexResponse.buildResponse(hecoInfoService.getGasPriceAndLimit());
 	}
 
-	//    @AuthRequired
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_HRC20GASPRICE, method = RequestMethod.GET)
 	public DexResponse<HecoGasPriceResult> getHrc20GasPriceAndLimit() throws TalkenException {
 		return DexResponse.buildResponse(hecoInfoService.getHrc20GasPriceAndLimit());
@@ -366,7 +362,7 @@ public class BlockChainInfoController {
 	 * @throws Exception
 	 */
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GET_TRANSACTION_BY_HASH, method = RequestMethod.GET)
-	public DexResponse<EthTransactionResultDTO> getHecoTransaction(@RequestParam("txHash") String txHash) throws Exception {
+	public DexResponse<EthTransactionResult> getHecoTransaction(@RequestParam("txHash") String txHash) throws Exception {
 		return DexResponse.buildResponse(hecoInfoService.getHecoTransaction(txHash));
 	}
 
@@ -377,7 +373,7 @@ public class BlockChainInfoController {
 	 * @throws Exception
 	 */
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GET_TRANSACTION_RECEIPT_BY_HASH, method = RequestMethod.GET)
-	public DexResponse<EthTransactionReceiptResultDTO> getHecoTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
+	public DexResponse<EthTransactionReceiptResult> getHecoTransactionReceipt(@RequestParam("txHash") String txHash) throws Exception {
 		if (txHash != null) {
 			return DexResponse.buildResponse(hecoInfoService.getHecoTransactionReceipt(txHash));
 		} else {
@@ -392,7 +388,7 @@ public class BlockChainInfoController {
 	 * @return
 	 * @throws TalkenException
 	 */
-//	@AuthRequired
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.BLOCK_CHAIN_HECO_GETHRC20BALANCE, method = RequestMethod.POST)
 	public DexResponse<BigInteger> getHrc20Balance(@RequestBody Erc20BalanceRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);

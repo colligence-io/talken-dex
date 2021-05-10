@@ -1,6 +1,5 @@
 package io.talken.dex.api.service;
 
-
 import ch.qos.logback.core.encoder.ByteArrayUtil;
 import io.talken.common.exception.TalkenException;
 import io.talken.common.exception.common.DataIdNotFoundException;
@@ -62,11 +61,11 @@ public class OfferService {
 	 * @throws DataIdNotFoundException
 	 * @throws TaskIntegrityCheckFailedException
 	 */
-	public OfferDetailResultDTO getOfferDetail(long offerId) throws DataIdNotFoundException, TaskIntegrityCheckFailedException {
+	public OfferDetailResult getOfferDetail(long offerId) throws DataIdNotFoundException, TaskIntegrityCheckFailedException {
 		DexTaskCreateofferRecord offerRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER).where(DEX_TASK_CREATEOFFER.OFFERID.eq(offerId)).fetchOne();
 		if(offerRecord == null) throw new DataIdNotFoundException(DexTaskCreateoffer.class, offerId);
 
-		OfferDetailResultDTO rtn = new OfferDetailResultDTO();
+		OfferDetailResult rtn = new OfferDetailResult();
 
 		DexTaskId taskId = DexTaskId.decode_taskId(offerRecord.getTaskid());
 		rtn.setTaskId(taskId.getId());

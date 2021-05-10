@@ -9,7 +9,7 @@ import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
 import io.talken.dex.api.controller.dto.CreateStakingRequest;
 import io.talken.dex.api.controller.dto.CreateStakingResult;
-import io.talken.dex.api.controller.dto.StakingEventDTO;
+import io.talken.dex.api.controller.dto.StakingEventRequest;
 import io.talken.dex.api.service.StakingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -59,7 +59,7 @@ public class StakingController {
 //    }
 
     @RequestMapping(value = RequestMappings.STAKING_DETAIL, method = RequestMethod.GET)
-    public DexResponse<StakingEventDTO> getStakingDetail(
+    public DexResponse<StakingEventRequest> getStakingDetail(
             @PathVariable @NotEmpty long stakingId
     ) throws TalkenException {
         return DexResponse.buildResponse(stakingService.getStakingEvent(stakingId));

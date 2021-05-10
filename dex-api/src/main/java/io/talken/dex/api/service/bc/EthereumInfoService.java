@@ -5,8 +5,8 @@ import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.persistence.jooq.tables.pojos.Bctx;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.controller.dto.EthTransactionReceiptResultDTO;
-import io.talken.dex.api.controller.dto.EthTransactionResultDTO;
+import io.talken.dex.api.controller.dto.EthTransactionReceiptResult;
+import io.talken.dex.api.controller.dto.EthTransactionResult;
 import io.talken.dex.api.controller.dto.PendingTxListRequest;
 import io.talken.dex.api.controller.dto.PendingTxListResult;
 import io.talken.dex.shared.service.blockchain.ethereum.Erc20ContractInfoService;
@@ -175,8 +175,8 @@ public class EthereumInfoService {
         return map;
     }
 
-    public EthTransactionResultDTO getEthTransaction(String txHash) throws ExecutionException, InterruptedException {
-        EthTransactionResultDTO.EthTransactionResultDTOBuilder builder = EthTransactionResultDTO.builder();
+    public EthTransactionResult getEthTransaction(String txHash) throws ExecutionException, InterruptedException {
+        EthTransactionResult.EthTransactionResultBuilder builder = EthTransactionResult.builder();
         if (txHash != null) {
             Transaction tx = ethNetworkService.getEthTransaction(txHash);
             if (tx != null) {
@@ -204,8 +204,8 @@ public class EthereumInfoService {
         return builder.build();
     }
 
-    public EthTransactionReceiptResultDTO getEthTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
-        EthTransactionReceiptResultDTO.EthTransactionReceiptResultDTOBuilder builder = EthTransactionReceiptResultDTO.builder();
+    public EthTransactionReceiptResult getEthTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
+        EthTransactionReceiptResult.EthTransactionReceiptResultBuilder builder = EthTransactionReceiptResult.builder();
         if (txHash != null) {
             TransactionReceipt tx = ethNetworkService.getEthTransactionReceipt(txHash);
             if (tx != null) {

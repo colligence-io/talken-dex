@@ -98,6 +98,9 @@ public class RequestMappings {
 	public static final String TMS_TM_INFO = TMS + "/info/{symbol}";
 	public static final String TMS_MI_LIST = TMS + "/listManaged";
     public static final String TMS_TMC_INFO = TMS + "/totalMarketCapInfo";
+    public static final String TMS_CONTRACT_ADD = TMS + "/contract";
+    public static final String TMS_CONTRACT_REMOVE = TMS + "/contract/{contractAddress}";
+    public static final String TMS_CONTRACT_LIST = TMS + "/contract/list";
 
 	// Not Implemented Yet
 	private static final String ADM = "/adm";

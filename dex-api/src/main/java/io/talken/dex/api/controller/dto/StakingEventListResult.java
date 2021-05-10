@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class StakingEventListDTO {
+public class StakingEventListResult {
     private long total;
     private int totalPage;
     private int pageLimit;
@@ -14,5 +14,5 @@ public class StakingEventListDTO {
     private long totalOpen;
     private long totalClosed;
 
-    public List<StakingEventDTO> stakingEventList;
+    public List<StakingEventRequest> stakingEventList;
 }

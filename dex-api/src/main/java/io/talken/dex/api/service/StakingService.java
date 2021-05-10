@@ -11,7 +11,7 @@ import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.dex.api.controller.dto.CreateStakingRequest;
 import io.talken.dex.api.controller.dto.CreateStakingResult;
-import io.talken.dex.api.controller.dto.StakingEventDTO;
+import io.talken.dex.api.controller.dto.StakingEventRequest;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.exception.*;
 import io.talken.dex.shared.service.blockchain.stellar.StellarConverter;
@@ -246,8 +246,8 @@ public class StakingService {
         return stakingEventRecord;
     }
 
-    public StakingEventDTO getStakingEvent(long stakingId) throws StakingEventNotFoundException {
-        StakingEventDTO dto = new StakingEventDTO();
+    public StakingEventRequest getStakingEvent(long stakingId) throws StakingEventNotFoundException {
+        StakingEventRequest dto = new StakingEventRequest();
         StakingEventRecord stakingEventRecord = dslContext.selectFrom(STAKING_EVENT)
                 .where(STAKING_EVENT.ID.eq(stakingId))
                 .fetchAny();
@@ -286,11 +286,11 @@ public class StakingService {
         LocalDateTime expr = stakingEventRecord.getExprTimestamp();
         LocalDateTime now = UTCUtil.getNow();
 
-        StakingEventDTO.StakingStateEnum stateEnum = StakingEventDTO.StakingStateEnum.PREFARE;
-        if (now.isAfter(start) && now.isBefore(end)) stateEnum = StakingEventDTO.StakingStateEnum.OPEN;
-        else if (now.isAfter(end)) stateEnum = StakingEventDTO.StakingStateEnum.CLOSE;
+        StakingEventRequest.StakingStateEnum stateEnum = StakingEventRequest.StakingStateEnum.PREFARE;
+        if (now.isAfter(start) && now.isBefore(end)) stateEnum = StakingEventRequest.StakingStateEnum.OPEN;
+        else if (now.isAfter(end)) stateEnum = StakingEventRequest.StakingStateEnum.CLOSE;
         // TODO : expr
-//        else if (now.isAfter(expr)) stateEnum = StakingEventDTO.StakingStateEnum.COMPLETE;
+//        else if (now.isAfter(expr)) stateEnum = StakingEventRequest.StakingStateEnum.COMPLETE;
         dto.setStakingState(stateEnum);
 
         return dto;

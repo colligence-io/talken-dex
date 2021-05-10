@@ -6,7 +6,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class OfferDetailResultDTO {
+public class OfferDetailResult {
 	private String taskId;
 	private DexTaskTypeEnum taskType;
 	private long offerId;

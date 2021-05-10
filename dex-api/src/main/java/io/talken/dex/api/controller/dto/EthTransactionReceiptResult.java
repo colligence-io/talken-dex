@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class EthTransactionReceiptResultDTO {
+public class EthTransactionReceiptResult {
     private String transactionHash;
     private BigInteger transactionIndex;
     private String blockHash;

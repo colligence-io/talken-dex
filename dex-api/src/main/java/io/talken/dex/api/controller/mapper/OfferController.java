@@ -36,7 +36,7 @@ public class OfferController {
 	 * @throws TalkenException
 	 */
 	@RequestMapping(value = RequestMappings.OFFER_DETAIL, method = RequestMethod.GET)
-	public DexResponse<OfferDetailResultDTO> getOfferDetail(@PathVariable @NotEmpty long offerId) throws TalkenException {
+	public DexResponse<OfferDetailResult> getOfferDetail(@PathVariable @NotEmpty long offerId) throws TalkenException {
 		return DexResponse.buildResponse(offerService.getOfferDetail(offerId));
 	}
 

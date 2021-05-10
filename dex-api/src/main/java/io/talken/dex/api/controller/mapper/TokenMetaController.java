@@ -2,16 +2,18 @@ package io.talken.dex.api.controller.mapper;
 
 import io.talken.common.exception.TalkenException;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.api.config.auth.AuthInfo;
+import io.talken.dex.api.config.auth.AuthRequired;
+import io.talken.dex.api.controller.DTOValidator;
 import io.talken.dex.api.controller.DexResponse;
 import io.talken.dex.api.controller.RequestMappings;
+import io.talken.dex.api.controller.dto.ContractListResult;
+import io.talken.dex.api.controller.dto.ContractRequest;
 import io.talken.dex.api.controller.dto.TotalMarketCapResult;
 import io.talken.dex.api.service.TokenMetaApiService;
 import io.talken.dex.shared.TokenMetaTable;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotEmpty;
 
@@ -22,7 +24,11 @@ public class TokenMetaController {
 	@Autowired
 	private TokenMetaApiService tmService;
 
-	/**
+    @Autowired
+    private AuthInfo authInfo;
+
+
+    /**
 	 * managed meta list
 	 *
 	 * @return
@@ -65,5 +71,25 @@ public class TokenMetaController {
     @RequestMapping(value = RequestMappings.TMS_TMC_INFO, method = RequestMethod.GET)
     public DexResponse<TotalMarketCapResult> totalMarketCapInfo() {
         return DexResponse.buildResponse(tmService.getTotalMarketCapInfo());
+    }
+
+
+    @AuthRequired
+    @RequestMapping(value = RequestMappings.TMS_CONTRACT_ADD, method = RequestMethod.POST)
+    public DexResponse<Boolean> addContract(@RequestBody ContractRequest postBody) throws TalkenException {
+        DTOValidator.validate(postBody);
+        return DexResponse.buildResponse(tmService.addContract(authInfo.getUser(), postBody));
+    }
+
+    @AuthRequired
+    @RequestMapping(value = RequestMappings.TMS_CONTRACT_REMOVE, method = RequestMethod.DELETE)
+    public DexResponse<Boolean> removeContract(@PathVariable @NotEmpty String contractAddress) throws TalkenException {
+        return DexResponse.buildResponse(tmService.removeContract(authInfo.getUser(), contractAddress));
+    }
+
+    @AuthRequired
+    @RequestMapping(value = RequestMappings.TMS_CONTRACT_LIST, method = RequestMethod.GET)
+    public DexResponse<ContractListResult> listContract() throws TalkenException {
+        return DexResponse.buildResponse(tmService.listContract(authInfo.getUser()));
     }
 }

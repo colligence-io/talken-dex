@@ -5,16 +5,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
+import io.talken.common.persistence.jooq.tables.pojos.User;
+import io.talken.common.persistence.jooq.tables.pojos.UserContract;
+import io.talken.common.persistence.jooq.tables.records.UserContractRecord;
 import io.talken.common.util.PrefixedLogger;
+import io.talken.dex.api.controller.dto.ContractListResult;
+import io.talken.dex.api.controller.dto.ContractRequest;
 import io.talken.dex.api.controller.dto.TotalMarketCapResult;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TokenMetaTableService;
 import io.talken.dex.shared.exception.TokenMetaLoadException;
+import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.json.Converter;
 import org.bson.json.JsonWriterSettings;
 import org.bson.json.StrictJsonWriter;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.jooq.DSLContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,21 +33,25 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static io.talken.common.persistence.jooq.Tables.USER_CONTRACT;
 
 @Service
 @Scope("singleton")
+@RequiredArgsConstructor
 public class TokenMetaApiService extends TokenMetaTableService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaApiService.class);
 
     private static final String COLLECTION_NAME = "coin_gecko";
 
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;
 
-	@Autowired
-	private RedisTemplate<String, Object> redisTemplate;
+	private final RedisTemplate<String, Object> redisTemplate;
 
 	private static Long loadTimestamp;
+
+    private final DSLContext dslContext;
 
 	@PostConstruct
 	private void init() throws TokenMetaLoadException {
@@ -113,5 +123,49 @@ public class TokenMetaApiService extends TokenMetaTableService {
                 logger.error(String.format("Fail to convert offset %d to JSON date", value), e);
             }
         }
+    }
+
+    public Boolean addContract(User user, ContractRequest postBody) {
+        UserContractRecord ucRecord = new UserContractRecord();
+
+        ucRecord.setUserId(user.getId());
+        ucRecord.setBctxType(postBody.getBctxType());
+        ucRecord.setContractType(postBody.getContractType());
+        ucRecord.setContractAddress(postBody.getContractAddress());
+        ucRecord.setName(postBody.getName());
+        ucRecord.setSymbol(postBody.getSymbol());
+        ucRecord.setDecimals(postBody.getDecimals());
+        dslContext.attach(ucRecord);
+        ucRecord.store();
+
+	    return true;
+    }
+
+    public Boolean removeContract(User user, String contract) {
+
+        UserContractRecord ucRecord = dslContext.selectFrom(USER_CONTRACT)
+                .where(USER_CONTRACT.USER_ID.eq(user.getId())
+                        .and(USER_CONTRACT.CONTRACT_ADDRESS.eq(contract)))
+                .fetchAny();
+
+        dslContext.attach(ucRecord);
+        ucRecord.delete();
+
+        return true;
+    }
+
+    public ContractListResult listContract(User user) {
+        ContractListResult result = new ContractListResult();
+        result.setRows(dslContext.selectFrom(USER_CONTRACT)
+                .where(USER_CONTRACT.USER_ID.eq(user.getId()))
+                .fetch()
+                .stream()
+                .map(r -> new ContractRequest(r.into(USER_CONTRACT).into(UserContract.class)))
+                .collect(Collectors.toList()));
+
+        result.setTotal(result.getRows().size());
+        result.setPageLimit(-1);
+        result.setTotalPage(-1);
+        return result;
     }
 }

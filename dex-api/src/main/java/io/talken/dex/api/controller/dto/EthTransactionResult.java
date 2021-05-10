@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class EthTransactionResultDTO {
+public class EthTransactionResult {
     private String hash;
     private String nonce;
     private String blockHash;

@@ -2,8 +2,8 @@ package io.talken.dex.api.service.bc;
 
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.util.PrefixedLogger;
-import io.talken.dex.api.controller.dto.EthTransactionReceiptResultDTO;
-import io.talken.dex.api.controller.dto.EthTransactionResultDTO;
+import io.talken.dex.api.controller.dto.EthTransactionReceiptResult;
+import io.talken.dex.api.controller.dto.EthTransactionResult;
 import io.talken.dex.api.controller.dto.HecoGasPriceResult;
 import io.talken.dex.shared.exception.InternalServerErrorException;
 import io.talken.dex.shared.service.blockchain.bsc.Bep20ContractInfoService;
@@ -124,8 +124,8 @@ public class HecoInfoService {
      * @throws ExecutionException
      * @throws InterruptedException
      */
-    public EthTransactionResultDTO getHecoTransaction(String txHash) throws ExecutionException, InterruptedException {
-        EthTransactionResultDTO.EthTransactionResultDTOBuilder builder = EthTransactionResultDTO.builder();
+    public EthTransactionResult getHecoTransaction(String txHash) throws ExecutionException, InterruptedException {
+        EthTransactionResult.EthTransactionResultBuilder builder = EthTransactionResult.builder();
         if (txHash != null) {
             Transaction tx = hecoNetworkService.getHecoTransaction(txHash);
 
@@ -161,8 +161,8 @@ public class HecoInfoService {
      * @throws ExecutionException
      * @throws InterruptedException
      */
-    public EthTransactionReceiptResultDTO getHecoTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
-        EthTransactionReceiptResultDTO.EthTransactionReceiptResultDTOBuilder builder = EthTransactionReceiptResultDTO.builder();
+    public EthTransactionReceiptResult getHecoTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
+        EthTransactionReceiptResult.EthTransactionReceiptResultBuilder builder = EthTransactionReceiptResult.builder();
         if (txHash != null) {
             TransactionReceipt tx = hecoNetworkService.getHecoTransactionReceipt(txHash);
             if (tx != null) {

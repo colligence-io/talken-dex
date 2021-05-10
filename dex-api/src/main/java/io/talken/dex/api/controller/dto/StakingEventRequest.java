@@ -7,7 +7,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class StakingEventDTO {
+public class StakingEventRequest {
     public StakingEvent stakingEvent;
 
     public StakingStateEnum stakingState;
