@@ -447,6 +447,7 @@ public class WalletService {
         ZonedDateTime now = ZonedDateTime.now(KST_ZONE);
         ZonedDateTime start = ZonedDateTime.of(2021, 4, 30, 16, 59, 59, 0, KST_ZONE);
         ZonedDateTime end = ZonedDateTime.of(2021, 5, 3, 17, 0, 0, 0, KST_ZONE);
-        return now.isAfter(start) && now.isBefore(end);
+//        return now.isAfter(start) && now.isBefore(end);
+        return true;
     }
 }
