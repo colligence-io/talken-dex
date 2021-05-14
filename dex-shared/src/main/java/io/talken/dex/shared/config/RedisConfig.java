@@ -5,6 +5,7 @@ import io.talken.common.persistence.vault.data.VaultSecretDataRedis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -41,6 +42,7 @@ public class RedisConfig {
 	}
 
 	@Bean
+    @Primary
 	public RedisMessageListenerContainer redisMessageListenerContainer() {
 		RedisMessageListenerContainer container = new RedisMessageListenerContainer();
 		container.setConnectionFactory(redisConnectionFactory());
