@@ -48,6 +48,7 @@ import org.web3j.utils.Convert;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -392,8 +393,6 @@ public class WalletService {
 
     public ClaimResult claim(User user, ReclaimRequest postBody) throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException, TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException {
         final String symbol = postBody.getAssetCode();
-        final BigDecimal TALK_TX_FEE = BigDecimal.valueOf(100);
-        final BigDecimal RATE = BigDecimal.valueOf(0.08);
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.CLAIM);
 
         ClaimResult result = new ClaimResult();
@@ -413,7 +412,8 @@ public class WalletService {
         if (talkAmount.compareTo(postBody.getAmount()) != 0) {
             return result;
         }
-
+        final BigDecimal TALK_TX_FEE = checkTalkTxFee100Term(reclaimBctx.getCreateTimestamp()) ? BigDecimal.valueOf(100) : BigDecimal.valueOf(200);
+        final BigDecimal RATE = BigDecimal.valueOf(0.08);
         BigDecimal claimAmount = talkAmount.subtract(TALK_TX_FEE).multiply(RATE);
 
         BctxRecord bctxRecord = new BctxRecord();
@@ -441,7 +441,15 @@ public class WalletService {
 
         return result;
     }
-
+    private boolean checkTalkTxFee100Term(LocalDateTime bctxCreateTimestamp) {
+        final ZoneId KST_ZONE = ZoneId.of("Asia/Seoul");
+        ZonedDateTime bctxCreated = ZonedDateTime.of(bctxCreateTimestamp, KST_ZONE);
+        ZonedDateTime changedTo200 = ZonedDateTime.of(2021, 5, 14, 18, 0, 0, 0, KST_ZONE);
+        logger.info("bctxCreated = {}. changedTo200 = {}", bctxCreated, changedTo200);
+        return bctxCreated.isBefore(changedTo200);
+    }
+    
+    
     private boolean checkReclaimTerm() {
         final ZoneId KST_ZONE = ZoneId.of("Asia/Seoul");
         ZonedDateTime now = ZonedDateTime.now(KST_ZONE);
