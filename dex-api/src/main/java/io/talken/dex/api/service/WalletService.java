@@ -444,7 +444,8 @@ public class WalletService {
     private boolean checkTalkTxFee100Term(LocalDateTime bctxCreateTimestamp) {
         final ZoneId KST_ZONE = ZoneId.of("Asia/Seoul");
         ZonedDateTime bctxCreated = ZonedDateTime.of(bctxCreateTimestamp, KST_ZONE);
-        ZonedDateTime changedTo200 = ZonedDateTime.of(2021, 5, 14, 9, 0, 0, 0, KST_ZONE);
+        ZonedDateTime changedTo200 = ZonedDateTime.of(2021, 5, 10, 9, 0, 0, 0, KST_ZONE);
+//        상용기에서 날짜비교 문제있었음. 확인필요
         return bctxCreated.isBefore(changedTo200);
     }
     
