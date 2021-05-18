@@ -48,7 +48,7 @@ public class KlaytnInfoService {
      * get klay account
      *
      * @param address the address
-     * @return account
+     * @return account account
      * @throws GeneralException the general exception
      */
     public Account.AccountData getAccount(String address) throws GeneralException {
@@ -75,7 +75,7 @@ public class KlaytnInfoService {
      * get klay balance
      *
      * @param address the address
-     * @return balance
+     * @return balance balance
      * @throws GeneralException the general exception
      */
     public BigInteger getBalance(String address) throws GeneralException{

@@ -65,11 +65,6 @@ public class AccessTokenInterceptor implements HandlerInterceptor {
 	 * Parse JWT if exists
 	 * Store UserAuth info to session-scoped bean AuthInfo
 	 *
-	 * @param request
-	 * @param response
-	 * @param handler
-	 * @return
-	 * @throws Exception
 	 */
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {

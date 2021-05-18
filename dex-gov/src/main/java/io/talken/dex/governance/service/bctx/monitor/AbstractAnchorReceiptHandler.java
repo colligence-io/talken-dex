@@ -33,7 +33,6 @@ public abstract class AbstractAnchorReceiptHandler implements TokenMetaTableUpda
 	/**
 	 * this will be fired from TokenMetaTableService
 	 *
-	 * @param metaTable
 	 */
 	@Override
 	public synchronized void handleTokenMetaTableUpdate(TokenMetaTable metaTable) {

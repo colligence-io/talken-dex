@@ -54,9 +54,6 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 	 * 2. check payment operations is matched with task
 	 * 3. queue bctx to transfer holded asset to user
 	 *
-	 * @param txmId
-	 * @param txResult
-	 * @return
 	 */
 	@Override
 	public DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt txResult) {

@@ -64,10 +64,6 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 	 * 2. check this receipt is anchoring (search DB task)
 	 * 3. insert asset issueing bctx
 	 *
-	 * @param _void
-	 * @param txResult
-	 * @param receipt
-	 * @throws Exception
 	 */
 	@Override
 	public void handle(Void _void, StellarTxReceipt txResult, StellarOpReceipt receipt) throws Exception {

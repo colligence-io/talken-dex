@@ -58,10 +58,6 @@ public abstract class AbstractFilecoinAnchorReceiptHandler extends AbstractAncho
 	 * 2. check this fcMessage is anchoring (search DB task)
 	 * 3. insert asset issueing bctx
 	 *
-	 * @param block
-	 * @param txResult
-	 * @param msg
-	 * @throws Exception
 	 */
 	@Override
 	public void handle(FilecoinMessage.Block block, FilecoinMessage.SecpkMessage txResult, FilecoinMessage.SecpkMessage msg) throws Exception {

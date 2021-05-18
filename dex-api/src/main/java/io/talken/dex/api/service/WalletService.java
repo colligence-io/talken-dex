@@ -179,7 +179,7 @@ public class WalletService {
      * user can request this API once in LUK_TRANSFER_PENDING_TIME seconds
      *
      * @param user the user
-     * @return boolean
+     * @return boolean boolean
      * @throws IntegrationException           the integration exception
      * @throws PrivateWalletNotFoundException the private wallet not found exception
      * @throws TokenMetaNotFoundException     the token meta not found exception
@@ -234,7 +234,7 @@ public class WalletService {
      * check user private wallet has enough(MINIMUM_LUK_FOR_TRANSFER) LUK for transfer
      *
      * @param address the address
-     * @return boolean
+     * @return boolean boolean
      */
     public boolean checkTransferLukPrepared(String address) {
         BigDecimal lukBalance = getLukBalance(address);

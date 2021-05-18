@@ -63,10 +63,6 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 	 * 2. check this receipt is anchoring (search DB task)
 	 * 3. insert asset issueing bctx
 	 *
-	 * @param block
-	 * @param txResult
-	 * @param receipt
-	 * @throws Exception
 	 */
 	@Override
 	public void handle(EthBlock.Block block, TransactionReceipt txResult, EthereumTransferReceipt receipt) throws Exception {

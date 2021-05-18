@@ -35,7 +35,6 @@ public class TokenMetaController {
      * managed meta list
      *
      * @return dex response
-     * @throws TalkenException
      */
     @RequestMapping(value = RequestMappings.TMS_MI_LIST, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable> managedInfoList() {
@@ -58,7 +57,6 @@ public class TokenMetaController {
      * all meta list
      *
      * @return dex response
-     * @throws TalkenException
      */
     @RequestMapping(value = RequestMappings.TMS_TM_LIST, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable> tokenMetaList() {
@@ -69,7 +67,6 @@ public class TokenMetaController {
      * market cap info
      *
      * @return dex response
-     * @throws TalkenException
      */
     @RequestMapping(value = RequestMappings.TMS_TMC_INFO, method = RequestMethod.GET)
     public DexResponse<TotalMarketCapResult> totalMarketCapInfo() {

@@ -52,11 +52,6 @@ public class FilecoinTxSender extends TxSender {
 	/**
 	 * send filecoin tx
 	 *
-	 * @param meta
-	 * @param bctx
-	 * @param log
-	 * @return
-	 * @throws Exception
 	 */
 	@Override
 	public boolean sendTx(TokenMetaTable.Meta meta, Bctx bctx, BctxLogRecord log) throws Exception {
