@@ -26,6 +26,9 @@ import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_CREATEOFFER;
 
+/**
+ * The type Create buy offer task transaction processor.
+ */
 @Component
 public class CreateBuyOfferTaskTransactionProcessor extends AbstractCreateOfferTaskTransactionProcessor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(CreateBuyOfferTaskTransactionProcessor.class);

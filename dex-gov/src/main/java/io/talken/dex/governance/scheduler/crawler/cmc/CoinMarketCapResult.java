@@ -4,12 +4,20 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * The type Coin market cap result.
+ *
+ * @param <T> the type parameter
+ */
 @Data
 public class CoinMarketCapResult<T> {
 	private T data;
 	private _Status status;
 
-	@Data
+    /**
+     * The type Status.
+     */
+    @Data
 	public static class _Status {
 		private LocalDateTime timestamp;
 		private int error_code;

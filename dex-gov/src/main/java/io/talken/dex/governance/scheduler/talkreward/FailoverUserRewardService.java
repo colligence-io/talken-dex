@@ -1,6 +1,7 @@
 package io.talken.dex.governance.scheduler.talkreward;
 
 //import io.talken.common.RunningProfile;
+
 import io.talken.common.persistence.enums.BctxStatusEnum;
 import io.talken.common.persistence.jooq.tables.records.BctxRecord;
 import io.talken.common.persistence.jooq.tables.records.UserRewardRecord;
@@ -21,9 +22,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.responses.AccountResponse;
 
-//import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.*;
 
+//import static io.talken.common.CommonConsts.ZONE_UTC;
+
+/**
+ * The type Failover user reward service.
+ */
 @Service
 @Scope("singleton")
 public class FailoverUserRewardService {
@@ -32,6 +37,9 @@ public class FailoverUserRewardService {
     @Autowired
     private DSLContext dslContext;
 
+    /**
+     * The Tx mgr.
+     */
     @Autowired
     protected DataSourceTransactionManager txMgr;
 
@@ -47,11 +55,17 @@ public class FailoverUserRewardService {
 
     private final String _CLAZZ_NAME = this.getClass().getSimpleName();
 
+    /**
+     * Suspend.
+     */
     public void suspend() {
         logger.info("{} SUSPENDED by admin.", _CLAZZ_NAME);
         isSuspended = true;
     }
 
+    /**
+     * Resume.
+     */
     public void resume() {
         logger.info("{} RESUMED by admin.", _CLAZZ_NAME);
         isSuspended = false;

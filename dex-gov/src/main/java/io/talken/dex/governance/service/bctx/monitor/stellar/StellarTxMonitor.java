@@ -79,7 +79,10 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 
 	private Set<String> assetsToSave = new HashSet<>();
 
-	@Data
+    /**
+     * The type Stellar tx monitor status.
+     */
+    @Data
 	public static class StellarTxMonitorStatus {
 		private String lastPagingToken;
 		private LocalDateTime lastTokenTimestamp;
@@ -269,7 +272,12 @@ public class StellarTxMonitor extends TxMonitor<Void, StellarTxReceipt, StellarO
 		return false;
 	}
 
-	public void processDexTask(StellarTxReceipt txResult) {
+    /**
+     * Process dex task.
+     *
+     * @param txResult the tx result
+     */
+    public void processDexTask(StellarTxReceipt txResult) {
 		if(txResult.getTaskId() == null) return;
 
 		Integer count = dslContext.selectCount().from(DEX_TXMON).where(DEX_TXMON.TXHASH.eq(txResult.getResponse().getHash())).fetchOneInto(Integer.class);

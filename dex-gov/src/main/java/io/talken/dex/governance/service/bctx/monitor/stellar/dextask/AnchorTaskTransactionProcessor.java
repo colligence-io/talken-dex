@@ -15,6 +15,9 @@ import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
+/**
+ * The type Anchor task transaction processor.
+ */
 @Component
 public class AnchorTaskTransactionProcessor implements DexTaskTransactionProcessor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AnchorTaskTransactionProcessor.class);

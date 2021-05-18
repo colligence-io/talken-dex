@@ -44,9 +44,15 @@ public class NodeMonitorService {
 	@Autowired
 	private AdminAlarmService adminAlarmService;
 
-	BigInteger luniverseLastBlockNumber = null;
+    /**
+     * The Luniverse last block number.
+     */
+    BigInteger luniverseLastBlockNumber = null;
 
-	LocalDate lastAnnounce = null;
+    /**
+     * The Last announce.
+     */
+    LocalDate lastAnnounce = null;
 
 	// check every 10 minutes
 	@Scheduled(fixedDelay = 1000 * 60 * 10, initialDelay = 1000)
@@ -65,7 +71,13 @@ public class NodeMonitorService {
 		lastAnnounce = today;
 	}
 
-	public StringBuilder alarmNodeStatus(LocalDateTime now) {
+    /**
+     * Alarm node status string builder.
+     *
+     * @param now the now
+     * @return the string builder
+     */
+    public StringBuilder alarmNodeStatus(LocalDateTime now) {
 	    logger.info("Show Node Service Status");
         StringBuilder sb = new StringBuilder("Node Service Status\n");
         sb.append("Now : ")

@@ -35,6 +35,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The type Abstract ethereum tx monitor.
+ */
 public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block, TransactionReceipt, EthereumTransferReceipt> {
 	private final PrefixedLogger logger;
 
@@ -52,7 +55,13 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 	private long[] receiptsPerBlock = new long[ETA_BLOCKS];
 	private long[] takesPerBlock = new long[ETA_BLOCKS];
 
-	public AbstractEthereumTxMonitor(PrefixedLogger logger, String networkName) {
+    /**
+     * Instantiates a new Abstract ethereum tx monitor.
+     *
+     * @param logger      the logger
+     * @param networkName the network name
+     */
+    public AbstractEthereumTxMonitor(PrefixedLogger logger, String networkName) {
 		this.logger = logger;
 		this.networkName = networkName;
 		for(int i = 0; i < ETA_BLOCKS; i++) {
@@ -61,13 +70,35 @@ public abstract class AbstractEthereumTxMonitor extends TxMonitor<EthBlock.Block
 		}
 	}
 
-	abstract protected BigInteger getServiceStatusLastBlock();
+    /**
+     * Gets service status last block.
+     *
+     * @return the service status last block
+     */
+    abstract protected BigInteger getServiceStatusLastBlock();
 
-	abstract protected void saveServiceStatusLastBlock(BigInteger blockNumber, LocalDateTime timestamp);
+    /**
+     * Save service status last block.
+     *
+     * @param blockNumber the block number
+     * @param timestamp   the timestamp
+     */
+    abstract protected void saveServiceStatusLastBlock(BigInteger blockNumber, LocalDateTime timestamp);
 
-	abstract protected void saveReceiptDocuments(List<EthereumTransferReceipt> documents);
+    /**
+     * Save receipt documents.
+     *
+     * @param documents the documents
+     */
+    abstract protected void saveReceiptDocuments(List<EthereumTransferReceipt> documents);
 
-	protected void crawlBlocks(Web3j web3j, int collectionThreadNum) {
+    /**
+     * Crawl blocks.
+     *
+     * @param web3j               the web 3 j
+     * @param collectionThreadNum the collection thread num
+     */
+    protected void crawlBlocks(Web3j web3j, int collectionThreadNum) {
 		BigInteger latestBlockNumber = null;
 		BigInteger targetBlockNumber = null;
 		BigInteger cursor = null;

@@ -25,6 +25,9 @@ import java.math.RoundingMode;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
+/**
+ * The type Abstract ethereum anchor receipt handler.
+ */
 public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAnchorReceiptHandler implements TxMonitor.ReceiptHandler<EthBlock.Block, TransactionReceipt, EthereumTransferReceipt> {
 	private PrefixedLogger logger;
 
@@ -37,11 +40,22 @@ public abstract class AbstractEthereumAnchorReceiptHandler extends AbstractAncho
 	@Autowired
 	private DataSourceTransactionManager txMgr;
 
-	public AbstractEthereumAnchorReceiptHandler(PrefixedLogger logger) {
+    /**
+     * Instantiates a new Abstract ethereum anchor receipt handler.
+     *
+     * @param logger the logger
+     */
+    public AbstractEthereumAnchorReceiptHandler(PrefixedLogger logger) {
 		this.logger = logger;
 	}
 
-	abstract protected Condition getBcTypeCondition(String contractAddr);
+    /**
+     * Gets bc type condition.
+     *
+     * @param contractAddr the contract addr
+     * @return the bc type condition
+     */
+    abstract protected Condition getBcTypeCondition(String contractAddr);
 
 	/**
 	 * handle receipt

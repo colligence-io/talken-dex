@@ -44,6 +44,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static io.talken.common.persistence.jooq.Tables.USER;
 import static io.talken.common.persistence.jooq.Tables.USER_REWARD;
 
+/**
+ * The type User reward bctx service.
+ */
 @Service
 @Scope("singleton")
 public class UserRewardBctxService {
@@ -52,7 +55,10 @@ public class UserRewardBctxService {
 	@Autowired
 	private DSLContext dslContext;
 
-	@Autowired
+    /**
+     * The Tx mgr.
+     */
+    @Autowired
 	protected DataSourceTransactionManager txMgr;
 
 	@Autowired
@@ -76,12 +82,18 @@ public class UserRewardBctxService {
 
     private final String _CLAZZ_NAME = this.getClass().getSimpleName();
 
-	public void suspend() {
+    /**
+     * Suspend.
+     */
+    public void suspend() {
 		logger.info("{} SUSPENDED by admin.", _CLAZZ_NAME);
 		isSuspended = true;
 	}
 
-	public void resume() {
+    /**
+     * Resume.
+     */
+    public void resume() {
 		logger.info("{} RESUMED by admin.", _CLAZZ_NAME);
 		isSuspended = false;
 	}

@@ -45,7 +45,10 @@ public class StellarAnchorReceiptHandler extends AbstractAnchorReceiptHandler im
 	@Autowired
 	private StellarTxMonitor txMonitor;
 
-	public StellarAnchorReceiptHandler() {
+    /**
+     * Instantiates a new Stellar anchor receipt handler.
+     */
+    public StellarAnchorReceiptHandler() {
 		addBcType(BlockChainPlatformEnum.STELLAR);
 		addBcType(BlockChainPlatformEnum.STELLAR_TOKEN);
 	}

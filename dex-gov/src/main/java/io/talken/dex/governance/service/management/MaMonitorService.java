@@ -73,12 +73,18 @@ public class MaMonitorService {
 
 	private boolean isSuspended = false;
 
-	public void suspend() {
+    /**
+     * Suspend.
+     */
+    public void suspend() {
 		logger.info("MaMonitorService SUSPENDED by admin.");
 		isSuspended = true;
 	}
 
-	public void resume() {
+    /**
+     * Resume.
+     */
+    public void resume() {
 		logger.info("MaMonitorService RESUMED by admin.");
 		isSuspended = false;
 	}

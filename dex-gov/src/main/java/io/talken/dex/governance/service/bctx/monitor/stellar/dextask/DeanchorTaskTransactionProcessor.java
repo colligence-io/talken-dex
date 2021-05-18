@@ -25,6 +25,9 @@ import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_DEANCHOR;
 
+/**
+ * The type Deanchor task transaction processor.
+ */
 @Component
 public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProcessor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(DeanchorTaskTransactionProcessor.class);
@@ -32,7 +35,10 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 	@Autowired
 	private DSLContext dslContext;
 
-	@Autowired
+    /**
+     * The Tx mgr.
+     */
+    @Autowired
 	protected DataSourceTransactionManager txMgr;
 
 	@Autowired

@@ -44,6 +44,9 @@ import java.util.Map;
 import static io.talken.common.persistence.jooq.Tables.*;
 import static io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction.TIME_BOUND;
 
+/**
+ * The type Token meta gov service.
+ */
 @Service
 @Scope("singleton")
 @DependsOn("dbmigration")
@@ -96,12 +99,12 @@ public class TokenMetaGovService extends TokenMetaTableService {
 		lastTradeAggregationUpdatedTimestamp = loadTimestamp;
 	}
 
-	/**
-	 * check trade aggregation data and exchange rate data is updated
-	 *
-	 * @throws TokenMetaLoadException
-	 */
-	@Scheduled(fixedDelay = 5000)
+    /**
+     * check trade aggregation data and exchange rate data is updated
+     *
+     * @throws TokenMetaLoadException the token meta load exception
+     */
+    @Scheduled(fixedDelay = 5000)
 	public void checkTaExrAndUpdate() throws TokenMetaLoadException {
 		boolean reloaded = false;
 		Long redisTaDataUpdated = null;
@@ -466,7 +469,12 @@ public class TokenMetaGovService extends TokenMetaTableService {
 		}
 	}
 
-	public void adminUpdateStorage() throws TokenMetaLoadException {
+    /**
+     * Admin update storage.
+     *
+     * @throws TokenMetaLoadException the token meta load exception
+     */
+    public void adminUpdateStorage() throws TokenMetaLoadException {
 		load();
 	}
 

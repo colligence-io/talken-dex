@@ -19,27 +19,36 @@ import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import static io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction.TIME_BOUND;
 
+/**
+ * The type Abstract stellar tx sender.
+ */
 public abstract class AbstractStellarTxSender extends TxSender {
 	private final PrefixedLogger logger;
 
 	@Autowired
 	private StellarNetworkService stellarNetworkService;
 
-	public AbstractStellarTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
+    /**
+     * Instantiates a new Abstract stellar tx sender.
+     *
+     * @param platform the platform
+     * @param logger   the logger
+     */
+    public AbstractStellarTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
 		super(platform);
 		this.logger = logger;
 	}
 
-	/**
-	 * send stellar tx to network
-	 *
-	 * @param asset
-	 * @param bctx
-	 * @param log
-	 * @return
-	 * @throws Exception
-	 */
-	protected boolean sendStellarTx(Asset asset, Bctx bctx, BctxLogRecord log) throws Exception {
+    /**
+     * send stellar tx to network
+     *
+     * @param asset the asset
+     * @param bctx  the bctx
+     * @param log   the log
+     * @return boolean
+     * @throws Exception the exception
+     */
+    protected boolean sendStellarTx(Asset asset, Bctx bctx, BctxLogRecord log) throws Exception {
 		// pick horizon server
 		Server server = stellarNetworkService.pickServer();
 
@@ -117,6 +126,17 @@ public abstract class AbstractStellarTxSender extends TxSender {
 		}
 	}
 
+    /**
+     * Send stellar tx boolean.
+     *
+     * @param fromAddr the from addr
+     * @param toAddr   the to addr
+     * @param asset    the asset
+     * @param bctx     the bctx
+     * @param log      the log
+     * @return the boolean
+     * @throws Exception the exception
+     */
     public boolean sendStellarTx(String fromAddr, String toAddr, Asset asset, Bctx bctx, BctxLogRecord log) throws Exception {
         // pick horizon server
         Server server = stellarNetworkService.pickServer();

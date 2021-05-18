@@ -8,7 +8,6 @@ import io.talken.dex.shared.service.tradewallet.TradeWalletService;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +15,9 @@ import java.util.List;
 import static io.talken.common.persistence.jooq.Tables.USER;
 import static io.talken.common.persistence.jooq.Tables.USER_TRADE_WALLET;
 
+/**
+ * The type Trade wallet reset service.
+ */
 @Service
 @Scope("singleton")
 public class TradeWalletResetService {

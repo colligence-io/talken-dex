@@ -40,6 +40,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.*;
 
+/**
+ * The type Crawl cmc crypto currency service.
+ */
 @Service
 @Scope("singleton")
 public class CrawlCmcCryptoCurrencyService {
@@ -70,7 +73,10 @@ public class CrawlCmcCryptoCurrencyService {
 
 	private static AtomicLong counter = new AtomicLong(0);
 
-	public static class CoinMarketCapLatestResult extends CoinMarketCapResult<CMCLatestData> {}
+    /**
+     * The type Coin market cap latest result.
+     */
+    public static class CoinMarketCapLatestResult extends CoinMarketCapResult<CMCLatestData> {}
 
     @PostConstruct
     private void init() throws Exception {
@@ -100,11 +106,12 @@ public class CrawlCmcCryptoCurrencyService {
 		}
 	}
 
-	/**
-	 * Crawl CMC latest info
-	 * @throws Exception
-	 */
-	protected void crawlCMCLatest() throws Exception {
+    /**
+     * Crawl CMC latest info
+     *
+     * @throws Exception the exception
+     */
+    protected void crawlCMCLatest() throws Exception {
 		GenericUrl url = new GenericUrl(govSettings.getIntegration().getCoinMarketCap().getCryptoCurrencyUrl());
 
 		Result<TokenMetaRecord> tmList = dslContext.selectFrom(TOKEN_META)

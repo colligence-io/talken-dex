@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The type Filecoin tx sender.
+ */
 @Component
 public class FilecoinTxSender extends TxSender {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(FilecoinTxSender.class);
@@ -39,7 +42,10 @@ public class FilecoinTxSender extends TxSender {
 
 	private static Map<String, BigInteger> nonceCheck = new HashMap<>();
 
-	public FilecoinTxSender() {
+    /**
+     * Instantiates a new Filecoin tx sender.
+     */
+    public FilecoinTxSender() {
 		super(BlockChainPlatformEnum.FILECOIN);
 	}
 

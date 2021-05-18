@@ -41,6 +41,9 @@ import java.util.Map;
 
 import static io.talken.common.persistence.jooq.Tables.BCTX;
 
+/**
+ * The type Block chain transaction service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor

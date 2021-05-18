@@ -52,11 +52,22 @@ public abstract class AbstractAnchorReceiptHandler implements TokenMetaTableUpda
 		}
 	}
 
-	protected synchronized void addBcType(BlockChainPlatformEnum bcType) {
+    /**
+     * Add bc type.
+     *
+     * @param bcType the bc type
+     */
+    protected synchronized void addBcType(BlockChainPlatformEnum bcType) {
 		bcTypes.add(bcType);
 	}
 
-	protected synchronized boolean checkHolder(String holderAddress) {
+    /**
+     * Check holder boolean.
+     *
+     * @param holderAddress the holder address
+     * @return the boolean
+     */
+    protected synchronized boolean checkHolder(String holderAddress) {
 		if(holderAddress == null) return false;
 		// do not check holder address and return true for all addresses.
 		// this is intended to sure anchor task working even if meta update is failed.

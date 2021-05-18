@@ -28,6 +28,9 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The type Abstract ethereum tx sender.
+ */
 public abstract class AbstractEthereumTxSender extends TxSender {
 	private final PrefixedLogger logger;
 
@@ -44,7 +47,13 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 
 	private static Map<String, BigInteger> nonceCheck = new HashMap<>();
 
-	public AbstractEthereumTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
+    /**
+     * Instantiates a new Abstract ethereum tx sender.
+     *
+     * @param platform the platform
+     * @param logger   the logger
+     */
+    public AbstractEthereumTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
 		super(platform);
 		this.logger = logger;
 	}
@@ -76,7 +85,14 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		}
 	}
 
-	public String getMetaCA(TokenMetaTable.Meta meta, Bctx bctx) {
+    /**
+     * Gets meta ca.
+     *
+     * @param meta the meta
+     * @param bctx the bctx
+     * @return the meta ca
+     */
+    public String getMetaCA(TokenMetaTable.Meta meta, Bctx bctx) {
         String metaCA = null;
         if(meta.getAux() != null && meta.getAux().containsKey(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID)) {
             metaCA = meta.getAux().get(TokenMetaAuxCodeEnum.ERC20_CONTRACT_ID).toString();
@@ -84,22 +100,28 @@ public abstract class AbstractEthereumTxSender extends TxSender {
         return metaCA;
     }
 
+    /**
+     * Gets bctx ca.
+     *
+     * @param bctx the bctx
+     * @return the bctx ca
+     */
     public String getBctxCA(Bctx bctx) {
         return bctx.getPlatformAux();
     }
 
-	/**
-	 * send ethereum tx (impl)
-	 * NOTE use infura, NOT local node
-	 *
-	 * @param contractAddr
-	 * @param decimals
-	 * @param bctx
-	 * @param log
-	 * @return
-	 * @throws Exception
-	 */
-	protected boolean sendEthereumTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
+    /**
+     * send ethereum tx (impl)
+     * NOTE use infura, NOT local node
+     *
+     * @param contractAddr the contract addr
+     * @param decimals     the decimals
+     * @param bctx         the bctx
+     * @param log          the log
+     * @return boolean
+     * @throws Exception the exception
+     */
+    protected boolean sendEthereumTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
 		final String from = bctx.getAddressFrom();
 
         EthRpcClient ethRpcClient = ethereumNetworkService.getInfuraClient();
@@ -155,6 +177,17 @@ public abstract class AbstractEthereumTxSender extends TxSender {
 		}
 	}
 
+    /**
+     * Send tx with nonce boolean.
+     *
+     * @param contractAddr the contract addr
+     * @param decimals     the decimals
+     * @param bctx         the bctx
+     * @param log          the log
+     * @param nonce        the nonce
+     * @return the boolean
+     * @throws Exception the exception
+     */
     public boolean sendTxWithNonce(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log, BigInteger nonce) throws Exception {
         EthRpcClient infuraClient = ethereumNetworkService.getInfuraClient();
 
