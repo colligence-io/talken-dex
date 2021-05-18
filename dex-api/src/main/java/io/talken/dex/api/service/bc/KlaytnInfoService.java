@@ -18,6 +18,9 @@ import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.
 
 import java.math.BigInteger;
 
+/**
+ * The type Klaytn info service.
+ */
 @Service
 @Scope("singleton")
 public class KlaytnInfoService {
@@ -32,6 +35,9 @@ public class KlaytnInfoService {
     @Autowired
     private DSLContext dslContext;
 
+    /**
+     * The constant PAGE.
+     */
     final static long PAGE = 10;
 
     /****************
@@ -41,9 +47,9 @@ public class KlaytnInfoService {
     /**
      * get klay account
      *
-     * @param address
-     * @return
-     * @throws GeneralException
+     * @param address the address
+     * @return account
+     * @throws GeneralException the general exception
      */
     public Account.AccountData getAccount(String address) throws GeneralException {
         try {
@@ -65,14 +71,14 @@ public class KlaytnInfoService {
         }
     }
 
-	/**
-	 * get klay balance
-	 *
-	 * @param address
-	 * @return
-	 * @throws GeneralException
-	 */
-	public BigInteger getBalance(String address) throws GeneralException{
+    /**
+     * get klay balance
+     *
+     * @param address the address
+     * @return balance
+     * @throws GeneralException the general exception
+     */
+    public BigInteger getBalance(String address) throws GeneralException{
 	    try {
             return klayNetworkService.getKasClient().getClient().rpc.klay.getBalance(address).send().getValue();
         } catch(Exception ex) {
@@ -83,8 +89,8 @@ public class KlaytnInfoService {
     /**
      * get klay gasPrice
      *
-     * @return
-     * @throws GeneralException
+     * @return gas price
+     * @throws GeneralException the general exception
      */
     public BigInteger getGasPrice() throws GeneralException{
         try {
@@ -97,9 +103,9 @@ public class KlaytnInfoService {
     /**
      * get klay transaction
      *
-     * @param hash
-     * @return
-     * @throws GeneralException
+     * @param hash the hash
+     * @return transaction by hash
+     * @throws GeneralException the general exception
      */
     public Transaction.TransactionData getTransactionByHash(String hash) throws GeneralException{
         try {
@@ -112,9 +118,9 @@ public class KlaytnInfoService {
     /**
      * get klay transactionReceipt
      *
-     * @param hash
-     * @return
-     * @throws GeneralException
+     * @param hash the hash
+     * @return transaction receipt by hash
+     * @throws GeneralException the general exception
      */
     public TransactionReceipt.TransactionReceiptData getTransactionReceiptByHash(String hash) throws GeneralException{
         try {
@@ -124,15 +130,15 @@ public class KlaytnInfoService {
         }
     }
 
-	/**
-	 * get kip7/erc20 balance
-	 *
-	 * @param contract
-	 * @param address
-	 * @return
-	 * @throws GeneralException
-	 */
-	public BigInteger getKip7Balance(String contract, String address) throws GeneralException {
+    /**
+     * get kip7/erc20 balance
+     *
+     * @param contract the contract
+     * @param address  the address
+     * @return kip 7 balance
+     * @throws GeneralException the general exception
+     */
+    public BigInteger getKip7Balance(String contract, String address) throws GeneralException {
         try {
             return kip7ContractInfoService.getBalanceOf(klayNetworkService.getKasClient().getClient(), contract, address);
         } catch(Exception ex) {
@@ -140,7 +146,14 @@ public class KlaytnInfoService {
         }
 	}
 
-	public TransferArray getTransactionList(KlayTransactionListRequest request) throws GeneralException {
+    /**
+     * Gets transaction list.
+     *
+     * @param request the request
+     * @return the transaction list
+     * @throws GeneralException the general exception
+     */
+    public TransferArray getTransactionList(KlayTransactionListRequest request) throws GeneralException {
         try {
             TokenHistoryQueryOptions options = new TokenHistoryQueryOptions();
 
@@ -166,6 +179,14 @@ public class KlaytnInfoService {
         }
     }
 
+    /**
+     * Gets contract.
+     *
+     * @param contract the contract
+     * @param address  the address
+     * @return the contract
+     * @throws GeneralException the general exception
+     */
     public Kip7ContractInfoService.Kip7ContractInfo getContract(String contract, String address) throws GeneralException {
         try {
             return kip7ContractInfoService.getKip7ContractInfo(klayNetworkService.getKasClient().getClient(), contract);

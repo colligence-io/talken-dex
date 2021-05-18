@@ -9,6 +9,9 @@ import org.stellar.sdk.KeyPair;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+/**
+ * The type Calculate fee result.
+ */
 @Data
 public class CalculateFeeResult {
 	@JsonIgnore
@@ -25,31 +28,66 @@ public class CalculateFeeResult {
 	@JsonIgnore
 	private KeyPair feeHolderAccount;
 
-	public String getSellAssetCode() {
+    /**
+     * Gets sell asset code.
+     *
+     * @return the sell asset code
+     */
+    public String getSellAssetCode() {
 		return (sellAssetType == null) ? null : StellarConverter.toAssetCode(sellAssetType);
 	}
 
-	public String getBuyAssetCode() {
+    /**
+     * Gets buy asset code.
+     *
+     * @return the buy asset code
+     */
+    public String getBuyAssetCode() {
 		return (buyAssetType == null) ? null : StellarConverter.toAssetCode(buyAssetType);
 	}
 
-	public String getFeeAssetCode() {
+    /**
+     * Gets fee asset code.
+     *
+     * @return the fee asset code
+     */
+    public String getFeeAssetCode() {
 		return (feeAssetType == null) ? null : StellarConverter.toAssetCode(feeAssetType);
 	}
 
-	public BigDecimal getSellAmount() {
+    /**
+     * Gets sell amount.
+     *
+     * @return the sell amount
+     */
+    public BigDecimal getSellAmount() {
 		return (sellAmountRaw == null) ? null : StellarConverter.rawToActual(sellAmountRaw);
 	}
 
-	public BigDecimal getBuyAmount() {
+    /**
+     * Gets buy amount.
+     *
+     * @return the buy amount
+     */
+    public BigDecimal getBuyAmount() {
 		return (buyAmountRaw == null) ? null : StellarConverter.rawToActual(buyAmountRaw);
 	}
 
-	public BigDecimal getFeeAmount() {
+    /**
+     * Gets fee amount.
+     *
+     * @return the fee amount
+     */
+    public BigDecimal getFeeAmount() {
 		return (feeAmountRaw == null) ? null : StellarConverter.rawToActual(feeAmountRaw);
 	}
 
-	public String getFeeHolderAccountAddress() {
+    /**
+     * Gets fee holder account address.
+     *
+     * @return the fee holder account address
+     */
+    public String getFeeHolderAccountAddress() {
 		return feeHolderAccount.getAccountId();
 	}
 }

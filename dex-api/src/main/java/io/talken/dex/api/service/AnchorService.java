@@ -49,6 +49,9 @@ import java.util.Optional;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_DEANCHOR;
 
+/**
+ * The type Anchor service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -63,28 +66,28 @@ public class AnchorService {
 	private final PrivateWalletService pwService;
 	private final DSLContext dslContext;
 
-	/**
-	 * Create Anchor task
-	 * 1. rebalance user tradewallet for trustline
-	 * 2. create trustline for requested asset (and USDT)
-	 * 3. insert task to dex_task_anchor
-	 * 4. return transferDTObase to client
-	 * 5. after client(and wallet server) make tx dex-gov will catch tx and issue asset to user trade wallet
-	 *
-	 * @param user
-	 * @param request
-	 * @return
-	 * @throws TokenMetaNotFoundException
-	 * @throws ActiveAssetHolderAccountNotFoundException
-	 * @throws BlockChainPlatformNotSupportedException
-	 * @throws TradeWalletRebalanceException
-	 * @throws TradeWalletCreateFailedException
-	 * @throws SigningException
-	 * @throws StellarException
-	 * @throws TokenMetaNotManagedException
-	 * @throws DuplicatedTaskFoundException
-	 */
-	public PrivateWalletTransferDTO anchor(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
+    /**
+     * Create Anchor task
+     * 1. rebalance user tradewallet for trustline
+     * 2. create trustline for requested asset (and USDT)
+     * 3. insert task to dex_task_anchor
+     * 4. return transferDTObase to client
+     * 5. after client(and wallet server) make tx dex-gov will catch tx and issue asset to user trade wallet
+     *
+     * @param user    the user
+     * @param request the request
+     * @return private wallet transfer dto
+     * @throws TokenMetaNotFoundException                the token meta not found exception
+     * @throws ActiveAssetHolderAccountNotFoundException the active asset holder account not found exception
+     * @throws BlockChainPlatformNotSupportedException   the block chain platform not supported exception
+     * @throws TradeWalletRebalanceException             the trade wallet rebalance exception
+     * @throws TradeWalletCreateFailedException          the trade wallet create failed exception
+     * @throws SigningException                          the signing exception
+     * @throws StellarException                          the stellar exception
+     * @throws TokenMetaNotManagedException              the token meta not managed exception
+     * @throws DuplicatedTaskFoundException              the duplicated task found exception
+     */
+    public PrivateWalletTransferDTO anchor(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.ANCHOR);
 		final String assetHolderAddress = tmService.getManagedInfo(request.getAssetCode()).pickActiveHolderAccountAddress();
@@ -169,25 +172,25 @@ public class AnchorService {
 		return result;
 	}
 
-	/**
-	 * Create deanchor task
-	 * 1. insert deanchor task to dex_task_deanchor
-	 * 2. transfer tradewallet asset to issuer (burn)
-	 * 3. dex-gov will catch tx and transfer holding asset to user private wallet
-	 *
-	 * @param user
-	 * @param request
-	 * @return
-	 * @throws TokenMetaNotFoundException
-	 * @throws StellarException
-	 * @throws TradeWalletCreateFailedException
-	 * @throws SigningException
-	 * @throws ActiveAssetHolderAccountNotFoundException
-	 * @throws NotEnoughBalanceException
-	 * @throws TokenMetaNotManagedException
-	 * @throws DuplicatedTaskFoundException
-	 */
-	public DeanchorResult deanchor(User user, DeanchorRequest request) throws TokenMetaNotFoundException, StellarException, TradeWalletCreateFailedException, SigningException, ActiveAssetHolderAccountNotFoundException, NotEnoughBalanceException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
+    /**
+     * Create deanchor task
+     * 1. insert deanchor task to dex_task_deanchor
+     * 2. transfer tradewallet asset to issuer (burn)
+     * 3. dex-gov will catch tx and transfer holding asset to user private wallet
+     *
+     * @param user    the user
+     * @param request the request
+     * @return deanchor result
+     * @throws TokenMetaNotFoundException                the token meta not found exception
+     * @throws StellarException                          the stellar exception
+     * @throws TradeWalletCreateFailedException          the trade wallet create failed exception
+     * @throws SigningException                          the signing exception
+     * @throws ActiveAssetHolderAccountNotFoundException the active asset holder account not found exception
+     * @throws NotEnoughBalanceException                 the not enough balance exception
+     * @throws TokenMetaNotManagedException              the token meta not managed exception
+     * @throws DuplicatedTaskFoundException              the duplicated task found exception
+     */
+    public DeanchorResult deanchor(User user, DeanchorRequest request) throws TokenMetaNotFoundException, StellarException, TradeWalletCreateFailedException, SigningException, ActiveAssetHolderAccountNotFoundException, NotEnoughBalanceException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
 		final BigDecimal amount = StellarConverter.scale(request.getAmount());
 		final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.DEANCHOR);
 		final KeyPair issuerAccount = tmService.getManagedInfo(request.getAssetCode()).dexIssuerAccount();
@@ -319,6 +322,22 @@ public class AnchorService {
 		return result;
 	}
 
+    /**
+     * Anchor only talklmt private wallet transfer dto.
+     *
+     * @param user    the user
+     * @param request the request
+     * @return the private wallet transfer dto
+     * @throws TokenMetaNotFoundException                the token meta not found exception
+     * @throws ActiveAssetHolderAccountNotFoundException the active asset holder account not found exception
+     * @throws BlockChainPlatformNotSupportedException   the block chain platform not supported exception
+     * @throws TradeWalletRebalanceException             the trade wallet rebalance exception
+     * @throws TradeWalletCreateFailedException          the trade wallet create failed exception
+     * @throws SigningException                          the signing exception
+     * @throws StellarException                          the stellar exception
+     * @throws TokenMetaNotManagedException              the token meta not managed exception
+     * @throws DuplicatedTaskFoundException              the duplicated task found exception
+     */
     @Deprecated
     public PrivateWalletTransferDTO anchorOnlyTALKLMT(User user, AnchorRequest request) throws TokenMetaNotFoundException, ActiveAssetHolderAccountNotFoundException, BlockChainPlatformNotSupportedException, TradeWalletRebalanceException, TradeWalletCreateFailedException, SigningException, StellarException, TokenMetaNotManagedException, DuplicatedTaskFoundException {
         final String TALK = "TALK";

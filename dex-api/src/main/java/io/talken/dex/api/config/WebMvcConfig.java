@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.talken.common.CommonConsts;
+import io.talken.common.util.LocalDateTime2TimestampSerializer;
 import io.talken.dex.api.config.auth.AccessTokenInterceptor;
 import io.talken.dex.api.config.auth.AuthInfo;
-import io.talken.common.util.LocalDateTime2TimestampSerializer;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +24,9 @@ import javax.servlet.Filter;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * The type Web mvc config.
+ */
 @Configuration
 @EnableWebMvc
 public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
@@ -32,12 +35,22 @@ public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
 		registry.addInterceptor(tokenInterceptor());
 	}
 
-	@Bean
+    /**
+     * Token interceptor access token interceptor.
+     *
+     * @return the access token interceptor
+     */
+    @Bean
 	public AccessTokenInterceptor tokenInterceptor() {
 		return new AccessTokenInterceptor();
 	}
 
-	@Bean
+    /**
+     * Mapping jackson 2 http message converter mapping jackson 2 http message converter.
+     *
+     * @return the mapping jackson 2 http message converter
+     */
+    @Bean
 	public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
 		ObjectMapper mapper = new ObjectMapper();
 		SimpleModule module = new SimpleModule();
@@ -52,7 +65,12 @@ public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
 		converters.add(mappingJackson2HttpMessageConverter());
 	}
 
-	@Bean
+    /**
+     * Character encoding filter filter.
+     *
+     * @return the filter
+     */
+    @Bean
 	public Filter characterEncodingFilter() {
 		CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter();
 		characterEncodingFilter.setEncoding(CommonConsts.CHARSET_NAME);
@@ -60,7 +78,12 @@ public class WebMvcConfig implements WebMvcConfigurer, WebMvcRegistrations {
 		return characterEncodingFilter;
 	}
 
-	@Bean
+    /**
+     * Request scoped auth info bean auth info.
+     *
+     * @return the auth info
+     */
+    @Bean
 	@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
 	public AuthInfo requestScopedAuthInfoBean() {
 		return new AuthInfo();

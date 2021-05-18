@@ -4,6 +4,9 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 
+/**
+ * The type Transaction hash request.
+ */
 @Data
 public class TransactionHashRequest {
     @NotEmpty

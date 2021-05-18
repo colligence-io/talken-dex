@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Offer detail result.
+ */
 @Data
 public class OfferDetailResult {
 	private String taskId;

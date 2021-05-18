@@ -27,6 +27,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 
+/**
+ * The type Wallet controller.
+ */
 @RestController
 public class WalletController {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(WalletController.class);
@@ -46,87 +49,87 @@ public class WalletController {
 	@Autowired
 	private AuthInfo authInfo;
 
-	/**
-	 * get user trade wallet info
-	 *
-	 * @return
-	 * @throws TalkenException
-	 */
-	@AuthRequired
+    /**
+     * get user trade wallet info
+     *
+     * @return trade wallet
+     * @throws TalkenException the talken exception
+     */
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.TRADE_WALLET_BALANCE, method = RequestMethod.GET)
 	public DexResponse<TradeWalletResult> getTradeWallet() throws TalkenException {
 		return DexResponse.buildResponse(walletService.getTradeWalletBalances(authInfo.getUser()));
 	}
 
-	/**
-	 * build template tx envelope for TalkenWallet Mobile App
-	 *
-	 * @param assetCode
-	 * @return
-	 * @throws TalkenException
-	 */
-	@AuthRequired
+    /**
+     * build template tx envelope for TalkenWallet Mobile App
+     *
+     * @param assetCode the asset code
+     * @return dex response
+     * @throws TalkenException the talken exception
+     */
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_WITHDRAW_BASE, method = RequestMethod.GET)
 	public DexResponse<PrivateWalletTransferDTO> withdraw_base(@RequestParam("assetCode") String assetCode) throws TalkenException {
 		return DexResponse.buildResponse(pwService.createTransferDTObase(PrivateWalletMsgTypeEnum.TRANSFER, assetCode));
 	}
 
-	/**
-	 * anchor request
-	 *
-	 * @param postBody
-	 * @return
-	 * @throws TalkenException
-	 */
-	@AuthRequired
+    /**
+     * anchor request
+     *
+     * @param postBody the post body
+     * @return dex response
+     * @throws TalkenException the talken exception
+     */
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_ANCHOR_TASK, method = RequestMethod.POST)
 	public DexResponse<PrivateWalletTransferDTO> anchor(@RequestBody AnchorRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(anchorService.anchor(authInfo.getUser(), postBody));
 	}
 
-	/**
-	 * deanchor request
-	 *
-	 * @param postBody
-	 * @return
-	 * @throws TalkenException
-	 */
-	@AuthRequired
+    /**
+     * deanchor request
+     *
+     * @param postBody the post body
+     * @return dex response
+     * @throws TalkenException the talken exception
+     */
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.TRADE_WALLET_DEANCHOR_TASK, method = RequestMethod.POST)
 	public DexResponse<DeanchorResult> deanchor(@RequestBody DeanchorRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(anchorService.deanchor(authInfo.getUser(), postBody));
 	}
 
-	/**
-	 * calculate deanchor fee
-	 *
-	 * @param postBody
-	 * @return
-	 * @throws TalkenException
-	 */
-	@RequestMapping(value = RequestMappings.TRADE_WALLET_DEANCHOR_FEE, method = RequestMethod.POST)
+    /**
+     * calculate deanchor fee
+     *
+     * @param postBody the post body
+     * @return dex response
+     * @throws TalkenException the talken exception
+     */
+    @RequestMapping(value = RequestMappings.TRADE_WALLET_DEANCHOR_FEE, method = RequestMethod.POST)
 	public DexResponse<CalculateFeeResult> deanchorFee(@RequestBody DeanchorRequest postBody) throws TalkenException {
 		DTOValidator.validate(postBody);
 		return DexResponse.buildResponse(feeService.calculateDeanchorFee(postBody.getAssetCode(), postBody.getAmount()));
 	}
 
-	/**
-	 * search tradewallet tx list
-	 *
-	 * @param address
-	 * @param operationType
-	 * @param assetCode
-	 * @param assetIssuer
-	 * @param include
-	 * @param sort
-	 * @param page
-	 * @param offset
-	 * @return
-	 * @throws TalkenException
-	 */
-	@RequestMapping(value = RequestMappings.TRADE_WALLET_TXLIST, method = RequestMethod.GET)
+    /**
+     * search tradewallet tx list
+     *
+     * @param address       the address
+     * @param operationType the operation type
+     * @param assetCode     the asset code
+     * @param assetIssuer   the asset issuer
+     * @param include       the include
+     * @param sort          the sort
+     * @param page          the page
+     * @param offset        the offset
+     * @return dex response
+     * @throws TalkenException the talken exception
+     */
+    @RequestMapping(value = RequestMappings.TRADE_WALLET_TXLIST, method = RequestMethod.GET)
 	public DexResponse<List<StellarOpReceipt>> txList(
 			@RequestParam(value = "address")
 					String address,
@@ -158,36 +161,52 @@ public class WalletController {
 		return DexResponse.buildResponse(walletService.getTxList(address, operationType, assetCode, assetIssuer, includeAll, direction, page, offset));
 	}
 
-	/**
-	 * prepare luniverse transfer (refill gas LUK for user private wallet)
-	 *
-	 * @return
-	 * @throws TalkenException
-	 */
-	@AuthRequired
+    /**
+     * prepare luniverse transfer (refill gas LUK for user private wallet)
+     *
+     * @return dex response
+     * @throws TalkenException the talken exception
+     */
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_PREPARE_LMT_TRANSFER, method = RequestMethod.GET)
 	public DexResponse<Boolean> prepareLmtTransfer() throws TalkenException {
 		return DexResponse.buildResponse(walletService.prepareTransferLuk(authInfo.getUser()));
 	}
 
-	/**
-	 * check user private luniverse wallet is ready to transfer asset
-	 *
-	 * @param address
-	 * @return
-	 */
-	@AuthRequired
+    /**
+     * check user private luniverse wallet is ready to transfer asset
+     *
+     * @param address the address
+     * @return dex response
+     */
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.PRIVATE_WALLET_CHECK_LMT_TRANSFER_READY, method = RequestMethod.GET)
 	public DexResponse<Boolean> checkLmtTransferReady(@RequestParam("address") String address) {
 		return DexResponse.buildResponse(walletService.checkTransferLukPrepared(address));
 	}
 
+    /**
+     * Request reclaim dex response.
+     *
+     * @return the dex response
+     * @throws TradeWalletCreateFailedException  the trade wallet create failed exception
+     * @throws TaskIntegrityCheckFailedException the task integrity check failed exception
+     * @throws TokenMetaNotFoundException        the token meta not found exception
+     * @throws IntegrationException              the integration exception
+     */
     @AuthRequired
     @RequestMapping(value = RequestMappings.TRADE_WALLET_RECLAIM, method = RequestMethod.GET)
     public DexResponse<ReclaimResult> requestReclaim() throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException, TokenMetaNotFoundException, IntegrationException {
         return DexResponse.buildResponse(walletService.getReclaimByUser(authInfo.getUser(), DexTaskTypeEnum.RECLAIM));
     }
 
+    /**
+     * Request reclaim dex response.
+     *
+     * @param postBody the post body
+     * @return the dex response
+     * @throws Exception the exception
+     */
     @AuthRequired
     @RequestMapping(value = RequestMappings.TRADE_WALLET_RECLAIM, method = RequestMethod.POST)
     public DexResponse<ReclaimResult> requestReclaim(@RequestBody ReclaimRequest postBody) throws Exception {
@@ -195,12 +214,25 @@ public class WalletController {
         return DexResponse.buildResponse(walletService.reclaim(authInfo.getUser(), postBody));
     }
 
+    /**
+     * Claim dex response.
+     *
+     * @return the dex response
+     * @throws Exception the exception
+     */
     @AuthRequired
     @RequestMapping(value = RequestMappings.TRADE_WALLET_CLAIM, method = RequestMethod.GET)
     public DexResponse<ReclaimResult> claim() throws Exception {
         return DexResponse.buildResponse(walletService.getReclaimByUser(authInfo.getUser(), DexTaskTypeEnum.CLAIM));
     }
 
+    /**
+     * Request claim dex response.
+     *
+     * @param postBody the post body
+     * @return the dex response
+     * @throws Exception the exception
+     */
     @AuthRequired
     @RequestMapping(value = RequestMappings.TRADE_WALLET_CLAIM, method = RequestMethod.POST)
     public DexResponse<ClaimResult> requestClaim(@RequestBody ReclaimRequest postBody) throws Exception {
@@ -208,6 +240,13 @@ public class WalletController {
         return DexResponse.buildResponse(walletService.claim(authInfo.getUser(), postBody));
     }
 
+    /**
+     * Anchor only talklmt dex response.
+     *
+     * @param postBody the post body
+     * @return the dex response
+     * @throws TalkenException the talken exception
+     */
     @Deprecated
     @AuthRequired
     @RequestMapping(value = RequestMappings.PRIVATE_WALLET_TALK_LMT_ANCHOR, method = RequestMethod.POST)

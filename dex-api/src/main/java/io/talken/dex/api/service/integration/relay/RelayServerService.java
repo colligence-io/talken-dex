@@ -33,6 +33,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The type Relay server service.
+ */
 @Deprecated
 @Service
 public class RelayServerService {
@@ -70,7 +73,16 @@ public class RelayServerService {
 				.build();
 	}
 
-	public IntegrationResult<RelayAddContentsResponse> requestAddContents(RelayMsgTypeEnum msgType, long userId, DexTaskId dexTaskId, RelayEncryptedContent<?> encData) {
+    /**
+     * Request add contents integration result.
+     *
+     * @param msgType   the msg type
+     * @param userId    the user id
+     * @param dexTaskId the dex task id
+     * @param encData   the enc data
+     * @return the integration result
+     */
+    public IntegrationResult<RelayAddContentsResponse> requestAddContents(RelayMsgTypeEnum msgType, long userId, DexTaskId dexTaskId, RelayEncryptedContent<?> encData) {
 		CompletableFuture<IntegrationResult<RelayAddContentsResponse>> completableFuture = new CompletableFuture<>();
 
 		HashMap<String, String> contents = new HashMap<>();
@@ -140,7 +152,15 @@ public class RelayServerService {
 	}
 
 
-	public RelayTransferDTO createTransferDTObase(String assetCode) throws TokenMetaNotFoundException, BlockChainPlatformNotSupportedException {
+    /**
+     * Create transfer dt obase relay transfer dto.
+     *
+     * @param assetCode the asset code
+     * @return the relay transfer dto
+     * @throws TokenMetaNotFoundException              the token meta not found exception
+     * @throws BlockChainPlatformNotSupportedException the block chain platform not supported exception
+     */
+    public RelayTransferDTO createTransferDTObase(String assetCode) throws TokenMetaNotFoundException, BlockChainPlatformNotSupportedException {
 		TokenMetaTable.Meta tokenMeta = tmService.getTokenMeta(assetCode);
 
 		String platform_name = tokenMeta.getPlatform();

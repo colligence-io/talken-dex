@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotEmpty;
 
+/**
+ * The type Token meta controller.
+ */
 @RestController
 public class TokenMetaController {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TokenMetaController.class);
@@ -29,35 +32,35 @@ public class TokenMetaController {
 
 
     /**
-	 * managed meta list
-	 *
-	 * @return
-	 * @throws TalkenException
-	 */
-	@RequestMapping(value = RequestMappings.TMS_MI_LIST, method = RequestMethod.GET)
+     * managed meta list
+     *
+     * @return dex response
+     * @throws TalkenException
+     */
+    @RequestMapping(value = RequestMappings.TMS_MI_LIST, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable> managedInfoList() {
 		return DexResponse.buildResponse(tmService.getTokenMetaManagedList());
 	}
 
-	/**
-	 * single meta
-	 *
-	 * @param symbol
-	 * @return
-	 * @throws TalkenException
-	 */
-	@RequestMapping(value = RequestMappings.TMS_TM_INFO, method = RequestMethod.GET)
+    /**
+     * single meta
+     *
+     * @param symbol the symbol
+     * @return dex response
+     * @throws TalkenException the talken exception
+     */
+    @RequestMapping(value = RequestMappings.TMS_TM_INFO, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable.Meta> tokenMeta(@PathVariable @NotEmpty String symbol) throws TalkenException {
 		return DexResponse.buildResponse(tmService.getTokenMeta(symbol));
 	}
 
-	/**
-	 * all meta list
-	 *
-	 * @return
-	 * @throws TalkenException
-	 */
-	@RequestMapping(value = RequestMappings.TMS_TM_LIST, method = RequestMethod.GET)
+    /**
+     * all meta list
+     *
+     * @return dex response
+     * @throws TalkenException
+     */
+    @RequestMapping(value = RequestMappings.TMS_TM_LIST, method = RequestMethod.GET)
 	public DexResponse<TokenMetaTable> tokenMetaList() {
 		return DexResponse.buildResponse(tmService.getTokenMetaList());
 	}
@@ -65,7 +68,7 @@ public class TokenMetaController {
     /**
      * market cap info
      *
-     * @return
+     * @return dex response
      * @throws TalkenException
      */
     @RequestMapping(value = RequestMappings.TMS_TMC_INFO, method = RequestMethod.GET)
@@ -74,6 +77,13 @@ public class TokenMetaController {
     }
 
 
+    /**
+     * Add contract dex response.
+     *
+     * @param postBody the post body
+     * @return the dex response
+     * @throws TalkenException the talken exception
+     */
     @AuthRequired
     @RequestMapping(value = RequestMappings.TMS_CONTRACT_ADD, method = RequestMethod.POST)
     public DexResponse<Boolean> addContract(@RequestBody ContractRequest postBody) throws TalkenException {
@@ -81,12 +91,25 @@ public class TokenMetaController {
         return DexResponse.buildResponse(tmService.addContract(authInfo.getUser(), postBody));
     }
 
+    /**
+     * Remove contract dex response.
+     *
+     * @param contractAddress the contract address
+     * @return the dex response
+     * @throws TalkenException the talken exception
+     */
     @AuthRequired
     @RequestMapping(value = RequestMappings.TMS_CONTRACT_REMOVE, method = RequestMethod.DELETE)
     public DexResponse<Boolean> removeContract(@PathVariable @NotEmpty String contractAddress) throws TalkenException {
         return DexResponse.buildResponse(tmService.removeContract(authInfo.getUser(), contractAddress));
     }
 
+    /**
+     * List contract dex response.
+     *
+     * @return the dex response
+     * @throws TalkenException the talken exception
+     */
     @AuthRequired
     @RequestMapping(value = RequestMappings.TMS_CONTRACT_LIST, method = RequestMethod.GET)
     public DexResponse<ContractListResult> listContract() throws TalkenException {

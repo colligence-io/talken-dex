@@ -4,6 +4,9 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 
+/**
+ * The type Klay transaction list request.
+ */
 @Data
 public class KlayTransactionListRequest {
 	@NotEmpty

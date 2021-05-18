@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Delete offer result.
+ */
 @Data
 public class DeleteOfferResult {
 	private String taskId;

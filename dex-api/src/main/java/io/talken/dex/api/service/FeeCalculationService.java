@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 
+/**
+ * The type Fee calculation service.
+ */
 @Service
 @Scope("singleton")
 public class FeeCalculationService {
@@ -39,27 +42,27 @@ public class FeeCalculationService {
 		PIVOT_ASSET_MI = tmService.getManagedInfo(DexSettings.PIVOT_ASSET_CODE);
 	}
 
-	/**
-	 * pivot asset info
-	 *
-	 * @return
-	 */
-	public TokenMetaTable.ManagedInfo getPivotAssetManagedInfo() {
+    /**
+     * pivot asset info
+     *
+     * @return pivot asset managed info
+     */
+    public TokenMetaTable.ManagedInfo getPivotAssetManagedInfo() {
 		return PIVOT_ASSET_MI;
 	}
 
-	/**
-	 * calculate sell offer fee
-	 *
-	 * @param sellAssetCode
-	 * @param sellAmount
-	 * @param sellPrice
-	 * @return
-	 * @throws TokenMetaNotFoundException
-	 * @throws TokenMetaNotManagedException
-	 * @throws EffectiveAmountIsNegativeException
-	 */
-	public CalculateFeeResult calculateSellOfferFee(String sellAssetCode, BigDecimal sellAmount, BigDecimal sellPrice) throws TokenMetaNotFoundException, TokenMetaNotManagedException, EffectiveAmountIsNegativeException {
+    /**
+     * calculate sell offer fee
+     *
+     * @param sellAssetCode the sell asset code
+     * @param sellAmount    the sell amount
+     * @param sellPrice     the sell price
+     * @return calculate fee result
+     * @throws TokenMetaNotFoundException         the token meta not found exception
+     * @throws TokenMetaNotManagedException       the token meta not managed exception
+     * @throws EffectiveAmountIsNegativeException the effective amount is negative exception
+     */
+    public CalculateFeeResult calculateSellOfferFee(String sellAssetCode, BigDecimal sellAmount, BigDecimal sellPrice) throws TokenMetaNotFoundException, TokenMetaNotManagedException, EffectiveAmountIsNegativeException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 		rtn.setSellAssetType(tmService.getAssetType(sellAssetCode));
 		rtn.setBuyAssetType(PIVOT_ASSET_MI.dexAssetType());
@@ -79,17 +82,17 @@ public class FeeCalculationService {
 		return rtn;
 	}
 
-	/**
-	 * calculate buy offer fee
-	 *
-	 * @param buyAssetCode
-	 * @param buyAmount
-	 * @param buyPrice
-	 * @return
-	 * @throws TokenMetaNotFoundException
-	 * @throws TokenMetaNotManagedException
-	 */
-	public CalculateFeeResult calculateBuyOfferFee(String buyAssetCode, BigDecimal buyAmount, BigDecimal buyPrice) throws TokenMetaNotFoundException, TokenMetaNotManagedException {
+    /**
+     * calculate buy offer fee
+     *
+     * @param buyAssetCode the buy asset code
+     * @param buyAmount    the buy amount
+     * @param buyPrice     the buy price
+     * @return calculate fee result
+     * @throws TokenMetaNotFoundException   the token meta not found exception
+     * @throws TokenMetaNotManagedException the token meta not managed exception
+     */
+    public CalculateFeeResult calculateBuyOfferFee(String buyAssetCode, BigDecimal buyAmount, BigDecimal buyPrice) throws TokenMetaNotFoundException, TokenMetaNotManagedException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 		rtn.setSellAssetType(PIVOT_ASSET_MI.dexAssetType());
 		rtn.setBuyAssetType(tmService.getAssetType(buyAssetCode));
@@ -106,16 +109,16 @@ public class FeeCalculationService {
 		return rtn;
 	}
 
-	/**
-	 * calculate deanchor fee
-	 *
-	 * @param sellAssetCode
-	 * @param amount
-	 * @return
-	 * @throws TokenMetaNotFoundException
-	 * @throws TokenMetaNotManagedException
-	 */
-	public CalculateFeeResult calculateDeanchorFee(String sellAssetCode, BigDecimal amount) throws TokenMetaNotFoundException, TokenMetaNotManagedException {
+    /**
+     * calculate deanchor fee
+     *
+     * @param sellAssetCode the sell asset code
+     * @param amount        the amount
+     * @return calculate fee result
+     * @throws TokenMetaNotFoundException   the token meta not found exception
+     * @throws TokenMetaNotManagedException the token meta not managed exception
+     */
+    public CalculateFeeResult calculateDeanchorFee(String sellAssetCode, BigDecimal amount) throws TokenMetaNotFoundException, TokenMetaNotManagedException {
 		CalculateFeeResult rtn = new CalculateFeeResult();
 
 		rtn.setSellAssetType(tmService.getAssetType(sellAssetCode));

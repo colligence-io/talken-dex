@@ -6,6 +6,9 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
+/**
+ * The type Reclaim request.
+ */
 @Data
 public class ReclaimRequest {
 	@NotEmpty

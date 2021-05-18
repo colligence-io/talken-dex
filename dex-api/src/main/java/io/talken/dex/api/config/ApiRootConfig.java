@@ -12,6 +12,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
+/**
+ * The type Api root config.
+ */
 @Configuration
 @ComponentScan("io.talken.dex.shared")
 public class ApiRootConfig {
@@ -19,13 +22,23 @@ public class ApiRootConfig {
 	@Autowired
 	private ApiSettings apiSettings;
 
-	// PostLauncherExecutor
+    /**
+     * Post launch executor post launch executor.
+     *
+     * @return the post launch executor
+     */
+// PostLauncherExecutor
 	@Bean
 	public PostLaunchExecutor postLaunchExecutor() {
 		return new PostLaunchExecutor();
 	}
 
-	// Message Source & Service
+    /**
+     * Message source message source.
+     *
+     * @return the message source
+     */
+// Message Source & Service
 	@Bean
 	public MessageSource messageSource() {
 		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
@@ -35,12 +48,22 @@ public class ApiRootConfig {
 		return messageSource;
 	}
 
-	@Bean
+    /**
+     * Message service message service.
+     *
+     * @return the message service
+     */
+    @Bean
 	public MessageService messageService() {
 		return new MessageService(CommonConsts.LOCALE, messageSource());
 	}
 
-	@Bean
+    /**
+     * Jwt service jwt service.
+     *
+     * @return the jwt service
+     */
+    @Bean
 	public JWTService jwtService() {
 		return new JWTService(apiSettings.getAccessToken().getJwtSecret());
 	}

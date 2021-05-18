@@ -23,6 +23,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import static io.talken.common.persistence.jooq.Tables.USER;
 
+/**
+ * The type Access token interceptor.
+ */
 public class AccessTokenInterceptor implements HandlerInterceptor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AccessTokenInterceptor.class);
 
@@ -43,7 +46,12 @@ public class AccessTokenInterceptor implements HandlerInterceptor {
 
 	private static Long fixedUserId = null;
 
-	public static void setAuthSkipper(Long userId) {
+    /**
+     * Sets auth skipper.
+     *
+     * @param userId the user id
+     */
+    public static void setAuthSkipper(Long userId) {
 		fixedUserId = userId;
 	}
 

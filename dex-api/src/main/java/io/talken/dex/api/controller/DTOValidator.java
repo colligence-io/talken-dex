@@ -8,17 +8,20 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.util.Set;
 
+/**
+ * The type Dto validator.
+ */
 public class DTOValidator {
 	private static final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 
-	/**
-	 * Validate DTO annotations
-	 *
-	 * @param obj
-	 * @param <T>
-	 * @throws ParameterViolationException
-	 */
-	public static <T> void validate(T obj) throws ParameterViolationException {
+    /**
+     * Validate DTO annotations
+     *
+     * @param <T> the type parameter
+     * @param obj the obj
+     * @throws ParameterViolationException the parameter violation exception
+     */
+    public static <T> void validate(T obj) throws ParameterViolationException {
 		Validator validator = factory.getValidator();
 		Set<ConstraintViolation<T>> violations = validator.validate(obj);
 		if(violations.size() > 0) {

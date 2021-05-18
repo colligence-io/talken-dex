@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Swap prediction result.
+ */
 @Data
 public class SwapPredictionResult {
 	private String sourceAssetCode;

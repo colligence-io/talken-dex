@@ -6,6 +6,9 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
+/**
+ * The type Delete offer request.
+ */
 @Data
 public class DeleteOfferRequest {
 	@NotNull

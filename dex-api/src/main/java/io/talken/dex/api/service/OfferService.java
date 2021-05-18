@@ -39,6 +39,9 @@ import java.math.BigInteger;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_CREATEOFFER;
 
+/**
+ * The type Offer service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -53,15 +56,15 @@ public class OfferService {
 	private final DSLContext dslContext;
 	private final SignServerService signServerService;
 
-	/**
-	 * get offer detail for given offerId from database, not stellar network
-	 *
-	 * @param offerId
-	 * @return
-	 * @throws DataIdNotFoundException
-	 * @throws TaskIntegrityCheckFailedException
-	 */
-	public OfferDetailResult getOfferDetail(long offerId) throws DataIdNotFoundException, TaskIntegrityCheckFailedException {
+    /**
+     * get offer detail for given offerId from database, not stellar network
+     *
+     * @param offerId the offer id
+     * @return offer detail
+     * @throws DataIdNotFoundException           the data id not found exception
+     * @throws TaskIntegrityCheckFailedException the task integrity check failed exception
+     */
+    public OfferDetailResult getOfferDetail(long offerId) throws DataIdNotFoundException, TaskIntegrityCheckFailedException {
 		DexTaskCreateofferRecord offerRecord = dslContext.selectFrom(DEX_TASK_CREATEOFFER).where(DEX_TASK_CREATEOFFER.OFFERID.eq(offerId)).fetchOne();
 		if(offerRecord == null) throw new DataIdNotFoundException(DexTaskCreateoffer.class, offerId);
 
@@ -79,43 +82,43 @@ public class OfferService {
 		return rtn;
 	}
 
-	/**
-	 * create sell offer
-	 *
-	 * @param user
-	 * @param request
-	 * @return
-	 * @throws TokenMetaNotFoundException
-	 * @throws SigningException
-	 * @throws StellarException
-	 * @throws EffectiveAmountIsNegativeException
-	 * @throws TradeWalletCreateFailedException
-	 * @throws TradeWalletRebalanceException
-	 * @throws TokenMetaNotManagedException
-	 * @throws ParameterViolationException
-	 */
-	public CreateOfferResult createSellOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException, ParameterViolationException {
+    /**
+     * create sell offer
+     *
+     * @param user    the user
+     * @param request the request
+     * @return create offer result
+     * @throws TokenMetaNotFoundException         the token meta not found exception
+     * @throws SigningException                   the signing exception
+     * @throws StellarException                   the stellar exception
+     * @throws EffectiveAmountIsNegativeException the effective amount is negative exception
+     * @throws TradeWalletCreateFailedException   the trade wallet create failed exception
+     * @throws TradeWalletRebalanceException      the trade wallet rebalance exception
+     * @throws TokenMetaNotManagedException       the token meta not managed exception
+     * @throws ParameterViolationException        the parameter violation exception
+     */
+    public CreateOfferResult createSellOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException, ParameterViolationException {
 		if(!request.getBuyAssetCode().equalsIgnoreCase(DexSettings.PIVOT_ASSET_CODE))
 			throw new ParameterViolationException("Only " + DexSettings.PIVOT_ASSET_CODE + " is available for buying asset");
 		return createOffer(user, true, request);
 	}
 
-	/**
-	 * create buy offer
-	 *
-	 * @param user
-	 * @param request
-	 * @return
-	 * @throws TokenMetaNotFoundException
-	 * @throws SigningException
-	 * @throws StellarException
-	 * @throws EffectiveAmountIsNegativeException
-	 * @throws TradeWalletCreateFailedException
-	 * @throws TradeWalletRebalanceException
-	 * @throws TokenMetaNotManagedException
-	 * @throws ParameterViolationException
-	 */
-	public CreateOfferResult createBuyOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException, ParameterViolationException {
+    /**
+     * create buy offer
+     *
+     * @param user    the user
+     * @param request the request
+     * @return create offer result
+     * @throws TokenMetaNotFoundException         the token meta not found exception
+     * @throws SigningException                   the signing exception
+     * @throws StellarException                   the stellar exception
+     * @throws EffectiveAmountIsNegativeException the effective amount is negative exception
+     * @throws TradeWalletCreateFailedException   the trade wallet create failed exception
+     * @throws TradeWalletRebalanceException      the trade wallet rebalance exception
+     * @throws TokenMetaNotManagedException       the token meta not managed exception
+     * @throws ParameterViolationException        the parameter violation exception
+     */
+    public CreateOfferResult createBuyOffer(User user, CreateOfferRequest request) throws TokenMetaNotFoundException, SigningException, StellarException, EffectiveAmountIsNegativeException, TradeWalletCreateFailedException, TradeWalletRebalanceException, TokenMetaNotManagedException, ParameterViolationException {
 		if(!request.getSellAssetCode().equalsIgnoreCase(DexSettings.PIVOT_ASSET_CODE))
 			throw new ParameterViolationException("Only " + DexSettings.PIVOT_ASSET_CODE + " is available for selling asset");
 		return createOffer(user, false, request);
@@ -343,39 +346,39 @@ public class OfferService {
 	}
 
 
-	/**
-	 * delete sell offer
-	 *
-	 * @param user
-	 * @param request
-	 * @return
-	 * @throws SigningException
-	 * @throws TokenMetaNotFoundException
-	 * @throws TradeWalletCreateFailedException
-	 * @throws StellarException
-	 * @throws TokenMetaNotManagedException
-	 * @throws OfferNotValidException
-	 * @throws OwnershipMismatchException
-	 */
-	public DeleteOfferResult deleteSellOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException, OfferNotValidException, OwnershipMismatchException {
+    /**
+     * delete sell offer
+     *
+     * @param user    the user
+     * @param request the request
+     * @return delete offer result
+     * @throws SigningException                 the signing exception
+     * @throws TokenMetaNotFoundException       the token meta not found exception
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     * @throws StellarException                 the stellar exception
+     * @throws TokenMetaNotManagedException     the token meta not managed exception
+     * @throws OfferNotValidException           the offer not valid exception
+     * @throws OwnershipMismatchException       the ownership mismatch exception
+     */
+    public DeleteOfferResult deleteSellOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException, OfferNotValidException, OwnershipMismatchException {
 		return deleteOffer(user, true, request);
 	}
 
-	/**
-	 * delete buy offer
-	 *
-	 * @param user
-	 * @param request
-	 * @return
-	 * @throws SigningException
-	 * @throws TokenMetaNotFoundException
-	 * @throws TradeWalletCreateFailedException
-	 * @throws StellarException
-	 * @throws TokenMetaNotManagedException
-	 * @throws OfferNotValidException
-	 * @throws OwnershipMismatchException
-	 */
-	public DeleteOfferResult deleteBuyOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException, OfferNotValidException, OwnershipMismatchException {
+    /**
+     * delete buy offer
+     *
+     * @param user    the user
+     * @param request the request
+     * @return delete offer result
+     * @throws SigningException                 the signing exception
+     * @throws TokenMetaNotFoundException       the token meta not found exception
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     * @throws StellarException                 the stellar exception
+     * @throws TokenMetaNotManagedException     the token meta not managed exception
+     * @throws OfferNotValidException           the offer not valid exception
+     * @throws OwnershipMismatchException       the ownership mismatch exception
+     */
+    public DeleteOfferResult deleteBuyOffer(User user, DeleteOfferRequest request) throws SigningException, TokenMetaNotFoundException, TradeWalletCreateFailedException, StellarException, TokenMetaNotManagedException, OfferNotValidException, OwnershipMismatchException {
 		return deleteOffer(user, false, request);
 	}
 

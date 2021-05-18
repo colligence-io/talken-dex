@@ -14,6 +14,9 @@ import java.util.List;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TXMON;
 
+/**
+ * The type Task transaction list service.
+ */
 @Service
 @Scope("singleton")
 public class TaskTransactionListService {
@@ -22,13 +25,13 @@ public class TaskTransactionListService {
 	@Autowired
 	private DSLContext dslContext;
 
-	/**
-	 * get dex task tx list
-	 *
-	 * @param postBody
-	 * @return
-	 */
-	public List<TaskTransactionResult> getTxList(TxListRequest postBody) {
+    /**
+     * get dex task tx list
+     *
+     * @param postBody the post body
+     * @return tx list
+     */
+    public List<TaskTransactionResult> getTxList(TxListRequest postBody) {
 		List<TaskTransactionResult> rtn = new ArrayList<>();
 
 		// base select step

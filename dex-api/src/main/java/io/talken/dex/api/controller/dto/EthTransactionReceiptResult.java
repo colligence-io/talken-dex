@@ -7,6 +7,9 @@ import org.web3j.protocol.core.methods.response.Log;
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * The type Eth transaction receipt result.
+ */
 @Data
 @Builder
 public class EthTransactionReceiptResult {

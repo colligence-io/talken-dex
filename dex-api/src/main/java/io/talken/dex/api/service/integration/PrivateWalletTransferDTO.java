@@ -7,6 +7,9 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The type Private wallet transfer dto.
+ */
 @Data
 public class PrivateWalletTransferDTO {
 	private String msgType;
@@ -22,7 +25,12 @@ public class PrivateWalletTransferDTO {
 	private BigDecimal netfee;
 	private String memo;
 
-	public PrivateWalletTransferDTO(PrivateWalletMsgTypeEnum msgType) {
+    /**
+     * Instantiates a new Private wallet transfer dto.
+     *
+     * @param msgType the msg type
+     */
+    public PrivateWalletTransferDTO(PrivateWalletMsgTypeEnum msgType) {
 		this.msgType = msgType.getMsgType();
 	}
 }

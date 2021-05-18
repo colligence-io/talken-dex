@@ -25,6 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * The type Misc controller.
+ */
 @RestController
 public class MiscController {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(MiscController.class);
@@ -38,14 +41,14 @@ public class MiscController {
 	@Autowired
 	private TaskTransactionListService txListService;
 
-	/**
-	 * convert value using trade aggregation
-	 *
-	 * @param postBody
-	 * @return
-	 * @throws DexException
-	 */
-	@RequestMapping(value = RequestMappings.CONVERT_ASSET, method = RequestMethod.POST)
+    /**
+     * convert value using trade aggregation
+     *
+     * @param postBody the post body
+     * @return dex response
+     * @throws DexException the dex exception
+     */
+    @RequestMapping(value = RequestMappings.CONVERT_ASSET, method = RequestMethod.POST)
 	public DexResponse<BigDecimal> convert(@RequestBody AssetConvertRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
 		try {
@@ -58,14 +61,14 @@ public class MiscController {
 		}
 	}
 
-	/**
-	 * convert value using coinmarketcap data
-	 *
-	 * @param postBody
-	 * @return
-	 * @throws DexException
-	 */
-	@RequestMapping(value = RequestMappings.EXCHANGE_ASSET, method = RequestMethod.POST)
+    /**
+     * convert value using coinmarketcap data
+     *
+     * @param postBody the post body
+     * @return dex response
+     * @throws DexException the dex exception
+     */
+    @RequestMapping(value = RequestMappings.EXCHANGE_ASSET, method = RequestMethod.POST)
 	public DexResponse<BigDecimal> exchange(@RequestBody AssetExchangeRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);
 		try {
@@ -78,14 +81,14 @@ public class MiscController {
 		}
 	}
 
-	/**
-	 * get DexTask tx list
-	 *
-	 * @param postBody
-	 * @return
-	 * @throws DexException
-	 */
-	@AuthRequired
+    /**
+     * get DexTask tx list
+     *
+     * @param postBody the post body
+     * @return dex response
+     * @throws DexException the dex exception
+     */
+    @AuthRequired
 	@RequestMapping(value = RequestMappings.TXLIST, method = RequestMethod.POST)
 	public DexResponse<List<TaskTransactionResult>> txList(@RequestBody TxListRequest postBody) throws DexException {
 		DTOValidator.validate(postBody);

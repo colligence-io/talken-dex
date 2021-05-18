@@ -7,6 +7,9 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The type Relay transfer dto.
+ */
 @Deprecated
 @Data
 public class RelayTransferDTO {

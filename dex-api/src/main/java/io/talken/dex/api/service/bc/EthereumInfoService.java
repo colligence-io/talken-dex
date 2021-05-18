@@ -29,6 +29,9 @@ import java.util.concurrent.ExecutionException;
 
 import static io.talken.common.persistence.jooq.Tables.BCTX;
 
+/**
+ * The type Ethereum info service.
+ */
 @Service
 @Scope("singleton")
 public class EthereumInfoService {
@@ -43,26 +46,26 @@ public class EthereumInfoService {
     @Autowired
     private DSLContext dslContext;
 
-	/**
-	 * get eth balance
-	 *
-	 * @param address
-	 * @return
-	 * @throws GeneralException
-	 */
-	public BigInteger getEthBalance(String address) throws GeneralException {
+    /**
+     * get eth balance
+     *
+     * @param address the address
+     * @return eth balance
+     * @throws GeneralException the general exception
+     */
+    public BigInteger getEthBalance(String address) throws GeneralException {
 		return getEthBalance(ethNetworkService.getLocalClient().newClient(), address);
 	}
 
-	/**
-	 * get eth balance
-	 *
-	 * @param web3j
-	 * @param address
-	 * @return
-	 * @throws GeneralException
-	 */
-	public BigInteger getEthBalance(Web3j web3j, String address) throws GeneralException {
+    /**
+     * get eth balance
+     *
+     * @param web3j   the web 3 j
+     * @param address the address
+     * @return eth balance
+     * @throws GeneralException the general exception
+     */
+    public BigInteger getEthBalance(Web3j web3j, String address) throws GeneralException {
 		try {
 			return web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send().getBalance();
 		} catch(Exception ex) {
@@ -70,28 +73,28 @@ public class EthereumInfoService {
 		}
 	}
 
-	/**
-	 * get erc20 balance
-	 *
-	 * @param contract
-	 * @param address
-	 * @return
-	 * @throws GeneralException
-	 */
-	public BigInteger getErc20Balance(String contract, String address) throws GeneralException {
+    /**
+     * get erc20 balance
+     *
+     * @param contract the contract
+     * @param address  the address
+     * @return erc 20 balance
+     * @throws GeneralException the general exception
+     */
+    public BigInteger getErc20Balance(String contract, String address) throws GeneralException {
 		return getErc20Balance(ethNetworkService.getLocalClient().newClient(), contract, address);
 	}
 
-	/**
-	 * get erc20 balance
-	 *
-	 * @param web3j
-	 * @param contract
-	 * @param address
-	 * @return
-	 * @throws GeneralException
-	 */
-	public BigInteger getErc20Balance(Web3j web3j, String contract, String address) throws GeneralException {
+    /**
+     * get erc20 balance
+     *
+     * @param web3j    the web 3 j
+     * @param contract the contract
+     * @param address  the address
+     * @return erc 20 balance
+     * @throws GeneralException the general exception
+     */
+    public BigInteger getErc20Balance(Web3j web3j, String contract, String address) throws GeneralException {
 		try {
 			return contractInfoService.getBalanceOf(web3j, contract, address);
 		} catch(Exception ex) {
@@ -99,7 +102,13 @@ public class EthereumInfoService {
 		}
 	}
 
-	public PendingTxListResult getPendingTransactionTxList(PendingTxListRequest request) {
+    /**
+     * Gets pending transaction tx list.
+     *
+     * @param request the request
+     * @return the pending transaction tx list
+     */
+    public PendingTxListResult getPendingTransactionTxList(PendingTxListRequest request) {
 	    // TODO : add condition
         PendingTxListResult result = new PendingTxListResult();
         Condition cond = BCTX.STATUS.eq(BctxStatusEnum.SENT)
@@ -123,12 +132,12 @@ public class EthereumInfoService {
 
     /**
      * for test
-     * @param address
-     * @return
-     * @throws ExecutionException
-     * @throws InterruptedException
+     *
+     * @param address the address
+     * @return transaction count
+     * @throws ExecutionException   the execution exception
+     * @throws InterruptedException the interrupted exception
      */
-
     public Map<String, BigInteger> getTransactionCount(String address) throws ExecutionException, InterruptedException {
         Map<String, BigInteger> map = new HashMap<>();
         Web3j web3j = ethNetworkService.getLocalClient().newClient();
@@ -175,6 +184,14 @@ public class EthereumInfoService {
         return map;
     }
 
+    /**
+     * Gets eth transaction.
+     *
+     * @param txHash the tx hash
+     * @return the eth transaction
+     * @throws ExecutionException   the execution exception
+     * @throws InterruptedException the interrupted exception
+     */
     public EthTransactionResult getEthTransaction(String txHash) throws ExecutionException, InterruptedException {
         EthTransactionResult.EthTransactionResultBuilder builder = EthTransactionResult.builder();
         if (txHash != null) {
@@ -204,6 +221,14 @@ public class EthereumInfoService {
         return builder.build();
     }
 
+    /**
+     * Gets eth transaction receipt.
+     *
+     * @param txHash the tx hash
+     * @return the eth transaction receipt
+     * @throws ExecutionException   the execution exception
+     * @throws InterruptedException the interrupted exception
+     */
     public EthTransactionReceiptResult getEthTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
         EthTransactionReceiptResult.EthTransactionReceiptResultBuilder builder = EthTransactionReceiptResult.builder();
         if (txHash != null) {

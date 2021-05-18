@@ -2,6 +2,9 @@ package io.talken.dex.api.service.integration.relay;
 
 import lombok.Data;
 
+/**
+ * The type Relay add contents request.
+ */
 @Deprecated
 @Data
 public class RelayAddContentsRequest {

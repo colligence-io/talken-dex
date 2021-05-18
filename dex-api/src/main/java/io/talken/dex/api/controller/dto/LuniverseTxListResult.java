@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * The type Luniverse tx list result.
+ */
 @Data
 public class LuniverseTxListResult {
 	private String status = "1";

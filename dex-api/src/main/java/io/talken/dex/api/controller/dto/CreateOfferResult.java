@@ -6,6 +6,9 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Create offer result.
+ */
 @Data
 public class CreateOfferResult {
 	private String taskId;
@@ -23,15 +26,45 @@ public class CreateOfferResult {
 	private BigDecimal madeAmount;
 	private Boolean postTxStatus;
 
-	public String getSellAssetCode() {return getFeeResult().getSellAssetCode();}
+    /**
+     * Gets sell asset code.
+     *
+     * @return the sell asset code
+     */
+    public String getSellAssetCode() {return getFeeResult().getSellAssetCode();}
 
-	public String getBuyAssetCode() {return getFeeResult().getBuyAssetCode();}
+    /**
+     * Gets buy asset code.
+     *
+     * @return the buy asset code
+     */
+    public String getBuyAssetCode() {return getFeeResult().getBuyAssetCode();}
 
-	public String getFeeAssetCode() {return getFeeResult().getFeeAssetCode();}
+    /**
+     * Gets fee asset code.
+     *
+     * @return the fee asset code
+     */
+    public String getFeeAssetCode() {return getFeeResult().getFeeAssetCode();}
 
-	public BigDecimal getSellAmount() {return getFeeResult().getSellAmount();}
+    /**
+     * Gets sell amount.
+     *
+     * @return the sell amount
+     */
+    public BigDecimal getSellAmount() {return getFeeResult().getSellAmount();}
 
-	public BigDecimal getBuyAmount() {return getFeeResult().getBuyAmount();}
+    /**
+     * Gets buy amount.
+     *
+     * @return the buy amount
+     */
+    public BigDecimal getBuyAmount() {return getFeeResult().getBuyAmount();}
 
-	public BigDecimal getFeeAmount() {return getFeeResult().getFeeAmount();}
+    /**
+     * Gets fee amount.
+     *
+     * @return the fee amount
+     */
+    public BigDecimal getFeeAmount() {return getFeeResult().getFeeAmount();}
 }

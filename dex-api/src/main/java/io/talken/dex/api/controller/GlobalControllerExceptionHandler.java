@@ -20,6 +20,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.Locale;
 
+/**
+ * The type Global controller exception handler.
+ */
 @PrefixedLogger.NoStacktraceLogging
 @ControllerAdvice
 public class GlobalControllerExceptionHandler {
@@ -28,21 +31,42 @@ public class GlobalControllerExceptionHandler {
 	@Autowired
 	private MessageService ms;
 
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
+    /**
+     * Handle http message not readable exception dex response.
+     *
+     * @param e      the e
+     * @param locale the locale
+     * @return the dex response
+     */
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	public DexResponse<Void> handleHttpMessageNotReadableException(HttpMessageNotReadableException e, Locale locale) {
 		logger.exception(e);
 		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.BAD_REQUEST.value(), "Request Violation", HttpStatus.BAD_REQUEST, null));
 	}
 
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
+    /**
+     * Handle parameter violation exception dex response.
+     *
+     * @param e      the e
+     * @param locale the locale
+     * @return the dex response
+     */
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(ParameterViolationException.class)
 	public DexResponse<Void> handleParameterViolationException(ParameterViolationException e, Locale locale) {
 		logger.exception(e);
 		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.BAD_REQUEST.value(), "Parameter Violation", HttpStatus.BAD_REQUEST, null));
 	}
 
-	@ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    /**
+     * Handle method not allowed exception dex response.
+     *
+     * @param e      the e
+     * @param locale the locale
+     * @return the dex response
+     */
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
 	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
 	@ResponseBody
 	public DexResponse<Void> handleMethodNotAllowedException(HttpRequestMethodNotSupportedException e, Locale locale) {
@@ -50,14 +74,28 @@ public class GlobalControllerExceptionHandler {
 		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.METHOD_NOT_ALLOWED.value(), e.getMessage(), HttpStatus.METHOD_NOT_ALLOWED, null));
 	}
 
-	@ResponseStatus(HttpStatus.UNAUTHORIZED)
+    /**
+     * Handle runtime exception dex response.
+     *
+     * @param e      the e
+     * @param locale the locale
+     * @return the dex response
+     */
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
 	@ExceptionHandler(UnauthorizedException.class)
 	@ResponseBody
 	public DexResponse<Void> handleRuntimeException(UnauthorizedException e, Locale locale) {
 		return DexResponse.buildResponse(new DexResponseBody<>(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(), HttpStatus.UNAUTHORIZED, null));
 	}
 
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    /**
+     * Handle clg exception dex response.
+     *
+     * @param e      the e
+     * @param locale the locale
+     * @return the dex response
+     */
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(IntegrationException.class)
 	@ResponseBody
 	public DexResponse<IntegrationResult> handleCLGException(IntegrationException e, Locale locale) {
@@ -66,7 +104,14 @@ public class GlobalControllerExceptionHandler {
 		return DexResponse.buildResponse(new DexResponseBody<>(e.getErrorCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, e.getResult()));
 	}
 
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    /**
+     * Handle clg exception dex response.
+     *
+     * @param e      the e
+     * @param locale the locale
+     * @return the dex response
+     */
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(TalkenException.class)
 	@ResponseBody
 	public DexResponse<Void> handleCLGException(TalkenException e, Locale locale) {
@@ -74,7 +119,14 @@ public class GlobalControllerExceptionHandler {
 		return DexResponse.buildResponse(new DexResponseBody<>(e.getErrorCode(), ms.getMessage(locale, e), HttpStatus.INTERNAL_SERVER_ERROR, null));
 	}
 
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    /**
+     * Handle runtime exception dex response.
+     *
+     * @param e      the e
+     * @param locale the locale
+     * @return the dex response
+     */
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(RuntimeException.class)
 	@ResponseBody
 	public DexResponse<Void> handleRuntimeException(RuntimeException e, Locale locale) {
@@ -89,7 +141,14 @@ public class GlobalControllerExceptionHandler {
 		return handleCLGException(new InternalServerErrorException(e), locale);
 	}
 
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    /**
+     * Handle exception dex response.
+     *
+     * @param e      the e
+     * @param locale the locale
+     * @return the dex response
+     */
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(Exception.class)
 	@ResponseBody
 	public DexResponse<Void> handleException(Exception e, Locale locale) {

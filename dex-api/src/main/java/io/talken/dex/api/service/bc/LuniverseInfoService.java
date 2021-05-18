@@ -17,6 +17,9 @@ import org.web3j.protocol.Web3j;
 
 import javax.annotation.PostConstruct;
 
+/**
+ * The type Luniverse info service.
+ */
 @Service
 @Scope("singleton")
 public class LuniverseInfoService {
@@ -35,13 +38,13 @@ public class LuniverseInfoService {
 		this.rpcClient = luniverseNetworkService.newMainRpcClient();
 	}
 
-	/**
-	 * get luniverse gasprice and limit
-	 *
-	 * @return
-	 * @throws InternalServerErrorException
-	 */
-	public LuniverseGasPriceResult getGasPriceAndLimit() throws InternalServerErrorException {
+    /**
+     * get luniverse gasprice and limit
+     *
+     * @return gas price and limit
+     * @throws InternalServerErrorException the internal server error exception
+     */
+    public LuniverseGasPriceResult getGasPriceAndLimit() throws InternalServerErrorException {
 		try {
 			LuniverseGasPriceResult rtn = new LuniverseGasPriceResult();
 			rtn.setGasPrice(luniverseNetworkService.getGasPrice(this.rpcClient));
@@ -52,17 +55,17 @@ public class LuniverseInfoService {
 		}
 	}
 
-	/**
-	 * get luniverse tx list
-	 *
-	 * @param address
-	 * @param contractaddress
-	 * @param direction
-	 * @param page
-	 * @param offset
-	 * @return
-	 */
-	public LuniverseTxListResult getTxList(String address, String contractaddress, Sort.Direction direction, int page, int offset) {
+    /**
+     * get luniverse tx list
+     *
+     * @param address         the address
+     * @param contractaddress the contractaddress
+     * @param direction       the direction
+     * @param page            the page
+     * @param offset          the offset
+     * @return tx list
+     */
+    public LuniverseTxListResult getTxList(String address, String contractaddress, Sort.Direction direction, int page, int offset) {
 		LuniverseTxListResult rtn = new LuniverseTxListResult();
 
 		if(contractaddress != null) {

@@ -13,6 +13,9 @@ import org.stellar.sdk.Asset;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Asset convert service.
+ */
 @Service
 @Scope("singleton")
 public class AssetConvertService {
@@ -24,32 +27,32 @@ public class AssetConvertService {
 	// interchange assets, in order
 	private static final String[] INTERCHANGE = new String[]{"BTC", "ETH", "XLM", "CTX"};
 
-	/**
-	 * convert asset using trade aggregation data
-	 *
-	 * @param fromCode
-	 * @param amount
-	 * @param toCode
-	 * @return
-	 * @throws AssetConvertException
-	 * @throws TokenMetaNotFoundException
-	 * @throws TokenMetaNotManagedException
-	 */
-	public BigDecimal convert(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaNotFoundException, TokenMetaNotManagedException {
+    /**
+     * convert asset using trade aggregation data
+     *
+     * @param fromCode the from code
+     * @param amount   the amount
+     * @param toCode   the to code
+     * @return big decimal
+     * @throws AssetConvertException        the asset convert exception
+     * @throws TokenMetaNotFoundException   the token meta not found exception
+     * @throws TokenMetaNotManagedException the token meta not managed exception
+     */
+    public BigDecimal convert(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaNotFoundException, TokenMetaNotManagedException {
 		return convert(tmService.getAssetType(fromCode), amount, tmService.getAssetType(toCode));
 	}
 
-	/**
-	 * convert asset using trade aggregation data
-	 *
-	 * @param fromType
-	 * @param amount
-	 * @param toType
-	 * @return
-	 * @throws AssetConvertException
-	 * @throws TokenMetaNotFoundException
-	 */
-	public BigDecimal convert(Asset fromType, BigDecimal amount, Asset toType) throws AssetConvertException, TokenMetaNotFoundException {
+    /**
+     * convert asset using trade aggregation data
+     *
+     * @param fromType the from type
+     * @param amount   the amount
+     * @param toType   the to type
+     * @return big decimal
+     * @throws AssetConvertException      the asset convert exception
+     * @throws TokenMetaNotFoundException the token meta not found exception
+     */
+    public BigDecimal convert(Asset fromType, BigDecimal amount, Asset toType) throws AssetConvertException, TokenMetaNotFoundException {
 		if(fromType.equals(toType))
 			return StellarConverter.scale(amount);
 
@@ -83,17 +86,17 @@ public class AssetConvertService {
 		}
 	}
 
-	/**
-	 * calculate exchange value of asset with fiat
-	 *
-	 * @param fromCode
-	 * @param amount
-	 * @param toCode
-	 * @return
-	 * @throws AssetConvertException
-	 * @throws TokenMetaNotFoundException
-	 */
-	public BigDecimal exchange(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaNotFoundException {
+    /**
+     * calculate exchange value of asset with fiat
+     *
+     * @param fromCode the from code
+     * @param amount   the amount
+     * @param toCode   the to code
+     * @return big decimal
+     * @throws AssetConvertException      the asset convert exception
+     * @throws TokenMetaNotFoundException the token meta not found exception
+     */
+    public BigDecimal exchange(String fromCode, BigDecimal amount, String toCode) throws AssetConvertException, TokenMetaNotFoundException {
 		if(fromCode.equals(toCode))
 			return StellarConverter.scale(amount);
 

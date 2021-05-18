@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * The type Bsc info service.
+ */
 @Service
 @Scope("singleton")
 public class BscInfoService {
@@ -34,8 +37,17 @@ public class BscInfoService {
 
     private Web3j rpcClient;
 
+    /**
+     * The Default gaslimit.
+     */
     static final String DEFAULT_GASLIMIT = "21000";
+    /**
+     * The Default contract gaslimit.
+     */
     static final String DEFAULT_CONTRACT_GASLIMIT = "300000";
+    /**
+     * The Default contract gasprice.
+     */
     static final String DEFAULT_CONTRACT_GASPRICE = "5000000000";
 
     @PostConstruct
@@ -46,9 +58,9 @@ public class BscInfoService {
     /**
      * get bsc balance
      *
-     * @param address
-     * @return
-     * @throws GeneralException
+     * @param address the address
+     * @return bsc balance
+     * @throws GeneralException the general exception
      */
     public BigInteger getBscBalance(String address) throws GeneralException {
         return getBscBalance(rpcClient, address);
@@ -57,10 +69,10 @@ public class BscInfoService {
     /**
      * get bsc balance
      *
-     * @param web3j
-     * @param address
-     * @return
-     * @throws GeneralException
+     * @param web3j   the web 3 j
+     * @param address the address
+     * @return bsc balance
+     * @throws GeneralException the general exception
      */
     public BigInteger getBscBalance(Web3j web3j, String address) throws GeneralException {
         try {
@@ -73,10 +85,10 @@ public class BscInfoService {
     /**
      * get bep20 balance
      *
-     * @param contract
-     * @param address
-     * @return
-     * @throws GeneralException
+     * @param contract the contract
+     * @param address  the address
+     * @return bep 20 balance
+     * @throws GeneralException the general exception
      */
     public BigInteger getBep20Balance(String contract, String address) throws GeneralException {
         return getBep20Balance(bscNetworkService.getClient().newClient(), contract, address);
@@ -85,11 +97,11 @@ public class BscInfoService {
     /**
      * get bep20 balance
      *
-     * @param web3j
-     * @param contract
-     * @param address
-     * @return
-     * @throws GeneralException
+     * @param web3j    the web 3 j
+     * @param contract the contract
+     * @param address  the address
+     * @return bep 20 balance
+     * @throws GeneralException the general exception
      */
     public BigInteger getBep20Balance(Web3j web3j, String contract, String address) throws GeneralException {
         try {
@@ -99,6 +111,12 @@ public class BscInfoService {
         }
     }
 
+    /**
+     * Gets gas price and limit.
+     *
+     * @return the gas price and limit
+     * @throws InternalServerErrorException the internal server error exception
+     */
     public BscGasPriceResult getGasPriceAndLimit() throws InternalServerErrorException {
         try {
             BscGasPriceResult rtn = new BscGasPriceResult();
@@ -110,16 +128,35 @@ public class BscInfoService {
         }
     }
 
+    /**
+     * Gets gas price.
+     *
+     * @param web3j the web 3 j
+     * @return the gas price
+     * @throws IOException the io exception
+     */
     public BigInteger getGasPrice(Web3j web3j) throws IOException {
         // recommended from lambda256
         return web3j.ethGasPrice().send().getGasPrice();
     }
 
+    /**
+     * Gets gas limit.
+     *
+     * @param web3j the web 3 j
+     * @return the gas limit
+     */
     public BigInteger getGasLimit(Web3j web3j) {
         return new BigInteger(DEFAULT_GASLIMIT);
     }
 
-    // TODO: need to calculate gas price for contract tokens
+    /**
+     * Gets bep 20 gas price and limit.
+     *
+     * @return the bep 20 gas price and limit
+     * @throws InternalServerErrorException the internal server error exception
+     */
+// TODO: need to calculate gas price for contract tokens
     public BscGasPriceResult getBep20GasPriceAndLimit() throws InternalServerErrorException {
         try {
             BscGasPriceResult rtn = new BscGasPriceResult();
@@ -130,15 +167,38 @@ public class BscInfoService {
             throw new InternalServerErrorException(e);
         }
     }
+
+    /**
+     * Gets bep 20 gas price.
+     *
+     * @param web3j the web 3 j
+     * @return the bep 20 gas price
+     * @throws IOException the io exception
+     */
     public BigInteger getBep20GasPrice(Web3j web3j) throws IOException {
         // expected value. 5 Gwei is default.
         return new BigInteger(DEFAULT_CONTRACT_GASPRICE);
     }
 
+    /**
+     * Gets bep 20 gas limit.
+     *
+     * @param web3j the web 3 j
+     * @return the bep 20 gas limit
+     * @throws IOException the io exception
+     */
     public BigInteger getBep20GasLimit(Web3j web3j) throws IOException {
         return new BigInteger(DEFAULT_CONTRACT_GASLIMIT);
     }
 
+    /**
+     * Gets bsc transaction.
+     *
+     * @param txHash the tx hash
+     * @return the bsc transaction
+     * @throws ExecutionException   the execution exception
+     * @throws InterruptedException the interrupted exception
+     */
     public EthTransactionResult getBscTransaction(String txHash) throws ExecutionException, InterruptedException {
         EthTransactionResult.EthTransactionResultBuilder builder = EthTransactionResult.builder();
         if (txHash != null) {
@@ -168,6 +228,14 @@ public class BscInfoService {
         return builder.build();
     }
 
+    /**
+     * Gets bsc transaction receipt.
+     *
+     * @param txHash the tx hash
+     * @return the bsc transaction receipt
+     * @throws ExecutionException   the execution exception
+     * @throws InterruptedException the interrupted exception
+     */
     public EthTransactionReceiptResult getBscTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
         EthTransactionReceiptResult.EthTransactionReceiptResultBuilder builder = EthTransactionReceiptResult.builder();
         if (txHash != null) {

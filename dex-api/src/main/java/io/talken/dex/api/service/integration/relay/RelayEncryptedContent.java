@@ -11,6 +11,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The type Relay encrypted content.
+ *
+ * @param <T> the type parameter
+ */
 @Deprecated
 public class RelayEncryptedContent<T> {
 	private T data;
@@ -18,7 +23,13 @@ public class RelayEncryptedContent<T> {
 	private String encrypted;
 	private Map<String, String> description;
 
-	public RelayEncryptedContent(T data) throws GeneralSecurityException {
+    /**
+     * Instantiates a new Relay encrypted content.
+     *
+     * @param data the data
+     * @throws GeneralSecurityException the general security exception
+     */
+    public RelayEncryptedContent(T data) throws GeneralSecurityException {
 		this.data = data;
 		this.description = new HashMap<>();
 		encrypt();
@@ -36,23 +47,49 @@ public class RelayEncryptedContent<T> {
 		encrypted = new AES256Util(key).encrypt(GSONWriter.toJsonString(data));
 	}
 
-	public T getData() {
+    /**
+     * Gets data.
+     *
+     * @return the data
+     */
+    public T getData() {
 		return data;
 	}
 
-	public void addDescription(String key, String value) {
+    /**
+     * Add description.
+     *
+     * @param key   the key
+     * @param value the value
+     */
+    public void addDescription(String key, String value) {
 		this.description.put(key, value);
 	}
 
-	public String getKey() {
+    /**
+     * Gets key.
+     *
+     * @return the key
+     */
+    public String getKey() {
 		return key;
 	}
 
-	public String getEncrypted() {
+    /**
+     * Gets encrypted.
+     *
+     * @return the encrypted
+     */
+    public String getEncrypted() {
 		return encrypted;
 	}
 
-	public Map<String, String> getDescription() {
+    /**
+     * Gets description.
+     *
+     * @return the description
+     */
+    public Map<String, String> getDescription() {
 		return this.description;
 	}
 }

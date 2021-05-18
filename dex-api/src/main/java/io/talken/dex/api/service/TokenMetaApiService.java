@@ -37,6 +37,9 @@ import java.util.stream.Collectors;
 
 import static io.talken.common.persistence.jooq.Tables.USER_CONTRACT;
 
+/**
+ * The type Token meta api service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -63,12 +66,12 @@ public class TokenMetaApiService extends TokenMetaTableService {
 		checkAndReload();
 	}
 
-	/**
-	 * check and reload meta if updated
-	 *
-	 * @throws TokenMetaLoadException
-	 */
-	protected void checkAndReload() throws TokenMetaLoadException {
+    /**
+     * check and reload meta if updated
+     *
+     * @throws TokenMetaLoadException the token meta load exception
+     */
+    protected void checkAndReload() throws TokenMetaLoadException {
 		try {
 			Long redisTmUpdated =
 					Optional.ofNullable(redisTemplate.opsForValue().get(TokenMetaTable.REDIS_UPDATED_KEY))
@@ -89,6 +92,11 @@ public class TokenMetaApiService extends TokenMetaTableService {
 		}
 	}
 
+    /**
+     * Gets total market cap info.
+     *
+     * @return the total market cap info
+     */
     public TotalMarketCapResult getTotalMarketCapInfo() {
         MongoCollection<Document> collection = mongoTemplate.getCollection(COLLECTION_NAME);
         Document lastDoc = collection.find().sort(new BasicDBObject("updated_at", -1)).first();
@@ -109,7 +117,13 @@ public class TokenMetaApiService extends TokenMetaTableService {
         }
     }
 
+    /**
+     * The type Json date time converter.
+     */
     public static class JsonDateTimeConverter implements Converter<Long> {
+        /**
+         * The Date time formatter.
+         */
         static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_INSTANT
                 .withZone(ZoneId.of("UTC"));
 
@@ -125,6 +139,13 @@ public class TokenMetaApiService extends TokenMetaTableService {
         }
     }
 
+    /**
+     * Add contract boolean.
+     *
+     * @param user     the user
+     * @param postBody the post body
+     * @return the boolean
+     */
     public Boolean addContract(User user, ContractRequest postBody) {
         UserContractRecord ucRecord = new UserContractRecord();
 
@@ -141,6 +162,13 @@ public class TokenMetaApiService extends TokenMetaTableService {
 	    return true;
     }
 
+    /**
+     * Remove contract boolean.
+     *
+     * @param user     the user
+     * @param contract the contract
+     * @return the boolean
+     */
     public Boolean removeContract(User user, String contract) {
 
         UserContractRecord ucRecord = dslContext.selectFrom(USER_CONTRACT)
@@ -154,6 +182,12 @@ public class TokenMetaApiService extends TokenMetaTableService {
         return true;
     }
 
+    /**
+     * List contract contract list result.
+     *
+     * @param user the user
+     * @return the contract list result
+     */
     public ContractListResult listContract(User user) {
         ContractListResult result = new ContractListResult();
         result.setRows(dslContext.selectFrom(USER_CONTRACT)
