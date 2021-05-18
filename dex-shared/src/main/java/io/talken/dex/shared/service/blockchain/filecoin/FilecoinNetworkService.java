@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 
+/**
+ * The type Filecoin network service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -29,12 +32,12 @@ public class FilecoinNetworkService {
 		logger.info("Using Filecoin SERVICE Network : {} / {} / {}", infuraUri, projectId, projectSecret);
 	}
 
-	/**
-	 * Filecoin JsonRpc client
-	 *
-	 * @return
-	 */
-	public FilecoinRpcClient getClient() {
+    /**
+     * Filecoin JsonRpc client
+     *
+     * @return client
+     */
+    public FilecoinRpcClient getClient() {
 		return this.client;
 	}
 }

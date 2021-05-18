@@ -27,6 +27,9 @@ import javax.management.ObjectName;
 import javax.sql.DataSource;
 import java.lang.management.ManagementFactory;
 
+/**
+ * The type Data config.
+ */
 @Configuration
 @ComponentScan("io.talken.common.persistence")
 @EnableTransactionManagement
@@ -41,6 +44,11 @@ public class DataConfig {
     @Value("${spring.datasource.hikari.pool-name}")
     private String poolName;
 
+    /**
+     * Data source data source.
+     *
+     * @return the data source
+     */
     @Bean(name = "dataSource")
     @Primary
     @ConfigurationProperties("spring.datasource.hikari")
@@ -83,16 +91,31 @@ public class DataConfig {
          */
     }
 
+    /**
+     * Data source connection provider data source connection provider.
+     *
+     * @return the data source connection provider
+     */
     @Bean
     public DataSourceConnectionProvider dataSourceConnectionProvider() {
         return new DataSourceConnectionProvider(new TransactionAwareDataSourceProxy(dataSource()));
     }
 
+    /**
+     * Dsl dsl context.
+     *
+     * @return the dsl context
+     */
     @Bean
     public DSLContext dsl() {
         return new DefaultDSLContext(configuration());
     }
 
+    /**
+     * Configuration default configuration.
+     *
+     * @return the default configuration
+     */
     @Bean
     public DefaultConfiguration configuration() {
         DefaultConfiguration config = new DefaultConfiguration();
@@ -103,6 +126,12 @@ public class DataConfig {
         return config;
     }
 
+    /**
+     * Pool proxy hikari pool mx bean.
+     *
+     * @return the hikari pool mx bean
+     * @throws MalformedObjectNameException the malformed object name exception
+     */
     @Bean
     public HikariPoolMXBean poolProxy() throws MalformedObjectNameException {
         MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
@@ -110,6 +139,9 @@ public class DataConfig {
         return JMX.newMBeanProxy(mbeanServer, objPoolName, HikariPoolMXBean.class);
     }
 
+    /**
+     * Log pool stats.
+     */
     @Bean
     public void logPoolStats() {
         try {
@@ -131,11 +163,19 @@ public class DataConfig {
         }
     }
 
+    /**
+     * Exception transformer exception translator.
+     *
+     * @return the exception translator
+     */
     @Bean
     public ExceptionTranslator exceptionTransformer() {
         return new ExceptionTranslator();
     }
 
+    /**
+     * The type Exception translator.
+     */
     public class ExceptionTranslator extends DefaultExecuteListener {
         public void exception(ExecuteContext context) {
             SQLDialect dialect = context.configuration().dialect();

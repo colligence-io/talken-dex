@@ -11,27 +11,56 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collections;
 
+/**
+ * The type Bsc rpc client.
+ */
 public class BscRpcClient {
     private final String uri;
     private String client = null;
     private Boolean isParity = null;
 
+    /**
+     * Instantiates a new Bsc rpc client.
+     *
+     * @param uri the uri
+     */
     public BscRpcClient(String uri) { this.uri = uri; }
 
+    /**
+     * Gets uri.
+     *
+     * @return the uri
+     */
     public String getUri() {
         return uri;
     }
 
+    /**
+     * Gets client version.
+     *
+     * @return the client version
+     * @throws IOException the io exception
+     */
     public String getClientVersion() throws IOException {
         // NOTICE: error occur <= 4.8.3
         if(this.client == null) this.client = newClient().web3ClientVersion().send().getWeb3ClientVersion();
         return client;
     }
 
+    /**
+     * New client web 3 j.
+     *
+     * @return the web 3 j
+     */
     public Web3j newClient() {
         return Web3j.build(newWeb3jService());
     }
 
+    /**
+     * New web 3 j service web 3 j service.
+     *
+     * @return the web 3 j service
+     */
     public Web3jService newWeb3jService() {
         return new Web3jHttpService(this.uri);
     }
@@ -40,10 +69,10 @@ public class BscRpcClient {
      * get proper next nonce from pending block
      * if node server is parity, use parity_nextNonce instead of eth_transactionCount for pending block
      *
-     * @param web3jService
-     * @param address
-     * @return
-     * @throws Exception
+     * @param web3jService the web 3 j service
+     * @param address      the address
+     * @return nonce
+     * @throws Exception the exception
      */
     public BigInteger getNonce(Web3jService web3jService, String address) throws Exception {
         if(this.isParity == null) {

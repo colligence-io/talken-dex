@@ -10,7 +10,12 @@ import org.stellar.sdk.Transaction;
 public class StellarSignerAccount implements StellarSigner {
 	private KeyPair kp;
 
-	public StellarSignerAccount(KeyPair kp) {
+    /**
+     * Instantiates a new Stellar signer account.
+     *
+     * @param kp the kp
+     */
+    public StellarSignerAccount(KeyPair kp) {
 		this.kp = kp;
 	}
 

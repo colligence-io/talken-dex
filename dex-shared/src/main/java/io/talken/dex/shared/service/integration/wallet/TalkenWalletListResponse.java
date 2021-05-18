@@ -8,6 +8,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 
 
+/**
+ * The type Talken wallet list response.
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class TalkenWalletListResponse extends ArrayList<TalkenWalletListResponse.Wallet> implements RestApiResponseInterface {
@@ -31,7 +34,10 @@ public class TalkenWalletListResponse extends ArrayList<TalkenWalletListResponse
 		return "OK";
 	}
 
-	@Data
+    /**
+     * The type Wallet.
+     */
+    @Data
 	public static class Wallet {
 		private String id;
 		private String name;

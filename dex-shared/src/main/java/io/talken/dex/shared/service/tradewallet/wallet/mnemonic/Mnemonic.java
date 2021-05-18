@@ -14,9 +14,16 @@ import java.util.List;
  * Mnemonic.
  * Created by cristi.paval on 3/13/18.
  */
-
 public class Mnemonic {
 
+    /**
+     * Create char [ ].
+     *
+     * @param strength the strength
+     * @param wordList the word list
+     * @return the char [ ]
+     * @throws MnemonicException the mnemonic exception
+     */
     public static char[] create(Strength strength, WordList wordList) throws MnemonicException {
         int byteCount = strength.getRawValue() / 8;
         byte[] bytes = SecureRandom.getSeed(byteCount);
@@ -56,6 +63,14 @@ public class Mnemonic {
         return mnemonic;
     }
 
+    /**
+     * Create seed byte [ ].
+     *
+     * @param mnemonic   the mnemonic
+     * @param passphrase the passphrase
+     * @return the byte [ ]
+     * @throws MnemonicException the mnemonic exception
+     */
     public static byte[] createSeed(char[] mnemonic, char[] passphrase) throws MnemonicException {
 
         char[] saltChars = new char[]{'m', 'n', 'e', 'm', 'o', 'n', 'i', 'c'};

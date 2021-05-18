@@ -13,12 +13,20 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+/**
+ * The type Redis config.
+ */
 @Configuration
 public class RedisConfig {
 	@Autowired
 	private VaultSecretReader secretReader;
 
-	@Bean
+    /**
+     * Redis connection factory lettuce connection factory.
+     *
+     * @return the lettuce connection factory
+     */
+    @Bean
 	public LettuceConnectionFactory redisConnectionFactory() {
 		VaultSecretDataRedis secret = secretReader.readSecret("redis", VaultSecretDataRedis.class);
 
@@ -30,7 +38,12 @@ public class RedisConfig {
 		return new LettuceConnectionFactory(redisConfig);
 	}
 
-	@Bean
+    /**
+     * Redis template redis template.
+     *
+     * @return the redis template
+     */
+    @Bean
 	public RedisTemplate<String, Object> redisTemplate() {
 		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(redisConnectionFactory());
@@ -41,7 +54,12 @@ public class RedisConfig {
 		return redisTemplate;
 	}
 
-	@Bean
+    /**
+     * Redis message listener container redis message listener container.
+     *
+     * @return the redis message listener container
+     */
+    @Bean
     @Primary
 	public RedisMessageListenerContainer redisMessageListenerContainer() {
 		RedisMessageListenerContainer container = new RedisMessageListenerContainer();

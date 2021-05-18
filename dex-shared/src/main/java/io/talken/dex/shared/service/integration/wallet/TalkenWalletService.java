@@ -28,20 +28,25 @@ public class TalkenWalletService {
 
 	private final String apiUrl;
 
-	public TalkenWalletService(String apiUrl) {
+    /**
+     * Instantiates a new Talken wallet service.
+     *
+     * @param apiUrl the api url
+     */
+    public TalkenWalletService(String apiUrl) {
 		this.apiUrl = apiUrl;
 	}
 
-	/**
-	 * get wallet address for wallet type/symbol (see BlockChainPlatformEnum.getWalletType() for walletType)
-	 *
-	 * @param userId
-	 * @param type
-	 * @param symbol
-	 * @return
-	 * @throws IntegrationException
-	 */
-	public ObjectPair<Boolean, String> getAddress(long userId, String type, String symbol) throws IntegrationException {
+    /**
+     * get wallet address for wallet type/symbol (see BlockChainPlatformEnum.getWalletType() for walletType)
+     *
+     * @param userId the user id
+     * @param type   the type
+     * @param symbol the symbol
+     * @return address
+     * @throws IntegrationException the integration exception
+     */
+    public ObjectPair<Boolean, String> getAddress(long userId, String type, String symbol) throws IntegrationException {
 		Optional<UserRecord> opt_user = dslContext.selectFrom(USER)
 				.where(USER.ID.eq(userId).and(USER.WALLET_TOKEN_ACTIVATE_FLAG.eq(true)))
 				.fetchOptional();

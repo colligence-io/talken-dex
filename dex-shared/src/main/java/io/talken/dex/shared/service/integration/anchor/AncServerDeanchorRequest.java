@@ -2,6 +2,9 @@ package io.talken.dex.shared.service.integration.anchor;
 
 import lombok.Data;
 
+/**
+ * The type Anc server deanchor request.
+ */
 @Deprecated
 @Data
 public class AncServerDeanchorRequest {

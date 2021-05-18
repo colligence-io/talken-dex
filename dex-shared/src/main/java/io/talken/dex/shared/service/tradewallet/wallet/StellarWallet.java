@@ -11,17 +11,37 @@ import javax.annotation.Nullable;
  * Generates Mnemonic with corresponding Stellar Keypair.
  * Created by cristi.paval on 3/14/18.
  */
-
 public class StellarWallet {
 
+    /**
+     * Generate 12 word mnemonic char [ ].
+     *
+     * @return the char [ ]
+     * @throws WalletException the wallet exception
+     */
     public static char[] generate12WordMnemonic() throws WalletException {
         return Mnemonic.create(Strength.NORMAL, WordList.ENGLISH);
     }
 
+    /**
+     * Generate 24 word mnemonic char [ ].
+     *
+     * @return the char [ ]
+     * @throws WalletException the wallet exception
+     */
     public static char[] generate24WordMnemonic() throws WalletException {
         return Mnemonic.create(Strength.HIGH, WordList.ENGLISH);
     }
 
+    /**
+     * Create key pair key pair.
+     *
+     * @param mnemonic   the mnemonic
+     * @param passphrase the passphrase
+     * @param index      the index
+     * @return the key pair
+     * @throws WalletException the wallet exception
+     */
     public static KeyPair createKeyPair(char[] mnemonic, @Nullable char[] passphrase, int index) throws WalletException {
         byte[] bip39Seed = Mnemonic.createSeed(mnemonic, passphrase);
 

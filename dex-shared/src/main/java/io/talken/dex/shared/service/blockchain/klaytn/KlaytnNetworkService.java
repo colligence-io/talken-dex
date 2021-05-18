@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 
+/**
+ * The type Klaytn network service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -32,6 +35,11 @@ public class KlaytnNetworkService {
         logger.info("Using Klaytn {} Network : {} {}", chainId, response.getValue(), "");
     }
 
+    /**
+     * Gets kas client.
+     *
+     * @return the kas client
+     */
     public KlayKasRpcClient getKasClient() {
         return this.klayKasRpcClient;
     }

@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * The type Tip set.
+ */
 @Data
 public class TipSet {
     private Cid[] cids;

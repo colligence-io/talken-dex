@@ -44,6 +44,9 @@ import static io.talken.common.persistence.jooq.Tables.USER;
 import static io.talken.common.persistence.jooq.Tables.USER_TRADE_WALLET;
 import static io.talken.dex.shared.service.blockchain.stellar.StellarChannelTransaction.TIME_BOUND;
 
+/**
+ * The type Trade wallet service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -129,14 +132,14 @@ public class TradeWalletService {
 		return TradeWallet.toKeyPair(getKeyBase(individualKey), secret);
 	}
 
-	/**
-	 * extract Stellar keypair from user tradeWalletInfo
-	 *
-	 * @param tradeWallet
-	 * @return
-	 * @throws SigningException
-	 */
-	public KeyPair extractKeyPair(TradeWalletInfo tradeWallet) throws SigningException {
+    /**
+     * extract Stellar keypair from user tradeWalletInfo
+     *
+     * @param tradeWallet the trade wallet
+     * @return key pair
+     * @throws SigningException the signing exception
+     */
+    public KeyPair extractKeyPair(TradeWalletInfo tradeWallet) throws SigningException {
 		try {
 			return decryptSecret(tradeWallet.getUid(), tradeWallet.getSecret());
 		} catch(Exception ex) {
@@ -144,7 +147,14 @@ public class TradeWalletService {
 		}
 	}
 
-	public TradeWalletInfo getTradeWallet(String walletAddr) throws TradeWalletCreateFailedException {
+    /**
+     * Gets trade wallet.
+     *
+     * @param walletAddr the wallet addr
+     * @return the trade wallet
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     */
+    public TradeWalletInfo getTradeWallet(String walletAddr) throws TradeWalletCreateFailedException {
 		User user = dslContext.select(USER.asterisk())
 				.from(USER.leftOuterJoin(USER_TRADE_WALLET).on(USER.ID.eq(USER_TRADE_WALLET.USER_ID)))
 				.where(USER_TRADE_WALLET.ACCOUNTID.eq(walletAddr))
@@ -155,11 +165,25 @@ public class TradeWalletService {
 		return loadTradeWallet(user, false);
 	}
 
-	public TradeWalletInfo getTradeWallet(User user) throws TradeWalletCreateFailedException {
+    /**
+     * Gets trade wallet.
+     *
+     * @param user the user
+     * @return the trade wallet
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     */
+    public TradeWalletInfo getTradeWallet(User user) throws TradeWalletCreateFailedException {
 		return loadTradeWallet(user, false);
 	}
 
-	public TradeWalletInfo ensureTradeWallet(User user) throws TradeWalletCreateFailedException {
+    /**
+     * Ensure trade wallet trade wallet info.
+     *
+     * @param user the user
+     * @return the trade wallet info
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     */
+    public TradeWalletInfo ensureTradeWallet(User user) throws TradeWalletCreateFailedException {
 		return loadTradeWallet(user, true);
 	}
 
@@ -299,7 +323,14 @@ public class TradeWalletService {
 		throw new TradeWalletCreateFailedException("[UserId#"+ user.getId() + "] Cannot confirm trade wallet from stellar network.");
 	}
 
-	public AccountResponse getAccountInfoFromStellar(String accountId) throws TradeWalletCreateFailedException {
+    /**
+     * Gets account info from stellar.
+     *
+     * @param accountId the account id
+     * @return the account info from stellar
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     */
+    public AccountResponse getAccountInfoFromStellar(String accountId) throws TradeWalletCreateFailedException {
 		// check stellar account balance
 		AccountResponse accountResponse = null;
 		try {
@@ -321,17 +352,19 @@ public class TradeWalletService {
 		return accountResponse;
 	}
 
-	/**
-	 * Add rebalance operation and signer to SCTX Builder
-	 *
-	 * @param sctxBuilder  SCTX Builder
-	 * @param tradeWallet
-	 * @param plusOneEntry set true if one more entry is required (e.g before making offer entry)
-	 * @param assetCodes   asset codes to check trustline
-	 * @return (tx modified, rebalace amount)
-	 * @throws TokenMetaNotFoundException
-	 */
-	public ObjectPair<Boolean, BigDecimal> addNativeBalancingOperation(StellarChannelTransaction.Builder sctxBuilder, TradeWalletInfo tradeWallet, boolean plusOneEntry, String... assetCodes) throws TokenMetaNotFoundException, TradeWalletRebalanceException, TokenMetaNotManagedException {
+    /**
+     * Add rebalance operation and signer to SCTX Builder
+     *
+     * @param sctxBuilder  SCTX Builder
+     * @param tradeWallet  the trade wallet
+     * @param plusOneEntry set true if one more entry is required (e.g before making offer entry)
+     * @param assetCodes   asset codes to check trustline
+     * @return (tx modified, rebalace amount) object pair
+     * @throws TokenMetaNotFoundException    the token meta not found exception
+     * @throws TradeWalletRebalanceException the trade wallet rebalance exception
+     * @throws TokenMetaNotManagedException  the token meta not managed exception
+     */
+    public ObjectPair<Boolean, BigDecimal> addNativeBalancingOperation(StellarChannelTransaction.Builder sctxBuilder, TradeWalletInfo tradeWallet, boolean plusOneEntry, String... assetCodes) throws TokenMetaNotFoundException, TradeWalletRebalanceException, TokenMetaNotManagedException {
 		boolean added = false;
 
 		BigDecimal nativeBalance = tradeWallet.getNativeBalance();
@@ -391,7 +424,14 @@ public class TradeWalletService {
 		return new ObjectPair<>(added, refillAmount);
 	}
 
-	public void resetTradeWallet(String uid) throws TradeWalletCreateFailedException, SigningException {
+    /**
+     * Reset trade wallet.
+     *
+     * @param uid the uid
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     * @throws SigningException                 the signing exception
+     */
+    public void resetTradeWallet(String uid) throws TradeWalletCreateFailedException, SigningException {
 		User user = dslContext.selectFrom(USER).where(USER.UID.eq(uid)).fetchOneInto(User.class);
 
 		if(user == null) throw new TradeWalletCreateFailedException("User " + uid + " does not exists");
@@ -399,15 +439,15 @@ public class TradeWalletService {
 		resetTradeWallet(user);
 	}
 
-	/**
-	 * claim all assets, merge into issuer, delete from db
-	 *
-	 * @param user
-	 * @return
-	 * @throws TradeWalletCreateFailedException
-	 * @throws SigningException
-	 */
-	public boolean resetTradeWallet(User user) throws TradeWalletCreateFailedException, SigningException {
+    /**
+     * claim all assets, merge into issuer, delete from db
+     *
+     * @param user the user
+     * @return boolean
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     * @throws SigningException                 the signing exception
+     */
+    public boolean resetTradeWallet(User user) throws TradeWalletCreateFailedException, SigningException {
 
 		TradeWalletInfo tw = loadTradeWallet(user, false);
 
@@ -506,20 +546,20 @@ public class TradeWalletService {
 	}
 
 
-	/**
-	 * Rebalance user tradewallet asset balance (not for native XLM)
-	 *
-	 * @param user
-	 * @param assetCode
-	 * @param targetBalance targetBalance, (untrust if negative)
-	 * @return
-	 * @throws TradeWalletCreateFailedException
-	 * @throws TradeWalletRebalanceException
-	 * @throws SigningException
-	 * @throws TokenMetaNotFoundException
-	 * @throws TokenMetaNotManagedException
-	 */
-	public String rebalanceIssuedAsset(User user, String assetCode, BigDecimal targetBalance) throws TradeWalletCreateFailedException, TradeWalletRebalanceException, SigningException, TokenMetaNotFoundException, TokenMetaNotManagedException {
+    /**
+     * Rebalance user tradewallet asset balance (not for native XLM)
+     *
+     * @param user          the user
+     * @param assetCode     the asset code
+     * @param targetBalance targetBalance, (untrust if negative)
+     * @return string
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     * @throws TradeWalletRebalanceException    the trade wallet rebalance exception
+     * @throws SigningException                 the signing exception
+     * @throws TokenMetaNotFoundException       the token meta not found exception
+     * @throws TokenMetaNotManagedException     the token meta not managed exception
+     */
+    public String rebalanceIssuedAsset(User user, String assetCode, BigDecimal targetBalance) throws TradeWalletCreateFailedException, TradeWalletRebalanceException, SigningException, TokenMetaNotFoundException, TokenMetaNotManagedException {
 		TradeWalletInfo tw = loadTradeWallet(user, false);
 
 		KeyPair kp = extractKeyPair(tw);

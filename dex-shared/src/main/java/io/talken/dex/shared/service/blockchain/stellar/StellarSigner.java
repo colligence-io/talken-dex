@@ -9,5 +9,11 @@ import org.stellar.sdk.Transaction;
  * this interface give abstract way for signing various type of account (KeyPair, TSS...)
  */
 public interface StellarSigner extends SingleKeyObject<String> {
-	void sign(Transaction tx) throws SigningException;
+    /**
+     * Sign.
+     *
+     * @param tx the tx
+     * @throws SigningException the signing exception
+     */
+    void sign(Transaction tx) throws SigningException;
 }

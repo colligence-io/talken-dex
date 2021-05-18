@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 
 import static io.talken.common.persistence.redis.RedisConsts.KEY_GOVERNANCE_DEX_CHANNEL;
 
+/**
+ * The type Stellar network service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -82,28 +85,57 @@ public class StellarNetworkService {
 		}
 	}
 
+    /**
+     * Pick local server server.
+     *
+     * @return the server
+     */
     public Server pickLocalServer() {
         return new Server(this.serverUri);
     }
 
-	public Server pickServer() {
+    /**
+     * Pick server server.
+     *
+     * @return the server
+     */
+    public Server pickServer() {
 //	    return pickPublicServer();
 	    if (this.appName != null && this.appVersion != null)
             return pickServer(this.appName, this.appVersion);
 		return new Server(this.serverUri);
 	}
 
+    /**
+     * Pick server server.
+     *
+     * @param appName    the app name
+     * @param appVersion the app version
+     * @return the server
+     */
     public Server pickServer(String appName, String appVersion) {
         Server server = new Server(this.serverUri);
         return getServer(appName, appVersion, server);
     }
 
+    /**
+     * Pick public server server.
+     *
+     * @return the server
+     */
     public Server pickPublicServer() {
         if (this.appName != null && this.appVersion != null)
             return pickPublicServer(this.appName, this.appVersion);
 		return new Server(this.publicServerUri);
 	}
 
+    /**
+     * Pick public server server.
+     *
+     * @param appName    the app name
+     * @param appVersion the app version
+     * @return the server
+     */
     public Server pickPublicServer(String appName, String appVersion) {
         Server server = new Server(this.publicServerUri);
         return getServer(appName, appVersion, server);
@@ -129,33 +161,48 @@ public class StellarNetworkService {
         return server;
     }
 
-	public Network getNetwork() {
+    /**
+     * Gets network.
+     *
+     * @return the network
+     */
+    public Network getNetwork() {
 		return this.network;
 	}
 
-	public int getNetworkFee() {
+    /**
+     * Gets network fee.
+     *
+     * @return the network fee
+     */
+    public int getNetworkFee() {
 		return BASE_FEE;
 	}
 
+    /**
+     * Gets network max fee.
+     *
+     * @return the network max fee
+     */
     public int getNetworkMaxFee() {
         return MAX_BASE_FEE;
     }
 
-	/**
-	 * shortcut new channel tx builder
-	 *
-	 * @return
-	 */
-	public StellarChannelTransaction.Builder newChannelTxBuilder() {
+    /**
+     * shortcut new channel tx builder
+     *
+     * @return stellar channel transaction . builder
+     */
+    public StellarChannelTransaction.Builder newChannelTxBuilder() {
 		return new StellarChannelTransaction.Builder(this);
 	}
 
-	/**
-	 * pick available channel
-	 *
-	 * @return
-	 */
-	public StellarChannel pickChannel() {
+    /**
+     * pick available channel
+     *
+     * @return stellar channel
+     */
+    public StellarChannel pickChannel() {
 		synchronized(channels) {
 			Collections.sort(channels);
 			long until = System.currentTimeMillis() + PICK_CHANNEL_TIMEOUT;
@@ -183,12 +230,12 @@ public class StellarNetworkService {
 		return null;
 	}
 
-	/**
-	 * release channel
-	 *
-	 * @param channelAccount
-	 */
-	public void releaseChannel(StellarChannel channelAccount) {
+    /**
+     * release channel
+     *
+     * @param channelAccount the channel account
+     */
+    public void releaseChannel(StellarChannel channelAccount) {
 		if(channelAccount != null) {
 			Boolean released = redisTemplate.delete(KEY_GOVERNANCE_DEX_CHANNEL + ":" + channelAccount.getAccountId());
 			if(released != null && released)
@@ -196,36 +243,49 @@ public class StellarNetworkService {
 		}
 	}
 
-	/**
-	 * get all channel list
-	 *
-	 * @return
-	 */
-	public List<String> getChannelList() {
+    /**
+     * get all channel list
+     *
+     * @return channel list
+     */
+    public List<String> getChannelList() {
 		return channels.stream().map(StellarChannel::getAccountId).collect(Collectors.toList());
 	}
 
-	public int getBaseFeeFromServer() throws IOException {
+    /**
+     * Gets base fee from server.
+     *
+     * @return the base fee from server
+     * @throws IOException the io exception
+     */
+    public int getBaseFeeFromServer() throws IOException {
         Server server = this.pickPublicServer();
         FeeStatsResponse resp = server.feeStats().execute();
         return resp.getLastLedgerBaseFee().intValue();
     }
 
+    /**
+     * Gets max fee from server.
+     *
+     * @return the max fee from server
+     * @throws IOException the io exception
+     */
     public int getMaxFeeFromServer() throws IOException {
         Server server = this.pickPublicServer();
         FeeStatsResponse resp = server.feeStats().execute();
         return resp.getMaxFee().getMax().intValue();
     }
 
-	/**
-	 * Send Stellar Transaction to network, if timeout occurred, retry MAXIMUM_SUBMIT_RETRY times
-	 *
-	 * @param server
-	 * @param tx
-	 * @return
-	 * @throws IOException
-	 */
-	public SubmitTransactionResponse sendTransaction(Server server, Transaction tx) throws IOException, AccountRequiresMemoException {
+    /**
+     * Send Stellar Transaction to network, if timeout occurred, retry MAXIMUM_SUBMIT_RETRY times
+     *
+     * @param server the server
+     * @param tx     the tx
+     * @return submit transaction response
+     * @throws IOException                  the io exception
+     * @throws AccountRequiresMemoException the account requires memo exception
+     */
+    public SubmitTransactionResponse sendTransaction(Server server, Transaction tx) throws IOException, AccountRequiresMemoException {
 //        AccountResponse sourceAccount = null;
 		SubmitTransactionTimeoutResponseException rtn = null;
 		for(int i = 0; i < MAXIMUM_SUBMIT_RETRY; i++) {

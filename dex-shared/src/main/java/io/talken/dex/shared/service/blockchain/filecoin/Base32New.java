@@ -1,5 +1,8 @@
 package io.talken.dex.shared.service.blockchain.filecoin;
 
+/**
+ * The type Base 32 new.
+ */
 public class Base32New extends Object {
     private static final String base32Chars = "abcdefghijklmnopqrstuvwxyz234567";
     private static final int[] base32Lookup = {0xFF, 0xFF, 0x1A, 0x1B, 0x1C,
@@ -72,7 +75,7 @@ public class Base32New extends Object {
     /**
      * Decodes the given base32 String to a raw byte array.
      *
-     * @param base32
+     * @param base32 the base 32
      * @return Decoded <code>base32</code> String as a raw byte array.
      */
     static public byte[] decode(final String base32) {

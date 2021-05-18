@@ -8,10 +8,20 @@ import shadow.com.google.common.io.BaseEncoding;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+/**
+ * The type Stellar xdr decoder.
+ */
 @Deprecated
 public class StellarXdrDecoder {
 
-	public static TransactionResult decodeResultXdr(TransactionResponse response) throws IOException {
+    /**
+     * Decode result xdr transaction result.
+     *
+     * @param response the response
+     * @return the transaction result
+     * @throws IOException the io exception
+     */
+    public static TransactionResult decodeResultXdr(TransactionResponse response) throws IOException {
 		// decode result
 		byte[] bytes = BaseEncoding.base64().decode(response.getResultXdr());
 		ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);

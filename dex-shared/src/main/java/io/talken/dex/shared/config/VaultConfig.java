@@ -8,6 +8,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.net.URI;
 
+/**
+ * The type Vault config.
+ */
 @Configuration
 public class VaultConfig extends TalkenVaultConfiguration {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(VaultConfig.class);

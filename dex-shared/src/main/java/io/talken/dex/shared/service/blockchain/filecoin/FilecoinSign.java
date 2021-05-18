@@ -25,11 +25,20 @@ import java.util.List;
 
 import static org.web3j.crypto.Sign.signMessage;
 
+/**
+ * The type Filecoin sign.
+ */
 public class FilecoinSign {
     private static final PrefixedLogger logger = PrefixedLogger.getLogger(FilecoinSign.class);
 
+    /**
+     * The constant CID_PREFIX.
+     */
     public static byte[] CID_PREFIX = new byte[]{0x01, 0x71, (byte) 0xa0, (byte) 0xe4, 0x02, 0x20};
 
+    /**
+     * The constant FIL_HARDENED.
+     */
     public static final ChildNumber FIL_HARDENED = new ChildNumber(461, true);
 
     private static SignData transaction(FilecoinTransaction tran) {
@@ -83,6 +92,13 @@ public class FilecoinSign {
         return signData;
     }
 
+    /**
+     * Sign transaction string.
+     *
+     * @param tran          the tran
+     * @param mnemonicWords the mnemonic words
+     * @return the string
+     */
     public static String signTransaction(FilecoinTransaction tran, List<String> mnemonicWords) {
         logger.debug("start signTransaction with Transaction {}", tran);
         SignData signData = transaction(tran);

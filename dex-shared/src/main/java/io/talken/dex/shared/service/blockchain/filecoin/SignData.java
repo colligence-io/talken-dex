@@ -4,6 +4,9 @@ import co.nstant.in.cbor.model.ByteString;
 import co.nstant.in.cbor.model.UnsignedInteger;
 import lombok.Data;
 
+/**
+ * The type Sign data.
+ */
 @Data
 public class SignData {
     private UnsignedInteger version;

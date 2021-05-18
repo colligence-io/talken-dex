@@ -11,11 +11,17 @@ import org.stellar.sdk.xdr.PaymentResultCode;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Payment op receipt.
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PaymentOpReceipt extends StellarOpReceipt<PaymentOperation, PaymentResult> {
 
-	@Data
+    /**
+     * The type Request.
+     */
+    @Data
 	@Builder
 	public static class Request {
 		private String from;
@@ -24,7 +30,10 @@ public class PaymentOpReceipt extends StellarOpReceipt<PaymentOperation, Payment
 		private String asset;
 	}
 
-	@Data
+    /**
+     * The type Result.
+     */
+    @Data
 	@Builder
 	public static class Result {
 		private PaymentResultCode resultCode;

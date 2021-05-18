@@ -22,6 +22,9 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * The type Erc 20 contract info service.
+ */
 @Service
 @Scope("singleton")
 public class Erc20ContractInfoService {
@@ -29,16 +32,16 @@ public class Erc20ContractInfoService {
 
 	// FIXME : THIS CANNOT CHECK CONTRACT IS ERC20 OR ERC721
 
-	/**
-	 * get erc20 standard name, symbol, decimals
-	 * cached in redis
-	 *
-	 * @param web3j
-	 * @param contractAddress
-	 * @return
-	 * @throws Exception
-	 */
-	@Cacheable(value = CacheConfig.CacheNames.ETH_ERC20_CONTRACT_INFO, key = "#p1")
+    /**
+     * get erc20 standard name, symbol, decimals
+     * cached in redis
+     *
+     * @param web3j           the web 3 j
+     * @param contractAddress the contract address
+     * @return erc 20 contract info
+     * @throws Exception the exception
+     */
+    @Cacheable(value = CacheConfig.CacheNames.ETH_ERC20_CONTRACT_INFO, key = "#p1")
 	public Erc20ContractInfo getErc20ContractInfo(Web3j web3j, String contractAddress) throws Exception {
 		ERC20 erc20 = ERC20.load(contractAddress, web3j, Credentials.create("0x0000000000000000000000000000000000000000000000000000000000000000"), new DefaultGasProvider());
 
@@ -65,23 +68,26 @@ public class Erc20ContractInfoService {
 		return rtn;
 	}
 
-	@Data
+    /**
+     * The type Erc 20 contract info.
+     */
+    @Data
 	public static class Erc20ContractInfo {
 		private String name = null;
 		private String symbol = null;
 		private BigInteger decimals = BigInteger.valueOf(18); // default 18 decimals
 	}
 
-	/**
-	 * get erc20 contract balance from network
-	 *
-	 * @param web3j
-	 * @param contractAddress
-	 * @param owner
-	 * @return
-	 * @throws Exception
-	 */
-	public BigInteger getBalanceOf(Web3j web3j, String contractAddress, String owner) throws Exception {
+    /**
+     * get erc20 contract balance from network
+     *
+     * @param web3j           the web 3 j
+     * @param contractAddress the contract address
+     * @param owner           the owner
+     * @return balance of
+     * @throws Exception the exception
+     */
+    public BigInteger getBalanceOf(Web3j web3j, String contractAddress, String owner) throws Exception {
 		Function function = StandardERC20ContractFunctions.balanceOf(owner);
 
 		EthCall response = web3j.ethCall(
