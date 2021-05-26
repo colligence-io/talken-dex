@@ -9,3 +9,4 @@ gradle.properties
 build/
 out/
 temp/
+JavaDoc/

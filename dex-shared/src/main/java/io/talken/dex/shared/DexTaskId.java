@@ -18,22 +18,44 @@ public class DexTaskId {
 	@JsonIgnore
 	private String name = "INVALID";
 
-	DexTaskId(DexTaskTypeEnum type, String id, long genTime) {
+    /**
+     * Instantiates a new Dex task id.
+     *
+     * @param type    the type
+     * @param id      the id
+     * @param genTime the gen time
+     */
+    DexTaskId(DexTaskTypeEnum type, String id, long genTime) {
 		this.type = type;
 		this.id = id;
 		this.genTime = genTime;
 		this.name = this.type.name() + " Task " + this.id;
 	}
 
-	public DexTaskTypeEnum getType() {
+    /**
+     * Gets type.
+     *
+     * @return the type
+     */
+    public DexTaskTypeEnum getType() {
 		return type;
 	}
 
-	public String getId() {
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
+    public String getId() {
 		return id;
 	}
 
-	public long getGenTime() {
+    /**
+     * Gets gen time.
+     *
+     * @return the gen time
+     */
+    public long getGenTime() {
 		return genTime;
 	}
 
@@ -52,19 +74,24 @@ public class DexTaskId {
 	private static final char padding = '-';
 	private static final SecureRandom random = new SecureRandom();
 
-	public static void init(String seed) {
+    /**
+     * Init.
+     *
+     * @param seed the seed
+     */
+    public static void init(String seed) {
 		symbols = seed;
 		sc = symbols.toCharArray();
 		sl = symbols.length();
 	}
 
-	/**
-	 * generate new dex task id for given type
-	 *
-	 * @param type
-	 * @return
-	 */
-	public static DexTaskId generate_taskId(DexTaskTypeEnum type) {
+    /**
+     * generate new dex task id for given type
+     *
+     * @param type the type
+     * @return dex task id
+     */
+    public static DexTaskId generate_taskId(DexTaskTypeEnum type) {
 		long genTime = System.currentTimeMillis();
 
 		StringBuilder sb = new StringBuilder("TALKEN");
@@ -100,14 +127,14 @@ public class DexTaskId {
 		return new DexTaskId(type, head + s, genTime);
 	}
 
-	/**
-	 * decode dex task id string to object
-	 *
-	 * @param taskId
-	 * @return
-	 * @throws TaskIntegrityCheckFailedException
-	 */
-	public static DexTaskId decode_taskId(String taskId) throws TaskIntegrityCheckFailedException {
+    /**
+     * decode dex task id string to object
+     *
+     * @param taskId the task id
+     * @return dex task id
+     * @throws TaskIntegrityCheckFailedException the task integrity check failed exception
+     */
+    public static DexTaskId decode_taskId(String taskId) throws TaskIntegrityCheckFailedException {
 		try {
 			if(taskId == null || taskId.length() != 24) throw new TaskIntegrityCheckFailedException(taskId);
 

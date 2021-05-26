@@ -4,6 +4,9 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 
+/**
+ * The type Tx list request.
+ */
 @Data
 public class TxListRequest {
 	@NotEmpty

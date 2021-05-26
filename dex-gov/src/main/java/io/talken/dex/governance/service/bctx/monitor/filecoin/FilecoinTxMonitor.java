@@ -22,11 +22,17 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * The type Filecoin tx monitor.
+ */
 @Service
 @Scope("singleton")
 public class FilecoinTxMonitor extends AbstractFilecoinTxMonitor {
     private static final PrefixedLogger logger = PrefixedLogger.getLogger(FilecoinTxMonitor.class);
 
+    /**
+     * Instantiates a new Filecoin tx monitor.
+     */
     public FilecoinTxMonitor() {
         super(logger, "Filecoin");
     }
@@ -87,6 +93,9 @@ public class FilecoinTxMonitor extends AbstractFilecoinTxMonitor {
         return null;
     }
 
+    /**
+     * The type File coin tx monitor status.
+     */
     @Data
     public static class FileCoinTxMonitorStatus {
         private BigInteger lastBlock;

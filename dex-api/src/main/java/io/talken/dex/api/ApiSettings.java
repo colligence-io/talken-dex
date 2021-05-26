@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
+/**
+ * The type Api settings.
+ */
 @Component
 @ConfigurationProperties("talken.dex")
 @Getter
@@ -28,7 +31,10 @@ public class ApiSettings extends DexSettings {
 
 	private _AccessToken accessToken;
 
-	@Getter
+    /**
+     * The type Access token.
+     */
+    @Getter
 	@Setter
 	public static class _AccessToken {
 		private String tokenHeader;

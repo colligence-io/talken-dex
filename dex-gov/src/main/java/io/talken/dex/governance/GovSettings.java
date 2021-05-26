@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
+/**
+ * The type Gov settings.
+ */
 @Component
 @ConfigurationProperties("talken.dex")
 @Getter
@@ -28,7 +31,10 @@ public class GovSettings extends DexSettings {
 
 	private _Scheduler scheduler;
 
-	@Getter
+    /**
+     * The type Scheduler.
+     */
+    @Getter
 	@Setter
     public static class _Scheduler {
 		private int poolSize;

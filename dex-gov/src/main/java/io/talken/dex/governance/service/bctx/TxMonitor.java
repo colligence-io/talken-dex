@@ -24,9 +24,9 @@ import static io.talken.common.persistence.jooq.Tables.BCTX_LOG;
  * NOTE : TxMonitor implementation class has it's own singleton bean not like TxSender
  * this means monitor beans has it's own schedule and not affected by other monitor
  *
- * @param <TB>
- * @param <TT>
- * @param <TR>
+ * @param <TB> the type parameter
+ * @param <TT> the type parameter
+ * @param <TR> the type parameter
  */
 public abstract class TxMonitor<TB, TT, TR> {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(TxMonitor.class);
@@ -44,42 +44,102 @@ public abstract class TxMonitor<TB, TT, TR> {
 	private List<TransactionHandler<TB, TT>> txHandlers = new ArrayList<>();
 	private List<ReceiptHandler<TB, TT, TR>> receiptHandlers = new ArrayList<>();
 
-	public interface BlockHandler<TB> {
-		void handle(TB block) throws Exception;
+    /**
+     * The interface Block handler.
+     *
+     * @param <TB> the type parameter
+     */
+    public interface BlockHandler<TB> {
+        /**
+         * Handle.
+         *
+         * @param block the block
+         * @throws Exception the exception
+         */
+        void handle(TB block) throws Exception;
 	}
 
-	public interface TransactionHandler<TB, TT> {
-		void handle(TB block, TT transaction) throws Exception;
+    /**
+     * The interface Transaction handler.
+     *
+     * @param <TB> the type parameter
+     * @param <TT> the type parameter
+     */
+    public interface TransactionHandler<TB, TT> {
+        /**
+         * Handle.
+         *
+         * @param block       the block
+         * @param transaction the transaction
+         * @throws Exception the exception
+         */
+        void handle(TB block, TT transaction) throws Exception;
 	}
 
-	public interface ReceiptHandler<TB, TT, TR> {
-		void handle(TB block, TT transaction, TR receipt) throws Exception;
+    /**
+     * The interface Receipt handler.
+     *
+     * @param <TB> the type parameter
+     * @param <TT> the type parameter
+     * @param <TR> the type parameter
+     */
+    public interface ReceiptHandler<TB, TT, TR> {
+        /**
+         * Handle.
+         *
+         * @param block       the block
+         * @param transaction the transaction
+         * @param receipt     the receipt
+         * @throws Exception the exception
+         */
+        void handle(TB block, TT transaction, TR receipt) throws Exception;
 	}
 
-	/**
-	 * return what platform this is monitoring
-	 * pending check routine uses this method to find proper txMonitor for bctx record
-	 *
-	 * @return
-	 */
-	public abstract BlockChainPlatformEnum[] getBcTypes();
+    /**
+     * return what platform this is monitoring
+     * pending check routine uses this method to find proper txMonitor for bctx record
+     *
+     * @return block chain platform enum [ ]
+     */
+    public abstract BlockChainPlatformEnum[] getBcTypes();
 
-	public void addBlockHandler(BlockHandler<TB> blockHandler) {
+    /**
+     * Add block handler.
+     *
+     * @param blockHandler the block handler
+     */
+    public void addBlockHandler(BlockHandler<TB> blockHandler) {
 		logger.info("BlockHandler {} binded on {}.", blockHandler.getClass().getSimpleName(), this.getClass().getSimpleName());
 		this.blockHandlers.add(blockHandler);
 	}
 
-	public void addTransactionHandler(TransactionHandler<TB, TT> transactionHandler) {
+    /**
+     * Add transaction handler.
+     *
+     * @param transactionHandler the transaction handler
+     */
+    public void addTransactionHandler(TransactionHandler<TB, TT> transactionHandler) {
 		logger.info("TransactionHandler {} binded on {}", transactionHandler.getClass().getSimpleName(), this.getClass().getSimpleName());
 		this.txHandlers.add(transactionHandler);
 	}
 
-	public void addReceiptHandler(ReceiptHandler<TB, TT, TR> receiptHandler) {
+    /**
+     * Add receipt handler.
+     *
+     * @param receiptHandler the receipt handler
+     */
+    public void addReceiptHandler(ReceiptHandler<TB, TT, TR> receiptHandler) {
 		logger.info("ReceiptHandler {} binded on {}", receiptHandler.getClass().getSimpleName(), this.getClass().getSimpleName());
 		this.receiptHandlers.add(receiptHandler);
 	}
 
-	protected void callBlockHandlerStack(TB block) throws BctxException {
+    /**
+     * Call block handler stack.
+     *
+     * @param block the block
+     * @throws BctxException the bctx exception
+     */
+    protected void callBlockHandlerStack(TB block) throws BctxException {
 		for(BlockHandler<TB> blockHandler : blockHandlers) {
 			try {
 				blockHandler.handle(block);
@@ -90,7 +150,14 @@ public abstract class TxMonitor<TB, TT, TR> {
 		}
 	}
 
-	protected void callTxHandlerStack(TB block, TT tx) throws Exception {
+    /**
+     * Call tx handler stack.
+     *
+     * @param block the block
+     * @param tx    the tx
+     * @throws Exception the exception
+     */
+    protected void callTxHandlerStack(TB block, TT tx) throws Exception {
 		// uncomment this to check receipt in realtime (very slow)
 		//updateBctxReceiptInfo(tx);
 		for(TransactionHandler<TB, TT> txHandler : txHandlers) {
@@ -103,7 +170,15 @@ public abstract class TxMonitor<TB, TT, TR> {
 		}
 	}
 
-	protected void callReceiptHandlerStack(TB block, TT tx, TR receipt) throws Exception {
+    /**
+     * Call receipt handler stack.
+     *
+     * @param block   the block
+     * @param tx      the tx
+     * @param receipt the receipt
+     * @throws Exception the exception
+     */
+    protected void callReceiptHandlerStack(TB block, TT tx, TR receipt) throws Exception {
 		for(ReceiptHandler<TB, TT, TR> receiptHandler : receiptHandlers) {
 			try {
 				receiptHandler.handle(block, tx, receipt);
@@ -114,31 +189,31 @@ public abstract class TxMonitor<TB, TT, TR> {
 		}
 	}
 
-	/**
-	 * convert TT to TxReceipt
-	 *
-	 * @param tx
-	 * @return
-	 */
-	abstract protected TxReceipt toTxMonitorReceipt(TT tx);
+    /**
+     * convert TT to TxReceipt
+     *
+     * @param tx the tx
+     * @return tx receipt
+     */
+    abstract protected TxReceipt toTxMonitorReceipt(TT tx);
 
-	/**
-	 * get TT from txID
-	 *
-	 * @param txId
-	 * @return
-	 */
-	abstract protected TT getTransactionReceipt(String txId);
+    /**
+     * get TT from txID
+     *
+     * @param txId the tx id
+     * @return transaction receipt
+     */
+    abstract protected TT getTransactionReceipt(String txId);
 
-	/**
-	 * check txId's status from network and update bctxReceipt
-	 * this is fail safe function for network timeout, unknown error and so on
-	 * see BlockChainTrasactionService.checkPending()
-	 *
-	 * @param txId
-	 * @throws Exception
-	 */
-	public void checkTransactionStatus(String txId) throws Exception {
+    /**
+     * check txId's status from network and update bctxReceipt
+     * this is fail safe function for network timeout, unknown error and so on
+     * see BlockChainTrasactionService.checkPending()
+     *
+     * @param txId the tx id
+     * @throws Exception the exception
+     */
+    public void checkTransactionStatus(String txId) throws Exception {
 	    if (txId != null) {
             TT tx = getTransactionReceipt(txId);
             if(tx != null) updateBctxReceiptInfo(tx);
@@ -178,7 +253,10 @@ public abstract class TxMonitor<TB, TT, TR> {
 		}
 	}
 
-	@Data
+    /**
+     * The type Tx receipt.
+     */
+    @Data
 	public static class TxReceipt {
 		private BctxStatusEnum status;
 		private String txRefId;
@@ -186,7 +264,14 @@ public abstract class TxMonitor<TB, TT, TR> {
 
 		private TxReceipt() {}
 
-		public static TxReceipt ofSuccessful(String txRefId, Object receiptObject) {
+        /**
+         * Of successful tx receipt.
+         *
+         * @param txRefId       the tx ref id
+         * @param receiptObject the receipt object
+         * @return the tx receipt
+         */
+        public static TxReceipt ofSuccessful(String txRefId, Object receiptObject) {
 			TxReceipt rtn = new TxReceipt();
 			rtn.status = BctxStatusEnum.SUCCESS;
 			rtn.txRefId = txRefId;
@@ -194,7 +279,14 @@ public abstract class TxMonitor<TB, TT, TR> {
 			return rtn;
 		}
 
-		public static TxReceipt ofFailed(String txRefId, Object receiptObject) {
+        /**
+         * Of failed tx receipt.
+         *
+         * @param txRefId       the tx ref id
+         * @param receiptObject the receipt object
+         * @return the tx receipt
+         */
+        public static TxReceipt ofFailed(String txRefId, Object receiptObject) {
 			TxReceipt rtn = new TxReceipt();
 			rtn.status = BctxStatusEnum.FAILED;
 			rtn.txRefId = txRefId;

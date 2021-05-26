@@ -6,6 +6,9 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
+/**
+ * The type Create offer request.
+ */
 @Data
 public class CreateOfferRequest {
 	@NotEmpty

@@ -4,7 +4,6 @@ import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.governance.service.bctx.monitor.ethereum.AbstractEthereumAnchorReceiptHandler;
 import org.jooq.Condition;
-import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,10 @@ public class LuniverseAnchorReceiptHandler extends AbstractEthereumAnchorReceipt
 	@Autowired
 	private LuniverseTxMonitor txMonitor;
 
-	public LuniverseAnchorReceiptHandler() {
+    /**
+     * Instantiates a new Luniverse anchor receipt handler.
+     */
+    public LuniverseAnchorReceiptHandler() {
 		super(logger);
 		addBcType(BlockChainPlatformEnum.LUNIVERSE);
 		addBcType(BlockChainPlatformEnum.LUNIVERSE_MAIN_TOKEN);

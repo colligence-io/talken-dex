@@ -41,10 +41,12 @@ import org.stellar.sdk.responses.SubmitTransactionTimeoutResponseException;
 import java.io.IOException;
 import java.math.BigDecimal;
 
-import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_STAKING;
 import static io.talken.common.persistence.jooq.Tables.USER;
 
+/**
+ * The type Staking scheduled service.
+ */
 @Service
 @Scope("singleton")
 public class StakingScheduledService {
@@ -53,6 +55,9 @@ public class StakingScheduledService {
     @Autowired
     private DSLContext dslContext;
 
+    /**
+     * The Tx mgr.
+     */
     @Autowired
     protected DataSourceTransactionManager txMgr;
 
@@ -77,11 +82,17 @@ public class StakingScheduledService {
 
     private final String _CLAZZ_NAME = this.getClass().getSimpleName();
 
+    /**
+     * Suspend.
+     */
     public void suspend() {
         logger.info("{} SUSPENDED by admin.", _CLAZZ_NAME);
         isSuspended = true;
     }
 
+    /**
+     * Resume.
+     */
     public void resume() {
         logger.info("{} RESUMED by admin.", _CLAZZ_NAME);
         isSuspended = false;

@@ -4,6 +4,9 @@ import ch.qos.logback.core.encoder.ByteArrayUtil;
 import lombok.Data;
 import org.stellar.sdk.Transaction;
 
+/**
+ * The type Relay stellar raw tx dto.
+ */
 @Deprecated
 @Data
 public class RelayStellarRawTxDTO {
@@ -11,7 +14,12 @@ public class RelayStellarRawTxDTO {
 	private String hash;
 	private String envelopeXdr;
 
-	public RelayStellarRawTxDTO(Transaction tx) {
+    /**
+     * Instantiates a new Relay stellar raw tx dto.
+     *
+     * @param tx the tx
+     */
+    public RelayStellarRawTxDTO(Transaction tx) {
 		this.sequence = tx.getSequenceNumber();
 		this.hash = ByteArrayUtil.toHexString(tx.hash());
 		this.envelopeXdr = tx.toEnvelopeXdrBase64();

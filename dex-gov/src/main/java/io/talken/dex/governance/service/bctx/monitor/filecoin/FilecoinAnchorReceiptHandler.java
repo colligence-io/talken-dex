@@ -23,7 +23,10 @@ public class FilecoinAnchorReceiptHandler extends AbstractFilecoinAnchorReceiptH
 	@Autowired
 	private FilecoinTxMonitor txMonitor;
 
-	public FilecoinAnchorReceiptHandler() {
+    /**
+     * Instantiates a new Filecoin anchor receipt handler.
+     */
+    public FilecoinAnchorReceiptHandler() {
 		super(logger);
 		addBcType(BlockChainPlatformEnum.FILECOIN);
 //		addBcType(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN);

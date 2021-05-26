@@ -9,10 +9,18 @@ import java.math.BigInteger;
  * parity_nextNonce jsonrpc
  */
 public class ParityNextNonceResponse extends Response<String> {
-	public ParityNextNonceResponse() {
+    /**
+     * Instantiates a new Parity next nonce response.
+     */
+    public ParityNextNonceResponse() {
 	}
 
-	public BigInteger getNextNonce() {
+    /**
+     * Gets next nonce.
+     *
+     * @return the next nonce
+     */
+    public BigInteger getNextNonce() {
 		return Numeric.decodeQuantity((String) this.getResult());
 	}
 }

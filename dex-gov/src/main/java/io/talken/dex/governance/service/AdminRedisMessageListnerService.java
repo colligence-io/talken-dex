@@ -26,6 +26,9 @@ import java.nio.charset.StandardCharsets;
 
 import static io.talken.common.persistence.jooq.Tables.USER;
 
+/**
+ * The type Admin redis message listner service.
+ */
 @Service
 public class AdminRedisMessageListnerService implements MessageListener {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AdminRedisMessageListnerService.class);

@@ -4,6 +4,9 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 
+/**
+ * The type Erc 20 balance request.
+ */
 @Data
 public class Erc20BalanceRequest {
 	@NotEmpty

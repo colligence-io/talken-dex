@@ -29,7 +29,13 @@ public class StellarTxReceipt {
 	private boolean isFeeBump = false;
 	private String txMemo = null;
 
-	public StellarTxReceipt(TransactionResponse response, Network network) {
+    /**
+     * Instantiates a new Stellar tx receipt.
+     *
+     * @param response the response
+     * @param network  the network
+     */
+    public StellarTxReceipt(TransactionResponse response, Network network) {
 		this.network = network;
 		this.response = response;
 		parse();
@@ -79,25 +85,55 @@ public class StellarTxReceipt {
 		}
 	}
 
-	public TransactionResponse getResponse() {
+    /**
+     * Gets response.
+     *
+     * @return the response
+     */
+    public TransactionResponse getResponse() {
 		return response;
 	}
 
-	public Transaction getTransaction() {
+    /**
+     * Gets transaction.
+     *
+     * @return the transaction
+     */
+    public Transaction getTransaction() {
 		return this.tx;
 	}
 
-	public TransactionResult getResult() {
+    /**
+     * Gets result.
+     *
+     * @return the result
+     */
+    public TransactionResult getResult() {
 		return result;
 	}
 
-	public DexTaskId getTaskId() {
+    /**
+     * Gets task id.
+     *
+     * @return the task id
+     */
+    public DexTaskId getTaskId() {
 		return dexTaskId;
 	}
 
-	public String getTxHash() {return response.getHash();}
+    /**
+     * Gets tx hash.
+     *
+     * @return the tx hash
+     */
+    public String getTxHash() {return response.getHash();}
 
-	public List<StellarOpReceipt> getOpReceipts() {
+    /**
+     * Gets op receipts.
+     *
+     * @return the op receipts
+     */
+    public List<StellarOpReceipt> getOpReceipts() {
 		if(opReceipts == null) {
 			opReceipts = new ArrayList<>();
 

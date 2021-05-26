@@ -6,13 +6,21 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * The type Dist status.
+ */
 @Data
 public class DistStatus implements SingleKeyObject<String> {
 	private String assetCode;
 	private AtomicInteger count = new AtomicInteger();
 	private BigDecimal amount = BigDecimal.ZERO;
 
-	public DistStatus(String assetCode) {
+    /**
+     * Instantiates a new Dist status.
+     *
+     * @param assetCode the asset code
+     */
+    public DistStatus(String assetCode) {
 		this.assetCode = assetCode;
 	}
 

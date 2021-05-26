@@ -2,6 +2,9 @@ package io.talken.dex.api.controller.dto;
 
 import lombok.Data;
 
+/**
+ * The type Dex key request.
+ */
 @Data
 public class DexKeyRequest {
 	private Long userId;

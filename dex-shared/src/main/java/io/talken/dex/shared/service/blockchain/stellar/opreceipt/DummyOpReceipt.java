@@ -8,11 +8,17 @@ import org.stellar.sdk.Operation;
 import org.stellar.sdk.xdr.OperationResult;
 import org.stellar.sdk.xdr.OperationResultCode;
 
+/**
+ * The type Dummy op receipt.
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class DummyOpReceipt extends StellarOpReceipt<Operation, OperationResult> {
 
-	@Data
+    /**
+     * The type Result.
+     */
+    @Data
 	@Builder
 	public static class Result {
 		private OperationResultCode resultCode;

@@ -8,11 +8,17 @@ import io.talken.dex.shared.TokenMetaTable;
 import org.springframework.stereotype.Component;
 import org.stellar.sdk.AssetTypeNative;
 
+/**
+ * The type Stellar lumen tx sender.
+ */
 @Component
 public class StellarLumenTxSender extends AbstractStellarTxSender {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StellarLumenTxSender.class);
 
-	public StellarLumenTxSender() {
+    /**
+     * Instantiates a new Stellar lumen tx sender.
+     */
+    public StellarLumenTxSender() {
 		super(BlockChainPlatformEnum.STELLAR, logger);
 	}
 

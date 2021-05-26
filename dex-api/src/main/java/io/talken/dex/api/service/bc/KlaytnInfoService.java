@@ -6,33 +6,51 @@ import com.klaytn.caver.methods.response.TransactionReceipt;
 import io.talken.common.exception.common.GeneralException;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.dex.api.controller.dto.KlayTransactionListRequest;
+import io.talken.dex.api.service.TokenMetaApiService;
 import io.talken.dex.shared.service.blockchain.klaytn.Kip7ContractInfoService;
 import io.talken.dex.shared.service.blockchain.klaytn.KlaytnNetworkService;
+import io.talken.dex.shared.service.integration.wallet.TalkenWalletService;
+import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.web3j.protocol.exceptions.TransactionException;
 import xyz.groundx.caver_ext_kas.kas.tokenhistory.TokenHistoryQueryOptions;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.ApiException;
 import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.PageableTransfers;
 import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.model.TransferArray;
+import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.wallet.model.TransactionResult;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
+/**
+ * The type Klaytn info service.
+ */
 @Service
 @Scope("singleton")
+@RequiredArgsConstructor
 public class KlaytnInfoService {
     private static final PrefixedLogger logger = PrefixedLogger.getLogger(KlaytnInfoService.class);
 
-	@Autowired
-	private KlaytnNetworkService klayNetworkService;
+	private final KlaytnNetworkService klayNetworkService;
 
-    @Autowired
-    private Kip7ContractInfoService kip7ContractInfoService;
+    private final Kip7ContractInfoService kip7ContractInfoService;
 
-    @Autowired
-    private DSLContext dslContext;
+    private final DSLContext dslContext;
 
+    private final TokenMetaApiService tmService;
+
+    private final TalkenWalletService pwService;
+
+    /**
+     * The constant PAGE.
+     */
     final static long PAGE = 10;
+
+    final static String KLAY = "KLAY";
 
     /****************
      * TODO : make RPC Call Error response (also eth)
@@ -41,9 +59,9 @@ public class KlaytnInfoService {
     /**
      * get klay account
      *
-     * @param address
-     * @return
-     * @throws GeneralException
+     * @param address the address
+     * @return account account
+     * @throws GeneralException the general exception
      */
     public Account.AccountData getAccount(String address) throws GeneralException {
         try {
@@ -65,14 +83,14 @@ public class KlaytnInfoService {
         }
     }
 
-	/**
-	 * get klay balance
-	 *
-	 * @param address
-	 * @return
-	 * @throws GeneralException
-	 */
-	public BigInteger getBalance(String address) throws GeneralException{
+    /**
+     * get klay balance
+     *
+     * @param address the address
+     * @return balance balance
+     * @throws GeneralException the general exception
+     */
+    public BigInteger getBalance(String address) throws GeneralException{
 	    try {
             return klayNetworkService.getKasClient().getClient().rpc.klay.getBalance(address).send().getValue();
         } catch(Exception ex) {
@@ -83,8 +101,8 @@ public class KlaytnInfoService {
     /**
      * get klay gasPrice
      *
-     * @return
-     * @throws GeneralException
+     * @return gas price
+     * @throws GeneralException the general exception
      */
     public BigInteger getGasPrice() throws GeneralException{
         try {
@@ -97,9 +115,9 @@ public class KlaytnInfoService {
     /**
      * get klay transaction
      *
-     * @param hash
-     * @return
-     * @throws GeneralException
+     * @param hash the hash
+     * @return transaction by hash
+     * @throws GeneralException the general exception
      */
     public Transaction.TransactionData getTransactionByHash(String hash) throws GeneralException{
         try {
@@ -112,9 +130,9 @@ public class KlaytnInfoService {
     /**
      * get klay transactionReceipt
      *
-     * @param hash
-     * @return
-     * @throws GeneralException
+     * @param hash the hash
+     * @return transaction receipt by hash
+     * @throws GeneralException the general exception
      */
     public TransactionReceipt.TransactionReceiptData getTransactionReceiptByHash(String hash) throws GeneralException{
         try {
@@ -124,15 +142,15 @@ public class KlaytnInfoService {
         }
     }
 
-	/**
-	 * get kip7/erc20 balance
-	 *
-	 * @param contract
-	 * @param address
-	 * @return
-	 * @throws GeneralException
-	 */
-	public BigInteger getKip7Balance(String contract, String address) throws GeneralException {
+    /**
+     * get kip7/erc20 balance
+     *
+     * @param contract the contract
+     * @param address  the address
+     * @return kip 7 balance
+     * @throws GeneralException the general exception
+     */
+    public BigInteger getKip7Balance(String contract, String address) throws GeneralException {
         try {
             return kip7ContractInfoService.getBalanceOf(klayNetworkService.getKasClient().getClient(), contract, address);
         } catch(Exception ex) {
@@ -140,7 +158,14 @@ public class KlaytnInfoService {
         }
 	}
 
-	public TransferArray getTransactionList(KlayTransactionListRequest request) throws GeneralException {
+    /**
+     * Gets transaction list.
+     *
+     * @param request the request
+     * @return the transaction list
+     * @throws GeneralException the general exception
+     */
+    public TransferArray getTransactionList(KlayTransactionListRequest request) throws GeneralException {
         try {
             TokenHistoryQueryOptions options = new TokenHistoryQueryOptions();
 
@@ -166,12 +191,29 @@ public class KlaytnInfoService {
         }
     }
 
+    /**
+     * Gets contract.
+     *
+     * @param contract the contract
+     * @param address  the address
+     * @return the contract
+     * @throws GeneralException the general exception
+     */
     public Kip7ContractInfoService.Kip7ContractInfo getContract(String contract, String address) throws GeneralException {
         try {
             return kip7ContractInfoService.getKip7ContractInfo(klayNetworkService.getKasClient().getClient(), contract);
         } catch(Exception ex) {
             throw new GeneralException(ex);
         }
+    }
+
+    public TransactionResult send(String symbol, String to, BigDecimal amount) throws ApiException {
+        return klayNetworkService.send(symbol, to, amount);
+    }
+
+    public TransactionReceipt.TransactionReceiptData sendContract(String symbol, String contract, String to, BigDecimal amount)
+            throws IOException, InvocationTargetException, NoSuchMethodException, ClassNotFoundException, InstantiationException, IllegalAccessException, ApiException, TransactionException {
+        return klayNetworkService.sendContract(symbol, contract, to, amount);
     }
 
 //	public PendingTxListResult getPendingTransactionTxList(PendingTxListRequest request) {

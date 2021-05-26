@@ -11,8 +11,18 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The type Manage offer claims.
+ */
 public abstract class ManageOfferClaims {
-	public static List<ClaimedOffer> parseClaimedOffers(ManageOfferSuccessResult success, StellarOpReceipt opReceipt) {
+    /**
+     * Parse claimed offers list.
+     *
+     * @param success   the success
+     * @param opReceipt the op receipt
+     * @return the list
+     */
+    public static List<ClaimedOffer> parseClaimedOffers(ManageOfferSuccessResult success, StellarOpReceipt opReceipt) {
 		List<ClaimedOffer> claimedOffers = new ArrayList<>();
 
 		for(ClaimOfferAtom claimOfferAtom : success.getOffersClaimed()) {
@@ -34,7 +44,10 @@ public abstract class ManageOfferClaims {
 		return claimedOffers;
 	}
 
-	@Data
+    /**
+     * The type Claimed offer.
+     */
+    @Data
 	public static class ClaimedOffer {
 		private Long offerId;
 		private String sellerAccount;

@@ -29,6 +29,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static io.talken.common.CommonConsts.ZONE_UTC;
 
+/**
+ * The type Crawl coin gecko service.
+ */
 @Service
 @Scope("singleton")
 public class CrawlCoinGeckoService {
@@ -60,6 +63,9 @@ public class CrawlCoinGeckoService {
     private static AtomicLong counter = new AtomicLong(0);
     private LocalDateTime lastUpdated = LocalDateTime.now();
 
+    /**
+     * Instantiates a new Crawl coin gecko service.
+     */
     public CrawlCoinGeckoService() {
         this.apis.put("global", "/global");
     }

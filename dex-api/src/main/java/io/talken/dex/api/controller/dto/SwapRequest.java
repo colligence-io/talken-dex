@@ -6,6 +6,9 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
+/**
+ * The type Swap request.
+ */
 @Data
 public class SwapRequest {
 	@NotEmpty

@@ -3,6 +3,9 @@ package io.talken.dex.api.controller.dto;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * The type Eth transaction result.
+ */
 @Data
 @Builder
 public class EthTransactionResult {

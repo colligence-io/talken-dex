@@ -15,6 +15,9 @@ import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_DELETEOFFER;
 
+/**
+ * The type Delete sell offer task transaction processor.
+ */
 @Component
 public class DeleteSellOfferTaskTransactionProcessor implements DexTaskTransactionProcessor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(DeleteSellOfferTaskTransactionProcessor.class);
@@ -30,9 +33,6 @@ public class DeleteSellOfferTaskTransactionProcessor implements DexTaskTransacti
 	/**
 	 * update dex_task_deleteOffer signTxCatchFlag
 	 *
-	 * @param txmId
-	 * @param txResult
-	 * @return
 	 */
 	@Override
 	public DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt txResult) {

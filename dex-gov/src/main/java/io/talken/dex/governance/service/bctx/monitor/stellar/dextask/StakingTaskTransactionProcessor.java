@@ -15,6 +15,9 @@ import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_STAKING;
 
+/**
+ * The type Staking task transaction processor.
+ */
 @Component
 public class StakingTaskTransactionProcessor implements DexTaskTransactionProcessor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(StakingTaskTransactionProcessor.class);

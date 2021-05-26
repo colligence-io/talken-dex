@@ -15,6 +15,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/**
+ * The type Abstract filecoin tx monitor.
+ */
 public abstract class AbstractFilecoinTxMonitor extends TxMonitor<FilecoinMessage.Block, FilecoinMessage.SecpkMessage, FilecoinMessage.SecpkMessage> {
 	private final PrefixedLogger logger;
 
@@ -26,7 +29,13 @@ public abstract class AbstractFilecoinTxMonitor extends TxMonitor<FilecoinMessag
 	private long[] receiptsPerBlock = new long[ETA_BLOCKS];
 	private long[] takesPerBlock = new long[ETA_BLOCKS];
 
-	public AbstractFilecoinTxMonitor(PrefixedLogger logger, String networkName) {
+    /**
+     * Instantiates a new Abstract filecoin tx monitor.
+     *
+     * @param logger      the logger
+     * @param networkName the network name
+     */
+    public AbstractFilecoinTxMonitor(PrefixedLogger logger, String networkName) {
 		this.logger = logger;
 		this.networkName = networkName;
 		for(int i = 0; i < ETA_BLOCKS; i++) {
@@ -35,13 +44,35 @@ public abstract class AbstractFilecoinTxMonitor extends TxMonitor<FilecoinMessag
 		}
 	}
 
-	abstract protected BigInteger getServiceStatusLastBlock();
+    /**
+     * Gets service status last block.
+     *
+     * @return the service status last block
+     */
+    abstract protected BigInteger getServiceStatusLastBlock();
 
-	abstract protected void saveServiceStatusLastBlock(BigInteger blockNumber, LocalDateTime timestamp);
+    /**
+     * Save service status last block.
+     *
+     * @param blockNumber the block number
+     * @param timestamp   the timestamp
+     */
+    abstract protected void saveServiceStatusLastBlock(BigInteger blockNumber, LocalDateTime timestamp);
 
-	abstract protected void saveReceiptDocuments(List<FilecoinMessage.SecpkMessage> documents);
+    /**
+     * Save receipt documents.
+     *
+     * @param documents the documents
+     */
+    abstract protected void saveReceiptDocuments(List<FilecoinMessage.SecpkMessage> documents);
 
-	protected void crawlBlocks(FilecoinRpcClient client, int collectionThreadNum) {
+    /**
+     * Crawl blocks.
+     *
+     * @param client              the client
+     * @param collectionThreadNum the collection thread num
+     */
+    protected void crawlBlocks(FilecoinRpcClient client, int collectionThreadNum) {
 		BigInteger latestBlockNumber = null;
 		BigInteger targetBlockNumber = null;
 		BigInteger cursor = null;

@@ -17,6 +17,13 @@ public class Ed25519Derivation {
     private byte[] privateKey;
     private byte[] chainCode;
 
+    /**
+     * From secret seed ed 25519 derivation.
+     *
+     * @param seed the seed
+     * @return the ed 25519 derivation
+     * @throws Ed25519DerivationException the ed 25519 derivation exception
+     */
     public static Ed25519Derivation fromSecretSeed(byte[] seed) throws Ed25519DerivationException {
 
         char[] key = new char[]{'e', 'd', '2', '5', '5', '1', '9', ' ', 's', 'e', 'e', 'd'};
@@ -46,10 +53,22 @@ public class Ed25519Derivation {
         this.chainCode = chainCode;
     }
 
+    /**
+     * Get private key byte [ ].
+     *
+     * @return the byte [ ]
+     */
     public byte[] getPrivateKey() {
         return privateKey;
     }
 
+    /**
+     * Derived ed 25519 derivation.
+     *
+     * @param index the index
+     * @return the ed 25519 derivation
+     * @throws Ed25519DerivationException the ed 25519 derivation exception
+     */
     public Ed25519Derivation derived(int index) throws Ed25519DerivationException {
 
         long edge = 0x80000000L;

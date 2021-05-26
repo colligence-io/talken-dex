@@ -22,6 +22,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * The type Ethereum network service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -52,42 +55,63 @@ public class EthereumNetworkService {
         this.gasOracleApiUrl = dexSettings.getBcnode().getEthereum().getGasOracleUrl();
 		this.gasEthescanApiUrl = dexSettings.getBcnode().getEthereum().getGasEtherscanUrl();
 
-		logger.info("Using Ethereum {} Network : {} {}", network, this.localClient.getUri(), this.localClient.getClientVersion());
+//		logger.info("Using Ethereum {} Network : {} {}", network, this.localClient.getUri(), this.localClient.getClientVersion());
 		logger.info("Using Ethereum Infura {} Network : {} {}", network, this.infuraClient.getUri(), this.infuraClient.getClientVersion());
 		updateGasPrice();
 	}
 
-	/**
-	 * local network rpc client
-	 * use this for monitoring, not for transaction
-	 *
-	 * @return
-	 */
-	public EthRpcClient getLocalClient() {
+    /**
+     * local network rpc client
+     * use this for monitoring, not for transaction
+     *
+     * @return local client
+     */
+    public EthRpcClient getLocalClient() {
         return getInfuraClient();
 //		return this.localClient;
 	}
 
-	/**
-	 * infura network rpc client
-	 * use this for making transaction, not for monitoring
-	 *
-	 * @return
-	 */
-	public EthRpcClient getInfuraClient() {
+    /**
+     * infura network rpc client
+     * use this for making transaction, not for monitoring
+     *
+     * @return infura client
+     */
+    public EthRpcClient getInfuraClient() {
 		return this.infuraClient;
 	}
 
+    /**
+     * Gets rpc client.
+     *
+     * @return the rpc client
+     */
     public EthRpcClient getRpcClient() {
         if (ACTIVATE_LOCAL_NODE) return this.localClient;
 	    else return this.infuraClient;
     }
 
+    /**
+     * Gets eth transaction.
+     *
+     * @param txHash the tx hash
+     * @return the eth transaction
+     * @throws ExecutionException   the execution exception
+     * @throws InterruptedException the interrupted exception
+     */
     public Transaction getEthTransaction(String txHash) throws ExecutionException, InterruptedException {
         Web3j web3j = this.getRpcClient().newClient();
         return web3j.ethGetTransactionByHash(txHash).sendAsync().get().getTransaction().orElse(null);
     }
 
+    /**
+     * Gets eth transaction receipt.
+     *
+     * @param txHash the tx hash
+     * @return the eth transaction receipt
+     * @throws ExecutionException   the execution exception
+     * @throws InterruptedException the interrupted exception
+     */
     public TransactionReceipt getEthTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
         Web3j web3j = this.getRpcClient().newClient();
         return web3j.ethGetTransactionReceipt(txHash).sendAsync().get().getTransactionReceipt().orElse(null);
@@ -160,13 +184,13 @@ public class EthereumNetworkService {
         }
 	}
 
-	/**
-	 * get recommended gasPrice
-	 *
-	 * @param web3j
-	 * @return
-	 */
-	public BigInteger getGasPrice(Web3j web3j) {
+    /**
+     * get recommended gasPrice
+     *
+     * @param web3j the web 3 j
+     * @return gas price
+     */
+    public BigInteger getGasPrice(Web3j web3j) {
 		if(gasPrice != null) {
 			return Convert.toWei(gasPrice.toPlainString(), Convert.Unit.GWEI).toBigInteger();
 		} else {
@@ -198,7 +222,10 @@ public class EthereumNetworkService {
         }
     }
 
-	@Data
+    /**
+     * The type Gas price oracle result.
+     */
+    @Data
 	public static class GasPriceOracleResult implements RestApiResponseInterface {
 		private String safeLow;
 		private String standard;
@@ -228,12 +255,18 @@ public class EthereumNetworkService {
 		}
 	}
 
+    /**
+     * The type Gas price etherscan result.
+     */
     @Data
     public static class GasPriceEtherscanResult implements RestApiResponseInterface {
         private String status;
         private String message;
         private Result result;
 
+        /**
+         * The type Result.
+         */
         @Data
         class Result {
             private String LastBlock;
@@ -263,6 +296,12 @@ public class EthereumNetworkService {
         }
     }
 
+    /**
+     * Gas convert big decimal.
+     *
+     * @param strNum the str num
+     * @return the big decimal
+     */
     public BigDecimal gasConvert(String strNum) {
         if (strNum == null) {
             return BigDecimal.ZERO;

@@ -6,6 +6,9 @@ import org.springframework.data.mongodb.core.index.Indexed;
 
 import java.math.BigInteger;
 
+/**
+ * The type Ethereum transfer receipt.
+ */
 @Data
 public class EthereumTransferReceipt {
 	@Id

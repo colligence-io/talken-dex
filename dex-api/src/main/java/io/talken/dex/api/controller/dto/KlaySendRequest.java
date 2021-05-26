@@ -6,15 +6,14 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
-/**
- * The type Create staking request.
- */
 @Data
-public class CreateStakingRequest {
+public class KlaySendRequest {
+    @NotEmpty
+    private String symbol;
 	@NotEmpty
-	private String stakingCode;
-	@NotEmpty
-	private String stakingAssetCode;
+	private String to;
 	@NotNull
 	private BigDecimal amount;
+
+    private String contract;
 }

@@ -14,6 +14,9 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The type Mongo config.
+ */
 @Configuration
 public class MongoConfig extends AbstractMongoClientConfiguration {
 	@Autowired

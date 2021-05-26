@@ -12,32 +12,72 @@ public class TransactionBlockExecutor {
 
 	private DataSourceTransactionManager txMgr;
 
-	public TransactionBlockExecutor(DataSourceTransactionManager txMgr) {
+    /**
+     * Instantiates a new Transaction block executor.
+     *
+     * @param txMgr the tx mgr
+     */
+    public TransactionBlockExecutor(DataSourceTransactionManager txMgr) {
 		this.txMgr = txMgr;
 	}
 
-	@FunctionalInterface
+    /**
+     * The interface Transaction block.
+     */
+    @FunctionalInterface
 	public static interface TransactionBlock {
-		void runTransaction() throws Exception;
+        /**
+         * Run transaction.
+         *
+         * @throws Exception the exception
+         */
+        void runTransaction() throws Exception;
 	}
 
-	public TransactionStatus beginTransaction(TransactionDefinition definition) {
+    /**
+     * Begin transaction transaction status.
+     *
+     * @param definition the definition
+     * @return the transaction status
+     */
+    public TransactionStatus beginTransaction(TransactionDefinition definition) {
 		return txMgr.getTransaction(definition);
 	}
 
-	public TransactionStatus beginTransaction() {
+    /**
+     * Begin transaction transaction status.
+     *
+     * @return the transaction status
+     */
+    public TransactionStatus beginTransaction() {
 		return beginTransaction(new DefaultTransactionDefinition());
 	}
 
-	public void rollbackTransaction(TransactionStatus tx) {
+    /**
+     * Rollback transaction.
+     *
+     * @param tx the tx
+     */
+    public void rollbackTransaction(TransactionStatus tx) {
 		txMgr.rollback(tx);
 	}
 
-	public void commitTransaction(TransactionStatus tx) {
+    /**
+     * Commit transaction.
+     *
+     * @param tx the tx
+     */
+    public void commitTransaction(TransactionStatus tx) {
 		txMgr.commit(tx);
 	}
 
-	public void transactional(TransactionBlock block) throws Exception {
+    /**
+     * Transactional.
+     *
+     * @param block the block
+     * @throws Exception the exception
+     */
+    public void transactional(TransactionBlock block) throws Exception {
 		TransactionStatus tx = beginTransaction();
 		try {
 			block.runTransaction();
@@ -48,7 +88,13 @@ public class TransactionBlockExecutor {
 		}
 	}
 
-	public static TransactionBlockExecutor of(DataSourceTransactionManager txMgr) {
+    /**
+     * Of transaction block executor.
+     *
+     * @param txMgr the tx mgr
+     * @return the transaction block executor
+     */
+    public static TransactionBlockExecutor of(DataSourceTransactionManager txMgr) {
 		return new TransactionBlockExecutor(txMgr);
 	}
 }

@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Create staking result.
+ */
 @Data
 public class CreateStakingResult {
 	private String taskId;

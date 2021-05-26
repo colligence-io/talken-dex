@@ -1,8 +1,17 @@
 package io.talken.dex.api.service.integration;
 
+/**
+ * The enum Private wallet msg type enum.
+ */
 public enum PrivateWalletMsgTypeEnum {
-	TRANSFER("3000"),
-	ANCHOR("3001");
+    /**
+     * Transfer private wallet msg type enum.
+     */
+    TRANSFER("3000"),
+    /**
+     * Anchor private wallet msg type enum.
+     */
+    ANCHOR("3001");
 
 	private final String msgType;
 
@@ -10,7 +19,12 @@ public enum PrivateWalletMsgTypeEnum {
 		this.msgType = msgType;
 	}
 
-	public String getMsgType() {
+    /**
+     * Gets msg type.
+     *
+     * @return the msg type
+     */
+    public String getMsgType() {
 		return msgType;
 	}
 }

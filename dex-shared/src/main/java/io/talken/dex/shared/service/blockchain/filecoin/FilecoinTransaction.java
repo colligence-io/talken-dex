@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.math.BigInteger;
 
+/**
+ * The type Filecoin transaction.
+ */
 @Data
 public class FilecoinTransaction {
     private String to;

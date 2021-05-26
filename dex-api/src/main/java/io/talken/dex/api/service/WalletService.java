@@ -18,7 +18,10 @@ import io.talken.common.util.GSONWriter;
 import io.talken.common.util.PrefixedLogger;
 import io.talken.common.util.UTCUtil;
 import io.talken.common.util.collection.ObjectPair;
-import io.talken.dex.api.controller.dto.*;
+import io.talken.dex.api.controller.dto.ClaimResult;
+import io.talken.dex.api.controller.dto.ReclaimRequest;
+import io.talken.dex.api.controller.dto.ReclaimResult;
+import io.talken.dex.api.controller.dto.TradeWalletResult;
 import io.talken.dex.shared.DexTaskId;
 import io.talken.dex.shared.TokenMetaTable;
 import io.talken.dex.shared.TransactionBlockExecutor;
@@ -51,10 +54,17 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static io.talken.common.persistence.jooq.Tables.*;
+import static io.talken.common.persistence.jooq.Tables.BCTX;
+import static io.talken.common.persistence.jooq.Tables.BCTX_LOG;
 
+/**
+ * The type Wallet service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -82,14 +92,14 @@ public class WalletService {
 	private final BigDecimal MINIMUM_LUK_FOR_TRANSFER = BigDecimal.valueOf(2.381);
 	private final int LUK_TRANSFER_PENDING_TIME = 5;
 
-	/**
-	 * get tradewallet balances
-	 *
-	 * @param user
-	 * @return
-	 * @throws TradeWalletCreateFailedException
-	 */
-	public TradeWalletResult getTradeWalletBalances(User user) throws TradeWalletCreateFailedException {
+    /**
+     * get tradewallet balances
+     *
+     * @param user the user
+     * @return trade wallet balances
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     */
+    public TradeWalletResult getTradeWalletBalances(User user) throws TradeWalletCreateFailedException {
 		TradeWalletInfo tw = twService.getTradeWallet(user);
 		TradeWalletResult rtn = new TradeWalletResult();
 		Map<String, TradeWalletResult.Balance> balances = new HashMap<>();
@@ -114,20 +124,20 @@ public class WalletService {
 	}
 
 
-	/**
-	 * get trade wallet tx list
-	 *
-	 * @param address
-	 * @param operationType
-	 * @param assetCode
-	 * @param assetIssuer
-	 * @param includeAll
-	 * @param direction
-	 * @param page
-	 * @param offset
-	 * @return
-	 */
-	public List<StellarOpReceipt> getTxList(String address, String operationType, String assetCode, String assetIssuer, boolean includeAll, Sort.Direction direction, int page, int offset) {
+    /**
+     * get trade wallet tx list
+     *
+     * @param address       the address
+     * @param operationType the operation type
+     * @param assetCode     the asset code
+     * @param assetIssuer   the asset issuer
+     * @param includeAll    the include all
+     * @param direction     the direction
+     * @param page          the page
+     * @param offset        the offset
+     * @return tx list
+     */
+    public List<StellarOpReceipt> getTxList(String address, String operationType, String assetCode, String assetIssuer, boolean includeAll, Sort.Direction direction, int page, int offset) {
 		// return empty if address is not given
 		if(address == null) return new ArrayList<>();
 
@@ -163,20 +173,20 @@ public class WalletService {
 		return mongoTemplate.find(qry, StellarOpReceipt.class, "stellar_txReceipt");
 	}
 
-	/**
-	 * prepare luniverse transfer for user private wallet
-	 * (refill LUK)
-	 * user can request this API once in LUK_TRANSFER_PENDING_TIME seconds
-	 *
-	 * @param user
-	 * @return
-	 * @throws IntegrationException
-	 * @throws PrivateWalletNotFoundException
-	 * @throws TokenMetaNotFoundException
-	 * @throws TokenMetaNotManagedException
-	 * @throws PendingLastRequestException
-	 */
-	public synchronized boolean prepareTransferLuk(User user) throws IntegrationException, PrivateWalletNotFoundException, TokenMetaNotFoundException, TokenMetaNotManagedException, PendingLastRequestException {
+    /**
+     * prepare luniverse transfer for user private wallet
+     * (refill LUK)
+     * user can request this API once in LUK_TRANSFER_PENDING_TIME seconds
+     *
+     * @param user the user
+     * @return boolean boolean
+     * @throws IntegrationException           the integration exception
+     * @throws PrivateWalletNotFoundException the private wallet not found exception
+     * @throws TokenMetaNotFoundException     the token meta not found exception
+     * @throws TokenMetaNotManagedException   the token meta not managed exception
+     * @throws PendingLastRequestException    the pending last request exception
+     */
+    public synchronized boolean prepareTransferLuk(User user) throws IntegrationException, PrivateWalletNotFoundException, TokenMetaNotFoundException, TokenMetaNotManagedException, PendingLastRequestException {
 
 		final String checkRedisKey = "talken:svc:lukprepare:" + user.getUid();
 
@@ -220,13 +230,13 @@ public class WalletService {
 		return true;
 	}
 
-	/**
-	 * check user private wallet has enough(MINIMUM_LUK_FOR_TRANSFER) LUK for transfer
-	 *
-	 * @param address
-	 * @return
-	 */
-	public boolean checkTransferLukPrepared(String address) {
+    /**
+     * check user private wallet has enough(MINIMUM_LUK_FOR_TRANSFER) LUK for transfer
+     *
+     * @param address the address
+     * @return boolean boolean
+     */
+    public boolean checkTransferLukPrepared(String address) {
         BigDecimal lukBalance = getLukBalance(address);
 	    boolean result = MINIMUM_LUK_FOR_TRANSFER.compareTo(lukBalance) <= 0;
         logger.info("checkTransferLukPrepared : {} {} ", MINIMUM_LUK_FOR_TRANSFER, lukBalance);
@@ -240,6 +250,14 @@ public class WalletService {
 		return result;
 	}
 
+    /**
+     * Reclaim reclaim result.
+     *
+     * @param user    the user
+     * @param request the request
+     * @return the reclaim result
+     * @throws Exception the exception
+     */
     public ReclaimResult reclaim(User user, ReclaimRequest request) throws Exception {
         ReclaimResult result = new ReclaimResult();
         result.setCheckTerm(checkReclaimTerm());
@@ -349,6 +367,17 @@ public class WalletService {
         return result;
     }
 
+    /**
+     * Gets reclaim by user.
+     *
+     * @param user            the user
+     * @param dexTaskTypeEnum the dex task type enum
+     * @return the reclaim by user
+     * @throws TradeWalletCreateFailedException  the trade wallet create failed exception
+     * @throws TaskIntegrityCheckFailedException the task integrity check failed exception
+     * @throws TokenMetaNotFoundException        the token meta not found exception
+     * @throws IntegrationException              the integration exception
+     */
     public ReclaimResult getReclaimByUser(User user, DexTaskTypeEnum dexTaskTypeEnum)
             throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException, TokenMetaNotFoundException, IntegrationException {
 	    final String USDT = "USDT";
@@ -391,6 +420,18 @@ public class WalletService {
         return result;
     }
 
+    /**
+     * Claim claim result.
+     *
+     * @param user     the user
+     * @param postBody the post body
+     * @return the claim result
+     * @throws TradeWalletCreateFailedException          the trade wallet create failed exception
+     * @throws TaskIntegrityCheckFailedException         the task integrity check failed exception
+     * @throws TokenMetaNotFoundException                the token meta not found exception
+     * @throws IntegrationException                      the integration exception
+     * @throws ActiveAssetHolderAccountNotFoundException the active asset holder account not found exception
+     */
     public ClaimResult claim(User user, ReclaimRequest postBody) throws TradeWalletCreateFailedException, TaskIntegrityCheckFailedException, TokenMetaNotFoundException, IntegrationException, ActiveAssetHolderAccountNotFoundException {
         final String symbol = postBody.getAssetCode();
         final DexTaskId dexTaskId = DexTaskId.generate_taskId(DexTaskTypeEnum.CLAIM);

@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+/**
+ * The type Auth required aspect.
+ */
 @Component
 @Aspect
 @Order(0)
@@ -20,11 +23,24 @@ public class AuthRequiredAspect {
 	@Autowired
 	private AuthInfo authInfo;
 
-	//	@Pointcut("execution(@AuthRequired * *(..))")
+    /**
+     * Is auth required.
+     *
+     * @param authRequired the auth required
+     */
+//	@Pointcut("execution(@AuthRequired * *(..))")
 	@Pointcut(value = "@annotation(authRequired)")
 	public void isAuthRequired(AuthRequired authRequired) {}
 
-	@Around("isAuthRequired(authRequired)")
+    /**
+     * Validate auth object.
+     *
+     * @param joinPoint    the join point
+     * @param authRequired the auth required
+     * @return the object
+     * @throws Throwable the throwable
+     */
+    @Around("isAuthRequired(authRequired)")
 	public Object validateAuth(ProceedingJoinPoint joinPoint, AuthRequired authRequired) throws Throwable {
 		if(authInfo == null)
 			throw new UnauthorizedException(new AuthenticationException("Authentication information not found."));

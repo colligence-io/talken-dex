@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * The type Relay add contents response.
+ */
 @Deprecated
 @Data
 public class RelayAddContentsResponse implements RestApiResponseInterface {

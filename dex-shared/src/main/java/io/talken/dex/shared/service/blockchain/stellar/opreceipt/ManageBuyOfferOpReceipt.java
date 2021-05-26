@@ -12,11 +12,17 @@ import org.stellar.sdk.xdr.ManageBuyOfferResultCode;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * The type Manage buy offer op receipt.
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ManageBuyOfferOpReceipt extends StellarOpReceipt<ManageBuyOfferOperation, ManageBuyOfferResult> {
 
-	@Data
+    /**
+     * The type Request.
+     */
+    @Data
 	@Builder
 	public static class Request {
 		private String ownerAccount;
@@ -27,7 +33,10 @@ public class ManageBuyOfferOpReceipt extends StellarOpReceipt<ManageBuyOfferOper
 		private Long offerId;
 	}
 
-	@Data
+    /**
+     * The type Result.
+     */
+    @Data
 	@Builder
 	public static class Result {
 		private Long offerId;

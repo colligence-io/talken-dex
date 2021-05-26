@@ -4,7 +4,6 @@ package io.talken.dex.governance.service.bctx.monitor.ethereum;
 import io.talken.common.persistence.enums.BlockChainPlatformEnum;
 import io.talken.common.util.PrefixedLogger;
 import org.jooq.Condition;
-import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,10 @@ public class EthereumAnchorReceiptHandler extends AbstractEthereumAnchorReceiptH
 	@Autowired
 	private EthereumTxMonitor txMonitor;
 
-	public EthereumAnchorReceiptHandler() {
+    /**
+     * Instantiates a new Ethereum anchor receipt handler.
+     */
+    public EthereumAnchorReceiptHandler() {
 		super(logger);
 		addBcType(BlockChainPlatformEnum.ETHEREUM);
 		addBcType(BlockChainPlatformEnum.ETHEREUM_ERC20_TOKEN);

@@ -3,6 +3,11 @@ package io.talken.dex.shared.service.integration.signer;
 import io.talken.common.util.integration.rest.RestApiResponseInterface;
 import lombok.Data;
 
+/**
+ * The type Abstract sign server response.
+ *
+ * @param <T> the type parameter
+ */
 @Data
 public abstract class AbstractSignServerResponse<T> implements RestApiResponseInterface {
 	private String code;

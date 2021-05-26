@@ -5,8 +5,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * The interface Auth required.
+ */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AuthRequired {
-	boolean isRequired() default true;
+    /**
+     * Is required boolean.
+     *
+     * @return the boolean
+     */
+    boolean isRequired() default true;
 }

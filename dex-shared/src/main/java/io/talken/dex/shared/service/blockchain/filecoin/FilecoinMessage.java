@@ -7,8 +7,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * The type Filecoin message.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FilecoinMessage {
+    /**
+     * The type Message.
+     */
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static final class Message {
@@ -37,12 +43,26 @@ public class FilecoinMessage {
                     '}';
         }
     }
+
+    /**
+     * The type Secpk message.
+     */
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static final class SecpkMessage {
+        /**
+         * The Message.
+         */
         Message message;
+        /**
+         * The Cid.
+         */
         Cid cid;
     }
+
+    /**
+     * The type Ticket.
+     */
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static final class Ticket {
@@ -50,6 +70,10 @@ public class FilecoinMessage {
         private String VDFResult;
         private String VDFProof;
     }
+
+    /**
+     * The type Block.
+     */
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static final class Block {

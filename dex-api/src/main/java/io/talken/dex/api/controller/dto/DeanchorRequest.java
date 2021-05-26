@@ -6,6 +6,9 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
+/**
+ * The type Deanchor request.
+ */
 @Data
 public class DeanchorRequest {
 	@NotEmpty

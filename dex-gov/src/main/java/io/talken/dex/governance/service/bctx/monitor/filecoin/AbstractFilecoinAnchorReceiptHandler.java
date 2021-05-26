@@ -20,6 +20,9 @@ import java.math.BigDecimal;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_ANCHOR;
 
+/**
+ * The type Abstract filecoin anchor receipt handler.
+ */
 public abstract class AbstractFilecoinAnchorReceiptHandler extends AbstractAnchorReceiptHandler implements TxMonitor.ReceiptHandler<FilecoinMessage.Block, FilecoinMessage.SecpkMessage, FilecoinMessage.SecpkMessage> {
 	private PrefixedLogger logger;
 
@@ -32,11 +35,22 @@ public abstract class AbstractFilecoinAnchorReceiptHandler extends AbstractAncho
 	@Autowired
 	private DataSourceTransactionManager txMgr;
 
-	public AbstractFilecoinAnchorReceiptHandler(PrefixedLogger logger) {
+    /**
+     * Instantiates a new Abstract filecoin anchor receipt handler.
+     *
+     * @param logger the logger
+     */
+    public AbstractFilecoinAnchorReceiptHandler(PrefixedLogger logger) {
 		this.logger = logger;
 	}
 
-	abstract protected Condition getBcTypeCondition(String contractAddr);
+    /**
+     * Gets bc type condition.
+     *
+     * @param contractAddr the contract addr
+     * @return the bc type condition
+     */
+    abstract protected Condition getBcTypeCondition(String contractAddr);
 
 	/**
 	 * handle fcMessage
@@ -44,10 +58,6 @@ public abstract class AbstractFilecoinAnchorReceiptHandler extends AbstractAncho
 	 * 2. check this fcMessage is anchoring (search DB task)
 	 * 3. insert asset issueing bctx
 	 *
-	 * @param block
-	 * @param txResult
-	 * @param msg
-	 * @throws Exception
 	 */
 	@Override
 	public void handle(FilecoinMessage.Block block, FilecoinMessage.SecpkMessage txResult, FilecoinMessage.SecpkMessage msg) throws Exception {

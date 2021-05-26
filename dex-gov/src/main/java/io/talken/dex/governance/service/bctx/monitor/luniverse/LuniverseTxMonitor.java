@@ -25,6 +25,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * The type Luniverse tx monitor.
+ */
 @Service
 @Scope("singleton")
 public class LuniverseTxMonitor extends AbstractEthereumTxMonitor {
@@ -39,7 +42,10 @@ public class LuniverseTxMonitor extends AbstractEthereumTxMonitor {
 	@Autowired
 	private ServiceStatusService ssService;
 
-	@Data
+    /**
+     * The type Luniverse tx monitor status.
+     */
+    @Data
 	public static class LuniverseTxMonitorStatus {
 		private BigInteger lastBlock;
 		private LocalDateTime lastBlockTimestamp;
@@ -47,7 +53,10 @@ public class LuniverseTxMonitor extends AbstractEthereumTxMonitor {
 
 	private static final String COLLECTION_NAME = "luniverse_txReceipt";
 
-	public LuniverseTxMonitor() {
+    /**
+     * Instantiates a new Luniverse tx monitor.
+     */
+    public LuniverseTxMonitor() {
 		super(logger, "Luniverse");
 	}
 

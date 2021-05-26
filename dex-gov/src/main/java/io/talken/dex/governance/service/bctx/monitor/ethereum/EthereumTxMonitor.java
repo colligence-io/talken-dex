@@ -24,6 +24,9 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * The type Ethereum tx monitor.
+ */
 @Service
 @Scope("singleton")
 public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
@@ -43,11 +46,17 @@ public class EthereumTxMonitor extends AbstractEthereumTxMonitor {
 
 	private static final String COLLECTION_NAME = "ethereum_txReceipt";
 
-	public EthereumTxMonitor() {
+    /**
+     * Instantiates a new Ethereum tx monitor.
+     */
+    public EthereumTxMonitor() {
 		super(logger, "Ethereum");
 	}
 
-	@Data
+    /**
+     * The type Ethereum tx monitor status.
+     */
+    @Data
 	public static class EthereumTxMonitorStatus {
 		private BigInteger lastBlock;
 		private LocalDateTime lastBlockTimestamp;

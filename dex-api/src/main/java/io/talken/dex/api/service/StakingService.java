@@ -32,6 +32,9 @@ import static io.talken.common.persistence.jooq.Tables.STAKING_EVENT;
 import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.sum;
 
+/**
+ * The type Staking service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -42,6 +45,30 @@ public class StakingService {
     private final TradeWalletService twService;
     private final TokenMetaApiService tmService;
 
+    /**
+     * Create staking create staking result.
+     *
+     * @param user    the user
+     * @param request the request
+     * @return the create staking result
+     * @throws TokenMetaNotFoundException       the token meta not found exception
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     * @throws TokenMetaNotManagedException     the token meta not managed exception
+     * @throws StakingEventNotFoundException    the staking event not found exception
+     * @throws StakingBalanceNotEnoughException the staking balance not enough exception
+     * @throws StakingAmountEnoughException     the staking amount enough exception
+     * @throws StakingBeforeStartException      the staking before start exception
+     * @throws UnStakingBeforeExpireException   the un staking before expire exception
+     * @throws UnStakingAfterStakingException   the un staking after staking exception
+     * @throws StakingUserEnoughException       the staking user enough exception
+     * @throws StakingAlreadyExistsException    the staking already exists exception
+     * @throws StakingAfterEndException         the staking after end exception
+     * @throws StakingTooLittleAmountException  the staking too little amount exception
+     * @throws UnStakingDisabledException       the un staking disabled exception
+     * @throws StakingTooMuchAmountException    the staking too much amount exception
+     * @throws StakingTooOverAmountException    the staking too over amount exception
+     * @throws UnStakingTooOverAmountException  the un staking too over amount exception
+     */
     public CreateStakingResult createStaking(User user, CreateStakingRequest request)
             throws TokenMetaNotFoundException, TradeWalletCreateFailedException,
             TokenMetaNotManagedException, StakingEventNotFoundException,
@@ -53,6 +80,30 @@ public class StakingService {
         return createStaking(user, true, request);
     }
 
+    /**
+     * Create un staking create staking result.
+     *
+     * @param user    the user
+     * @param request the request
+     * @return the create staking result
+     * @throws TokenMetaNotFoundException       the token meta not found exception
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     * @throws TokenMetaNotManagedException     the token meta not managed exception
+     * @throws StakingEventNotFoundException    the staking event not found exception
+     * @throws StakingBalanceNotEnoughException the staking balance not enough exception
+     * @throws StakingAmountEnoughException     the staking amount enough exception
+     * @throws StakingBeforeStartException      the staking before start exception
+     * @throws UnStakingBeforeExpireException   the un staking before expire exception
+     * @throws UnStakingAfterStakingException   the un staking after staking exception
+     * @throws StakingUserEnoughException       the staking user enough exception
+     * @throws StakingAlreadyExistsException    the staking already exists exception
+     * @throws StakingAfterEndException         the staking after end exception
+     * @throws StakingTooLittleAmountException  the staking too little amount exception
+     * @throws UnStakingDisabledException       the un staking disabled exception
+     * @throws StakingTooMuchAmountException    the staking too much amount exception
+     * @throws StakingTooOverAmountException    the staking too over amount exception
+     * @throws UnStakingTooOverAmountException  the un staking too over amount exception
+     */
     public CreateStakingResult createUnStaking(User user, CreateStakingRequest request)
             throws TokenMetaNotFoundException, TradeWalletCreateFailedException,
             TokenMetaNotManagedException, StakingEventNotFoundException,
@@ -64,6 +115,31 @@ public class StakingService {
         return createStaking(user, false, request);
     }
 
+    /**
+     * Create staking create staking result.
+     *
+     * @param user      the user
+     * @param isStaking the is staking
+     * @param request   the request
+     * @return the create staking result
+     * @throws TokenMetaNotFoundException       the token meta not found exception
+     * @throws TradeWalletCreateFailedException the trade wallet create failed exception
+     * @throws TokenMetaNotManagedException     the token meta not managed exception
+     * @throws StakingEventNotFoundException    the staking event not found exception
+     * @throws StakingBalanceNotEnoughException the staking balance not enough exception
+     * @throws UnStakingBeforeExpireException   the un staking before expire exception
+     * @throws StakingAmountEnoughException     the staking amount enough exception
+     * @throws StakingBeforeStartException      the staking before start exception
+     * @throws StakingAlreadyExistsException    the staking already exists exception
+     * @throws UnStakingAfterStakingException   the un staking after staking exception
+     * @throws StakingUserEnoughException       the staking user enough exception
+     * @throws StakingAfterEndException         the staking after end exception
+     * @throws StakingTooMuchAmountException    the staking too much amount exception
+     * @throws UnStakingDisabledException       the un staking disabled exception
+     * @throws StakingTooLittleAmountException  the staking too little amount exception
+     * @throws StakingTooOverAmountException    the staking too over amount exception
+     * @throws UnStakingTooOverAmountException  the un staking too over amount exception
+     */
     protected synchronized CreateStakingResult createStaking(User user, boolean isStaking, CreateStakingRequest request)
             throws TokenMetaNotFoundException, TradeWalletCreateFailedException, TokenMetaNotManagedException,
             StakingEventNotFoundException, StakingBalanceNotEnoughException, UnStakingBeforeExpireException,
@@ -113,6 +189,13 @@ public class StakingService {
         return result;
     }
 
+    /**
+     * Check staking available boolean.
+     *
+     * @param user    the user
+     * @param request the request
+     * @return the boolean
+     */
     public boolean checkStakingAvailable(User user, CreateStakingRequest request) {
         final String stakingEventCode = request.getStakingCode();
         final String stakingEventAssetCode = request.getStakingAssetCode();
@@ -246,6 +329,13 @@ public class StakingService {
         return stakingEventRecord;
     }
 
+    /**
+     * Gets staking event.
+     *
+     * @param stakingId the staking id
+     * @return the staking event
+     * @throws StakingEventNotFoundException the staking event not found exception
+     */
     public StakingEventRequest getStakingEvent(long stakingId) throws StakingEventNotFoundException {
         StakingEventRequest dto = new StakingEventRequest();
         StakingEventRecord stakingEventRecord = dslContext.selectFrom(STAKING_EVENT)

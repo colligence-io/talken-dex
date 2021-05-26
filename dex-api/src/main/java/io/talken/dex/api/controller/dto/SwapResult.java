@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Swap result.
+ */
 @Data
 public class SwapResult {
 	private String taskId;

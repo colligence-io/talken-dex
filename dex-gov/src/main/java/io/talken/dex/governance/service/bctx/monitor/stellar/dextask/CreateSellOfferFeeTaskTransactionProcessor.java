@@ -31,6 +31,9 @@ import java.util.Optional;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_CREATEOFFER;
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_CREATEOFFERSELLFEE;
 
+/**
+ * The type Create sell offer fee task transaction processor.
+ */
 @Component
 public class CreateSellOfferFeeTaskTransactionProcessor extends AbstractCreateOfferTaskTransactionProcessor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(CreateSellOfferFeeTaskTransactionProcessor.class);

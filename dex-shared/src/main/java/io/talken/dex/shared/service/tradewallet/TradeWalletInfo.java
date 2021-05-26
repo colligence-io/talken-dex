@@ -12,6 +12,9 @@ import org.stellar.sdk.responses.AccountResponse;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Trade wallet info.
+ */
 @Data
 public final class TradeWalletInfo {
 	private boolean isConfirmed;
@@ -36,27 +39,61 @@ public final class TradeWalletInfo {
 	@JsonIgnore
 	private AccountResponse accountResponse = null;
 
-	public TradeWalletInfo(User user) {
+    /**
+     * Instantiates a new Trade wallet info.
+     *
+     * @param user the user
+     */
+    public TradeWalletInfo(User user) {
 		this.user = user;
 	}
 
-	public String getUid() {
+    /**
+     * Gets uid.
+     *
+     * @return the uid
+     */
+    public String getUid() {
 		return user.getUid();
 	}
 
-	public BigDecimal getBalance(Asset asset) {
+    /**
+     * Gets balance.
+     *
+     * @param asset the asset
+     * @return the balance
+     */
+    public BigDecimal getBalance(Asset asset) {
 		return StellarConverter.getAccountBalance(accountResponse, asset);
 	}
 
-	public BigDecimal getNativeBalance() {
+    /**
+     * Gets native balance.
+     *
+     * @return the native balance
+     */
+    public BigDecimal getNativeBalance() {
 		return StellarConverter.getAccountNativeBalance(accountResponse);
 	}
 
-	public boolean isTrusted(Asset asset) {
+    /**
+     * Is trusted boolean.
+     *
+     * @param asset the asset
+     * @return the boolean
+     */
+    public boolean isTrusted(Asset asset) {
 		return StellarConverter.isAccountTrusted(accountResponse, asset);
 	}
 
-	public boolean hasEnough(Asset asset, BigDecimal amount) {
+    /**
+     * Has enough boolean.
+     *
+     * @param asset  the asset
+     * @param amount the amount
+     * @return the boolean
+     */
+    public boolean hasEnough(Asset asset, BigDecimal amount) {
 		return StellarConverter.isAccountBalanceEnough(accountResponse, asset, amount);
 	}
 }

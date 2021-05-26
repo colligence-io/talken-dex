@@ -7,9 +7,17 @@ import io.talken.dex.api.config.auth.AccessTokenInterceptor;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 
+/**
+ * The type Api launcher.
+ */
 @SpringBootApplication(scanBasePackages = {"io.talken.dex.api"}, exclude = {ErrorMvcAutoConfiguration.class})
 public class ApiLauncher extends DefaultApplication {
-	public static void main(String[] args) {
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     */
+    public static void main(String[] args) {
 		// Parse arguments
 		for(int i = 0; i < args.length; i++) {
 			// force uid

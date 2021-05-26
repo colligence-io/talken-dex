@@ -5,6 +5,9 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.Map;
 
+/**
+ * The type Total market cap result.
+ */
 @Data
 public class TotalMarketCapResult {
     private long active_cryptocurrencies;

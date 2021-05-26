@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
+/**
+ * The type Filecoin receipt collector.
+ */
 @Service
 @Scope("singleton")
 @Deprecated
@@ -23,6 +26,20 @@ public class FilecoinReceiptCollector {
 
 	private final long collectionTimeout = 30;
 
+    /**
+     * Collect map.
+     *
+     * @param collectThreads the collect threads
+     * @param networkName    the network name
+     * @param web3j          the web 3 j
+     * @param txs            the txs
+     * @return the map
+     * @throws ExecutionException   the execution exception
+     * @throws InterruptedException the interrupted exception
+     * @throws TimeoutException     the timeout exception
+     * @throws BctxException        the bctx exception
+     * @throws IOException          the io exception
+     */
     @SuppressWarnings("unchecked")
 	public synchronized Map<String, TransactionReceipt> collect(int collectThreads, String networkName, Web3j web3j, List<Transaction> txs) throws ExecutionException, InterruptedException, TimeoutException, BctxException, IOException {
 		Map<String, TransactionReceipt> receipts = new HashMap<>();
@@ -63,7 +80,17 @@ public class FilecoinReceiptCollector {
 		return receipts;
 	}
 
-	@Async
+    /**
+     * Collect receipts future.
+     *
+     * @param networkName the network name
+     * @param web3j       the web 3 j
+     * @param tq          the tq
+     * @return the future
+     * @throws BctxException the bctx exception
+     * @throws IOException   the io exception
+     */
+    @Async
 	public Future<Map<String, TransactionReceipt>> collectReceipts(String networkName, Web3j web3j, Queue<String> tq) throws BctxException, IOException {
 		Map<String, TransactionReceipt> t_receipts = new HashMap<>();
 		while(true) {

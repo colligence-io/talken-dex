@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.talken.common.util.integration.rest.RestApiResponseInterface;
 import lombok.Data;
 
+/**
+ * The type Anc server anchor response.
+ */
 @Deprecated
 @Data
 @JsonIgnoreProperties("message")
@@ -32,7 +35,10 @@ public class AncServerAnchorResponse implements RestApiResponseInterface {
 		return getDescription();
 	}
 
-	@Data
+    /**
+     * The type Data.
+     */
+    @Data
 	public static class _Data {
 		private Integer index;
 		private String address;

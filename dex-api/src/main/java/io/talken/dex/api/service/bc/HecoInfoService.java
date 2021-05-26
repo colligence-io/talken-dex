@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * The type Heco info service.
+ */
 @Service
 @Scope("singleton")
 public class HecoInfoService {
@@ -34,8 +37,17 @@ public class HecoInfoService {
 
     private Web3j rpcClient;
 
+    /**
+     * The Default gaslimit.
+     */
     static final String DEFAULT_GASLIMIT = "21000";
+    /**
+     * The Default contract gaslimit.
+     */
     static final String DEFAULT_CONTRACT_GASLIMIT = "300000";
+    /**
+     * The Default contract gasprice.
+     */
     static final String DEFAULT_CONTRACT_GASPRICE = "1000000000";
 
     @PostConstruct
@@ -46,9 +58,9 @@ public class HecoInfoService {
     /**
      * get heco balance
      *
-     * @param address
-     * @return
-     * @throws GeneralException
+     * @param address the address
+     * @return heco balance
+     * @throws GeneralException the general exception
      */
     public BigInteger getHecoBalance(String address) throws GeneralException {
         return getHecoBalance(rpcClient, address);
@@ -57,10 +69,10 @@ public class HecoInfoService {
     /**
      * get heco balance
      *
-     * @param web3j
-     * @param address
-     * @return
-     * @throws GeneralException
+     * @param web3j   the web 3 j
+     * @param address the address
+     * @return heco balance
+     * @throws GeneralException the general exception
      */
     public BigInteger getHecoBalance(Web3j web3j, String address) throws GeneralException {
         try {
@@ -73,8 +85,8 @@ public class HecoInfoService {
     /**
      * get heco gas price and limit
      *
-     * @return
-     * @throws InternalServerErrorException
+     * @return gas price and limit
+     * @throws InternalServerErrorException the internal server error exception
      */
     public HecoGasPriceResult getGasPriceAndLimit() throws InternalServerErrorException {
         try {
@@ -87,16 +99,36 @@ public class HecoInfoService {
         }
     }
 
+    /**
+     * Gets gas price.
+     *
+     * @param web3j the web 3 j
+     * @return the gas price
+     * @throws IOException the io exception
+     */
     public BigInteger getGasPrice(Web3j web3j) throws IOException {
         return web3j.ethGasPrice().send().getGasPrice();
     }
 
+    /**
+     * Gets gas limit.
+     *
+     * @param web3j the web 3 j
+     * @return the gas limit
+     * @throws IOException the io exception
+     */
     public BigInteger getGasLimit(Web3j web3j) throws IOException {
         //default gas limit value
         return new BigInteger(DEFAULT_GASLIMIT);
     }
 
-    // TODO: need to calculate gas price for contract tokens
+    /**
+     * Gets hrc 20 gas price and limit.
+     *
+     * @return the hrc 20 gas price and limit
+     * @throws InternalServerErrorException the internal server error exception
+     */
+// TODO: need to calculate gas price for contract tokens
     public HecoGasPriceResult getHrc20GasPriceAndLimit() throws InternalServerErrorException {
         try {
             HecoGasPriceResult rtn = new HecoGasPriceResult();
@@ -107,11 +139,26 @@ public class HecoInfoService {
             throw new InternalServerErrorException(e);
         }
     }
+
+    /**
+     * Gets hrc 20 gas price.
+     *
+     * @param web3j the web 3 j
+     * @return the hrc 20 gas price
+     * @throws IOException the io exception
+     */
     public BigInteger getHrc20GasPrice(Web3j web3j) throws IOException {
         // expected value. 1 Gwei is default.
         return new BigInteger(DEFAULT_CONTRACT_GASPRICE);
     }
 
+    /**
+     * Gets hrc 20 gas limit.
+     *
+     * @param web3j the web 3 j
+     * @return the hrc 20 gas limit
+     * @throws IOException the io exception
+     */
     public BigInteger getHrc20GasLimit(Web3j web3j) throws IOException {
         return new BigInteger(DEFAULT_CONTRACT_GASLIMIT);
     }
@@ -119,10 +166,11 @@ public class HecoInfoService {
 
     /**
      * get heco transaction by hash
-     * @param txHash
-     * @return
-     * @throws ExecutionException
-     * @throws InterruptedException
+     *
+     * @param txHash the tx hash
+     * @return heco transaction
+     * @throws ExecutionException   the execution exception
+     * @throws InterruptedException the interrupted exception
      */
     public EthTransactionResult getHecoTransaction(String txHash) throws ExecutionException, InterruptedException {
         EthTransactionResult.EthTransactionResultBuilder builder = EthTransactionResult.builder();
@@ -156,10 +204,11 @@ public class HecoInfoService {
 
     /**
      * get heco transaction receipt by hash
-     * @param txHash
-     * @return
-     * @throws ExecutionException
-     * @throws InterruptedException
+     *
+     * @param txHash the tx hash
+     * @return heco transaction receipt
+     * @throws ExecutionException   the execution exception
+     * @throws InterruptedException the interrupted exception
      */
     public EthTransactionReceiptResult getHecoTransactionReceipt(String txHash) throws ExecutionException, InterruptedException {
         EthTransactionReceiptResult.EthTransactionReceiptResultBuilder builder = EthTransactionReceiptResult.builder();
@@ -191,10 +240,10 @@ public class HecoInfoService {
     /**
      * get hrc20 balance
      *
-     * @param contract
-     * @param address
-     * @return
-     * @throws GeneralException
+     * @param contract the contract
+     * @param address  the address
+     * @return hrc 20 balance
+     * @throws GeneralException the general exception
      */
     public BigInteger getHrc20Balance(String contract, String address) throws GeneralException {
         return getHrc20Balance(hecoNetworkService.getClient().newClient(), contract, address);
@@ -203,11 +252,11 @@ public class HecoInfoService {
     /**
      * get hrc20 balance
      *
-     * @param web3j
-     * @param contract
-     * @param address
-     * @return
-     * @throws GeneralException
+     * @param web3j    the web 3 j
+     * @param contract the contract
+     * @param address  the address
+     * @return hrc 20 balance
+     * @throws GeneralException the general exception
      */
     public BigInteger getHrc20Balance(Web3j web3j, String contract, String address) throws GeneralException {
         try {

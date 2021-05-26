@@ -17,38 +17,64 @@ public class EthRpcClient {
 	private String client = null;
 	private Boolean isParity = null;
 
-	public EthRpcClient(String uri) {
+    /**
+     * Instantiates a new Eth rpc client.
+     *
+     * @param uri the uri
+     */
+    public EthRpcClient(String uri) {
 		this.uri = uri;
 	}
 
-	public String getUri() {
+    /**
+     * Gets uri.
+     *
+     * @return the uri
+     */
+    public String getUri() {
 		return uri;
 	}
 
-	public String getClientVersion() throws IOException {
+    /**
+     * Gets client version.
+     *
+     * @return the client version
+     * @throws IOException the io exception
+     */
+    public String getClientVersion() throws IOException {
 	    // NOTICE: error occur <= 4.8.3
 		if(this.client == null) this.client = newClient().web3ClientVersion().send().getWeb3ClientVersion();
 		return client;
 	}
 
-	public Web3j newClient() {
+    /**
+     * New client web 3 j.
+     *
+     * @return the web 3 j
+     */
+    public Web3j newClient() {
 		return Web3j.build(newWeb3jService());
 	}
 
-	public Web3jService newWeb3jService() {
+    /**
+     * New web 3 j service web 3 j service.
+     *
+     * @return the web 3 j service
+     */
+    public Web3jService newWeb3jService() {
 		return new Web3jHttpService(this.uri);
 	}
 
-	/**
-	 * get proper next nonce from pending block
-	 * if node server is parity, use parity_nextNonce instead of eth_transactionCount for pending block
-	 *
-	 * @param web3jService
-	 * @param address
-	 * @return
-	 * @throws Exception
-	 */
-	public BigInteger getNonce(Web3jService web3jService, String address) throws Exception {
+    /**
+     * get proper next nonce from pending block
+     * if node server is parity, use parity_nextNonce instead of eth_transactionCount for pending block
+     *
+     * @param web3jService the web 3 j service
+     * @param address      the address
+     * @return nonce
+     * @throws Exception the exception
+     */
+    public BigInteger getNonce(Web3jService web3jService, String address) throws Exception {
 		if(this.isParity == null) {
 			getClientVersion();
 			this.isParity = client.startsWith("Parity-Ethereum");

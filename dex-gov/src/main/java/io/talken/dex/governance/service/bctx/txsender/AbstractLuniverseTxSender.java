@@ -22,13 +22,22 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 
+/**
+ * The type Abstract luniverse tx sender.
+ */
 public abstract class AbstractLuniverseTxSender extends TxSender {
 	private final PrefixedLogger logger;
 
 	@Autowired
 	private LuniverseNetworkService luniverseNetworkService;
 
-	public AbstractLuniverseTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
+    /**
+     * Instantiates a new Abstract luniverse tx sender.
+     *
+     * @param platform the platform
+     * @param logger   the logger
+     */
+    public AbstractLuniverseTxSender(BlockChainPlatformEnum platform, PrefixedLogger logger) {
 		super(platform);
 		this.logger = logger;
 	}
@@ -36,11 +45,6 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 	/**
 	 * send luniverse tx
 	 *
-	 * @param meta
-	 * @param bctx
-	 * @param log
-	 * @return
-	 * @throws Exception
 	 */
 	@Override
 	public boolean sendTx(TokenMetaTable.Meta meta, Bctx bctx, BctxLogRecord log) throws Exception {
@@ -62,17 +66,17 @@ public abstract class AbstractLuniverseTxSender extends TxSender {
 		}
 	}
 
-	/**
-	 * send luniverse tx (impl)
-	 *
-	 * @param contractAddr
-	 * @param decimals
-	 * @param bctx
-	 * @param log
-	 * @return
-	 * @throws Exception
-	 */
-	protected boolean sendLuniverseTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
+    /**
+     * send luniverse tx (impl)
+     *
+     * @param contractAddr the contract addr
+     * @param decimals     the decimals
+     * @param bctx         the bctx
+     * @param log          the log
+     * @return boolean
+     * @throws Exception the exception
+     */
+    protected boolean sendLuniverseTx(String contractAddr, Integer decimals, Bctx bctx, BctxLogRecord log) throws Exception {
 		Web3j web3j = luniverseNetworkService.newMainRpcClient();
 
 		BigInteger nonce = web3j.ethGetTransactionCount(bctx.getAddressFrom(), DefaultBlockParameterName.LATEST).send().getTransactionCount();

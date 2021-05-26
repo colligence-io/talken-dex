@@ -6,6 +6,9 @@ import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerF
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * The type Web server config.
+ */
 @Configuration
 public class WebServerConfig implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> {
 	@Override
@@ -19,7 +22,12 @@ public class WebServerConfig implements WebServerFactoryCustomizer<ConfigurableS
 //		factory.addErrorPages(new ErrorPage("/error"));
 	}
 
-	@Bean
+    /**
+     * Jetty servlet web server factory jetty servlet web server factory.
+     *
+     * @return the jetty servlet web server factory
+     */
+    @Bean
 	public JettyServletWebServerFactory jettyServletWebServerFactory() {
 		JettyServletWebServerFactory jetty = new JettyServletWebServerFactory();
 //        jetty.setPort(9000);

@@ -14,6 +14,9 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 
+/**
+ * The type Abstract create offer task transaction processor.
+ */
 @Component
 public abstract class AbstractCreateOfferTaskTransactionProcessor implements DexTaskTransactionProcessor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(AbstractCreateOfferTaskTransactionProcessor.class);
@@ -33,11 +36,21 @@ public abstract class AbstractCreateOfferTaskTransactionProcessor implements Dex
 		feeRatePivot = govSettings.getTask().getCreateOffer().getFeeRatePivot();
 	}
 
-	protected TokenMetaTable.ManagedInfo getPivotAssetManagedInfo() {
+    /**
+     * Gets pivot asset managed info.
+     *
+     * @return the pivot asset managed info
+     */
+    protected TokenMetaTable.ManagedInfo getPivotAssetManagedInfo() {
 		return PIVOT_ASSET_MI;
 	}
 
-	protected BigDecimal getFeeRatePivot() {
+    /**
+     * Gets fee rate pivot.
+     *
+     * @return the fee rate pivot
+     */
+    protected BigDecimal getFeeRatePivot() {
 		return feeRatePivot;
 	}
 }

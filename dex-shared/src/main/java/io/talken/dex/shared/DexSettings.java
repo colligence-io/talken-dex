@@ -14,12 +14,18 @@ import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.util.Map;
 
+/**
+ * The type Dex settings.
+ */
 @Data
 public class DexSettings {
 	@Autowired
 	private VaultSecretReader secretReader;
 
-	public static String PIVOT_ASSET_CODE = "USDT";
+    /**
+     * The constant PIVOT_ASSET_CODE.
+     */
+    public static String PIVOT_ASSET_CODE = "USDT";
 
 	@PostConstruct
 	private void readVaultSecret() {
@@ -42,7 +48,10 @@ public class DexSettings {
 
 	private _MaM mam;
 
-	@Getter
+    /**
+     * The type Ma m.
+     */
+    @Getter
 	@Setter
 	public static class _MaM {
 		private BigDecimal creatorMinBalance;
@@ -50,7 +59,10 @@ public class DexSettings {
 		private BigDecimal issuerMinBalance;
 		private _NetworkFeeBuffer netfeeBuffer;
 
-		@Getter
+        /**
+         * The type Network fee buffer.
+         */
+        @Getter
 		@Setter
 		public static class _NetworkFeeBuffer {
 			private Map<String, BigDecimal> holder;
@@ -60,7 +72,10 @@ public class DexSettings {
 
 	private _TradeWallet tradeWallet;
 
-	@Getter
+    /**
+     * The type Trade wallet.
+     */
+    @Getter
 	@Setter
 	public static class _TradeWallet {
 		private String creatorAddress;
@@ -68,19 +83,28 @@ public class DexSettings {
 
 	private _Task task;
 
-	@Getter
+    /**
+     * The type Task.
+     */
+    @Getter
 	@Setter
 	public static class _Task {
 		private _CreateOffer createOffer;
 		private _Deanchor deanchor;
 
-		@Getter
+        /**
+         * The type Create offer.
+         */
+        @Getter
 		@Setter
 		public static class _CreateOffer {
 			private BigDecimal feeRatePivot;
 		}
 
-		@Getter
+        /**
+         * The type Deanchor.
+         */
+        @Getter
 		@Setter
 		public static class _Deanchor {
 			private BigDecimal feeAmountTalk;
@@ -89,7 +113,10 @@ public class DexSettings {
 
 	private _BCNodes bcnode;
 
-	@Getter
+    /**
+     * The type Bc nodes.
+     */
+    @Getter
 	@Setter
 	public static class _BCNodes {
 		private _Stellar stellar;
@@ -101,7 +128,10 @@ public class DexSettings {
 		private _Heco heco;
 	}
 
-	@Getter
+    /**
+     * The type Filecoin.
+     */
+    @Getter
 	@Setter
 	public static class _Filecoin {
 		private String infuraUri;
@@ -109,7 +139,10 @@ public class DexSettings {
 		private String projectSecret;
 	}
 
-	@Getter
+    /**
+     * The type Stellar.
+     */
+    @Getter
 	@Setter
 	public static class _Stellar {
 		private String network;
@@ -118,7 +151,10 @@ public class DexSettings {
 		private VaultSecretDataStellar secret;
 	}
 
-	@Getter
+    /**
+     * The type Ethereum.
+     */
+    @Getter
 	@Setter
 	public static class _Ethereum {
 		private String network;
@@ -128,7 +164,10 @@ public class DexSettings {
         private String gasEtherscanUrl;
 	}
 
-	@Getter
+    /**
+     * The type Luniverse.
+     */
+    @Getter
 	@Setter
 	public static class _Luniverse {
 		private VaultSecretDataLuniverse secret;
@@ -137,6 +176,9 @@ public class DexSettings {
 		private String mainRpcUri;
 	}
 
+    /**
+     * The type Klaytn.
+     */
     @Getter
     @Setter
     public static class _Klaytn {
@@ -145,6 +187,9 @@ public class DexSettings {
         private String secretAccessKey;
     }
 
+    /**
+     * The type Bsc.
+     */
     @Getter
     @Setter
     public static class _Bsc {
@@ -152,7 +197,10 @@ public class DexSettings {
         private String mainRpcUri;
     }
 
-	@Getter
+    /**
+     * The type Heco.
+     */
+    @Getter
 	@Setter
 	public static class _Heco {
 		private int chainId;
@@ -161,7 +209,10 @@ public class DexSettings {
 
 	private _Integration integration;
 
-	@Getter
+    /**
+     * The type Integration.
+     */
+    @Getter
 	@Setter
 	public static class _Integration {
 		private VaultSecretDataSlack slack;
@@ -171,25 +222,37 @@ public class DexSettings {
 		private _Relay relay;
 		private _Anchor anchor;
 
-		@Getter
+        /**
+         * The type Wallet.
+         */
+        @Getter
 		@Setter
 		public static class _Wallet {
 			private String apiUrl;
 		}
 
-		@Getter
+        /**
+         * The type Relay.
+         */
+        @Getter
 		@Setter
 		public static class _Relay {
 			private String apiUrl;
 		}
 
-		@Getter
+        /**
+         * The type Anchor.
+         */
+        @Getter
 		@Setter
 		public static class _Anchor {
 			private String apiUrl;
 		}
 
-		@Getter
+        /**
+         * The type Sign server.
+         */
+        @Getter
 		@Setter
 		public static class _SignServer {
 			private String addr;
@@ -197,7 +260,10 @@ public class DexSettings {
 			private String appKey;
 		}
 
-		@Getter
+        /**
+         * The type Coin market cap.
+         */
+        @Getter
 		@Setter
 		public static class _CoinMarketCap {
 			private String apiKey;

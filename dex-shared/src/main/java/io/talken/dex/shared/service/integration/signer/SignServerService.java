@@ -49,7 +49,14 @@ public class SignServerService {
 	 */
 	private final static Object updateLock = new Object();
 
-	public SignServerService(String serverAddr, String appName, String appKey) {
+    /**
+     * Instantiates a new Sign server service.
+     *
+     * @param serverAddr the server addr
+     * @param appName    the app name
+     * @param appKey     the app key
+     */
+    public SignServerService(String serverAddr, String appName, String appKey) {
 		this.signingUrl = serverAddr + "/sign";
 		this.introduceUrl = serverAddr + "/introduce";
 		this.answerUrl = serverAddr + "/answer";
@@ -156,25 +163,25 @@ public class SignServerService {
 		return RestApiClient.requestPost(this.signingUrl, headers, request, SignServerSignResponse.class);
 	}
 
-	/**
-	 * sign stellar tx envelope
-	 * shortcut for simple transaction that tx.getSourceAccount is only account to be signed
-	 *
-	 * @param tx
-	 * @throws SigningException
-	 */
-	public void signStellarTransaction(Transaction tx) throws SigningException {
+    /**
+     * sign stellar tx envelope
+     * shortcut for simple transaction that tx.getSourceAccount is only account to be signed
+     *
+     * @param tx the tx
+     * @throws SigningException the signing exception
+     */
+    public void signStellarTransaction(Transaction tx) throws SigningException {
 		signStellarTransaction(tx, tx.getSourceAccount());
 	}
 
-	/**
-	 * sign stellar tx envelope with given accountId
-	 *
-	 * @param tx
-	 * @param accountId
-	 * @throws SigningException
-	 */
-	public void signStellarTransaction(Transaction tx, String accountId) throws SigningException {
+    /**
+     * sign stellar tx envelope with given accountId
+     *
+     * @param tx        the tx
+     * @param accountId the account id
+     * @throws SigningException the signing exception
+     */
+    public void signStellarTransaction(Transaction tx, String accountId) throws SigningException {
 		IntegrationResult<SignServerSignResponse> signResult = requestSign("XLM", accountId, tx.hash());
 
 		if(!signResult.isSuccess()) {
@@ -205,15 +212,15 @@ public class SignServerService {
 		tx.getSignatures().add(decoratedSignature);
 	}
 
-	/**
-	 * sign ethereum raw tx
-	 *
-	 * @param tx
-	 * @param from
-	 * @return
-	 * @throws SigningException
-	 */
-	public byte[] signEthereumTransaction(RawTransaction tx, String from) throws SigningException {
+    /**
+     * sign ethereum raw tx
+     *
+     * @param tx   the tx
+     * @param from the from
+     * @return byte [ ]
+     * @throws SigningException the signing exception
+     */
+    public byte[] signEthereumTransaction(RawTransaction tx, String from) throws SigningException {
 
 		byte[] encodedTx = TransactionEncoder.encode(tx);
 

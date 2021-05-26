@@ -27,12 +27,22 @@ import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The type Filecoin rpc client.
+ */
 public class FilecoinRpcClient {
     private static final PrefixedLogger logger = PrefixedLogger.getLogger(FilecoinRpcClient.class);
     private JsonRpcClient client;
 
     private static final BigDecimal FIL_UNIT = BigDecimal.TEN.pow(18);
 
+    /**
+     * Instantiates a new Filecoin rpc client.
+     *
+     * @param uri           the uri
+     * @param projectId     the project id
+     * @param projectSecret the project secret
+     */
     public FilecoinRpcClient(String uri, String projectId, String projectSecret) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
@@ -45,6 +55,13 @@ public class FilecoinRpcClient {
         private String projectSecret;
         private String uri;
 
+        /**
+         * Instantiates a new Base transport.
+         *
+         * @param uri           the uri
+         * @param projectId     the project id
+         * @param projectSecret the project secret
+         */
         BaseTransport(String uri, String projectId, String projectSecret){
             this.projectId = projectId;
             this.projectSecret = projectSecret;
@@ -74,6 +91,12 @@ public class FilecoinRpcClient {
         }
     }
 
+    /**
+     * Gets .
+     *
+     * @param address the address
+     * @return the
+     */
     public BigDecimal getbalance(String address) {
         String[] addr = {address};
         String balance = null;
@@ -93,6 +116,12 @@ public class FilecoinRpcClient {
         return BigDecimal.ZERO;
     }
 
+    /**
+     * Gets nonce.
+     *
+     * @param address the address
+     * @return the nonce
+     */
     public BigInteger getNonce(String address) {
         String[] addr = {address};
         String nonce = null;
@@ -114,8 +143,9 @@ public class FilecoinRpcClient {
 
     /**
      * filecoin 전송
-     * @param message
-     * @return
+     *
+     * @param message the message
+     * @return filecoin transaction
      */
     public FilecoinTransaction push(String message) {
         FilecoinTransaction result = this.client.createRequest().method("Filecoin.MpoolPush")
@@ -130,6 +160,11 @@ public class FilecoinRpcClient {
         return result;
     }
 
+    /**
+     * Gets chain head.
+     *
+     * @return the chain head
+     */
     public Map<String, Object> getChainHead() {
         return this.client.createRequest().method("Filecoin.ChainHead")
                 .id(0)
@@ -138,6 +173,12 @@ public class FilecoinRpcClient {
                 .execute();
     }
 
+    /**
+     * Gets chain get tip set by height.
+     *
+     * @param height the height
+     * @return the chain get tip set by height
+     */
     public TipSet getChainGetTipSetByHeight(BigInteger height) {
         TipSet rslt = this.client.createRequest().method("Filecoin.ChainGetTipSetByHeight")
                 .id(0)
@@ -147,6 +188,12 @@ public class FilecoinRpcClient {
         return rslt;
     }
 
+    /**
+     * Gets chain get block messages.
+     *
+     * @param cid the cid
+     * @return the chain get block messages
+     */
     public BlockMessages getChainGetBlockMessages(Cid cid) {
         BlockMessages rslt = this.client.createRequest().method("Filecoin.ChainGetBlockMessages")
                 .id(0)
@@ -156,6 +203,12 @@ public class FilecoinRpcClient {
         return rslt;
     }
 
+    /**
+     * Gets chain get message.
+     *
+     * @param cid the cid
+     * @return the chain get message
+     */
     public FilecoinMessage.Message getChainGetMessage(Cid cid) {
         FilecoinMessage.Message rslt = this.client.createRequest().method("Filecoin.ChainGetMessage")
                 .id(0)

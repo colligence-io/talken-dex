@@ -32,6 +32,9 @@ import static io.talken.common.CommonConsts.ZONE_UTC;
 import static io.talken.common.persistence.jooq.Tables.TOKEN_META;
 import static io.talken.common.persistence.jooq.Tables.TOKEN_META_MANAGED_MARKETPAIR;
 
+/**
+ * The type Trade aggregation service.
+ */
 @Service
 @Scope("singleton")
 public class TradeAggregationService {
@@ -54,7 +57,10 @@ public class TradeAggregationService {
 
 	private ReentrantLock lock = new ReentrantLock();
 
-	@Data
+    /**
+     * The type Trade aggregator status.
+     */
+    @Data
 	public static class TradeAggregatorStatus {
 		private LocalDateTime lastAggregation;
 	}

@@ -24,11 +24,22 @@ public class Web3jHttpService extends HttpService {
 		CONNECTION_SPEC_LIST = Arrays.asList(INFURA_CIPHER_SUITE_SPEC, ConnectionSpec.CLEARTEXT);
 	}
 
-	public Web3jHttpService(String url) {
+    /**
+     * Instantiates a new Web 3 j http service.
+     *
+     * @param url the url
+     */
+    public Web3jHttpService(String url) {
 		super(url, createOkHttpClient());
 	}
 
-	public Web3jHttpService(String url, boolean includeRawResponse) {
+    /**
+     * Instantiates a new Web 3 j http service.
+     *
+     * @param url                the url
+     * @param includeRawResponse the include raw response
+     */
+    public Web3jHttpService(String url, boolean includeRawResponse) {
 		super(url, createOkHttpClient(), includeRawResponse);
 	}
 

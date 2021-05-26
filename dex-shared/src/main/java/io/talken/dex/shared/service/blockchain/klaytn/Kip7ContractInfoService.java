@@ -11,6 +11,9 @@ import xyz.groundx.caver_ext_kas.rest_client.io.swagger.client.api.tokenhistory.
 
 import java.math.BigInteger;
 
+/**
+ * The type Kip 7 contract info service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -21,10 +24,10 @@ public class Kip7ContractInfoService {
      * get bep20 standard name, symbol, decimals
      * cached in redis
      *
-     * @param caver
-     * @param contractAddress
-     * @return
-     * @throws Exception
+     * @param caver           the caver
+     * @param contractAddress the contract address
+     * @return kip 7 contract info
+     * @throws Exception the exception
      */
 //    @Cacheable(value = CacheConfig.CacheNames.BSC_BEP20_CONTRACT_INFO, key = "#p1")
     public Kip7ContractInfoService.Kip7ContractInfo getKip7ContractInfo(CaverExtKAS caver, String contractAddress) throws Exception {
@@ -56,6 +59,9 @@ public class Kip7ContractInfoService {
         return rtn;
     }
 
+    /**
+     * The type Kip 7 contract info.
+     */
     @Data
     public static class Kip7ContractInfo {
         private String name = null;
@@ -66,11 +72,11 @@ public class Kip7ContractInfoService {
     /**
      * get erc20 contract balance from network
      *
-     * @param caver
-     * @param contractAddress
-     * @param owner
-     * @return
-     * @throws Exception
+     * @param caver           the caver
+     * @param contractAddress the contract address
+     * @param owner           the owner
+     * @return balance of
+     * @throws Exception the exception
      */
     public BigInteger getBalanceOf(CaverExtKAS caver, String contractAddress, String owner) throws Exception {
         KIP7 kip7 = new KIP7(caver, contractAddress);

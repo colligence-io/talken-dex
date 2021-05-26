@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Anc server anchor request.
+ */
 @Deprecated
 @Data
 public class AncServerAnchorRequest {

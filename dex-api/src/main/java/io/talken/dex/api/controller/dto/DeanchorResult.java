@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * The type Deanchor result.
+ */
 @Data
 public class DeanchorResult {
 	private String taskId;

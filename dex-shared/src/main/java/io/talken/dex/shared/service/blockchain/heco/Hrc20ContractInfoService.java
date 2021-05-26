@@ -24,6 +24,9 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * The type Hrc 20 contract info service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -34,10 +37,10 @@ public class Hrc20ContractInfoService {
      * get hrc20 standard name, symbol, decimals
      * cached in redis
      *
-     * @param web3j
-     * @param contractAddress
-     * @return
-     * @throws Exception
+     * @param web3j           the web 3 j
+     * @param contractAddress the contract address
+     * @return hrc 20 contract info
+     * @throws Exception the exception
      */
     @Cacheable(value = CacheConfig.CacheNames.HECO_HRC20_CONTRACT_INFO, key = "#p1")
     public Hrc20ContractInfoService.Hrc20ContractInfo getHrc20ContractInfo(Web3j web3j, String contractAddress) throws Exception {
@@ -66,6 +69,9 @@ public class Hrc20ContractInfoService {
         return rtn;
     }
 
+    /**
+     * The type Hrc 20 contract info.
+     */
     @Data
     public static class Hrc20ContractInfo {
         private String name = null;
@@ -76,11 +82,11 @@ public class Hrc20ContractInfoService {
     /**
      * get erc20 contract balance from network
      *
-     * @param web3j
-     * @param contractAddress
-     * @param owner
-     * @return
-     * @throws Exception
+     * @param web3j           the web 3 j
+     * @param contractAddress the contract address
+     * @param owner           the owner
+     * @return balance of
+     * @throws Exception the exception
      */
     public BigInteger getBalanceOf(Web3j web3j, String contractAddress, String owner) throws Exception {
         Function function = StandardERC20ContractFunctions.balanceOf(owner);

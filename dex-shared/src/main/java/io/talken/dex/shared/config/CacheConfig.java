@@ -15,27 +15,61 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The type Cache config.
+ */
 @Configuration
 @EnableCaching//Using redis, settings on application.yml
 public class CacheConfig {
-	public static class CacheNames {
-		public static final String SWAP_PREDICT_SET = "swapPredictSet";
-		public static final String ETH_ERC20_CONTRACT_INFO = "eth_erc20ContractInfo";
-		public static final String LUK_ERC20_CONTRACT_INFO = "luk_erc20ContractInfo";
-		public static final String BSC_BEP20_CONTRACT_INFO = "bsc_bep20ContractInfo";
-		public static final String HECO_HRC20_CONTRACT_INFO = "heco_hrc20ContractInfo";
+    /**
+     * The type Cache names.
+     */
+    public static class CacheNames {
+        /**
+         * The constant SWAP_PREDICT_SET.
+         */
+        public static final String SWAP_PREDICT_SET = "swapPredictSet";
+        /**
+         * The constant ETH_ERC20_CONTRACT_INFO.
+         */
+        public static final String ETH_ERC20_CONTRACT_INFO = "eth_erc20ContractInfo";
+        /**
+         * The constant LUK_ERC20_CONTRACT_INFO.
+         */
+        public static final String LUK_ERC20_CONTRACT_INFO = "luk_erc20ContractInfo";
+        /**
+         * The constant BSC_BEP20_CONTRACT_INFO.
+         */
+        public static final String BSC_BEP20_CONTRACT_INFO = "bsc_bep20ContractInfo";
+        /**
+         * The constant HECO_HRC20_CONTRACT_INFO.
+         */
+        public static final String HECO_HRC20_CONTRACT_INFO = "heco_hrc20ContractInfo";
+        /**
+         * The constant KLAY_KIP7_CONTRACT_INFO.
+         */
         public static final String KLAY_KIP7_CONTRACT_INFO = "klay_kip7ContractInfo";
 	}
 
 	@Autowired
 	private LettuceConnectionFactory lettuceConnectionFactory;
 
-	@Bean
+    /**
+     * Default redis cache configuration redis cache configuration.
+     *
+     * @return the redis cache configuration
+     */
+    @Bean
 	public RedisCacheConfiguration defaultRedisCacheConfiguration() {
 		return buildCacheConfiguration(Duration.ofSeconds(60));
 	}
 
-	@Bean
+    /**
+     * Redis cache configuration map map.
+     *
+     * @return the map
+     */
+    @Bean
 	public Map<String, RedisCacheConfiguration> redisCacheConfigurationMap() {
 		Map<String, RedisCacheConfiguration> cfgMap = new HashMap<>();
 
@@ -64,7 +98,12 @@ public class CacheConfig {
 				.disableCachingNullValues();
 	}
 
-	@Bean
+    /**
+     * Cache manager redis cache manager.
+     *
+     * @return the redis cache manager
+     */
+    @Bean
 	public RedisCacheManager cacheManager() {
 		RedisCacheManager rcm = RedisCacheManager.builder(lettuceConnectionFactory)
 				.transactionAware()

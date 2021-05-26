@@ -25,6 +25,9 @@ import java.util.Optional;
 
 import static io.talken.common.persistence.jooq.Tables.DEX_TASK_DEANCHOR;
 
+/**
+ * The type Deanchor task transaction processor.
+ */
 @Component
 public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProcessor {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(DeanchorTaskTransactionProcessor.class);
@@ -32,7 +35,10 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 	@Autowired
 	private DSLContext dslContext;
 
-	@Autowired
+    /**
+     * The Tx mgr.
+     */
+    @Autowired
 	protected DataSourceTransactionManager txMgr;
 
 	@Autowired
@@ -48,9 +54,6 @@ public class DeanchorTaskTransactionProcessor implements DexTaskTransactionProce
 	 * 2. check payment operations is matched with task
 	 * 3. queue bctx to transfer holded asset to user
 	 *
-	 * @param txmId
-	 * @param txResult
-	 * @return
 	 */
 	@Override
 	public DexTaskTransactionProcessResult process(Long txmId, StellarTxReceipt txResult) {

@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+/**
+ * The type Private wallet service.
+ */
 @Service
 public class PrivateWalletService {
 	private static final PrefixedLogger logger = PrefixedLogger.getLogger(PrivateWalletService.class);
@@ -19,16 +22,16 @@ public class PrivateWalletService {
 	@Autowired
 	private TokenMetaApiService tmService;
 
-	/**
-	 * build template tx envelope for TalkenWallet Mobile App
-	 *
-	 * @param msgType
-	 * @param assetCode
-	 * @return
-	 * @throws TokenMetaNotFoundException
-	 * @throws BlockChainPlatformNotSupportedException
-	 */
-	public PrivateWalletTransferDTO createTransferDTObase(PrivateWalletMsgTypeEnum msgType, String assetCode) throws TokenMetaNotFoundException, BlockChainPlatformNotSupportedException {
+    /**
+     * build template tx envelope for TalkenWallet Mobile App
+     *
+     * @param msgType   the msg type
+     * @param assetCode the asset code
+     * @return private wallet transfer dto
+     * @throws TokenMetaNotFoundException              the token meta not found exception
+     * @throws BlockChainPlatformNotSupportedException the block chain platform not supported exception
+     */
+    public PrivateWalletTransferDTO createTransferDTObase(PrivateWalletMsgTypeEnum msgType, String assetCode) throws TokenMetaNotFoundException, BlockChainPlatformNotSupportedException {
 		TokenMetaTable.Meta tokenMeta = tmService.getTokenMeta(assetCode);
 
 		String platform_name = tokenMeta.getPlatform();

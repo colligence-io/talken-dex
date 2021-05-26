@@ -41,6 +41,9 @@ import java.util.Map;
 
 import static io.talken.common.persistence.jooq.Tables.BCTX;
 
+/**
+ * The type Block chain transaction service.
+ */
 @Service
 @Scope("singleton")
 @RequiredArgsConstructor
@@ -160,7 +163,17 @@ public class BlockChainTransactionService implements ApplicationContextAware {
 					} else {
 						logRecord.setStatus(BctxStatusEnum.FAILED);
 					}
-				} else {
+                } else if (BlockChainPlatformEnum.KLAYTN.equals(bctxRecord.getBctxType())
+                        || BlockChainPlatformEnum.KLAYTN_KIP7_TOKEN.equals(bctxRecord.getBctxType())
+                        || BlockChainPlatformEnum.KLAYTN_KIP17_TOKEN.equals(bctxRecord.getBctxType())
+                ){
+                    // TODO: for Klaytn bctx
+				    alarmService.warn(logger, "Do use Sender for {}", bctxRecord.getBctxType());
+
+                    logRecord.setStatus(BctxStatusEnum.FAILED);
+                    logRecord.setErrorcode("NoTxSender");
+                    logRecord.setErrormessage("TxSender " + bctxRecord.getBctxType() + " not found");
+                } else {
 					logRecord.setStatus(BctxStatusEnum.FAILED);
 					logRecord.setErrorcode("NoTxSender");
 					logRecord.setErrormessage("TxSender " + bctxRecord.getBctxType() + " not found");

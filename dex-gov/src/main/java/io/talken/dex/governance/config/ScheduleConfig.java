@@ -10,6 +10,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
+/**
+ * The type Schedule config.
+ */
 @Configuration
 @EnableScheduling
 @EnableAsync
@@ -17,7 +20,12 @@ public class ScheduleConfig {
 	@Autowired
 	private GovSettings govSettings;
 
-	@Bean(name = "taskScheduler")
+    /**
+     * Task scheduler thread pool task scheduler.
+     *
+     * @return the thread pool task scheduler
+     */
+    @Bean(name = "taskScheduler")
 	public ThreadPoolTaskScheduler taskScheduler() {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 		scheduler.setPoolSize(govSettings.getScheduler().getPoolSize());
@@ -25,7 +33,12 @@ public class ScheduleConfig {
 		return scheduler;
 	}
 
-	@Bean(name = "taskExecutor")
+    /**
+     * Task executor task executor.
+     *
+     * @return the task executor
+     */
+    @Bean(name = "taskExecutor")
 	public TaskExecutor taskExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		taskExecutor.setCorePoolSize(govSettings.getScheduler().getPoolSize());

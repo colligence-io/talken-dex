@@ -24,7 +24,13 @@ public class StellarChannelTransaction implements Closeable {
 	private Transaction tx = null;
 	private StellarChannel channel = null;
 
-	public static final long TIMEOUT = 30;
+    /**
+     * The constant TIMEOUT.
+     */
+    public static final long TIMEOUT = 30;
+    /**
+     * The constant TIME_BOUND.
+     */
     public static final long TIME_BOUND = 30;
 
 	/**
@@ -33,25 +39,41 @@ public class StellarChannelTransaction implements Closeable {
 	private StellarChannelTransaction() { }
 
 
-	public Server getServer() {
+    /**
+     * Gets server.
+     *
+     * @return the server
+     */
+    public Server getServer() {
 		return server;
 	}
 
-	public Transaction getTx() {
+    /**
+     * Gets tx.
+     *
+     * @return the tx
+     */
+    public Transaction getTx() {
 		return tx;
 	}
 
-	public StellarChannel getChannel() {
+    /**
+     * Gets channel.
+     *
+     * @return the channel
+     */
+    public StellarChannel getChannel() {
 		return channel;
 	}
 
-	/**
-	 * submit channel tx
-	 *
-	 * @return
-	 * @throws IOException
-	 */
-	public SubmitTransactionResponse submit() throws IOException, AccountRequiresMemoException {
+    /**
+     * submit channel tx
+     *
+     * @return submit transaction response
+     * @throws IOException                  the io exception
+     * @throws AccountRequiresMemoException the account requires memo exception
+     */
+    public SubmitTransactionResponse submit() throws IOException, AccountRequiresMemoException {
 		try {
 			// submit
 			logger.debug("Sending TX {} to stellar network.", ByteArrayUtil.toHexString(tx.hash()));
@@ -69,58 +91,66 @@ public class StellarChannelTransaction implements Closeable {
 		stellarNetworkService.releaseChannel(this.channel);
 	}
 
-	public static class Builder {
+    /**
+     * The type Builder.
+     */
+    public static class Builder {
 		private StellarNetworkService stellarNetworkService;
 		private String memo = null;
 		private List<Operation> operations = new ArrayList<>();
 		private SingleKeyTable<String, StellarSigner> signers = new SingleKeyTable<>();
 
-		public Builder(StellarNetworkService stellarNetworkService) {
+        /**
+         * Instantiates a new Builder.
+         *
+         * @param stellarNetworkService the stellar network service
+         */
+        public Builder(StellarNetworkService stellarNetworkService) {
 			this.stellarNetworkService = stellarNetworkService;
 		}
 
-		/**
-		 * set tx memo
-		 *
-		 * @param memo
-		 * @return
-		 */
-		public Builder setMemo(String memo) {
+        /**
+         * set tx memo
+         *
+         * @param memo the memo
+         * @return memo
+         */
+        public Builder setMemo(String memo) {
 			this.memo = memo;
 			return this;
 		}
 
-		/**
-		 * add tx operation
-		 *
-		 * @param op
-		 * @return
-		 */
-		public Builder addOperation(Operation op) {
+        /**
+         * add tx operation
+         *
+         * @param op the op
+         * @return builder
+         */
+        public Builder addOperation(Operation op) {
 			this.operations.add(op);
 			return this;
 		}
 
-		/**
-		 * add signer for transaction
-		 * channel will be added automatically
-		 *
-		 * @param signer
-		 * @return
-		 */
-		public Builder addSigner(StellarSigner signer) {
+        /**
+         * add signer for transaction
+         * channel will be added automatically
+         *
+         * @param signer the signer
+         * @return builder
+         */
+        public Builder addSigner(StellarSigner signer) {
 			this.signers.insert(signer);
 			return this;
 		}
 
-		/**
-		 * pick available channel, mark it as locked
-		 *
-		 * @return
-		 * @throws IOException
-		 * @throws SigningException
-		 */
-		public StellarChannelTransaction build() throws IOException, SigningException {
+        /**
+         * pick available channel, mark it as locked
+         *
+         * @return stellar channel transaction
+         * @throws IOException      the io exception
+         * @throws SigningException the signing exception
+         */
+        public StellarChannelTransaction build() throws IOException, SigningException {
 			StellarChannelTransaction sctx = new StellarChannelTransaction();
 			sctx.stellarNetworkService = this.stellarNetworkService;
 			try {
@@ -171,14 +201,15 @@ public class StellarChannelTransaction implements Closeable {
 			}
 		}
 
-		/**
-		 * shortcut build and submit
-		 *
-		 * @return
-		 * @throws IOException
-		 * @throws SigningException
-		 */
-		public SubmitTransactionResponse buildAndSubmit() throws IOException, SigningException, AccountRequiresMemoException {
+        /**
+         * shortcut build and submit
+         *
+         * @return submit transaction response
+         * @throws IOException                  the io exception
+         * @throws SigningException             the signing exception
+         * @throws AccountRequiresMemoException the account requires memo exception
+         */
+        public SubmitTransactionResponse buildAndSubmit() throws IOException, SigningException, AccountRequiresMemoException {
 			try(StellarChannelTransaction sctx = build()) {
 				return sctx.submit();
 			}

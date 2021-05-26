@@ -19,6 +19,9 @@ import java.util.List;
 
 /**
  * Stellar Operation Receipt
+ *
+ * @param <TO> the type parameter
+ * @param <TR> the type parameter
  */
 @Data
 public abstract class StellarOpReceipt<TO extends Operation, TR> {
@@ -47,17 +50,20 @@ public abstract class StellarOpReceipt<TO extends Operation, TR> {
 	@Indexed
 	private List<String> involvedAssets = new ArrayList<>();
 
-	public StellarOpReceipt() { }
+    /**
+     * Instantiates a new Stellar op receipt.
+     */
+    public StellarOpReceipt() { }
 
-	/**
-	 * build OpReceipt(implement instance) from response, operation, result
-	 *
-	 * @param response
-	 * @param operation
-	 * @param result
-	 * @return
-	 */
-	public static StellarOpReceipt fromResponse(TransactionResponse response, Operation operation, OperationResult result) {
+    /**
+     * build OpReceipt(implement instance) from response, operation, result
+     *
+     * @param response  the response
+     * @param operation the operation
+     * @param result    the result
+     * @return stellar op receipt
+     */
+    public static StellarOpReceipt fromResponse(TransactionResponse response, Operation operation, OperationResult result) {
 		switch(result.getTr().getDiscriminant()) {
 			case PAYMENT: {
 				PaymentOpReceipt rcpt = new PaymentOpReceipt();
@@ -105,16 +111,22 @@ public abstract class StellarOpReceipt<TO extends Operation, TR> {
 		return rcpt;
 	}
 
-	abstract protected void parse(TO op, TR result);
+    /**
+     * Parse.
+     *
+     * @param op     the op
+     * @param result the result
+     */
+    abstract protected void parse(TO op, TR result);
 
-	/**
-	 * set common values from response and call parse() for operation specific parsing
-	 *
-	 * @param response
-	 * @param operation
-	 * @param result
-	 */
-	protected void startImport(TransactionResponse response, TO operation, TR result) {
+    /**
+     * set common values from response and call parse() for operation specific parsing
+     *
+     * @param response  the response
+     * @param operation the operation
+     * @param result    the result
+     */
+    protected void startImport(TransactionResponse response, TO operation, TR result) {
 		this.hash = response.getHash();
 		this.ledger = response.getLedger();
 		this.pagingToken = response.getPagingToken();
@@ -129,29 +141,41 @@ public abstract class StellarOpReceipt<TO extends Operation, TR> {
 		parse(operation, result);
 	}
 
-	/**
-	 * add involved account for search indexing
-	 *
-	 * @param accountId
-	 */
-	public void addInvolvedAccount(String accountId) {
+    /**
+     * add involved account for search indexing
+     *
+     * @param accountId the account id
+     */
+    public void addInvolvedAccount(String accountId) {
 		if(!involvedAccounts.contains(accountId)) involvedAccounts.add(accountId);
 	}
 
-	/**
-	 * add involved asset for search indexing
-	 *
-	 * @param assetString
-	 */
-	public void addInvolvedAsset(String assetString) {
+    /**
+     * add involved asset for search indexing
+     *
+     * @param assetString the asset string
+     */
+    public void addInvolvedAsset(String assetString) {
 		if(!involvedAssets.contains(assetString)) involvedAssets.add(assetString);
 	}
 
-	static public String assetToString(org.stellar.sdk.xdr.Asset asset) {
+    /**
+     * Asset to string string.
+     *
+     * @param asset the asset
+     * @return the string
+     */
+    static public String assetToString(org.stellar.sdk.xdr.Asset asset) {
 		return assetToString(Asset.fromXdr(asset));
 	}
 
-	static public String assetToString(Asset asset) {
+    /**
+     * Asset to string string.
+     *
+     * @param asset the asset
+     * @return the string
+     */
+    static public String assetToString(Asset asset) {
 		if(asset instanceof AssetTypeNative) {
 			return "native";
 		} else {
