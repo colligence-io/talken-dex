@@ -412,7 +412,8 @@ public class WalletService {
         if (talkAmount.compareTo(postBody.getAmount()) != 0) {
             return result;
         }
-        final BigDecimal TALK_TX_FEE = checkTalkTxFee100Term(reclaimBctx.getCreateTimestamp()) ? BigDecimal.valueOf(100) : BigDecimal.valueOf(200);
+//        final BigDecimal TALK_TX_FEE = checkTalkTxFee100Term(reclaimBctx.getCreateTimestamp()) ? BigDecimal.valueOf(100) : BigDecimal.valueOf(200);
+        final BigDecimal TALK_TX_FEE = BigDecimal.valueOf(100);
         final BigDecimal RATE = BigDecimal.valueOf(0.08);
         BigDecimal claimAmount = talkAmount.subtract(TALK_TX_FEE).multiply(RATE);
 
