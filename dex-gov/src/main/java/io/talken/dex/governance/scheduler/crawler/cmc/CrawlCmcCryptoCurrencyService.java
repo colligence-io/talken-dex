@@ -83,6 +83,7 @@ public class CrawlCmcCryptoCurrencyService {
         if (mongoTemplate.getCollection(COLLECTION_NAME).countDocuments() == 0) {
             mongoTemplate.createCollection(COLLECTION_NAME);
         }
+        crawl();
     }
 
 	@Scheduled(cron = "0 */5 * * * *", zone = ZONE_UTC)
@@ -91,8 +92,8 @@ public class CrawlCmcCryptoCurrencyService {
         logger.debug("CMC CrawlerService ["+API_NAME+"] started at : {}", UTCUtil.getNow());
 		counter.incrementAndGet();
 		try {
-//            crawlCMCLatest();
-			if(RunningProfile.isProduction()) {
+//			if(RunningProfile.isProduction()) {
+			if(true) {
 				crawlCMCLatest();
 			} else { // for saving CMC credit, run every 4 hours only when it's not production environment
 				if(counter.get() % 24 == 0) {
@@ -181,7 +182,7 @@ public class CrawlCmcCryptoCurrencyService {
 							CRAWL_CMC.MAX_SUPPLY,
 							CRAWL_CMC.LAST_UPDATED,
 							CRAWL_CMC.DATE_ADDED,
-							CRAWL_CMC.TAGS,
+//							CRAWL_CMC.TAGS,
 							CRAWL_CMC.PLATFORM_ID,
 							CRAWL_CMC.PLATFORM_TOKEN_ADDRESS)
 							.values(
@@ -196,7 +197,7 @@ public class CrawlCmcCryptoCurrencyService {
 									_cc.getMax_supply(),
 									_cc.getLast_updated(),
 									_cc.getDate_added(),
-									tags,
+//									tags,
 									platform_id,
 									platform_token_address
 							)
