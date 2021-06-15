@@ -92,8 +92,8 @@ public class CrawlCmcCryptoCurrencyService {
         logger.debug("CMC CrawlerService ["+API_NAME+"] started at : {}", UTCUtil.getNow());
 		counter.incrementAndGet();
 		try {
-//			if(RunningProfile.isProduction()) {
-			if(true) {
+			if(RunningProfile.isProduction()) {
+//			if(true) {
 				crawlCMCLatest();
 			} else { // for saving CMC credit, run every 4 hours only when it's not production environment
 				if(counter.get() % 24 == 0) {
