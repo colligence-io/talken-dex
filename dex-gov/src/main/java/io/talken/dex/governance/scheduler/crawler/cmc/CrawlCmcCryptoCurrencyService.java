@@ -212,7 +212,7 @@ public class CrawlCmcCryptoCurrencyService {
 							.set(CRAWL_CMC.MAX_SUPPLY, _cc.getMax_supply())
 							.set(CRAWL_CMC.LAST_UPDATED, _cc.getLast_updated())
 							.set(CRAWL_CMC.DATE_ADDED, _cc.getDate_added())
-							.set(CRAWL_CMC.TAGS, tags)
+//							.set(CRAWL_CMC.TAGS, tags)
 							.set(CRAWL_CMC.PLATFORM_ID, platform_id)
 							.set(CRAWL_CMC.PLATFORM_TOKEN_ADDRESS, platform_token_address)
 							.execute();
