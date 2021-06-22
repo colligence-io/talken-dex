@@ -47,7 +47,7 @@ talken:
     bcnode:
       stellar:
         network: test
-        rpcUri: "https://horizon-testnet.stellar.org"
+        rpcUri: "http://192.168.0.37:8000"
         publicRpcUri: "https://horizon-testnet.stellar.org"
       ethereum:
         network: test

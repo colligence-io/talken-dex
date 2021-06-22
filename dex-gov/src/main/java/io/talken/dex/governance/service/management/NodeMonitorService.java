@@ -126,7 +126,7 @@ public class NodeMonitorService {
 	}
 
 	private void checkStellarNodes(StringBuilder sb) throws IOException {
-		RootResponse localInfo = stellarNetworkService.pickLocalServer().root();
+		RootResponse localInfo = stellarNetworkService.pickServer().root();
 		RootResponse publicInfo = stellarNetworkService.pickPublicServer().root();
 
 		sb.append("Stellar node server status").append("\n");
