@@ -83,7 +83,6 @@ public class CrawlCmcCryptoCurrencyService {
         if (mongoTemplate.getCollection(COLLECTION_NAME).countDocuments() == 0) {
             mongoTemplate.createCollection(COLLECTION_NAME);
         }
-        crawl();
     }
 
 	@Scheduled(cron = "0 */5 * * * *", zone = ZONE_UTC)
